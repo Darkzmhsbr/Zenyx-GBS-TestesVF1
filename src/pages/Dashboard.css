@@ -1,0 +1,357 @@
+.dashboard-container {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-lg);
+  padding: var(--spacing-xl);
+  max-width: 1600px;
+  margin: 0 auto;
+  margin-top: var(--header-height); 
+  margin-left: var(--sidebar-width);
+  color: var(--foreground);
+}
+
+/* --- 1. CABEÇALHO --- */
+.dashboard-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  margin-bottom: var(--spacing-md);
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.page-title {
+  font-size: 1.5rem;
+  font-weight: 700;
+  margin: 0;
+  color: var(--foreground);
+}
+
+.highlight-text {
+  color: var(--primary); /* Roxo */
+}
+
+.page-subtitle {
+  color: var(--muted-foreground);
+  font-size: 0.9rem;
+  margin-top: 5px;
+}
+
+.header-actions {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+/* --- 2. TOP CARDS GRID --- */
+.top-cards-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: var(--spacing-lg);
+}
+
+.analytic-card {
+  background-color: var(--card);
+  border: 1px solid var(--card-border);
+  border-radius: var(--radius);
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  transition: transform 0.2s, border-color 0.2s;
+}
+
+.analytic-card:hover {
+  transform: translateY(-2px);
+  border-color: var(--primary);
+}
+
+.card-header-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.card-label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--muted-foreground);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.card-icon-muted {
+  color: var(--muted-foreground);
+  opacity: 0.5;
+}
+
+.card-main-value {
+  font-size: 2rem;
+  font-weight: 700;
+  color: var(--foreground);
+}
+
+/* --- 3. MAIN ANALYTIC GRID (Chart + Side Stats) --- */
+.main-analytic-grid {
+  display: grid;
+  grid-template-columns: 2fr 1fr; /* Gráfico ocupa 2/3, Stats ocupa 1/3 */
+  gap: var(--spacing-lg);
+}
+
+/* Área do Gráfico */
+.card-box {
+  background-color: var(--card);
+  border: 1px solid var(--card-border);
+  border-radius: var(--radius);
+  padding: 1.5rem;
+}
+
+.chart-section {
+  display: flex;
+  flex-direction: column;
+  min-height: 450px;
+}
+
+.chart-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 2rem;
+}
+
+.chart-info {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.icon-circle {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background-color: rgba(42, 33, 60, 0.5); /* Fundo escuro sutil */
+  border: 1px solid var(--card-border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--primary);
+}
+
+.chart-label {
+  display: block;
+  font-size: 0.75rem;
+  color: var(--muted-foreground);
+  margin-bottom: 4px;
+}
+
+.chart-big-number {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #fff; /* Destaque branco */
+}
+
+.chart-big-number span {
+  color: var(--primary);
+}
+
+.chart-legend {
+  font-size: 0.8rem;
+  color: var(--muted-foreground);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.dot {
+  width: 8px;
+  height: 8px;
+  background-color: var(--primary);
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.chart-wrapper {
+  flex: 1;
+  width: 100%;
+}
+
+/* Coluna Direita (Side Stats) */
+.side-stats-column {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-md);
+}
+
+.side-stat-card {
+  background-color: var(--card);
+  border: 1px solid var(--card-border);
+  border-radius: var(--radius);
+  padding: 1.2rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 0.5rem;
+  flex: 1; /* Faz todos terem altura igual/distribuída */
+}
+
+.side-stat-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  color: var(--muted-foreground);
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.side-stat-value {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--foreground);
+}
+
+.text-danger {
+  color: var(--danger);
+}
+
+/* --- RESPONSIVIDADE --- */
+@media (max-width: 1024px) {
+  .main-analytic-grid {
+    grid-template-columns: 1fr; /* Vira coluna única no mobile/tablet */
+  }
+  
+  .chart-section {
+    min-height: 350px;
+  }
+}
+
+@media (max-width: 768px) {
+  .dashboard-container {
+    margin-left: 0;
+    padding: var(--spacing-md);
+  }
+  
+  .dashboard-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  
+  .header-actions {
+    width: 100%;
+    justify-content: flex-start;
+  }
+  
+  .page-title {
+    font-size: 1.25rem;
+  }
+}
+
+/* Animação de Loading */
+.spin {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.fade-in {
+  animation: fadeIn 0.5s ease-in-out;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* ============================================================
+   👇 NOVOS ESTILOS DO DATE PICKER (FILTRO DE DATA)
+   ============================================================ */
+
+/* Botão Personalizado que abre o Calendário */
+.date-filter-btn {
+  background-color: #0f0b14; /* Fundo bem escuro */
+  border: 1px solid var(--card-border);
+  color: var(--foreground);
+  padding: 8px 16px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 0.9rem;
+  transition: all 0.2s;
+  min-width: 180px;
+  justify-content: space-between;
+}
+
+.date-filter-btn:hover {
+  border-color: var(--primary);
+  color: var(--primary);
+}
+
+.date-filter-btn svg {
+  opacity: 0.8;
+}
+
+/* --- CUSTOMIZAÇÃO DO CALENDÁRIO (DATEPICKER) PARA TEMA DARK --- */
+.react-datepicker {
+  background-color: var(--card) !important;
+  border: 1px solid var(--card-border) !important;
+  color: var(--foreground) !important;
+  font-family: inherit !important;
+  border-radius: 12px !important;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+  overflow: hidden;
+}
+
+.react-datepicker__header {
+  background-color: var(--secondary) !important;
+  border-bottom: 1px solid var(--card-border) !important;
+  padding-top: 15px !important;
+}
+
+.react-datepicker__current-month {
+  color: var(--foreground) !important;
+  margin-bottom: 10px;
+  text-transform: capitalize;
+}
+
+.react-datepicker__day-name {
+  color: var(--muted-foreground) !important;
+}
+
+.react-datepicker__day {
+  color: var(--foreground) !important;
+  border-radius: 6px !important;
+  transition: background-color 0.2s;
+}
+
+.react-datepicker__day:hover {
+  background-color: var(--primary) !important;
+  color: #fff !important;
+}
+
+/* Dia Selecionado ou no Range */
+.react-datepicker__day--selected, 
+.react-datepicker__day--in-range {
+  background-color: var(--primary) !important;
+  color: #fff !important;
+}
+
+/* Intervalo entre datas */
+.react-datepicker__day--in-selecting-range {
+  background-color: rgba(195, 51, 255, 0.3) !important;
+}
+
+/* Setas do calendário */
+.react-datepicker__navigation-icon::before {
+  border-color: var(--muted-foreground) !important;
+}
+
+/* Hoje */
+.react-datepicker__day--today {
+  font-weight: bold;
+  border: 1px solid var(--primary);
+}

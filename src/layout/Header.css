@@ -1,0 +1,445 @@
+.header {
+  position: fixed;
+  top: 0;
+  left: 260px;
+  right: 0;
+  height: 70px;
+  background-color: var(--background);
+  border-bottom: 1px solid var(--card-border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 30px;
+  z-index: 100;
+  transition: all 0.3s ease;
+}
+
+.header-left {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+
+.mobile-menu-btn {
+  display: none;
+  background: none;
+  border: none;
+  color: var(--foreground);
+  cursor: pointer;
+  padding: 0;
+}
+
+.header-right {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+
+/* --- SELETOR DE BOT --- */
+.bot-selector-wrapper {
+  position: relative;
+}
+
+.bot-selector-btn {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: var(--card);
+  border: 1px solid var(--card-border);
+  padding: 6px 12px;
+  border-radius: 30px;
+  color: var(--foreground);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.bot-selector-btn:hover, .bot-selector-btn.active {
+  border-color: var(--primary);
+  background: rgba(195, 51, 255, 0.05);
+}
+
+.bot-icon-circle {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #c333ff, #7b1fa2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+}
+
+.bot-name {
+  font-weight: 600;
+  font-size: 0.9rem;
+  max-width: 150px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Dropdown de Bots */
+.bot-dropdown-menu {
+  position: absolute;
+  top: 50px;
+  right: 0;
+  width: 280px;
+  background: var(--card);
+  border: 1px solid var(--card-border);
+  border-radius: 12px;
+  box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+  overflow: hidden;
+  z-index: 1000;
+  animation: fadeIn 0.2s ease;
+}
+
+.dropdown-header {
+  padding: 15px;
+  font-size: 0.85rem;
+  color: var(--muted-foreground);
+  border-bottom: 1px solid var(--card-border);
+}
+
+.dropdown-item {
+  padding: 12px 15px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+  color: var(--foreground);
+  transition: background 0.2s;
+}
+
+.dropdown-item:hover {
+  background: rgba(195, 51, 255, 0.05);
+}
+
+.dropdown-item.selected {
+  background: rgba(195, 51, 255, 0.1);
+  color: #c333ff;
+}
+
+.bot-mini-icon {
+  background: var(--muted);
+  padding: 6px;
+  border-radius: 50%;
+  display: flex;
+}
+
+.check-icon {
+  margin-left: auto;
+  color: #00e676;
+}
+
+.dropdown-footer {
+  padding: 10px;
+  text-align: right;
+  border-top: 1px solid var(--card-border);
+}
+
+.dropdown-footer a {
+  color: #c333ff;
+  text-decoration: none;
+  font-size: 0.8rem;
+  font-weight: bold;
+}
+
+/* --- ÍCONES DE AÇÃO --- */
+.icon-btn {
+  position: relative;
+  background: none;
+  border: none;
+  color: var(--muted-foreground);
+  cursor: pointer;
+  padding: 8px;
+  border-radius: 50%;
+  transition: all 0.2s;
+}
+
+.icon-btn:hover, .icon-btn.active { 
+  background: rgba(195, 51, 255, 0.1);
+  color: var(--primary); 
+}
+
+/* ============================================================ */
+/* NOTIFICAÇÕES - DROPDOWN                                     */
+/* ============================================================ */
+.notification-dropdown-wrapper {
+  position: relative;
+}
+
+/* Badge de contador */
+.notification-badge {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  background: #ef4444;
+  color: white;
+  font-size: 0.65rem;
+  font-weight: bold;
+  padding: 2px 5px;
+  border-radius: 10px;
+  min-width: 16px;
+  text-align: center;
+}
+
+/* Dropdown de Notificações */
+.notification-dropdown-menu {
+  position: absolute;
+  top: 50px;
+  right: 0;
+  width: 360px;
+  max-height: 500px;
+  background: var(--card);
+  border: 1px solid var(--card-border);
+  border-radius: 12px;
+  box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+  overflow: hidden;
+  z-index: 1000;
+  animation: fadeIn 0.2s ease;
+}
+
+.notification-header {
+  padding: 15px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid var(--card-border);
+}
+
+.notification-header h4 {
+  margin: 0;
+  font-size: 1rem;
+  color: var(--foreground);
+}
+
+.mark-all-read {
+  background: none;
+  border: none;
+  color: var(--primary);
+  font-size: 0.75rem;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.mark-all-read:hover {
+  text-decoration: underline;
+}
+
+.notification-list {
+  max-height: 350px;
+  overflow-y: auto;
+}
+
+.notification-item {
+  padding: 12px 15px;
+  display: flex;
+  gap: 12px;
+  cursor: pointer;
+  transition: background 0.2s;
+  border-bottom: 1px solid var(--card-border);
+}
+
+.notification-item:hover {
+  background: rgba(195, 51, 255, 0.05);
+}
+
+.notification-item.unread {
+  background: rgba(195, 51, 255, 0.03);
+}
+
+.notification-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.2rem;
+  flex-shrink: 0;
+}
+
+.notification-icon.success {
+  background: rgba(16, 185, 129, 0.1);
+}
+
+.notification-icon.warning {
+  background: rgba(245, 158, 11, 0.1);
+}
+
+.notification-icon.info {
+  background: rgba(59, 130, 246, 0.1);
+}
+
+.notification-content {
+  flex: 1;
+}
+
+.notification-title {
+  font-weight: 600;
+  font-size: 0.9rem;
+  color: var(--foreground);
+  margin: 0 0 4px 0;
+}
+
+.notification-text {
+  font-size: 0.85rem;
+  color: var(--muted-foreground);
+  margin: 0 0 4px 0;
+}
+
+.notification-time {
+  font-size: 0.75rem;
+  color: var(--muted-foreground);
+  margin: 0;
+}
+
+.notification-footer {
+  padding: 10px;
+  text-align: center;
+  border-top: 1px solid var(--card-border);
+}
+
+.notification-footer a {
+  color: var(--primary);
+  text-decoration: none;
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+/* --- AVATAR E DROPDOWN DE PERFIL --- */
+.profile-dropdown-wrapper {
+  position: relative;
+}
+
+.user-avatar {
+  width: 36px;
+  height: 36px;
+  background: linear-gradient(135deg, #c333ff, #7b1fa2);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  color: #fff;
+  font-size: 0.8rem;
+  border: 2px solid var(--card-border);
+  transition: transform 0.2s;
+}
+
+.user-avatar:hover {
+  transform: scale(1.05);
+  border-color: var(--primary);
+}
+
+/* Dropdown de Perfil */
+.profile-dropdown-menu {
+  position: absolute;
+  top: 50px;
+  right: 0;
+  width: 240px;
+  background: var(--card);
+  border: 1px solid var(--card-border);
+  border-radius: 12px;
+  box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+  overflow: hidden;
+  z-index: 1000;
+  animation: fadeIn 0.2s ease;
+}
+
+.profile-dropdown-header {
+  padding: 15px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: rgba(195, 51, 255, 0.05);
+}
+
+.profile-avatar-large {
+  width: 45px;
+  height: 45px;
+  background: linear-gradient(135deg, #c333ff, #7b1fa2);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  color: #fff;
+  font-size: 1rem;
+}
+
+.profile-name {
+  font-weight: 600;
+  color: var(--foreground);
+  font-size: 0.9rem;
+}
+
+.profile-email {
+  font-size: 0.75rem;
+  color: var(--muted-foreground);
+  margin-top: 2px;
+}
+
+.profile-dropdown-divider {
+  height: 1px;
+  background: var(--card-border);
+  margin: 5px 0;
+}
+
+.profile-dropdown-item {
+  padding: 12px 15px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  cursor: pointer;
+  color: var(--foreground);
+  font-size: 0.9rem;
+  transition: background 0.2s;
+}
+
+.profile-dropdown-item:hover {
+  background: rgba(195, 51, 255, 0.05);
+}
+
+.profile-dropdown-item.danger {
+  color: #ef4444;
+}
+
+.profile-dropdown-item.danger:hover {
+  background: rgba(239, 68, 68, 0.1);
+}
+
+/* --- ANIMAÇÕES --- */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(-10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* --- RESPONSIVIDADE MOBILE --- */
+@media (max-width: 768px) {
+  .header {
+    left: 0;
+    padding: 0 15px;
+    height: 60px;
+  }
+
+  .mobile-menu-btn {
+    display: block;
+    margin-right: 10px;
+  }
+
+  .bot-name {
+    max-width: 100px;
+  }
+  
+  .icon-btn {
+    padding: 6px;
+  }
+
+  .bot-dropdown-menu,
+  .profile-dropdown-menu,
+  .notification-dropdown-menu {
+    width: 90vw;
+    max-width: 320px;
+  }
+}
