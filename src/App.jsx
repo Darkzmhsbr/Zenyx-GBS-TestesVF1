@@ -4,6 +4,7 @@ import { BotProvider } from './context/BotContext';
 import { AuthProvider } from './context/AuthContext';
 import { MainLayout } from './layout/MainLayout';
 import { Login } from './pages/Login';
+import { Register } from './pages/Register';
 
 import { Dashboard } from './pages/Dashboard';
 import { Contacts } from './pages/Contacts';
@@ -29,6 +30,7 @@ import { MiniAppSuccess } from './pages/miniapp/MiniAppSuccess';
 
 const Logout = () => {
   localStorage.removeItem('zenyx_admin_user');
+  localStorage.removeItem('zenyx_token');
   window.location.href = '/login';
   return null;
 };
@@ -97,6 +99,7 @@ function App() {
         <Router>
           <Routes>
             <Route path="/login" element={<Login />} />
+            <Route path="/register" element={<Register />} />
             <Route path="/logout" element={<Logout />} />
             
             {/* 🔥 ROTAS PÚBLICAS DA LOJA (MINI APP) */}

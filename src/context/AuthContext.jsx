@@ -1,4 +1,5 @@
 import React, { createContext, useState, useContext, useEffect } from 'react';
+import axios from 'axios';
 
 const AuthContext = createContext();
 
@@ -7,59 +8,79 @@ export function AuthProvider({ children }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Verifica se já tem login salvo ao abrir o site
+    // Verifica se já tem token JWT salvo
+    const token = localStorage.getItem('zenyx_token');
     const savedUser = localStorage.getItem('zenyx_admin_user');
-    if (savedUser) {
+    
+    if (token && savedUser) {
       try {
-        setUser(JSON.parse(savedUser));
+        const userData = JSON.parse(savedUser);
+        setUser(userData);
+        
+        // Configura o token no axios globalmente
+        axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
       } catch (error) {
         console.error("Erro ao carregar usuário:", error);
+        localStorage.removeItem('zenyx_token');
         localStorage.removeItem('zenyx_admin_user');
       }
     }
     setLoading(false);
   }, []);
 
-  const login = (username, password) => {
-    // ============================================================
-    // 🔒 LISTA DE USUÁRIOS E PERMISSÕES (CORRIGIDA)
-    // ============================================================
-    const usuarios = {
-      'ZeKai': { 
-        pass: '123456', 
-        name: 'Admin Zenyx', 
-        // 🔥 ALTERADO: De 'master' para 'admin' para ativar o filtro de visualização
-        role: 'admin',      
-        // 👇 SEUS BOTS (ZeKinha e Mister MK7)
-        allowed_bots: [1, 2] 
-      },
-      'ManitoMHS': { 
-        pass: 'Hermano8762', 
-        name: 'Sócio Manito', 
-        role: 'partner',     
-        // 👇 BOT DELE (Club Fans)
-        allowed_bots: [3]    
-      }
-    };
-
-    // Verifica se o usuário existe e a senha bate
-    if (usuarios[username] && usuarios[username].pass === password) {
-      const userConfig = usuarios[username];
+  // ============================================================
+  // 🔐 LOGIN COM API REAL (SUBSTITUI O HARDCODED)
+  // ============================================================
+  const login = async (username, password) => {
+    try {
+      const API_URL = 'https://zenyx-gbs-testesv1-production.up.railway.app';
       
-      // Cria o objeto do usuário com as permissões
-      const userData = { 
-        name: userConfig.name, 
+      const response = await axios.post(`${API_URL}/api/auth/login`, {
         username: username,
-        role: userConfig.role,
-        allowed_bots: userConfig.allowed_bots 
+        password: password
+      });
+
+      const { access_token, user_id, username: userName } = response.data;
+
+      // Salva o token JWT
+      localStorage.setItem('zenyx_token', access_token);
+      
+      // Cria objeto do usuário
+      const userData = {
+        id: user_id,
+        username: userName,
+        name: userName,
+        role: 'admin', // Por enquanto todos são admin
+        allowed_bots: [] // FASE 2: Vai filtrar por owner_id
       };
 
-      setUser(userData);
+      // Salva dados do usuário
       localStorage.setItem('zenyx_admin_user', JSON.stringify(userData));
+      
+      // Configura token no axios
+      axios.defaults.headers.common['Authorization'] = `Bearer ${access_token}`;
+      
+      // Atualiza estado
+      setUser(userData);
+      
+      console.log("✅ Login realizado:", userName);
       return true;
+      
+    } catch (error) {
+      console.error("❌ Erro no login:", error);
+      
+      // Se der 401 (credenciais inválidas)
+      if (error.response?.status === 401) {
+        return false;
+      }
+      
+      // Se der erro de rede, mostra mensagem
+      if (!error.response) {
+        alert("Erro de conexão com o servidor. Verifique sua internet.");
+      }
+      
+      return false;
     }
-    
-    return false;
   };
 
   // ============================================================
@@ -72,9 +93,13 @@ export function AuthProvider({ children }) {
     setUser(null);
     
     // Limpa localStorage
+    localStorage.removeItem('zenyx_token');
     localStorage.removeItem('zenyx_admin_user');
     localStorage.removeItem('zenyx_selected_bot');
     localStorage.removeItem('zenyx_theme');
+    
+    // Remove token do axios
+    delete axios.defaults.headers.common['Authorization'];
     
     // Força reload da página para garantir limpeza total
     window.location.href = '/login';
