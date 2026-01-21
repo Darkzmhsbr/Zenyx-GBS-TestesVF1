@@ -26,6 +26,7 @@ import {
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import './Sidebar.css';
+import React from 'react';
 
 export function Sidebar({ isOpen, onClose }) {
   const location = useLocation();
@@ -136,15 +137,14 @@ export function Sidebar({ isOpen, onClose }) {
             {isBotMenuOpen && (
               <div className="nav-subitems">
                 <Link to="/bots" className={`nav-item ${isActive('/bots')}`} onClick={onClose}>
-                  <MessageSquare size={18} /> <span>Gerenciar Bots</span>
+                  <Zap size={18} /> <span>Gerenciar Bots</span>
                 </Link>
-                <Link to="/bots/novo" className={`nav-item ${isActive('/bots/novo')}`} onClick={onClose}>
+                <Link to="/bots/new" className={`nav-item ${isActive('/bots/new')}`} onClick={onClose}>
                   <PlusCircle size={18} /> <span>Novo Bot</span>
                 </Link>
               </div>
             )}
           </div>
-
           <Link to="/flow" className={`nav-item ${isActive('/flow')}`} onClick={onClose}>
             <Layers size={20} />
             <span>Flow Chat (Fluxo)</span>
