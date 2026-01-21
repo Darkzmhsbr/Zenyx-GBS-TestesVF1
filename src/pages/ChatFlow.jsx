@@ -191,6 +191,7 @@ export function ChatFlow() {
   return (
     <div className="chatflow-container">
       
+      {/* HEADER CORRIGIDO: Botão Salvar visível */}
       <div className="page-header">
         <div className="header-titles">
           <h1>Editor de Fluxo</h1>
@@ -205,9 +206,7 @@ export function ChatFlow() {
 
       <div className="flow-steps">
         
-        {/* ============================================================ */}
         {/* 1. SELETOR DE MODO DE INÍCIO */}
-        {/* ============================================================ */}
         <Card className="step-card start-mode-card">
             <CardContent>
                 <div className="card-header-row">
@@ -288,7 +287,6 @@ export function ChatFlow() {
                 label="Texto da Mensagem" 
                 value={flow.msg_boas_vindas}
                 onChange={val => {
-                    // 🔥 CORREÇÃO MANTIDA: Garante string
                     const textValue = typeof val === 'object' ? val.target.value : val;
                     setFlow({...flow, msg_boas_vindas: textValue});
                 }}
