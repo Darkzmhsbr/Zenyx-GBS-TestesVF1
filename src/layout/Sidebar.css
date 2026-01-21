@@ -35,51 +35,35 @@
   border-bottom: 1px solid var(--sidebar-border);
 }
 
-.sidebar-logo {
+.logo-area {
   display: flex;
   align-items: center;
   gap: 12px;
-  font-weight: 700;
-  font-size: 1.2rem;
-  color: #fff;
-}
-
-.logo-icon {
-  color: var(--primary-color);
-  fill: var(--primary-color);
-}
-
-.logo-text .highlight {
-  color: var(--primary-color);
 }
 
 /* --- NAVEGAÇÃO --- */
 .sidebar-nav {
   flex: 1;
-  padding: 20px 15px;
   overflow-y: auto;
+  padding: 20px 0;
   display: flex;
   flex-direction: column;
-  gap: 5px;
+  gap: 5px; /* Espaçamento entre itens */
 }
 
-/* Scrollbar fina e escura */
-.sidebar-nav::-webkit-scrollbar { width: 4px; }
-.sidebar-nav::-webkit-scrollbar-thumb { background: #333; border-radius: 4px; }
-
-/* --- ITENS DE MENU (PADRÃO) --- */
+/* Itens do Menu */
 .nav-item {
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: 12px 15px;
+  padding: 12px 25px; /* Padding padrão */
   color: var(--text-secondary);
   text-decoration: none;
-  border-radius: 8px;
-  transition: all 0.2s ease;
   font-size: 0.95rem;
+  font-weight: 500;
+  transition: all 0.2s ease;
+  border-right: 3px solid transparent;
   cursor: pointer;
-  border: 1px solid transparent;
 }
 
 .nav-item:hover {
@@ -88,75 +72,93 @@
 }
 
 .nav-item.active {
-  background-color: var(--primary-glow);
+  background: linear-gradient(90deg, rgba(195, 51, 255, 0.05), transparent);
   color: var(--primary-color);
-  border-color: rgba(195, 51, 255, 0.2);
-  font-weight: 600;
+  border-right-color: var(--primary-color);
 }
 
-/* --- GROUP HEADER (BOTÃO QUE ABRE MENU) --- */
-.group-header {
+/* --- 🔥 ÁREA SUPER ADMIN (NOVO) --- */
+.admin-section {
+  margin-bottom: 10px;
+  border-bottom: 1px solid var(--sidebar-border);
+  padding-bottom: 10px;
+}
+
+.admin-section-title {
+  padding: 0 25px; /* Alinhado com o nav-item */
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: var(--primary-color);
+  margin-bottom: 8px;
+  margin-top: 5px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  opacity: 0.9;
+}
+
+.nav-item.super-admin {
+  color: #ffcc00 !important; /* Dourado forçado */
+}
+
+.nav-item.super-admin:hover {
+  background: rgba(255, 204, 0, 0.1); /* Brilho dourado suave */
+  color: #ffd700 !important;
+}
+
+.nav-item.super-admin.active {
+  background: rgba(255, 204, 0, 0.15);
+  border-right-color: #ffcc00;
+}
+
+/* --- DIVISOR --- */
+.divider {
+  height: 1px;
+  background-color: var(--sidebar-border);
+  margin: 10px 20px;
+}
+
+/* --- SUBMENUS (Accordion) --- */
+.nav-group {
+  display: flex;
+  flex-direction: column;
+}
+
+.nav-item-header {
+  display: flex;
+  align-items: center;
   justify-content: space-between;
+  padding: 12px 25px;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all 0.2s;
 }
 
-.group-label {
+.nav-item-header:hover {
+  color: #fff;
+  background-color: var(--item-hover);
+}
+
+.nav-item-header.open {
+  color: #fff;
+}
+
+.nav-item-header-content {
   display: flex;
   align-items: center;
   gap: 12px;
 }
 
-/* --- SUBMENUS (LINHAS DE CONEXÃO E ALINHAMENTO) --- */
 .nav-subitems {
+  background-color: rgba(0,0,0,0.3);
   display: flex;
   flex-direction: column;
-  gap: 4px;
-  padding-left: 20px; /* Recuo do submenu */
-  margin-top: 4px;
-  margin-bottom: 8px;
-  position: relative;
+  padding: 5px 0;
 }
 
-/* Linha vertical guia */
-.nav-subitems::before {
-  content: '';
-  position: absolute;
-  left: 12px; /* Posição da linha */
-  top: 0;
-  bottom: 0;
-  width: 1px;
-  background-color: #333;
-}
-
+/* Indentação dos subitens */
 .nav-subitems .nav-item {
-  padding: 10px 15px;
-  font-size: 0.9rem; /* Fonte levemente menor */
-  color: #888;
-}
-
-.nav-subitems .nav-item:hover {
-  color: #fff;
-  background: transparent; /* Sem fundo no hover do submenu */
-  padding-left: 20px; /* Pequeno movimento para direita */
-}
-
-.nav-subitems .nav-item.active {
-  color: var(--primary-color);
-  background: transparent;
-  border: none;
-}
-
-/* Ícones do submenu */
-.nav-subitems .nav-item svg {
-  width: 16px; 
-  height: 16px;
-  opacity: 0.7;
-}
-
-/* --- DIVIDER --- */
-.divider {
-  height: 1px;
-  background-color: var(--sidebar-border);
-  margin: 15px 0;
+  padding-left: 57px; /* 25px padding + 20px icon + 12px gap */
+  font-size: 0.9rem;
 }
 
 /* --- LOGOUT BUTTON --- */
@@ -200,26 +202,27 @@
 
   /* Botão X visível no mobile */
   .close-sidebar-btn {
-    display: flex;
-    align-items: center;
-    justify-content: center;
+    display: block;
   }
 
-  /* Overlay escuro de fundo */
+  /* Overlay escuro */
   .sidebar-overlay {
     display: block;
     position: fixed;
-    top: 0; left: 0; right: 0; bottom: 0;
-    background: rgba(0,0,0,0.7);
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0,0,0,0.6);
+    backdrop-filter: blur(2px);
     z-index: 999;
     opacity: 0;
-    pointer-events: none;
-    transition: opacity 0.3s ease;
-    backdrop-filter: blur(2px);
+    visibility: hidden;
+    transition: opacity 0.3s;
   }
 
   .sidebar-overlay.open {
     opacity: 1;
-    pointer-events: auto;
+    visibility: visible;
   }
 }
