@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Outlet, Navigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 
-// 👇 AQUI ESTAVA O ERRO: Agora aponta para a pasta ATUAL (./)
+// 👇 Importa componentes de estrutura
 import { Sidebar } from './Sidebar';
 import { Header } from './Header';
 
@@ -12,7 +12,7 @@ export function MainLayout() {
   // Estado para controlar o Menu Mobile
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
-  // 🔒 BLOQUEIO: Se não tiver usuário, chuta para o Login
+  // 🔒 BLOQUEIO: Se não tiver usuário logado, chuta para o Login
   if (!user) {
     return <Navigate to="/login" replace />;
   }
