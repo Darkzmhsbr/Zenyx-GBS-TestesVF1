@@ -146,6 +146,12 @@ export function Profile() {
 
   const role = getUserRole();
 
+  // ✅ FUNÇÃO PARA VERIFICAR SE É ADMIN
+  const isAdmin = () => {
+    const username = user?.username?.toLowerCase() || '';
+    return user?.is_superuser || username === 'adminzenyx' || username === 'admin';
+  };
+
   // ✅ FUNÇÃO SALVAR PERFIL (ATUALIZADA)
   const handleSaveProfile = async () => {
     try {
@@ -305,60 +311,62 @@ export function Profile() {
         </div>
       )}
 
-      {/* CONFIGURAÇÃO FINANCEIRA */}
-      <div className="finance-section" style={{ background: '#111', padding: '20px', borderRadius: '12px', border: '1px solid #333', marginBottom: '30px' }}>
-        <h3 style={{ display: 'flex', alignItems: 'center', gap: '10px', color: '#fff', marginBottom: '15px' }}>
-            <CreditCard size={20} color="#10b981" />
-            Configuração de Recebimento
-        </h3>
-        <p style={{ color: '#aaa', fontSize: '14px', marginBottom: '15px' }}>
-            Para receber suas comissões de vendas, informe o ID da sua conta Pushin Pay. 
-            Você receberá o valor das vendas descontando a taxa da plataforma.
-        </p>
-        
-        <div style={{ display: 'flex', gap: '10px', alignItems: 'end' }}>
-            <div style={{ flex: 1 }}>
-                <label style={{ display: 'block', color: '#ccc', fontSize: '12px', marginBottom: '5px' }}>
-                    ID da Conta Pushin Pay
-                </label>
-                <input 
-                    type="text" 
-                    value={profile.pushin_pay_id}
-                    onChange={(e) => setProfile({...profile, pushin_pay_id: e.target.value})}
-                    placeholder="Ex: 9D4FA0F6-..."
-                    disabled={!editing}
-                    style={{ 
-                        width: '100%', 
-                        padding: '10px', 
-                        background: editing ? '#222' : '#1a1a1a', 
-                        border: '1px solid #444', 
-                        color: '#fff', 
-                        borderRadius: '6px',
-                        cursor: editing ? 'text' : 'not-allowed'
-                    }}
-                />
-            </div>
-            {!editing && (
-                <button 
-                    onClick={handleSaveProfile}
-                    style={{ 
-                        padding: '10px 20px', 
-                        background: '#c333ff', 
-                        color: '#fff', 
-                        border: 'none', 
-                        borderRadius: '6px', 
-                        cursor: 'pointer',
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '5px',
-                        fontWeight: 'bold'
-                    }}
-                >
-                    <Save size={18} /> Salvar
-                </button>
-            )}
+      {/* 🔥 CONFIGURAÇÃO FINANCEIRA - APENAS PARA ADMINS */}
+      {isAdmin() && (
+        <div className="finance-section" style={{ background: '#111', padding: '20px', borderRadius: '12px', border: '1px solid #333', marginBottom: '30px' }}>
+          <h3 style={{ display: 'flex', alignItems: 'center', gap: '10px', color: '#fff', marginBottom: '15px' }}>
+              <CreditCard size={20} color="#10b981" />
+              Configuração de Recebimento
+          </h3>
+          <p style={{ color: '#aaa', fontSize: '14px', marginBottom: '15px' }}>
+              Para receber suas comissões de vendas, informe o ID da sua conta Pushin Pay. 
+              Você receberá o valor das vendas descontando a taxa da plataforma.
+          </p>
+          
+          <div style={{ display: 'flex', gap: '10px', alignItems: 'end' }}>
+              <div style={{ flex: 1 }}>
+                  <label style={{ display: 'block', color: '#ccc', fontSize: '12px', marginBottom: '5px' }}>
+                      ID da Conta Pushin Pay
+                  </label>
+                  <input 
+                      type="text" 
+                      value={profile.pushin_pay_id}
+                      onChange={(e) => setProfile({...profile, pushin_pay_id: e.target.value})}
+                      placeholder="Ex: 9D4FA0F6-..."
+                      disabled={!editing}
+                      style={{ 
+                          width: '100%', 
+                          padding: '10px', 
+                          background: editing ? '#222' : '#1a1a1a', 
+                          border: '1px solid #444', 
+                          color: '#fff', 
+                          borderRadius: '6px',
+                          cursor: editing ? 'text' : 'not-allowed'
+                      }}
+                  />
+              </div>
+              {!editing && (
+                  <button 
+                      onClick={handleSaveProfile}
+                      style={{ 
+                          padding: '10px 20px', 
+                          background: '#c333ff', 
+                          color: '#fff', 
+                          border: 'none', 
+                          borderRadius: '6px', 
+                          cursor: 'pointer',
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '5px',
+                          fontWeight: 'bold'
+                      }}
+                  >
+                      <Save size={18} /> Salvar
+                  </button>
+              )}
+          </div>
         </div>
-      </div>
+      )}
 
       {/* ESTATÍSTICAS */}
       <div className="empire-stats-section">
