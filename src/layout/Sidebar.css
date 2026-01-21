@@ -123,6 +123,34 @@
   flex-direction: column;
 }
 
+/* ✅ CORREÇÃO: Estilo para group-header (Meus Bots) */
+.nav-item.group-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 25px;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.nav-item.group-header:hover {
+  color: #fff;
+  background-color: var(--item-hover);
+}
+
+.nav-item.group-header.open {
+  color: #fff;
+}
+
+/* ✅ CORREÇÃO: Estilo para group-label (Meus Bots) */
+.group-label {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+/* Estilo original para nav-item-header (outros grupos) */
 .nav-item-header {
   display: flex;
   align-items: center;
