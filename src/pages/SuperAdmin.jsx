@@ -19,7 +19,36 @@ export function SuperAdmin() {
     
     try {
       const data = await superAdminService.getStats();
-      setStats(data);
+      
+      // ✅ TRANSFORMA OS DADOS DO BACKEND PARA O FORMATO ESPERADO
+      const transformedData = {
+        users: {
+          total: data.total_users || 0,
+          active: data.active_users || 0,
+          inactive: data.inactive_users || 0,
+          new_last_30_days: data.new_users_30d || 0,
+          growth_percentage: data.growth_percentage || 0
+        },
+        bots: {
+          total: data.total_bots || 0,
+          active: data.active_bots || 0,
+          inactive: data.inactive_bots || 0
+        },
+        revenue: {
+          total: (data.super_admin_revenue || 0) / 100, // ✅ Converte centavos → reais
+          last_30_days: 0, // Backend não retorna isso ainda
+          average_per_user: data.total_users > 0 
+            ? ((data.super_admin_revenue || 0) / 100) / data.total_users 
+            : 0
+        },
+        sales: {
+          total: data.super_admin_sales || data.total_sales || 0,
+          last_30_days: 0 // Backend não retorna isso ainda
+        }
+      };
+      
+      console.log("📊 Stats transformados:", transformedData);
+      setStats(transformedData);
     } catch (err) {
       console.error("Erro ao carregar estatísticas:", err);
       
@@ -123,11 +152,11 @@ export function SuperAdmin() {
           </div>
         </div>
 
-        {/* Card: Receita */}
+        {/* Card: Receita Total (SUPER ADMIN) */}
         <div className="stat-card revenue">
           <div className="stat-icon">💰</div>
           <div className="stat-content">
-            <h3>Receita Total</h3>
+            <h3>Receita Total (Super Admin)</h3>
             <div className="stat-number">
               R$ {(stats?.revenue?.total || 0).toLocaleString('pt-BR', { 
                 minimumFractionDigits: 2,
@@ -136,9 +165,7 @@ export function SuperAdmin() {
             </div>
             <div className="stat-details">
               <span className="stat-detail-item">
-                📅 Últimos 30 dias: R$ {(stats?.revenue?.last_30_days || 0).toLocaleString('pt-BR', { 
-                  minimumFractionDigits: 2 
-                })}
+                💸 Splits recebidos das vendas
               </span>
             </div>
             <div className="stat-info">
@@ -153,15 +180,15 @@ export function SuperAdmin() {
         <div className="stat-card sales">
           <div className="stat-icon">📈</div>
           <div className="stat-content">
-            <h3>Vendas</h3>
+            <h3>Vendas (Sistema)</h3>
             <div className="stat-number">{stats?.sales?.total || 0}</div>
             <div className="stat-details">
               <span className="stat-detail-item">
-                📅 Últimos 30 dias: {stats?.sales?.last_30_days || 0}
+                🎯 Todas as vendas do sistema
               </span>
             </div>
             <div className="stat-info">
-              Ticket médio: R$ {stats?.sales?.total > 0 
+              Ticket médio: R$ {stats?.sales?.total > 0 && stats?.revenue?.total > 0
                 ? ((stats.revenue.total / stats.sales.total)).toLocaleString('pt-BR', { 
                     minimumFractionDigits: 2 
                   })

@@ -231,17 +231,32 @@ export const dashboardService = {
 export const profileService = {
   get: async () => (await api.get('/api/admin/profile')).data,
   update: async (data) => (await api.post('/api/admin/profile', data)).data,
-  getStats: async () => (await api.get('/api/profile/stats')).data  // ✅ MÉTODO ADICIONADO
+  getStats: async () => (await api.get('/api/profile/stats')).data
 };
 
 // ============================================================
-// 🔗 SERVIÇO DE INTEGRAÇÕES E TRACKING
+// 🔗 SERVIÇO DE INTEGRAÇÕES E TRACKING (✅ ADICIONADO)
 // ============================================================
 export const integrationService = { 
     getConfig: async () => (await api.get('/api/admin/config')).data,
     saveConfig: async (d) => (await api.post('/api/admin/config', d)).data,
     installTracker: async () => (await api.post('/api/admin/config/install-tracker')).data,
     testPixel: async () => (await api.get('/api/admin/config/test-pixel')).data
+};
+
+// ✅ ADICIONADO: SERVIÇO DE TRACKING (RESOLVE ERRO DO VERCEL)
+export const trackingService = {
+    getConfig: async () => (await api.get('/api/admin/tracking/config')).data,
+    saveConfig: async (data) => (await api.post('/api/admin/tracking/config', data)).data,
+    getEvents: async (filters = {}) => {
+        const params = new URLSearchParams();
+        if (filters.start_date) params.append('start_date', filters.start_date);
+        if (filters.end_date) params.append('end_date', filters.end_date);
+        if (filters.bot_id) params.append('bot_id', filters.bot_id);
+        
+        return (await api.get(`/api/admin/tracking/events?${params.toString()}`)).data;
+    },
+    testPixel: async () => (await api.get('/api/admin/tracking/test')).data
 };
 
 // ============================================================
@@ -339,7 +354,6 @@ export const authService = {
     return response.data;
   },
 
-  // 🆕 ADICIONADO PARA SUPORTE AO SPLIT/PUSHIN PAY (MEMBRO)
   updateProfile: async (data) => {
     const response = await api.put('/api/auth/profile', data);
     return response.data;
@@ -350,9 +364,6 @@ export const authService = {
 // 📋 SERVIÇO DE AUDIT LOGS (FASE 3.3)
 // ============================================================
 export const auditService = {
-  /**
-   * Busca logs de auditoria com filtros opcionais
-   */
   getLogs: async (filters = {}) => {
     try {
       const params = new URLSearchParams();
@@ -380,9 +391,6 @@ export const auditService = {
 // 👑 SERVIÇO SUPER ADMIN (🆕 FASE 3.4)
 // ============================================================
 export const superAdminService = {
-  /**
-   * Busca estatísticas globais do sistema (apenas super-admin)
-   */
   getStats: async () => {
     try {
       const response = await api.get('/api/superadmin/stats');
@@ -393,9 +401,6 @@ export const superAdminService = {
     }
   },
 
-  /**
-   * Lista todos os usuários do sistema (apenas super-admin)
-   */
   listUsers: async (filters = {}) => {
     try {
       const params = new URLSearchParams();
@@ -414,9 +419,6 @@ export const superAdminService = {
     }
   },
 
-  /**
-   * Busca detalhes completos de um usuário específico (apenas super-admin)
-   */
   getUserDetails: async (userId) => {
     try {
       const response = await api.get(`/api/superadmin/users/${userId}`);
@@ -427,9 +429,6 @@ export const superAdminService = {
     }
   },
 
-  /**
-   * Ativa ou desativa um usuário (apenas super-admin)
-   */
   updateUserStatus: async (userId, isActive) => {
     try {
       const response = await api.put(`/api/superadmin/users/${userId}/status`, {
@@ -442,10 +441,6 @@ export const superAdminService = {
     }
   },
 
-  /**
-   * Deleta um usuário e todos os seus dados (apenas super-admin)
-   * ⚠️ ATENÇÃO: Ação irreversível!
-   */
   deleteUser: async (userId) => {
     try {
       const response = await api.delete(`/api/superadmin/users/${userId}`);
@@ -456,9 +451,6 @@ export const superAdminService = {
     }
   },
 
-  /**
-   * Promove ou rebaixa um usuário de/para super-admin (apenas super-admin)
-   */
   promoteUser: async (userId, isSuperuser) => {
     try {
       const response = await api.put(`/api/superadmin/users/${userId}/promote`, {
@@ -471,7 +463,6 @@ export const superAdminService = {
     }
   },
   
-  // 🆕 ADICIONADO PARA ATUALIZAR DADOS FINANCEIROS (TAXA/PUSHIN ID)
   updateUser: async (userId, userData) => {
     try {
         const response = await api.put(`/api/superadmin/users/${userId}`, userData);
