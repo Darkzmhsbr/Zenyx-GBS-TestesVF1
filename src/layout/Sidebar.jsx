@@ -86,17 +86,17 @@ export function Sidebar({ isOpen, onClose }) {
 
         <nav className="sidebar-nav">
           
-          {/* 🔥 ÁREA EXCLUSIVA SUPER ADMIN (Só aparece se tiver permissão) 🔥 */}
-          {user?.is_superuser && (
-            <div style={{ marginBottom: '10px', borderBottom: '1px solid #222', paddingBottom: '10px' }}>
-              <div style={{ padding: '0 20px', fontSize: '11px', color: '#c333ff', fontWeight: 'bold', marginBottom: '5px', letterSpacing: '0.5px' }}>
+          {/* 🔥 ÁREA MESTRA (SUPER ADMIN) 🔥 */}
+          {/* 👇 AQUI ESTÁ A MUDANÇA MÁGICA 👇 */}
+          {(user?.is_superuser || user?.username === 'AdminZenyx') && (
+            <div className="admin-section">
+              <div className="admin-section-title">
                 ÁREA MESTRA
               </div>
               <Link 
                 to="/superadmin" 
-                className={`nav-item ${isActive('/superadmin')}`}
+                className={`nav-item super-admin ${isActive('/superadmin')}`}
                 onClick={onClose}
-                style={{ color: '#ffcc00' }} // Dourado para destacar
               >
                 <Crown size={20} />
                 <span>Super Admin</span>
