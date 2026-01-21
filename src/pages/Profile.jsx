@@ -87,8 +87,9 @@ export function Profile() {
   const getUserRole = () => {
     const username = user?.username?.toLowerCase() || '';
     
-    // 1. DONO / MASTER (Você)
-    if (username === 'zekai' || username === 'admin' || username === 'master') {
+    // 1. VERIFICAÇÃO REAL DE SUPER ADMIN (Vem do Banco de Dados)
+    // Se o backend disser que é superuser, ou se for o dono do sistema
+    if (user?.is_superuser || username === 'adminzenyx' || username === 'admin') {
         return {
             label: 'Administrador - Dono do Império Zenyx',
             icon: <Shield size={16} />,
