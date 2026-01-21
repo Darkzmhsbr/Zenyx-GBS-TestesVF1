@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import Swal from 'sweetalert2';
-import { Save, MessageSquare, ArrowDown, Zap, Image as ImageIcon, Video, Plus, Trash2, Edit, Clock, Layout, Globe, Smartphone } from 'lucide-react';
+import { Save, MessageSquare, ArrowDown, Zap, Image as ImageIcon, Video, Plus, Trash2, Edit, Clock, Layout, Globe, Smartphone, ShoppingBag } from 'lucide-react';
 import { flowService } from '../services/api'; 
 import { useBot } from '../context/BotContext'; 
 import { Button } from '../components/Button';
@@ -191,23 +191,23 @@ export function ChatFlow() {
   return (
     <div className="chatflow-container">
       
-      <div className="page-header">
+      {/* 🔥 MUDANÇA CRÍTICA: ISOLAMENTO DE CLASSE */}
+      <div className="chatflow-header">
         <div className="header-titles">
           <h1>Editor de Fluxo</h1>
           <p>Configure a sequência de mensagens do seu bot.</p>
         </div>
         <div className="header-actions">
           <Button onClick={handleSaveFixed} disabled={loading} className="btn-save-main">
-            <Save size={20} /> <span className="btn-text">Salvar Alterações</span>
+            <Save size={20} style={{marginRight: '8px'}} /> 
+            SALVAR ALTERAÇÕES
           </Button>
         </div>
       </div>
 
       <div className="flow-steps">
         
-        {/* ============================================================ */}
         {/* 1. SELETOR DE MODO DE INÍCIO */}
-        {/* ============================================================ */}
         <Card className="step-card start-mode-card">
             <CardContent>
                 <div className="card-header-row">
@@ -288,7 +288,6 @@ export function ChatFlow() {
                 label="Texto da Mensagem" 
                 value={flow.msg_boas_vindas}
                 onChange={val => {
-                    // 🔥 CORREÇÃO MANTIDA: Garante string
                     const textValue = typeof val === 'object' ? val.target.value : val;
                     setFlow({...flow, msg_boas_vindas: textValue});
                 }}
