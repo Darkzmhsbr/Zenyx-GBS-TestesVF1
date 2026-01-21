@@ -235,28 +235,72 @@ export const profileService = {
 };
 
 // ============================================================
-// 🔗 SERVIÇO DE INTEGRAÇÕES E TRACKING (✅ ADICIONADO)
+// 📊 SERVIÇO DE TRACKING (RASTREAMENTO)
 // ============================================================
-export const integrationService = { 
-    getConfig: async () => (await api.get('/api/admin/config')).data,
-    saveConfig: async (d) => (await api.post('/api/admin/config', d)).data,
-    installTracker: async () => (await api.post('/api/admin/config/install-tracker')).data,
-    testPixel: async () => (await api.get('/api/admin/config/test-pixel')).data
-};
+// ⚠️ ADICIONE ESTE CÓDIGO NO SEU api.js
+// COLE ANTES DA LINHA: export default api;
+// ============================================================
 
-// ✅ ADICIONADO: SERVIÇO DE TRACKING (RESOLVE ERRO DO VERCEL)
 export const trackingService = {
-    getConfig: async () => (await api.get('/api/admin/tracking/config')).data,
-    saveConfig: async (data) => (await api.post('/api/admin/tracking/config', data)).data,
-    getEvents: async (filters = {}) => {
-        const params = new URLSearchParams();
-        if (filters.start_date) params.append('start_date', filters.start_date);
-        if (filters.end_date) params.append('end_date', filters.end_date);
-        if (filters.bot_id) params.append('bot_id', filters.bot_id);
-        
-        return (await api.get(`/api/admin/tracking/events?${params.toString()}`)).data;
-    },
-    testPixel: async () => (await api.get('/api/admin/tracking/test')).data
+  listFolders: async () => {
+    try {
+      const response = await api.get('/api/admin/tracking/folders');
+      return response.data;
+    } catch (error) {
+      console.error("Erro ao listar pastas de tracking:", error);
+      throw error;
+    }
+  },
+  
+  createFolder: async (data) => {
+    try {
+      const response = await api.post('/api/admin/tracking/folders', data);
+      return response.data;
+    } catch (error) {
+      console.error("Erro ao criar pasta de tracking:", error);
+      throw error;
+    }
+  },
+  
+  deleteFolder: async (folderId) => {
+    try {
+      const response = await api.delete(`/api/admin/tracking/folders/${folderId}`);
+      return response.data;
+    } catch (error) {
+      console.error("Erro ao deletar pasta de tracking:", error);
+      throw error;
+    }
+  },
+  
+  listLinks: async (folderId) => {
+    try {
+      const response = await api.get(`/api/admin/tracking/links/${folderId}`);
+      return response.data;
+    } catch (error) {
+      console.error("Erro ao listar links de tracking:", error);
+      throw error;
+    }
+  },
+  
+  createLink: async (data) => {
+    try {
+      const response = await api.post('/api/admin/tracking/links', data);
+      return response.data;
+    } catch (error) {
+      console.error("Erro ao criar link de tracking:", error);
+      throw error;
+    }
+  },
+  
+  deleteLink: async (linkId) => {
+    try {
+      const response = await api.delete(`/api/admin/tracking/links/${linkId}`);
+      return response.data;
+    } catch (error) {
+      console.error("Erro ao deletar link de tracking:", error);
+      throw error;
+    }
+  }
 };
 
 // ============================================================
@@ -471,7 +515,7 @@ export const superAdminService = {
         console.error("Erro ao atualizar usuário:", error);
         throw error;
     }
-  }
+  },
 };
 
 export default api;
