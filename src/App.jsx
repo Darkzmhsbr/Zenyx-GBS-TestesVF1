@@ -20,7 +20,9 @@ import { AdminManager } from './pages/AdminManager';
 import { OrderBump } from './pages/OrderBump';
 import { Profile } from './pages/Profile';
 import { Tracking } from './pages/Tracking';
-import { AuditLogs } from './pages/AuditLogs'; // 🆕 FASE 3.3
+import { AuditLogs } from './pages/AuditLogs'; // FASE 3.3
+import { SuperAdmin } from './pages/SuperAdmin'; // 🆕 FASE 3.4
+import { SuperAdminUsers } from './pages/SuperAdminUsers'; // 🆕 FASE 3.4
 
 // 🔥 IMPORTANDO A LOJA REAL
 import { MiniAppHome } from './pages/miniapp/MiniAppHome';
@@ -128,8 +130,12 @@ function App() {
               <Route path="/rastreamento" element={<Tracking />} />
               <Route path="/perfil" element={<Profile />} />
               
-              {/* 🆕 FASE 3.3: ROTA DE AUDIT LOGS */}
+              {/* FASE 3.3: ROTA DE AUDIT LOGS */}
               <Route path="/audit-logs" element={<AuditLogs />} />
+              
+              {/* 👑 FASE 3.4: ROTAS SUPER ADMIN */}
+              <Route path="/superadmin" element={<SuperAdmin />} />
+              <Route path="/superadmin/users" element={<SuperAdminUsers />} />
               
               <Route path="/config" element={<PlaceholderPage title="Configurações Gerais" />} />
               <Route path="/tutorial" element={<PlaceholderPage title="Tutoriais" />} />

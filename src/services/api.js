@@ -303,7 +303,7 @@ export const miniappService = {
 };
 
 // ============================================================
-// 🔐 SERVIÇO DE AUTENTICAÇÃO (NOVO)
+// 🔐 SERVIÇO DE AUTENTICAÇÃO
 // ============================================================
 export const authService = {
   register: async (username, email, password, fullName) => {
@@ -331,21 +331,11 @@ export const authService = {
 };
 
 // ============================================================
-// 📋 SERVIÇO DE AUDIT LOGS (🆕 FASE 3.3)
+// 📋 SERVIÇO DE AUDIT LOGS (FASE 3.3)
 // ============================================================
 export const auditService = {
   /**
    * Busca logs de auditoria com filtros opcionais
-   * 
-   * @param {Object} filters - Filtros opcionais
-   * @param {number} filters.user_id - ID do usuário
-   * @param {string} filters.action - Tipo de ação (ex: "bot_created")
-   * @param {string} filters.resource_type - Tipo de recurso (ex: "bot", "plano")
-   * @param {boolean} filters.success - true/false
-   * @param {string} filters.start_date - Data inicial (ISO)
-   * @param {string} filters.end_date - Data final (ISO)
-   * @param {number} filters.page - Página (padrão: 1)
-   * @param {number} filters.per_page - Logs por página (padrão: 50)
    */
   getLogs: async (filters = {}) => {
     try {
@@ -366,6 +356,108 @@ export const auditService = {
     } catch (error) {
       console.error("Erro ao buscar logs de auditoria:", error);
       return { data: [], total: 0, page: 1, per_page: 50, total_pages: 0 };
+    }
+  }
+};
+
+// ============================================================
+// 👑 SERVIÇO SUPER ADMIN (🆕 FASE 3.4)
+// ============================================================
+export const superAdminService = {
+  /**
+   * Busca estatísticas globais do sistema (apenas super-admin)
+   */
+  getStats: async () => {
+    try {
+      const response = await api.get('/api/superadmin/stats');
+      return response.data;
+    } catch (error) {
+      console.error("Erro ao buscar estatísticas super admin:", error);
+      throw error;
+    }
+  },
+
+  /**
+   * Lista todos os usuários do sistema (apenas super-admin)
+   * 
+   * @param {Object} filters - Filtros opcionais
+   * @param {number} filters.page - Página (padrão: 1)
+   * @param {number} filters.per_page - Usuários por página (padrão: 50)
+   * @param {string} filters.search - Busca por username, email ou nome
+   * @param {string} filters.status - "active" ou "inactive"
+   */
+  listUsers: async (filters = {}) => {
+    try {
+      const params = new URLSearchParams();
+      
+      params.append('page', filters.page || 1);
+      params.append('per_page', filters.per_page || 50);
+      
+      if (filters.search) params.append('search', filters.search);
+      if (filters.status) params.append('status', filters.status);
+      
+      const response = await api.get(`/api/superadmin/users?${params.toString()}`);
+      return response.data;
+    } catch (error) {
+      console.error("Erro ao listar usuários:", error);
+      return { data: [], total: 0, page: 1, per_page: 50, total_pages: 0 };
+    }
+  },
+
+  /**
+   * Busca detalhes completos de um usuário específico (apenas super-admin)
+   */
+  getUserDetails: async (userId) => {
+    try {
+      const response = await api.get(`/api/superadmin/users/${userId}`);
+      return response.data;
+    } catch (error) {
+      console.error("Erro ao buscar detalhes do usuário:", error);
+      throw error;
+    }
+  },
+
+  /**
+   * Ativa ou desativa um usuário (apenas super-admin)
+   */
+  updateUserStatus: async (userId, isActive) => {
+    try {
+      const response = await api.put(`/api/superadmin/users/${userId}/status`, {
+        is_active: isActive
+      });
+      return response.data;
+    } catch (error) {
+      console.error("Erro ao atualizar status do usuário:", error);
+      throw error;
+    }
+  },
+
+  /**
+   * Deleta um usuário e todos os seus dados (apenas super-admin)
+   * ⚠️ ATENÇÃO: Ação irreversível!
+   */
+  deleteUser: async (userId) => {
+    try {
+      const response = await api.delete(`/api/superadmin/users/${userId}`);
+      return response.data;
+    } catch (error) {
+      console.error("Erro ao deletar usuário:", error);
+      throw error;
+    }
+  },
+
+  /**
+   * Promove ou rebaixa um usuário de/para super-admin (apenas super-admin)
+   */
+  promoteUser: async (userId, isSuperuser) => {
+    try {
+      const response = await api.put(`/api/superadmin/users/${userId}/promote`, {
+        is_superuser: isSuperuser
+      });
+      return response.data;
+    } catch (error) {
+      console.error("Erro ao promover/rebaixar usuário:", error);
+      throw error;
     }
   }
 };
