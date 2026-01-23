@@ -362,6 +362,50 @@ export const miniappService = {
 };
 
 // ============================================================
+// 🔌 SERVIÇO DE INTEGRAÇÕES
+// ============================================================
+export const integrationService = {
+  // Busca configuração de integração do bot
+  getConfig: async (botId) => {
+    try {
+      const response = await api.get(`/api/admin/bots/${botId}/integrations`);
+      return response.data;
+    } catch (error) {
+      console.error("Erro ao buscar configuração de integração:", error);
+      return {
+        pushin_pay_key: '',
+        pushin_pay_id: '',
+        split_enabled: false,
+        split_percentage: 0
+      };
+    }
+  },
+  
+  // Salva configuração de integração
+  saveConfig: async (botId, data) => {
+    try {
+      const response = await api.post(`/api/admin/bots/${botId}/integrations`, data);
+      return response.data;
+    } catch (error) {
+      console.error("Erro ao salvar configuração de integração:", error);
+      throw error;
+    }
+  },
+  
+  // Testa conexão com Pushin Pay
+  testConnection: async (apiKey) => {
+    try {
+      const response = await api.post('/api/admin/integrations/test-pushin', {
+        api_key: apiKey
+      });
+      return response.data;
+    } catch (error) {
+      console.error("Erro ao testar conexão:", error);
+      throw error;
+    }
+  }
+};
+// ============================================================
 // 🔐 SERVIÇO DE AUTENTICAÇÃO (✅ CORRIGIDO)
 // ============================================================
 export const authService = {
