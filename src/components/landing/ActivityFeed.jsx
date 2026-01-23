@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { publicService } from '../../api'; 
-// 👆 A importação acima deve casar EXATAMENTE com o nome do arquivo em src/api.js
+// 👇 AQUI ESTAVA O ERRO! Agora aponta para a pasta correta: services
+import { publicService } from '../../services/api'; 
 
 export function ActivityFeed() {
   const [activities, setActivities] = useState([]);
