@@ -43,19 +43,57 @@ api.interceptors.response.use(
       localStorage.removeItem('zenyx_admin_user');
       
       // 🔥 CORREÇÃO DO LOOP INFINITO:
-      // Só redireciona se NÃO estivermos já na tela de login ou registro
+      // Só redireciona se NÃO estivermos já na tela de login, registro ou home
       const path = window.location.pathname;
-      if (!path.includes('/login') && !path.includes('/register')) {
+      if (!path.includes('/login') && !path.includes('/register') && path !== '/') {
          console.log("🔄 Redirecionando para login...");
          window.location.href = '/login';
       } else {
-         console.log("⚠️ Já estamos no login, ignorando redirect.");
+         console.log("⚠️ Já estamos no login/home, ignorando redirect.");
       }
     }
     
     return Promise.reject(error);
   }
 );
+
+// ============================================================
+// 🌐 SERVIÇO PÚBLICO (SEM AUTENTICAÇÃO) - LANDING PAGE 🆕
+// ============================================================
+export const publicService = {
+  getActivityFeed: async () => {
+    try {
+      const response = await axios.get(`${API_URL}/api/public/activity-feed`);
+      return response.data;
+    } catch (error) {
+      console.error('Erro ao buscar feed de atividades:', error);
+      // Retorna dados mock em caso de erro
+      return {
+        activities: [
+          { name: "João P.", plan: "Acesso Semanal", price: 2.00, action: "ADICIONADO", icon: "✅" },
+          { name: "Maria S.", plan: "Grupo VIP Premium", price: 5.00, action: "ADICIONADO", icon: "✅" },
+          { name: "Carlos A.", plan: "Acesso Mensal", price: 10.00, action: "REMOVIDO", icon: "❌" },
+        ]
+      };
+    }
+  },
+
+  getStats: async () => {
+    try {
+      const response = await axios.get(`${API_URL}/api/public/stats`);
+      return response.data;
+    } catch (error) {
+      console.error('Erro ao buscar estatísticas:', error);
+      // Retorna valores padrão em caso de erro
+      return {
+        total_bots: 500,
+        total_sales: 5000,
+        total_revenue: 50000.00,
+        active_users: 1200
+      };
+    }
+  }
+};
 
 // ============================================================
 // 🤖 SERVIÇO DE BOTS

@@ -6,6 +6,7 @@ import { MainLayout } from './layout/MainLayout';
 // ✅ CORREÇÃO: Importação nomeada com chaves { Login }
 import { Login } from './pages/Login';
 import { Register } from './pages/Register';
+import { LandingPage } from './pages/LandingPage'; // 🆕 LANDING PAGE
 
 import { Dashboard } from './pages/Dashboard';
 import { Contacts } from './pages/Contacts';
@@ -102,6 +103,10 @@ function App() {
       <BotProvider>
         <Router>
           <Routes>
+            {/* 🆕 ROTA DA LANDING PAGE NA RAIZ */}
+            <Route path="/" element={<LandingPage />} />
+            
+            {/* Rotas de Autenticação */}
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
             <Route path="/logout" element={<Logout />} />
@@ -115,7 +120,7 @@ function App() {
             
             {/* Rotas Protegidas (Painel Admin) */}
             <Route element={<MainLayout />}>
-              <Route path="/" element={<Dashboard />} />
+              <Route path="/dashboard" element={<Dashboard />} />
               <Route path="/bots" element={<Bots />} />
               <Route path="/bots/new" element={<NewBot />} />
               <Route path="/bots/config/:id" element={<BotConfig />} />
@@ -147,8 +152,8 @@ function App() {
               <Route path="/funcoes/free" element={<PlaceholderPage title="Canal Free" />} />
             </Route>
 
-            {/* Qualquer outra rota redireciona para login */}
-            <Route path="*" element={<Navigate to="/login" replace />} />
+            {/* Qualquer outra rota não encontrada redireciona para landing page */}
+            <Route path="*" element={<Navigate to="/" replace />} />
 
           </Routes>
         </Router>
