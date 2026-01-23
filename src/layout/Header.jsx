@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useBot } from '../context/BotContext';
-import { notificationService } from '../services/api'; // 🔥 VAMOS CRIAR ISSO DEPOIS
+import { notificationService } from '../services/api';
 import { Bot, ChevronDown, Check, Bell, Moon, Sun, Menu, User, Settings, LogOut, X } from 'lucide-react'; 
 import './Header.css'; 
 
@@ -16,14 +16,11 @@ export function Header({ onToggleMenu }) {
   const [isNotificationOpen, setIsNotificationOpen] = useState(false);
   const [isDarkMode, setIsDarkMode] = useState(true);
 
-  // 🔔 ESTADOS PARA NOTIFICAÇÕES
+  // Estados de Notificação
   const [notifications, setNotifications] = useState([]);
   const [unreadCount, setUnreadCount] = useState(0);
-  const [loadingNotifs, setLoadingNotifs] = useState(false);
 
-  // ============================================================
-  // INICIALIZA TEMA AO CARREGAR
-  // ============================================================
+  // Inicializa tema
   useEffect(() => {
     const savedTheme = localStorage.getItem('zenyx_theme') || 'dark';
     const isDark = savedTheme === 'dark';
@@ -31,14 +28,10 @@ export function Header({ onToggleMenu }) {
     applyTheme(isDark);
   }, []);
 
-  // ============================================================
-  // BUSCAR NOTIFICAÇÕES REAIS
-  // ============================================================
+  // Busca notificações
   const fetchNotifications = async () => {
     if (!user) return;
     try {
-      // Nota: Se der erro aqui é porque ainda não atualizamos o api.js, 
-      // mas o código já está pronto para quando atualizarmos!
       if (notificationService) {
         const data = await notificationService.getAll();
         setNotifications(data.notifications || []);
@@ -49,51 +42,36 @@ export function Header({ onToggleMenu }) {
     }
   };
 
-  // Carrega ao iniciar e a cada 60 segundos
   useEffect(() => {
     fetchNotifications();
     const interval = setInterval(fetchNotifications, 60000);
     return () => clearInterval(interval);
   }, [user]);
 
-  // ============================================================
-  // MARCAR COMO LIDA
-  // ============================================================
-  const handleMarkAsRead = async (id) => {
-    try {
-      await notificationService.markRead(id);
-      // Atualiza localmente para parecer instantâneo
-      setNotifications(prev => prev.map(n => 
-        n.id === id ? { ...n, read: true } : n
-      ));
-      setUnreadCount(prev => Math.max(0, prev - 1));
-    } catch (error) {
-      console.error("Erro ao marcar como lida", error);
-    }
-  };
-
   const handleMarkAllRead = async () => {
     try {
       await notificationService.markAllRead();
       setNotifications(prev => prev.map(n => ({ ...n, read: true })));
       setUnreadCount(0);
-    } catch (error) {
-      console.error("Erro ao marcar todas", error);
-    }
+    } catch (error) { console.error(error); }
   };
 
-  // ============================================================
-  // FUNÇÃO: APLICAR TEMA
-  // ============================================================
+  const handleMarkAsRead = async (id) => {
+    try {
+      await notificationService.markRead(id);
+      setNotifications(prev => prev.map(n => n.id === id ? { ...n, read: true } : n));
+      setUnreadCount(prev => Math.max(0, prev - 1));
+    } catch (error) { console.error(error); }
+  };
+
   const applyTheme = (isDark) => {
     const root = document.documentElement;
-    
     if (isDark) {
       root.style.setProperty('--background', '#0f0c29');
-      root.style.setProperty('--card-bg', '#1b1730'); // Roxo escuro original
+      root.style.setProperty('--card-bg', '#1b1730');
       root.style.setProperty('--text-primary', '#ffffff');
       root.style.setProperty('--text-secondary', '#a0a0b0');
-      root.style.setProperty('--border-color', '#302b63');
+      root.style.setProperty('--border-color', 'rgba(255, 255, 255, 0.1)');
     } else {
       root.style.setProperty('--background', '#f4f6f9');
       root.style.setProperty('--card-bg', '#ffffff');
@@ -115,31 +93,28 @@ export function Header({ onToggleMenu }) {
     navigate('/login');
   };
 
-  // Formata data amigável (Ex: "Há 5 min")
   const formatTime = (dateString) => {
     const date = new Date(dateString);
     const now = new Date();
-    const diff = Math.floor((now - date) / 1000); // segundos
-
+    const diff = Math.floor((now - date) / 1000);
     if (diff < 60) return 'Agora';
     if (diff < 3600) return `Há ${Math.floor(diff / 60)} min`;
     if (diff < 86400) return `Há ${Math.floor(diff / 3600)} h`;
     return date.toLocaleDateString('pt-BR');
   };
 
-  // Cores por tipo
   const getTypeColor = (type) => {
     switch(type) {
-      case 'success': return '#00d26a'; // Verde
-      case 'warning': return '#fcd535'; // Amarelo
-      case 'error': return '#f8312f';   // Vermelho
-      default: return '#c333ff';        // Roxo (Info)
+      case 'success': return '#00d26a';
+      case 'warning': return '#fcd535';
+      case 'error': return '#f8312f';
+      default: return '#c333ff';
     }
   };
 
   return (
     <header className="app-header">
-      {/* Lado Esquerdo: Botão Menu Mobile + Seletor de Bots */}
+      {/* ESQUERDA: Menu Mobile e Bot Selector */}
       <div className="header-left">
         <button className="menu-toggle-btn" onClick={onToggleMenu}>
           <Menu size={24} />
@@ -161,33 +136,29 @@ export function Header({ onToggleMenu }) {
 
           {isBotMenuOpen && (
             <div className="bot-dropdown">
-              <div className="bot-dropdown-header">Seus Bots</div>
-              
+              <div className="profile-dropdown-header" style={{ fontWeight: 'bold' }}>Seus Bots</div>
               {bots.length === 0 ? (
-                <div className="bot-dropdown-empty">Nenhum bot encontrado</div>
+                <div className="empty-state">Nenhum bot encontrado</div>
               ) : (
                 bots.map(bot => (
                   <div 
                     key={bot.id} 
-                    className={`bot-dropdown-item ${selectedBot?.id === bot.id ? 'active' : ''}`}
+                    className="profile-dropdown-item"
                     onClick={() => {
                       changeBot(bot);
                       setIsBotMenuOpen(false);
                     }}
                   >
                     <span>{bot.nome}</span>
-                    {selectedBot?.id === bot.id && <Check size={16} className="check-icon" />}
+                    {selectedBot?.id === bot.id && <Check size={16} style={{ marginLeft: 'auto', color: '#00d26a' }} />}
                   </div>
                 ))
               )}
-              
-              <div className="bot-dropdown-divider"></div>
+              <div className="profile-dropdown-divider"></div>
               <div 
-                className="bot-dropdown-action"
-                onClick={() => {
-                   navigate('/bots/new');
-                   setIsBotMenuOpen(false);
-                }}
+                className="profile-dropdown-item"
+                onClick={() => { navigate('/bots/new'); setIsBotMenuOpen(false); }}
+                style={{ color: '#c333ff', fontWeight: 'bold' }}
               >
                 + Criar Novo Bot
               </div>
@@ -196,22 +167,19 @@ export function Header({ onToggleMenu }) {
         </div>
       </div>
 
-      {/* Lado Direito: Ações e Perfil */}
+      {/* DIREITA: Tema, Notificações, Perfil */}
       <div className="header-right">
-        
-        {/* TEMA DARK/LIGHT */}
-        <button className="icon-btn theme-toggle" onClick={toggleTheme} title="Alternar Tema">
+        <button className="icon-btn" onClick={toggleTheme}>
           {isDarkMode ? <Sun size={20} /> : <Moon size={20} />}
         </button>
 
-        {/* NOTIFICAÇÕES */}
-        <div className="notification-wrapper">
+        <div className="notification-wrapper" style={{ position: 'relative' }}>
           <button 
             className="icon-btn"
             onClick={() => {
                setIsNotificationOpen(!isNotificationOpen);
                setIsProfileMenuOpen(false);
-               if(!isNotificationOpen) fetchNotifications(); // Atualiza ao abrir
+               if(!isNotificationOpen) fetchNotifications();
             }}
           >
             <Bell size={20} />
@@ -223,17 +191,12 @@ export function Header({ onToggleMenu }) {
               <div className="notification-header">
                 <span>Notificações</span>
                 {unreadCount > 0 && (
-                  <button className="mark-read-btn" onClick={handleMarkAllRead}>
-                    Ler todas
-                  </button>
+                  <button className="mark-read-btn" onClick={handleMarkAllRead}>Ler todas</button>
                 )}
               </div>
-              
               <div className="notification-list">
                 {notifications.length === 0 ? (
-                  <div className="empty-state">
-                    <p>Tudo limpo por aqui! ✨</p>
-                  </div>
+                  <div className="empty-state">Nenhuma notificação nova</div>
                 ) : (
                   notifications.map((notif) => (
                     <div 
@@ -255,8 +218,7 @@ export function Header({ onToggleMenu }) {
           )}
         </div>
 
-        {/* PERFIL */}
-        <div className="profile-wrapper">
+        <div className="profile-wrapper" style={{ position: 'relative' }}>
           <button 
             className="profile-btn"
             onClick={() => {
@@ -281,44 +243,19 @@ export function Header({ onToggleMenu }) {
                 </div>
                 <div>
                   <div className="profile-name">{user?.name || 'Admin'}</div>
-                  <div className="profile-email">{user?.username || 'admin@zenyx.com'}</div>
+                  <div className="profile-email">{user?.username}</div>
                 </div>
               </div>
-
               <div className="profile-dropdown-divider"></div>
-
-              <div 
-                className="profile-dropdown-item"
-                onClick={() => {
-                  navigate('/perfil');
-                  setIsProfileMenuOpen(false);
-                }}
-              >
-                <User size={16} />
-                <span>Meu Perfil</span>
+              <div className="profile-dropdown-item" onClick={() => navigate('/perfil')}>
+                <User size={16} /> <span>Meu Perfil</span>
               </div>
-
-              <div 
-                className="profile-dropdown-item"
-                onClick={() => {
-                  navigate('/config');
-                  setIsProfileMenuOpen(false);
-                }}
-              >
-                <Settings size={16} />
-                <span>Configurações</span>
+              <div className="profile-dropdown-item" onClick={() => navigate('/config')}>
+                <Settings size={16} /> <span>Configurações</span>
               </div>
-
               <div className="profile-dropdown-divider"></div>
-
-              {/* BOTÃO SAIR */}
-              <div 
-                className="profile-dropdown-item danger"
-                onClick={handleLogout}
-                style={{ cursor: 'pointer' }}
-              >
-                <LogOut size={16} />
-                <span>Sair</span>
+              <div className="profile-dropdown-item danger" onClick={handleLogout}>
+                <LogOut size={16} /> <span>Sair</span>
               </div>
             </div>
           )}
