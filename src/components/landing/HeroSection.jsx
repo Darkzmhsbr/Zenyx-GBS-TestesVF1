@@ -1,200 +1,199 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { ArrowRight, PlayCircle, Zap } from 'lucide-react';
-import '../../styles/LandingPage.css'; // Garantindo que puxe os estilos globais
+import { ArrowRight, PlayCircle, Zap, ShieldCheck } from 'lucide-react';
+import '../../styles/LandingPage.css';
 
 export function HeroSection() {
   return (
     <section className="hero-section" style={{
       position: 'relative',
-      padding: '140px 20px 80px', // Padding top maior para compensar navbar fixa
-      background: 'radial-gradient(circle at 50% 10%, rgba(123, 31, 162, 0.15) 0%, rgba(10, 10, 10, 1) 70%)',
-      overflow: 'hidden',
-      display: 'flex',            // 🔥 FLEXBOX PARA CENTRALIZAR TUDO
-      flexDirection: 'column',    // 🔥 UM ITEM EMBAIXO DO OUTRO
-      alignItems: 'center',       // 🔥 ALINHAMENTO HORIZONTAL PERFEITO
-      textAlign: 'center'         // 🔥 TEXTO CENTRALIZADO
+      minHeight: '90vh', // Ocupa quase toda a tela
+      display: 'flex',
+      flexDirection: 'column',
+      alignItems: 'center',
+      justifyContent: 'center',
+      padding: '120px 20px 60px',
+      overflow: 'hidden'
     }}>
       
-      {/* Efeito de brilho de fundo (Glow) */}
+      {/* 🌌 BACKGROUND DINÂMICO (GLOW ORB) */}
       <div style={{
         position: 'absolute',
-        top: '-10%',
+        top: '-20%',
         left: '50%',
         transform: 'translateX(-50%)',
-        width: '600px',
-        height: '600px',
-        background: 'radial-gradient(circle, rgba(195, 51, 255, 0.2) 0%, rgba(0,0,0,0) 70%)',
+        width: '80vw',
+        height: '80vw',
+        maxWidth: '800px',
+        maxHeight: '800px',
+        background: 'radial-gradient(circle, rgba(195, 51, 255, 0.15) 0%, rgba(10, 10, 10, 0) 70%)',
         zIndex: 0,
-        pointerEvents: 'none'
+        pointerEvents: 'none',
+        animation: 'pulseGlow 5s infinite alternate' // Cria um "respiro" na luz
       }} />
 
-      {/* CONTEÚDO PRINCIPAL */}
+      {/* 📦 CONTEÚDO PRINCIPAL (COM ANIMAÇÃO CASCATA) */}
       <div className="hero-content" style={{ 
         position: 'relative', 
         zIndex: 1, 
-        maxWidth: '900px',
+        maxWidth: '1000px',
         display: 'flex',
         flexDirection: 'column',
-        alignItems: 'center', // 🎯 O SEGREDO DO ALINHAMENTO DA LOGO
-        gap: '24px'
+        alignItems: 'center',
+        textAlign: 'center',
+        gap: '20px'
       }}>
         
-        {/* 1. LOGO CENTRALIZADA 🎯 */}
-        <div className="hero-logo-wrapper" style={{
-          display: 'flex',
-          justifyContent: 'center',
-          marginBottom: '10px'
-        }}>
-          {/* Se você tiver uma imagem, substitua o texto abaixo pela tag <img> */}
-          {/* <img src="/logo-full.png" alt="Zenyx" style={{ height: '50px' }} /> */}
-          
-          {/* Placeholder Visual da Logo (Estilo da sua imagem) */}
+        {/* LOGO ZENYX (Animação: Vem de cima suave) */}
+        <div className="animate-up" style={{ marginBottom: '10px' }}>
           <h2 style={{
-            fontSize: '40px',
-            fontFamily: "'Inter', sans-serif", // Ou a fonte do seu projeto
+            fontSize: '50px',
+            fontFamily: "'Inter', sans-serif",
             fontWeight: '900',
             fontStyle: 'italic',
-            background: 'linear-gradient(135deg, #d88aff 0%, #9d4edd 100%)',
+            letterSpacing: '-2px',
+            background: 'linear-gradient(180deg, #fff 0%, #c333ff 100%)', // Degradê vertical na logo
             WebkitBackgroundClip: 'text',
             WebkitTextFillColor: 'transparent',
-            margin: 0,
-            padding: 0,
-            letterSpacing: '-1px',
-            textShadow: '0px 0px 20px rgba(157, 78, 221, 0.3)'
+            filter: 'drop-shadow(0 0 15px rgba(195, 51, 255, 0.4))', // Sombra neon
+            margin: 0
           }}>
             ZENYX
           </h2>
         </div>
 
-        {/* 2. BADGE (Menor Taxa) */}
-        <div className="hero-badge" style={{
-          display: 'inline-flex',
-          alignItems: 'center',
-          gap: '8px',
-          padding: '8px 16px',
-          background: 'rgba(195, 51, 255, 0.1)',
-          border: '1px solid rgba(195, 51, 255, 0.2)',
+        {/* BADGE DESTAQUE (Vidro Fosco) */}
+        <div className="animate-up delay-100 hero-badge glass-card" style={{
+          padding: '8px 20px',
           borderRadius: '50px',
-          fontSize: '13px',
+          fontSize: '14px',
           fontWeight: '600',
           color: '#e0aaff',
-          boxShadow: '0 0 15px rgba(195, 51, 255, 0.1)'
+          display: 'flex',
+          alignItems: 'center',
+          gap: '8px',
+          border: '1px solid rgba(195, 51, 255, 0.3)'
         }}>
-          <Zap size={14} fill="#e0aaff" />
-          ✨ MENOR TAXA DO MERCADO
+          <span style={{ position: 'relative', display: 'flex' }}>
+            <span style={{ position: 'absolute', width: '100%', height: '100%', borderRadius: '50%', background: '#c333ff', opacity: 0.7, animation: 'ping 1s cubic-bezier(0, 0, 0.2, 1) infinite' }}></span>
+            <span style={{ position: 'relative', width: '8px', height: '8px', borderRadius: '50%', background: '#c333ff' }}></span>
+          </span>
+          MENOR TAXA DO MERCADO (R$ 0,60)
         </div>
 
-        {/* 3. TÍTULO PRINCIPAL */}
-        <h1 style={{
-          fontSize: 'clamp(2.5rem, 5vw, 4rem)', // Responsivo
+        {/* TÍTULO IMPACTANTE */}
+        <h1 className="animate-up delay-200" style={{
+          fontSize: 'clamp(3rem, 6vw, 5rem)', // Gigante e responsivo
           fontWeight: '800',
-          lineHeight: '1.1',
+          lineHeight: '1.05',
           color: '#ffffff',
-          margin: 0
+          margin: '10px 0',
+          letterSpacing: '-1px'
         }}>
-          Automatize seu Telegram e <br />
-          <span style={{ 
-            background: 'linear-gradient(90deg, #c333ff 0%, #ff66c4 100%)',
-            WebkitBackgroundClip: 'text',
-            WebkitTextFillColor: 'transparent'
-          }}>
-            Escale suas Vendas com IA
-          </span>
+          O Futuro das Vendas <br />
+          no <span style={{ color: '#2AABEE' }}>Telegram</span> Chegou.
         </h1>
 
-        {/* 4. SUBTÍTULO */}
-        <p style={{
-          fontSize: '18px',
+        {/* SUBTÍTULO */}
+        <p className="animate-up delay-300" style={{
+          fontSize: '1.25rem',
           color: '#a1a1aa',
-          maxWidth: '600px',
+          maxWidth: '650px',
           lineHeight: '1.6',
           margin: '0 auto'
         }}>
-          Gerencie assinaturas, pagamentos e automações para seus grupos e canais VIPs com a 
-          <strong style={{ color: '#e0aaff' }}> menor taxa do mercado: apenas R$ 0,60 por venda!</strong>
+          Abandone o manual. A Zenyx utiliza <strong>IA Preditiva</strong> e automação de fluxo para transformar curiosos em assinantes VIPs enquanto você dorme.
         </p>
 
-        {/* 5. BOTÕES DE AÇÃO (CTA) */}
-        <div className="hero-buttons" style={{
+        {/* CTA BUTTONS */}
+        <div className="animate-up delay-400" style={{
           display: 'flex',
-          gap: '16px',
-          marginTop: '20px',
+          gap: '20px',
+          marginTop: '30px',
           flexWrap: 'wrap',
           justifyContent: 'center'
         }}>
           <Link to="/register" style={{ textDecoration: 'none' }}>
-            <button style={{
+            <button className="btn-glow" style={{
               display: 'flex',
               alignItems: 'center',
-              gap: '10px',
-              padding: '16px 32px',
-              background: '#c333ff',
+              gap: '12px',
+              padding: '18px 40px',
+              background: 'linear-gradient(90deg, #c333ff 0%, #7b1fa2 100%)',
               color: 'white',
               border: 'none',
-              borderRadius: '12px',
-              fontSize: '16px',
+              borderRadius: '16px',
+              fontSize: '18px',
               fontWeight: 'bold',
               cursor: 'pointer',
-              transition: 'transform 0.2s, box-shadow 0.2s',
-              boxShadow: '0 4px 20px rgba(195, 51, 255, 0.4)'
+              boxShadow: '0 10px 30px -10px rgba(195, 51, 255, 0.6)',
+              transition: 'all 0.3s ease'
             }}
-            onMouseOver={(e) => {
-              e.currentTarget.style.transform = 'translateY(-2px)';
-              e.currentTarget.style.boxShadow = '0 8px 25px rgba(195, 51, 255, 0.6)';
-            }}
-            onMouseOut={(e) => {
-              e.currentTarget.style.transform = 'translateY(0)';
-              e.currentTarget.style.boxShadow = '0 4px 20px rgba(195, 51, 255, 0.4)';
-            }}
+            onMouseOver={(e) => e.currentTarget.style.transform = 'translateY(-3px)'}
+            onMouseOut={(e) => e.currentTarget.style.transform = 'translateY(0)'}
             >
-              Começar Agora Grátis <ArrowRight size={18} />
+              Criar Conta Grátis <ArrowRight size={20} />
             </button>
           </Link>
 
-          <button style={{
+          <button className="glass-card" style={{
             display: 'flex',
             alignItems: 'center',
             gap: '10px',
-            padding: '16px 32px',
-            background: 'transparent',
+            padding: '18px 32px',
+            background: 'rgba(255, 255, 255, 0.05)',
             color: 'white',
-            border: '1px solid rgba(255, 255, 255, 0.2)',
-            borderRadius: '12px',
+            border: '1px solid rgba(255, 255, 255, 0.1)',
+            borderRadius: '16px',
             fontSize: '16px',
             fontWeight: '600',
             cursor: 'pointer',
-            transition: 'background 0.2s'
+            transition: 'all 0.3s ease'
           }}
-          onMouseOver={(e) => e.currentTarget.style.background = 'rgba(255, 255, 255, 0.05)'}
-          onMouseOut={(e) => e.currentTarget.style.background = 'transparent'}
+          onMouseOver={(e) => {
+            e.currentTarget.style.background = 'rgba(255, 255, 255, 0.1)';
+            e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.3)';
+          }}
+          onMouseOut={(e) => {
+            e.currentTarget.style.background = 'rgba(255, 255, 255, 0.05)';
+            e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.1)';
+          }}
           >
-            <PlayCircle size={18} /> Ver Demonstração
+            <PlayCircle size={20} /> Ver Demo
           </button>
         </div>
-        
-        {/* Informação extra (Checkmarks) */}
-        <div style={{
-          display: 'flex',
-          gap: '20px',
-          marginTop: '30px',
-          fontSize: '14px',
-          color: '#a1a1aa',
-          flexWrap: 'wrap',
-          justifyContent: 'center'
+
+        {/* SOCIAL PROOF / TRUST BADGES */}
+        <div className="animate-up delay-400" style={{
+          marginTop: '50px',
+          padding: '20px 40px',
+          background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.03), transparent)',
+          borderRadius: '20px',
+          borderTop: '1px solid rgba(255,255,255,0.05)'
         }}>
-          <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-            <div style={{ width: '6px', height: '6px', background: '#22c55e', borderRadius: '50%' }} /> Sem cartão de crédito
-          </span>
-          <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-            <div style={{ width: '6px', height: '6px', background: '#22c55e', borderRadius: '50%' }} /> Setup em 2 minutos
-          </span>
-          <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-            <div style={{ width: '6px', height: '6px', background: '#22c55e', borderRadius: '50%' }} /> Cancelamento grátis
-          </span>
+          <p style={{ fontSize: '12px', textTransform: 'uppercase', letterSpacing: '2px', color: '#666', marginBottom: '15px' }}>
+            CONFIADO POR +500 COMUNIDADES VIP
+          </p>
+          <div style={{ display: 'flex', gap: '30px', justifyContent: 'center', opacity: 0.5, filter: 'grayscale(100%)' }}>
+            {/* Ícones placeholder para dar peso visual */}
+            <div style={{ fontWeight: 'bold', fontSize: '18px' }}>PAGBANK</div>
+            <div style={{ fontWeight: 'bold', fontSize: '18px' }}>MERCADO PAGO</div>
+            <div style={{ fontWeight: 'bold', fontSize: '18px' }}>ASAAS</div>
+          </div>
         </div>
 
       </div>
+      
+      {/* CSS Inline para animação de pulso e ping */}
+      <style>{`
+        @keyframes pulseGlow {
+          0% { opacity: 0.4; transform: translateX(-50%) scale(0.9); }
+          100% { opacity: 0.8; transform: translateX(-50%) scale(1.1); }
+        }
+        @keyframes ping {
+          75%, 100% { transform: scale(2); opacity: 0; }
+        }
+      `}</style>
     </section>
   );
 }
