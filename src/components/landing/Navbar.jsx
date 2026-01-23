@@ -1,14 +1,14 @@
 import React, { useState, useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
+import { Menu, X, Zap } from 'lucide-react';
 
 export function Navbar() {
   const [scrolled, setScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const navigate = useNavigate();
 
   useEffect(() => {
     const handleScroll = () => {
-      setScrolled(window.scrollY > 50);
+      setScrolled(window.scrollY > 20);
     };
 
     window.addEventListener('scroll', handleScroll);
@@ -23,21 +23,46 @@ export function Navbar() {
     }
   };
 
+  const navLinks = [
+    { name: 'Recursos', href: 'features' },
+    { name: 'Funcionalidades', href: 'funcionalidades' },
+    { name: 'Tutoriais', href: 'tutoriais' },
+    { name: 'FAQ', href: 'faq' },
+  ];
+
   return (
     <nav className={`landing-navbar ${scrolled ? 'scrolled' : ''}`}>
       <div className="navbar-container">
-        {/* Logo com imagem */}
-        <div className="navbar-logo" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}>
-          <img src="/favicon.png" alt="Zenyx Logo" style={{ width: '40px', height: '40px', marginRight: '12px' }} />
-          ZenyxGBOT
-        </div>
+        {/* Logo */}
+        <a onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })} className="navbar-logo" style={{ cursor: 'pointer' }}>
+          <div style={{ position: 'relative' }}>
+            <div style={{
+              width: '40px',
+              height: '40px',
+              borderRadius: '12px',
+              background: 'linear-gradient(135deg, var(--primary) 0%, #7c3aed 100%)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              animation: 'glow-pulse 2s ease-in-out infinite'
+            }}>
+              <Zap size={20} color="white" />
+            </div>
+          </div>
+          <span style={{ fontSize: '1.25rem', fontWeight: 700, color: 'var(--foreground)' }}>
+            Zenyx<span className="neon-text" style={{ color: 'var(--primary)' }}>GBOT</span>
+          </span>
+        </a>
 
         {/* Desktop Menu */}
         <ul className="navbar-menu">
-          <li><a onClick={() => scrollToSection('recursos')}>Recursos</a></li>
-          <li><a onClick={() => scrollToSection('funcionalidades')}>Funcionalidades</a></li>
-          <li><a onClick={() => scrollToSection('tutoriais')}>Tutoriais</a></li>
-          <li><a onClick={() => scrollToSection('faq')}>FAQ</a></li>
+          {navLinks.map((link) => (
+            <li key={link.name}>
+              <a onClick={() => scrollToSection(link.href)}>
+                {link.name}
+              </a>
+            </li>
+          ))}
           <li>
             <Link to="/login" className="navbar-cta">
               Acessar Plataforma
@@ -49,18 +74,20 @@ export function Navbar() {
         <button 
           className="navbar-mobile-toggle"
           onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+          aria-label="Toggle menu"
         >
-          {mobileMenuOpen ? '✕' : '☰'}
+          {mobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
         </button>
       </div>
 
       {/* Mobile Menu */}
       <div className={`navbar-menu-mobile ${mobileMenuOpen ? 'active' : ''}`}>
-        <a onClick={() => scrollToSection('recursos')}>Recursos</a>
-        <a onClick={() => scrollToSection('funcionalidades')}>Funcionalidades</a>
-        <a onClick={() => scrollToSection('tutoriais')}>Tutoriais</a>
-        <a onClick={() => scrollToSection('faq')}>FAQ</a>
-        <Link to="/login" className="navbar-cta" style={{ textAlign: 'center', marginTop: '10px' }}>
+        {navLinks.map((link) => (
+          <a key={link.name} onClick={() => scrollToSection(link.href)}>
+            {link.name}
+          </a>
+        ))}
+        <Link to="/login" className="navbar-cta" style={{ textAlign: 'center', marginTop: '0.5rem' }}>
           Acessar Plataforma
         </Link>
       </div>

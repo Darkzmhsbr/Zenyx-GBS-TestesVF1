@@ -1,199 +1,321 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { ArrowRight, PlayCircle, Zap, ShieldCheck } from 'lucide-react';
-import '../../styles/LandingPage.css';
+import { ArrowRight, PlayCircle, Sparkles } from 'lucide-react';
+
+// Componente de Partícula Flutuante
+function Particle({ delay, left, top }) {
+  return (
+    <div
+      style={{
+        position: 'absolute',
+        width: '4px',
+        height: '4px',
+        borderRadius: '50%',
+        background: 'rgba(168, 85, 247, 0.4)',
+        left,
+        top,
+        animation: `particle-float 4s ease-in-out infinite`,
+        animationDelay: `${delay}s`,
+      }}
+    />
+  );
+}
 
 export function HeroSection() {
+  const [isVisible, setIsVisible] = useState(false);
+
+  useEffect(() => {
+    setIsVisible(true);
+  }, []);
+
+  // Gerar 20 partículas aleatórias
+  const particles = Array.from({ length: 20 }, (_, i) => ({
+    delay: i * 0.3,
+    left: `${Math.random() * 100}%`,
+    top: `${Math.random() * 100}%`,
+  }));
+
   return (
-    <section className="hero-section" style={{
+    <section style={{
       position: 'relative',
-      minHeight: '90vh', // Ocupa quase toda a tela
+      minHeight: '100vh',
       display: 'flex',
-      flexDirection: 'column',
       alignItems: 'center',
       justifyContent: 'center',
-      padding: '120px 20px 60px',
-      overflow: 'hidden'
+      overflow: 'hidden',
+      paddingTop: '5rem'
     }}>
       
-      {/* 🌌 BACKGROUND DINÂMICO (GLOW ORB) */}
-      <div style={{
-        position: 'absolute',
-        top: '-20%',
-        left: '50%',
-        transform: 'translateX(-50%)',
-        width: '80vw',
-        height: '80vw',
-        maxWidth: '800px',
-        maxHeight: '800px',
-        background: 'radial-gradient(circle, rgba(195, 51, 255, 0.15) 0%, rgba(10, 10, 10, 0) 70%)',
-        zIndex: 0,
-        pointerEvents: 'none',
-        animation: 'pulseGlow 5s infinite alternate' // Cria um "respiro" na luz
-      }} />
+      {/* 🌌 BACKGROUND ANIMADO */}
+      <div style={{ position: 'absolute', inset: 0, overflow: 'hidden' }}>
+        {/* Orbs de gradiente flutuantes */}
+        <div style={{
+          position: 'absolute',
+          top: '25%',
+          left: '25%',
+          width: '24rem',
+          height: '24rem',
+          background: 'rgba(168, 85, 247, 0.2)',
+          borderRadius: '50%',
+          filter: 'blur(120px)',
+          animation: 'float 3s ease-in-out infinite'
+        }} />
+        
+        <div style={{
+          position: 'absolute',
+          bottom: '25%',
+          right: '25%',
+          width: '20rem',
+          height: '20rem',
+          background: 'rgba(56, 189, 248, 0.2)',
+          borderRadius: '50%',
+          filter: 'blur(100px)',
+          animation: 'float 3s ease-in-out infinite',
+          animationDelay: '1s'
+        }} />
+        
+        <div style={{
+          position: 'absolute',
+          top: '50%',
+          left: '50%',
+          transform: 'translate(-50%, -50%)',
+          width: '37.5rem',
+          height: '37.5rem',
+          background: 'rgba(147, 51, 234, 0.1)',
+          borderRadius: '50%',
+          filter: 'blur(150px)'
+        }} />
+        
+        {/* Partículas */}
+        {particles.map((p, i) => (
+          <Particle key={i} {...p} />
+        ))}
 
-      {/* 📦 CONTEÚDO PRINCIPAL (COM ANIMAÇÃO CASCATA) */}
-      <div className="hero-content" style={{ 
-        position: 'relative', 
-        zIndex: 1, 
-        maxWidth: '1000px',
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        textAlign: 'center',
-        gap: '20px'
+        {/* Grid pattern */}
+        <div style={{
+          position: 'absolute',
+          inset: 0,
+          opacity: 0.02,
+          backgroundImage: `linear-gradient(rgba(168, 85, 247, 0.5) 1px, transparent 1px),
+                           linear-gradient(90deg, rgba(168, 85, 247, 0.5) 1px, transparent 1px)`,
+          backgroundSize: '50px 50px'
+        }} />
+      </div>
+
+      {/* 📦 CONTEÚDO PRINCIPAL */}
+      <div style={{
+        position: 'relative',
+        zIndex: 10,
+        maxWidth: '72rem',
+        margin: '0 auto',
+        padding: '0 1.5rem',
+        textAlign: 'center'
       }}>
         
-        {/* LOGO ZENYX (Animação: Vem de cima suave) */}
-        <div className="animate-up" style={{ marginBottom: '10px' }}>
-          <h2 style={{
-            fontSize: '50px',
-            fontFamily: "'Inter', sans-serif",
-            fontWeight: '900',
-            fontStyle: 'italic',
-            letterSpacing: '-2px',
-            background: 'linear-gradient(180deg, #fff 0%, #c333ff 100%)', // Degradê vertical na logo
-            WebkitBackgroundClip: 'text',
-            WebkitTextFillColor: 'transparent',
-            filter: 'drop-shadow(0 0 15px rgba(195, 51, 255, 0.4))', // Sombra neon
-            margin: 0
-          }}>
-            ZENYX
-          </h2>
-        </div>
-
-        {/* BADGE DESTAQUE (Vidro Fosco) */}
-        <div className="animate-up delay-100 hero-badge glass-card" style={{
-          padding: '8px 20px',
-          borderRadius: '50px',
-          fontSize: '14px',
-          fontWeight: '600',
-          color: '#e0aaff',
-          display: 'flex',
+        {/* Badge */}
+        <div className={`${isVisible ? 'animate-fade-in-up' : 'opacity-0'}`} style={{
+          display: 'inline-flex',
           alignItems: 'center',
-          gap: '8px',
-          border: '1px solid rgba(195, 51, 255, 0.3)'
+          gap: '0.5rem',
+          background: 'rgba(15, 15, 25, 0.55)',
+          backdropFilter: 'blur(18px)',
+          WebkitBackdropFilter: 'blur(18px)',
+          border: '1px solid rgba(255, 255, 255, 0.08)',
+          borderRadius: '50px',
+          padding: '0.5rem 1rem',
+          marginBottom: '2rem',
+          transition: 'all 0.7s'
         }}>
-          <span style={{ position: 'relative', display: 'flex' }}>
-            <span style={{ position: 'absolute', width: '100%', height: '100%', borderRadius: '50%', background: '#c333ff', opacity: 0.7, animation: 'ping 1s cubic-bezier(0, 0, 0.2, 1) infinite' }}></span>
-            <span style={{ position: 'relative', width: '8px', height: '8px', borderRadius: '50%', background: '#c333ff' }}></span>
+          <Sparkles size={16} style={{ color: 'var(--primary)' }} />
+          <span style={{
+            fontSize: '0.875rem',
+            fontWeight: 600,
+            color: 'var(--primary)'
+          }}>
+            MENOR TAXA DO MERCADO (R$ 0,60)
           </span>
-          MENOR TAXA DO MERCADO (R$ 0,60)
         </div>
 
-        {/* TÍTULO IMPACTANTE */}
-        <h1 className="animate-up delay-200" style={{
-          fontSize: 'clamp(3rem, 6vw, 5rem)', // Gigante e responsivo
-          fontWeight: '800',
-          lineHeight: '1.05',
-          color: '#ffffff',
-          margin: '10px 0',
-          letterSpacing: '-1px'
+        {/* Título Principal */}
+        <h1 className={`${isVisible ? 'animate-fade-in-up delay-100' : 'opacity-0'}`} style={{
+          fontSize: 'clamp(2.5rem, 7vw, 4.5rem)',
+          fontWeight: 800,
+          color: 'var(--foreground)',
+          lineHeight: 1.1,
+          marginBottom: '1.5rem',
+          transition: 'all 0.7s'
         }}>
-          O Futuro das Vendas <br />
-          no <span style={{ color: '#2AABEE' }}>Telegram</span> Chegou.
+          O Futuro das Vendas no{' '}
+          <span style={{ position: 'relative', display: 'inline-block' }}>
+            <span style={{
+              position: 'relative',
+              zIndex: 10,
+              background: 'linear-gradient(90deg, var(--primary) 0%, #9333ea 50%, #38bdf8 100%)',
+              WebkitBackgroundClip: 'text',
+              WebkitTextFillColor: 'transparent',
+              backgroundClip: 'text'
+            }} className="neon-text">
+              Telegram
+            </span>
+            <span style={{
+              position: 'absolute',
+              inset: '-0.25rem',
+              background: 'linear-gradient(90deg, rgba(168, 85, 247, 0.2) 0%, rgba(147, 51, 234, 0.2) 50%, rgba(56, 189, 248, 0.2) 100%)',
+              filter: 'blur(16px)',
+              borderRadius: '8px',
+              zIndex: 0
+            }} />
+          </span>{' '}
+          Chegou
         </h1>
 
-        {/* SUBTÍTULO */}
-        <p className="animate-up delay-300" style={{
+        {/* Subtítulo */}
+        <p className={`${isVisible ? 'animate-fade-in-up delay-200' : 'opacity-0'}`} style={{
           fontSize: '1.25rem',
-          color: '#a1a1aa',
-          maxWidth: '650px',
-          lineHeight: '1.6',
-          margin: '0 auto'
+          color: 'var(--muted-foreground)',
+          maxWidth: '48rem',
+          margin: '0 auto 2.5rem',
+          lineHeight: 1.6,
+          transition: 'all 0.7s'
         }}>
-          Abandone o manual. A Zenyx utiliza <strong>IA Preditiva</strong> e automação de fluxo para transformar curiosos em assinantes VIPs enquanto você dorme.
+          Automatize suas vendas, gerencie seus clientes e escale seu negócio com a plataforma
+          mais completa de bots para Telegram. Simples, rápido e poderoso.
         </p>
 
-        {/* CTA BUTTONS */}
-        <div className="animate-up delay-400" style={{
+        {/* CTAs */}
+        <div className={`${isVisible ? 'animate-fade-in-up delay-300' : 'opacity-0'}`} style={{
           display: 'flex',
-          gap: '20px',
-          marginTop: '30px',
+          flexDirection: 'row',
           flexWrap: 'wrap',
-          justifyContent: 'center'
+          alignItems: 'center',
+          justifyContent: 'center',
+          gap: '1rem',
+          transition: 'all 0.7s'
         }}>
           <Link to="/register" style={{ textDecoration: 'none' }}>
-            <button className="btn-glow" style={{
-              display: 'flex',
+            <button style={{
+              display: 'inline-flex',
               alignItems: 'center',
-              gap: '12px',
-              padding: '18px 40px',
-              background: 'linear-gradient(90deg, #c333ff 0%, #7b1fa2 100%)',
+              gap: '0.5rem',
+              padding: '1.5rem 2rem',
+              background: 'linear-gradient(90deg, var(--primary) 0%, #7c3aed 100%)',
               color: 'white',
               border: 'none',
-              borderRadius: '16px',
-              fontSize: '18px',
-              fontWeight: 'bold',
+              borderRadius: '12px',
+              fontSize: '1.125rem',
+              fontWeight: 700,
               cursor: 'pointer',
-              boxShadow: '0 10px 30px -10px rgba(195, 51, 255, 0.6)',
-              transition: 'all 0.3s ease'
+              boxShadow: '0 0 20px rgba(168, 85, 247, 0.4)',
+              animation: 'glow-pulse 2s ease-in-out infinite',
+              transition: 'transform 0.3s ease'
             }}
-            onMouseOver={(e) => e.currentTarget.style.transform = 'translateY(-3px)'}
-            onMouseOut={(e) => e.currentTarget.style.transform = 'translateY(0)'}
+            onMouseEnter={(e) => e.currentTarget.style.transform = 'scale(1.05)'}
+            onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1)'}
             >
-              Criar Conta Grátis <ArrowRight size={20} />
+              Criar Conta Grátis
+              <ArrowRight size={20} />
             </button>
           </Link>
-
-          <button className="glass-card" style={{
-            display: 'flex',
+          
+          <button className="glass" style={{
+            display: 'inline-flex',
             alignItems: 'center',
-            gap: '10px',
-            padding: '18px 32px',
+            gap: '0.5rem',
+            padding: '1.5rem 2rem',
             background: 'rgba(255, 255, 255, 0.05)',
-            color: 'white',
+            color: 'var(--foreground)',
             border: '1px solid rgba(255, 255, 255, 0.1)',
-            borderRadius: '16px',
-            fontSize: '16px',
-            fontWeight: '600',
+            borderRadius: '12px',
+            fontSize: '1.125rem',
+            fontWeight: 600,
             cursor: 'pointer',
             transition: 'all 0.3s ease'
           }}
-          onMouseOver={(e) => {
+          onMouseEnter={(e) => {
             e.currentTarget.style.background = 'rgba(255, 255, 255, 0.1)';
-            e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.3)';
+            e.currentTarget.style.borderColor = 'rgba(168, 85, 247, 0.3)';
           }}
-          onMouseOut={(e) => {
+          onMouseLeave={(e) => {
             e.currentTarget.style.background = 'rgba(255, 255, 255, 0.05)';
             e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.1)';
           }}
           >
-            <PlayCircle size={20} /> Ver Demo
+            <PlayCircle size={20} style={{ color: 'var(--primary)' }} />
+            Ver Demo
           </button>
         </div>
 
-        {/* SOCIAL PROOF / TRUST BADGES */}
-        <div className="animate-up delay-400" style={{
-          marginTop: '50px',
-          padding: '20px 40px',
-          background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.03), transparent)',
-          borderRadius: '20px',
-          borderTop: '1px solid rgba(255,255,255,0.05)'
+        {/* Trust Indicators */}
+        <div className={`${isVisible ? 'animate-fade-in-up delay-400' : 'opacity-0'}`} style={{
+          marginTop: '4rem',
+          display: 'flex',
+          flexWrap: 'wrap',
+          alignItems: 'center',
+          justifyContent: 'center',
+          gap: '2rem',
+          color: 'var(--muted-foreground)',
+          transition: 'all 0.7s'
         }}>
-          <p style={{ fontSize: '12px', textTransform: 'uppercase', letterSpacing: '2px', color: '#666', marginBottom: '15px' }}>
-            CONFIADO POR +500 COMUNIDADES VIP
-          </p>
-          <div style={{ display: 'flex', gap: '30px', justifyContent: 'center', opacity: 0.5, filter: 'grayscale(100%)' }}>
-            {/* Ícones placeholder para dar peso visual */}
-            <div style={{ fontWeight: 'bold', fontSize: '18px' }}>PAGBANK</div>
-            <div style={{ fontWeight: 'bold', fontSize: '18px' }}>MERCADO PAGO</div>
-            <div style={{ fontWeight: 'bold', fontSize: '18px' }}>ASAAS</div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+            <div style={{
+              width: '8px',
+              height: '8px',
+              borderRadius: '50%',
+              background: 'var(--success)',
+              animation: 'pulse 2s infinite'
+            }} />
+            <span style={{ fontSize: '0.875rem' }}>500+ Bots Ativos</span>
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+            <div style={{
+              width: '8px',
+              height: '8px',
+              borderRadius: '50%',
+              background: 'var(--primary)',
+              animation: 'pulse 2s infinite'
+            }} />
+            <span style={{ fontSize: '0.875rem' }}>R$ 50.000+ em Vendas</span>
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+            <div style={{
+              width: '8px',
+              height: '8px',
+              borderRadius: '50%',
+              background: '#38bdf8',
+              animation: 'pulse 2s infinite'
+            }} />
+            <span style={{ fontSize: '0.875rem' }}>1.200+ Usuários</span>
           </div>
         </div>
-
       </div>
-      
-      {/* CSS Inline para animação de pulso e ping */}
-      <style>{`
-        @keyframes pulseGlow {
-          0% { opacity: 0.4; transform: translateX(-50%) scale(0.9); }
-          100% { opacity: 0.8; transform: translateX(-50%) scale(1.1); }
-        }
-        @keyframes ping {
-          75%, 100% { transform: scale(2); opacity: 0; }
-        }
-      `}</style>
+
+      {/* Scroll Indicator */}
+      <div style={{
+        position: 'absolute',
+        bottom: '2rem',
+        left: '50%',
+        transform: 'translateX(-50%)',
+        animation: 'bounce 2s infinite'
+      }}>
+        <div style={{
+          width: '1.5rem',
+          height: '2.5rem',
+          borderRadius: '50px',
+          border: '2px solid rgba(161, 161, 170, 0.3)',
+          display: 'flex',
+          alignItems: 'flex-start',
+          justifyContent: 'center',
+          padding: '0.5rem'
+        }}>
+          <div style={{
+            width: '4px',
+            height: '8px',
+            borderRadius: '2px',
+            background: 'var(--primary)',
+            animation: 'pulse 2s infinite'
+          }} />
+        </div>
+      </div>
     </section>
   );
 }

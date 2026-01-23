@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
-import { ArrowRight } from 'lucide-react';
+import { ArrowRight, Bot, DollarSign, Users } from 'lucide-react';
 import axios from 'axios';
 
 const API_URL = import.meta.env.VITE_API_URL || 'https://zenyxvips.com/api';
@@ -12,9 +12,28 @@ export function CTASection() {
     total_revenue: 50000,
     active_users: 1200
   });
+  const [isVisible, setIsVisible] = useState(false);
+  const sectionRef = useRef(null);
 
   useEffect(() => {
     fetchStats();
+  }, []);
+
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setIsVisible(true);
+        }
+      },
+      { threshold: 0.1 }
+    );
+
+    if (sectionRef.current) {
+      observer.observe(sectionRef.current);
+    }
+
+    return () => observer.disconnect();
   }, []);
 
   const fetchStats = async () => {
@@ -25,7 +44,6 @@ export function CTASection() {
       }
     } catch (error) {
       console.error('Erro ao buscar estatísticas:', error);
-      // Mantém valores padrão em caso de erro
     }
   };
 
@@ -40,33 +58,118 @@ export function CTASection() {
     }).format(num);
   };
 
-  return (
-    <section className="section-container">
-      <div className="cta-section">
-        <h2 className="cta-title">Pronto para Escalar suas Vendas?</h2>
-        <p className="cta-subtitle">
-          Junte-se a centenas de criadores que já automatizaram seus negócios
-        </p>
+  const statsData = [
+    { icon: Bot, value: `${formatNumber(stats.total_bots)}+`, label: 'Bots Criados' },
+    { icon: DollarSign, value: `${formatCurrency(stats.total_revenue)}+`, label: 'em Vendas' },
+    { icon: Users, value: `${formatNumber(stats.active_users)}+`, label: 'Usuários Ativos' },
+  ];
 
-        <div className="cta-stats">
-          <div className="cta-stat">
-            <p className="cta-stat-value">🎯 {formatNumber(stats.total_bots)}+</p>
-            <p className="cta-stat-label">Bots Criados</p>
+  return (
+    <section ref={sectionRef} className="section-container">
+      <div className="cta-section" style={{ position: 'relative', overflow: 'hidden' }}>
+        {/* Background gradient */}
+        <div style={{
+          position: 'absolute',
+          inset: 0,
+          background: 'linear-gradient(135deg, rgba(168, 85, 247, 0.3) 0%, rgba(147, 51, 234, 0.2) 50%, rgba(56, 189, 248, 0.3) 100%)',
+          backgroundSize: '200% 200%',
+          animation: 'gradient-shift 8s ease infinite'
+        }} />
+        
+        {/* Decorative elements */}
+        <div style={{
+          position: 'absolute',
+          top: 0,
+          right: 0,
+          width: '16rem',
+          height: '16rem',
+          background: 'rgba(168, 85, 247, 0.2)',
+          borderRadius: '50%',
+          filter: 'blur(100px)'
+        }} />
+        <div style={{
+          position: 'absolute',
+          bottom: 0,
+          left: 0,
+          width: '12rem',
+          height: '12rem',
+          background: 'rgba(56, 189, 248, 0.2)',
+          borderRadius: '50%',
+          filter: 'blur(80px)'
+        }} />
+
+        {/* Content */}
+        <div style={{ position: 'relative', zIndex: 10 }}>
+          <h2 className={`cta-title ${isVisible ? 'animate-fade-in-up' : 'opacity-0'}`}>
+            Pronto para{' '}
+            <span style={{
+              background: 'linear-gradient(90deg, var(--primary) 0%, #9333ea 50%, #38bdf8 100%)',
+              WebkitBackgroundClip: 'text',
+              WebkitTextFillColor: 'transparent',
+              backgroundClip: 'text'
+            }} className="neon-text">
+              Escalar suas Vendas?
+            </span>
+          </h2>
+
+          <p className={`cta-subtitle ${isVisible ? 'animate-fade-in-up delay-200' : 'opacity-0'}`}>
+            Junte-se a centenas de empreendedores que já automatizaram suas vendas
+            no Telegram e estão faturando mais com menos esforço.
+          </p>
+
+          {/* Stats */}
+          <div className={`cta-stats ${isVisible ? 'animate-fade-in-up delay-300' : 'opacity-0'}`}>
+            {statsData.map((stat, index) => {
+              const Icon = stat.icon;
+              return (
+                <div key={index} className="cta-stat glass">
+                  <div style={{
+                    width: '40px',
+                    height: '40px',
+                    borderRadius: '8px',
+                    background: 'rgba(168, 85, 247, 0.2)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    marginBottom: '0.5rem'
+                  }}>
+                    <Icon size={20} style={{ color: 'var(--primary)' }} />
+                  </div>
+                  <p className="cta-stat-value">{stat.value}</p>
+                  <p className="cta-stat-label">{stat.label}</p>
+                </div>
+              );
+            })}
           </div>
-          <div className="cta-stat">
-            <p className="cta-stat-value">💰 {formatCurrency(stats.total_revenue)}+</p>
-            <p className="cta-stat-label">em Vendas Processadas</p>
-          </div>
-          <div className="cta-stat">
-            <p className="cta-stat-value">⚡ {formatNumber(stats.active_users)}+</p>
-            <p className="cta-stat-label">Usuários Ativos</p>
+
+          {/* CTA Button */}
+          <div className={`${isVisible ? 'animate-fade-in-up delay-400' : 'opacity-0'}`}>
+            <Link to="/register" style={{ textDecoration: 'none' }}>
+              <button style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '0.5rem',
+                padding: '1.75rem 2.5rem',
+                background: 'linear-gradient(90deg, var(--primary) 0%, #7c3aed 100%)',
+                color: 'white',
+                border: 'none',
+                borderRadius: '12px',
+                fontSize: '1.125rem',
+                fontWeight: 700,
+                cursor: 'pointer',
+                boxShadow: '0 0 20px rgba(168, 85, 247, 0.4)',
+                animation: 'glow-pulse 2s ease-in-out infinite',
+                transition: 'transform 0.3s ease'
+              }}
+              onMouseEnter={(e) => e.currentTarget.style.transform = 'scale(1.05)'}
+              onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1)'}
+              >
+                Começar Agora Grátis
+                <ArrowRight size={20} />
+              </button>
+            </Link>
           </div>
         </div>
-
-        <Link to="/register" className="hero-btn-primary">
-          Começar Agora Grátis
-          <ArrowRight size={20} />
-        </Link>
       </div>
     </section>
   );

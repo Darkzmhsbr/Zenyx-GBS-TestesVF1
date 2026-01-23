@@ -1,8 +1,10 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { ChevronDown } from 'lucide-react';
 
 export function TutorialsSection() {
   const [openIndex, setOpenIndex] = useState(null);
+  const [isVisible, setIsVisible] = useState(false);
+  const sectionRef = useRef(null);
 
   const tutorials = [
     {
@@ -42,24 +44,61 @@ export function TutorialsSection() {
     }
   ];
 
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setIsVisible(true);
+        }
+      },
+      { threshold: 0.1 }
+    );
+
+    if (sectionRef.current) {
+      observer.observe(sectionRef.current);
+    }
+
+    return () => observer.disconnect();
+  }, []);
+
   const toggleTutorial = (index) => {
     setOpenIndex(openIndex === index ? null : index);
   };
 
   return (
-    <section id="tutoriais" className="section-container">
-      <div className="section-header">
-        <h2 className="section-title">Tutoriais Passo a Passo</h2>
-        <p className="section-subtitle">Guias completos para configurar sua plataforma em minutos</p>
+    <section id="tutoriais" ref={sectionRef} className="section-container">
+      <div className={`section-header ${isVisible ? 'animate-fade-in-up' : 'opacity-0'}`}>
+        <span style={{
+          display: 'inline-block',
+          color: 'var(--primary)',
+          fontWeight: 600,
+          fontSize: '0.875rem',
+          letterSpacing: '0.1em',
+          textTransform: 'uppercase',
+          marginBottom: '1rem'
+        }}>
+          Central de Ajuda
+        </span>
+        <h2 className="section-title">
+          Tutoriais{' '}
+          <span style={{
+            background: 'linear-gradient(90deg, var(--primary) 0%, #38bdf8 100%)',
+            WebkitBackgroundClip: 'text',
+            WebkitTextFillColor: 'transparent',
+            backgroundClip: 'text'
+          }}>
+            Passo a Passo
+          </span>
+        </h2>
+        <p className="section-subtitle">
+          Aprenda a usar todos os recursos da plataforma com nossos tutoriais detalhados.
+        </p>
       </div>
 
       <div className="tutorials-list">
         {tutorials.map((tutorial, index) => (
-          <div key={index} className="tutorial-item">
-            <div 
-              className="tutorial-header"
-              onClick={() => toggleTutorial(index)}
-            >
+          <div key={index} className={`tutorial-item ${isVisible ? 'animate-fade-in-up' : 'opacity-0'}`} style={{ animationDelay: `${index * 0.1}s` }}>
+            <div className="tutorial-header" onClick={() => toggleTutorial(index)}>
               <div className="tutorial-icon">{tutorial.icon}</div>
               <h3 className="tutorial-title">{tutorial.title}</h3>
               <ChevronDown 

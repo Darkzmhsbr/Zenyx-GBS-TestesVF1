@@ -1,6 +1,9 @@
-import React from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 
 export function FAQSection() {
+  const [isVisible, setIsVisible] = useState(false);
+  const sectionRef = useRef(null);
+
   const faqs = [
     {
       question: '❓ Por onde recebo os pagamentos?',
@@ -44,20 +47,68 @@ export function FAQSection() {
     }
   ];
 
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setIsVisible(true);
+        }
+      },
+      { threshold: 0.1 }
+    );
+
+    if (sectionRef.current) {
+      observer.observe(sectionRef.current);
+    }
+
+    return () => observer.disconnect();
+  }, []);
+
   return (
-    <section id="faq" className="section-container">
-      <div className="section-header">
-        <h2 className="section-title">Perguntas Frequentes</h2>
-        <p className="section-subtitle">Tudo que você precisa saber sobre a ZenyxGbot</p>
+    <section id="faq" ref={sectionRef} className="section-container">
+      <div className={`section-header ${isVisible ? 'animate-fade-in-up' : 'opacity-0'}`}>
+        <span style={{
+          display: 'inline-block',
+          color: 'var(--primary)',
+          fontWeight: 600,
+          fontSize: '0.875rem',
+          letterSpacing: '0.1em',
+          textTransform: 'uppercase',
+          marginBottom: '1rem'
+        }}>
+          Dúvidas Frequentes
+        </span>
+        <h2 className="section-title">
+          Perguntas{' '}
+          <span style={{
+            background: 'linear-gradient(90deg, var(--primary) 0%, #38bdf8 100%)',
+            WebkitBackgroundClip: 'text',
+            WebkitTextFillColor: 'transparent',
+            backgroundClip: 'text'
+          }}>
+            Frequentes
+          </span>
+        </h2>
+        <p className="section-subtitle">
+          Encontre respostas para as dúvidas mais comuns sobre a plataforma.
+        </p>
       </div>
 
       <div className="faq-list">
-        {faqs.map((faq, index) => (
-          <div key={index} className="faq-item fade-in">
-            <h3 className="faq-question">{faq.question}</h3>
-            <p className="faq-answer">{faq.answer}</p>
-          </div>
-        ))}
+        {faqs.map((faq, index) => {
+          const isEven = index % 2 === 0;
+          
+          return (
+            <div
+              key={index}
+              className={`faq-item ${isVisible ? (isEven ? 'animate-slide-in-left' : 'animate-slide-in-right') : 'opacity-0'}`}
+              style={{ animationDelay: `${index * 0.1}s` }}
+            >
+              <h3 className="faq-question">{faq.question}</h3>
+              <p className="faq-answer">{faq.answer}</p>
+            </div>
+          );
+        })}
       </div>
     </section>
   );
