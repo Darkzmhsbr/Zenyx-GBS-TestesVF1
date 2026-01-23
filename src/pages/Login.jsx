@@ -1,29 +1,33 @@
-import { useState, useEffect, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
-import axios from 'axios';
+import React, { useState, useEffect, useRef } from 'react';
+import { useNavigate, Link } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
+import { Lock, User, ArrowRight } from 'lucide-react';
+import { Button } from '../components/Button';
+import Swal from 'sweetalert2';
+import './Login.css';
 
-function Login() {
-  const [email, setEmail] = useState('');
+// 🔑 Chave do Site Key (Defina aqui ou em variáveis de ambiente)
+const TURNSTILE_SITE_KEY = '0x4AAAAAACOUmpPNTu0O44Tfoa_r8qOZzJs';
+
+export function Login() {
+  const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [turnstileToken, setTurnstileToken] = useState('');
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
+  
+  const { login } = useAuth();
   const navigate = useNavigate();
   const turnstileRef = useRef(null);
 
-  // 🔑 Substitua pela sua Site Key do Cloudflare Turnstile
-  const TURNSTILE_SITE_KEY = '0x4AAAAAACOUmpPNTu0O44Tfoa_r8qOZzJs';
-  const API_URL = 'https://zenyx-gbs-testesv1-production.up.railway.app';
-
-  // ✅ Callback quando Turnstile verifica com sucesso
+  // ✅ Configuração do Turnstile (Cloudflare)
   useEffect(() => {
+    // Função global que o Cloudflare chama quando verifica com sucesso
     window.onTurnstileSuccess = function(token) {
-      console.log('✅ Turnstile token recebido:', token.substring(0, 20) + '...');
+      console.log('✅ Turnstile token recebido:', token.substring(0, 15) + '...');
       setTurnstileToken(token);
-      setError(''); // Limpa erro anterior
     };
 
-    // Cleanup
+    // Limpeza ao desmontar o componente
     return () => {
       window.onTurnstileSuccess = null;
     };
@@ -31,58 +35,54 @@ function Login() {
 
   const handleLogin = async (e) => {
     e.preventDefault();
-    
-    // Validações
-    if (!email || !password) {
-      setError('Preencha todos os campos');
-      return;
-    }
 
+    // 1. Validação do Turnstile antes de tudo
     if (!turnstileToken) {
-      setError('Complete a verificação de segurança');
+      Swal.fire({
+        title: 'Verificação Necessária',
+        text: 'Por favor, aguarde a verificação de segurança.',
+        icon: 'warning',
+        background: '#1b1730',
+        color: '#fff',
+        confirmButtonColor: '#c333ff'
+      });
       return;
     }
-
+    
     setLoading(true);
-    setError('');
-
+    
     try {
-      console.log('📤 Enviando login...');
+      // 2. Tentativa de Login
+      // Nota: Se o seu backend exige o token, você precisará passar o 
+      // turnstileToken para a função login() do seu AuthContext no futuro.
+      const success = await login(username, password, turnstileToken);
       
-      const response = await axios.post(`${API_URL}/api/auth/login`, {
-        email: email,
-        password: password,
-        turnstile_token: turnstileToken
-      });
-
-      console.log('✅ Login bem-sucedido!', response.data);
-
-      // Salva dados no localStorage
-      localStorage.setItem('access_token', response.data.access_token);
-      localStorage.setItem('user_id', response.data.user_id);
-      localStorage.setItem('username', response.data.username);
-      localStorage.setItem('email', response.data.email);
-
-      // Redireciona para dashboard
-      navigate('/dashboard');
-
-    } catch (error) {
-      console.error('❌ Erro no login:', error);
-      
-      if (error.response?.status === 400) {
-        setError('Verificação de segurança falhou. Recarregue a página.');
-      } else if (error.response?.status === 401) {
-        setError('Email ou senha incorretos');
+      if (success) {
+        navigate('/');
       } else {
-        setError('Erro ao fazer login. Tente novamente.');
-      }
+        // Se falhar, reseta o token para forçar nova verificação se necessário
+        if (window.turnstile) window.turnstile.reset();
+        setTurnstileToken('');
 
-      // Reset Turnstile para nova tentativa
-      if (window.turnstile) {
-        window.turnstile.reset();
+        Swal.fire({
+          title: 'Acesso Negado',
+          text: 'Usuário ou senha incorretos.',
+          icon: 'error',
+          background: '#1b1730',
+          color: '#fff',
+          confirmButtonColor: '#c333ff'
+        });
       }
-      setTurnstileToken('');
-      
+    } catch (error) {
+      console.error("Erro no login:", error);
+      Swal.fire({
+        title: 'Erro',
+        text: 'Erro ao conectar com o servidor.',
+        icon: 'error',
+        background: '#1b1730',
+        color: '#fff',
+        confirmButtonColor: '#c333ff'
+      });
     } finally {
       setLoading(false);
     }
@@ -90,71 +90,74 @@ function Login() {
 
   return (
     <div className="login-container">
-      <div className="login-box">
-        <h1>Login</h1>
-
-        {error && (
-          <div className="error-message">
-            ❌ {error}
-          </div>
-        )}
-
-        <form onSubmit={handleLogin}>
-          {/* Email */}
-          <div className="form-group">
-            <label htmlFor="email">Email:</label>
-            <input
-              id="email"
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="seu@email.com"
-              disabled={loading}
+      <div className="login-card">
+        <div className="login-header">
+          <div className="logo-glow">Zenyx</div>
+          <p>Painel Administrativo</p>
+        </div>
+        
+        <form onSubmit={handleLogin} className="login-form">
+          <div className="input-group-login">
+            <User size={20} className="input-icon" />
+            <input 
+              type="text" 
+              placeholder="Usuário" 
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
               required
             />
           </div>
 
-          {/* Senha */}
-          <div className="form-group">
-            <label htmlFor="password">Senha:</label>
-            <input
-              id="password"
-              type="password"
+          <div className="input-group-login">
+            <Lock size={20} className="input-icon" />
+            <input 
+              type="password" 
+              placeholder="Senha" 
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              placeholder="Digite sua senha"
-              disabled={loading}
               required
             />
           </div>
 
-          {/* Cloudflare Turnstile */}
-          <div className="turnstile-container" ref={turnstileRef}>
+          {/* Widget do Cloudflare Turnstile Inserido Aqui */}
+          <div 
+            className="turnstile-wrapper" 
+            style={{ display: 'flex', justifyContent: 'center', margin: '15px 0' }} 
+            ref={turnstileRef}
+          >
             <div 
               className="cf-turnstile" 
               data-sitekey={TURNSTILE_SITE_KEY}
               data-callback="onTurnstileSuccess"
-              data-theme="light"
+              data-theme="dark" 
             ></div>
           </div>
 
-          {/* Botão Login */}
-          <button 
+          <Button 
             type="submit" 
-            className="login-button"
+            style={{ width: '100%', marginTop: '10px' }}
             disabled={loading || !turnstileToken}
           >
-            {loading ? 'Entrando...' : 'Login'}
-          </button>
-        </form>
+            {loading ? 'Entrando...' : 'Entrar no Sistema'} <ArrowRight size={18} />
+          </Button>
 
-        {/* Link para Registro */}
-        <p className="register-link">
-          Não tem uma conta? <a href="/register">Criar Conta</a>
-        </p>
+          <div style={{ marginTop: '20px', textAlign: 'center' }}>
+            <p style={{ color: 'var(--muted-foreground)', fontSize: '14px' }}>
+              Não tem uma conta?{' '}
+              <Link 
+                to="/register" 
+                style={{ 
+                  color: 'var(--primary)', 
+                  textDecoration: 'none',
+                  fontWeight: 'bold'
+                }}
+              >
+                Criar Conta
+              </Link>
+            </p>
+          </div>
+        </form>
       </div>
     </div>
   );
 }
-
-export default Login;
