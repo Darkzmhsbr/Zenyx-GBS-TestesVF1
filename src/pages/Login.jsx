@@ -13,85 +13,68 @@ export function Login() {
   const [password, setPassword] = useState('');
   const [turnstileToken, setTurnstileToken] = useState('');
   const [loading, setLoading] = useState(false);
-  
-  // Referência para o container onde o widget VAI aparecer
-  const turnstileRef = useRef(null);
-  // ID para rastrear o widget renderizado
+  const containerRef = useRef(null);
   const widgetId = useRef(null);
-
+  
   const { login } = useAuth();
   const navigate = useNavigate();
 
-  // --- LÓGICA DE FORÇA BRUTA PARA EXIBIR O WIDGET ---
   useEffect(() => {
-    // 1. Injetar o script dinamicamente se não existir
-    const scriptId = 'cloudflare-turnstile-script';
-    if (!document.getElementById(scriptId)) {
-      const script = document.createElement('script');
-      script.id = scriptId;
-      script.src = "https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit";
-      script.async = true;
-      script.defer = true;
-      document.head.appendChild(script);
-    }
-
-    // 2. Função para renderizar o widget
-    const renderWidget = () => {
-      if (window.turnstile && turnstileRef.current && !widgetId.current) {
+    // Função que tenta desenhar o widget
+    const tryRender = () => {
+      if (window.turnstile && containerRef.current && !widgetId.current) {
         try {
-          // Limpa conteúdo anterior para evitar duplicação
-          turnstileRef.current.innerHTML = '';
+          // Limpa qualquer lixo anterior
+          containerRef.current.innerHTML = '';
           
-          const id = window.turnstile.render(turnstileRef.current, {
+          const id = window.turnstile.render(containerRef.current, {
             sitekey: TURNSTILE_SITE_KEY,
             theme: 'dark',
             callback: (token) => {
-              console.log('Token Cloudflare Gerado:', token);
+              console.log("Token OK:", token);
               setTurnstileToken(token);
             },
-            'expired-callback': () => {
-              setTurnstileToken('');
-            },
-            'error-callback': () => {
-              console.error('Erro no Cloudflare');
-            }
+            'expired-callback': () => setTurnstileToken(''),
           });
           widgetId.current = id;
-        } catch (error) {
-          console.error("Erro ao renderizar Turnstile:", error);
+          return true; // Sucesso
+        } catch (e) {
+          console.error("Erro ao renderizar Turnstile:", e);
         }
       }
+      return false;
     };
 
-    // 3. Tenta renderizar a cada 500ms até conseguir (limite de 10 tentativas)
-    let attempts = 0;
-    const interval = setInterval(() => {
-      attempts++;
-      if (window.turnstile) {
-        renderWidget();
-        clearInterval(interval); // Para de tentar quando consegue
-      }
-      if (attempts > 20) clearInterval(interval); // Desiste após 10 segundos
-    }, 500);
+    // Tenta renderizar imediatamente
+    if (!tryRender()) {
+      // Se falhar, tenta a cada 100ms por 5 segundos
+      const interval = setInterval(() => {
+        if (tryRender()) {
+          clearInterval(interval);
+        }
+      }, 100);
+      
+      // Limpa o intervalo após 5 segundos para não travar memória
+      setTimeout(() => clearInterval(interval), 5000);
+      return () => clearInterval(interval);
+    }
 
+    // Cleanup ao sair da página
     return () => {
-      clearInterval(interval);
-      // Opcional: remover o widget ao sair da tela
       if (window.turnstile && widgetId.current) {
         window.turnstile.remove(widgetId.current);
         widgetId.current = null;
       }
     };
   }, []);
-  // --------------------------------------------------
 
   const handleLogin = async (e) => {
     e.preventDefault();
 
     if (!turnstileToken) {
       Swal.fire({
-        title: 'Atenção',
-        text: 'Aguarde o carregamento da verificação de segurança.',
+        title: 'Verificação Necessária',
+        text: 'Por favor, aguarde o carregamento do sistema de segurança.',
         icon: 'warning',
         background: '#1b1730',
         color: '#fff',
@@ -103,19 +86,17 @@ export function Login() {
     setLoading(true);
     
     try {
-      // Passa o token para o login (se seu backend validar)
       const success = await login(username, password, turnstileToken);
       
       if (success) {
         navigate('/');
       } else {
-        // Reseta o widget em caso de erro
-        if (window.turnstile) window.turnstile.reset(widgetId.current);
+        if (window.turnstile && widgetId.current) window.turnstile.reset(widgetId.current);
         setTurnstileToken('');
         
         Swal.fire({
           title: 'Acesso Negado',
-          text: 'Usuário ou senha incorretos.',
+          text: 'Dados incorretos.',
           icon: 'error',
           background: '#1b1730',
           color: '#fff',
@@ -123,10 +104,10 @@ export function Login() {
         });
       }
     } catch (error) {
-      console.error("Erro no login:", error);
+      console.error(error);
       Swal.fire({
-        title: 'Erro',
-        text: 'Erro ao conectar com o servidor.',
+        title: 'Erro de Conexão',
+        text: 'Não foi possível conectar ao servidor.',
         icon: 'error',
         background: '#1b1730',
         color: '#fff',
@@ -168,17 +149,14 @@ export function Login() {
             />
           </div>
 
-          {/* ÁREA RESERVADA PARA O WIDGET - COM ALTURA MÍNIMA PARA NÃO PISCAR */}
+          {/* ÁREA DO WIDGET */}
           <div 
-            ref={turnstileRef}
-            style={{ 
-              display: 'flex', 
-              justifyContent: 'center', 
-              marginTop: '15px', 
-              marginBottom: '15px',
-              minHeight: '65px' 
-            }}
-          ></div>
+            ref={containerRef} 
+            className="turnstile-wrapper"
+            style={{ minHeight: '65px', margin: '15px 0', display: 'flex', justifyContent: 'center' }}
+          >
+            {/* O Cloudflare vai injetar o iframe aqui dentro */}
+          </div>
 
           <Button 
             type="submit" 
@@ -190,17 +168,7 @@ export function Login() {
 
           <div style={{ marginTop: '20px', textAlign: 'center' }}>
             <p style={{ color: 'var(--muted-foreground)', fontSize: '14px' }}>
-              Não tem uma conta?{' '}
-              <Link 
-                to="/register" 
-                style={{ 
-                  color: 'var(--primary)', 
-                  textDecoration: 'none',
-                  fontWeight: 'bold'
-                }}
-              >
-                Criar Conta
-              </Link>
+              Não tem uma conta? <Link to="/register" style={{ color: 'var(--primary)', fontWeight: 'bold', textDecoration: 'none' }}>Criar Conta</Link>
             </p>
           </div>
         </form>
