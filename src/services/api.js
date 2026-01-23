@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-// 🔗 SEU DOMÍNIO DO RAILWAY (Confirmado conforme seus logs)
+// 🔗 SEU DOMÍNIO DO RAILWAY
 const API_URL = 'https://zenyx-gbs-testesv1-production.up.railway.app';
 
 const api = axios.create({
@@ -34,16 +34,12 @@ api.interceptors.request.use(
 api.interceptors.response.use(
   (response) => response,
   (error) => {
-    // Se receber 401 (não autorizado)
     if (error.response?.status === 401) {
       console.warn("⚠ Token inválido ou expirado.");
       
-      // Limpa dados locais
       localStorage.removeItem('zenyx_token');
       localStorage.removeItem('zenyx_admin_user');
       
-      // 🔥 CORREÇÃO DO LOOP INFINITO:
-      // Só redireciona se NÃO estivermos já na tela de login ou registro
       const path = window.location.pathname;
       if (!path.includes('/login') && !path.includes('/register')) {
          console.log("🔄 Redirecionando para login...");
@@ -211,6 +207,9 @@ export const adminService = {
     removeAdmin: async (id, tId) => (await api.delete(`/api/admin/bots/${id}/admins/${tId}`)).data
 };
 
+// ============================================================
+// 📊 SERVIÇO DE DASHBOARD
+// ============================================================
 export const dashboardService = { 
   getStats: async (id = null, startDate = null, endDate = null) => {
     const params = new URLSearchParams();
@@ -253,6 +252,9 @@ export const dashboardService = {
   }
 };
 
+// ============================================================
+// 🔗 SERVIÇO DE TRACKING
+// ============================================================
 export const trackingService = {
   createFolder: async (data) => (await api.post('/api/admin/tracking/folders', data)).data,
   listFolders: async (page = 1, perPage = 20) => {
@@ -365,7 +367,6 @@ export const miniappService = {
 // 🔌 SERVIÇO DE INTEGRAÇÕES
 // ============================================================
 export const integrationService = {
-  // Busca configuração de integração do bot
   getConfig: async (botId) => {
     try {
       const response = await api.get(`/api/admin/bots/${botId}/integrations`);
@@ -381,7 +382,6 @@ export const integrationService = {
     }
   },
   
-  // Salva configuração de integração
   saveConfig: async (botId, data) => {
     try {
       const response = await api.post(`/api/admin/bots/${botId}/integrations`, data);
@@ -392,7 +392,6 @@ export const integrationService = {
     }
   },
   
-  // Testa conexão com Pushin Pay
   testConnection: async (apiKey) => {
     try {
       const response = await api.post('/api/admin/integrations/test-pushin', {
@@ -405,8 +404,62 @@ export const integrationService = {
     }
   }
 };
+
 // ============================================================
-// 🔐 SERVIÇO DE AUTENTICAÇÃO (✅ CORRIGIDO)
+// 👤 SERVIÇO DE PERFIL
+// ============================================================
+export const profileService = {
+  getProfile: async () => {
+    try {
+      const response = await api.get('/api/auth/me');
+      return response.data;
+    } catch (error) {
+      console.error("Erro ao buscar perfil:", error);
+      throw error;
+    }
+  },
+  
+  updateProfile: async (data) => {
+    try {
+      const response = await api.put('/api/auth/profile', data);
+      return response.data;
+    } catch (error) {
+      console.error("Erro ao atualizar perfil:", error);
+      throw error;
+    }
+  },
+  
+  updatePassword: async (currentPassword, newPassword) => {
+    try {
+      const response = await api.put('/api/auth/password', {
+        current_password: currentPassword,
+        new_password: newPassword
+      });
+      return response.data;
+    } catch (error) {
+      console.error("Erro ao atualizar senha:", error);
+      throw error;
+    }
+  },
+  
+  getStats: async () => {
+    try {
+      const response = await api.get('/api/auth/stats');
+      return response.data;
+    } catch (error) {
+      console.error("Erro ao buscar estatísticas:", error);
+      return {
+        total_bots: 0,
+        total_sales: 0,
+        total_revenue: 0,
+        active_users: 0
+      };
+    }
+  }
+};
+
+// ============================================================
+// 🔐 SERVIÇO DE AUTENTICAÇÃO (✅ CORRIGIDO COM TURNSTILE)
 // ============================================================
 export const authService = {
   register: async (username, email, password, fullName) => {
@@ -424,7 +477,7 @@ export const authService = {
     const response = await api.post('/api/auth/login', {
       username,
       password,
-      turnstile_token: turnstileToken  // ✅ Adicionado
+      turnstile_token: turnstileToken
     });
     return response.data;
   },
@@ -441,7 +494,7 @@ export const authService = {
 };
 
 // ============================================================
-// 📋 SERVIÇO DE AUDIT LOGS (FASE 3.3)
+// 📋 SERVIÇO DE AUDIT LOGS
 // ============================================================
 export const auditService = {
   getLogs: async (filters = {}) => {
@@ -468,7 +521,7 @@ export const auditService = {
 };
 
 // ============================================================
-// 👑 SERVIÇO SUPER ADMIN (🆕 FASE 3.4)
+// 👑 SERVIÇO SUPER ADMIN
 // ============================================================
 export const superAdminService = {
   getStats: async () => {
