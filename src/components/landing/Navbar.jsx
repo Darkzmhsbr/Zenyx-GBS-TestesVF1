@@ -26,7 +26,9 @@ export function Navbar() {
   return (
     <nav className={`landing-navbar ${scrolled ? 'scrolled' : ''}`}>
       <div className="navbar-container">
+        {/* Logo com imagem */}
         <div className="navbar-logo" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}>
+          <img src="/favicon.png" alt="Zenyx Logo" style={{ width: '40px', height: '40px', marginRight: '12px' }} />
           ZenyxGBOT
         </div>
 

@@ -21,19 +21,19 @@ export function TutorialsSection() {
       content: 'Acesse sua conta Pushin Pay e copie sua chave de API. No painel ZenyxGbot, vá em Integrações > Pushin Pay e cole sua chave. Ative a integração e configure o split de pagamento.'
     },
     {
-      icon: '🏷️',
-      title: 'Como Configurar Código de Venda',
-      content: 'No painel, vá em Rastreamento > Códigos de Venda. Crie um novo código personalizado para cada campanha. Use-o nos links de checkout para rastrear origem das vendas.'
+      icon: '🔗',
+      title: 'Como Criar Sistema de Redirecionamento',
+      content: 'Acesse Rastreamento > Redirecionamento. Crie uma pasta com nome da plataforma (ex: Instagram). Dentro da pasta, crie links específicos (Stories, Feed, Bio). O sistema gerará links rastreáveis como t.me/SeuBot?start=codigo.'
     },
     {
       icon: '📊',
-      title: 'Como Configurar Tracking Meta Pixel',
-      content: 'Copie seu Pixel ID do Facebook Ads Manager. Cole em Rastreamento > Meta Pixel. Ative os eventos de Purchase, InitiateCheckout e AddToCart para rastreamento completo.'
+      title: 'Como Acompanhar o Funil de Vendas',
+      content: 'No menu Funil, você verá 3 estágios: Topo (Lead Frio - apenas deu start), Meio (Lead Quente - gerou PIX mas não pagou), Fundo (Cliente - assinantes ativos). Monitore a conversão entre cada etapa.'
     },
     {
-      icon: '🔗',
-      title: 'Como Configurar Tracking UTMify',
-      content: 'Em Rastreamento > UTMs, crie parâmetros personalizados (utm_source, utm_medium, utm_campaign). Use esses parâmetros nos seus links de divulgação para identificar melhor suas fontes de tráfego.'
+      icon: '♻️',
+      title: 'Como Configurar Remarketing',
+      content: 'Em Remarketing, crie campanhas segmentadas por estágio do funil. Envie mensagens automáticas para leads quentes que não converteram. Configure ofertas especiais e acompanhe os resultados.'
     },
     {
       icon: '🔔',

@@ -18,19 +18,19 @@ export function MoreFeatures() {
       description: 'Aprove membros e envie boas-vindas personalizadas. Gestão de múltiplos grupos e canais.'
     },
     {
-      icon: '🎯',
-      title: 'Tracking Meta Pixel & UTMs',
-      description: 'Rastreie conversões no Facebook Ads. Códigos UTM personalizados por campanha.'
+      icon: '🔗',
+      title: 'Sistema de Redirecionamento',
+      description: 'Crie pastas organizadas por plataforma (Instagram, Facebook, TikTok, etc). Rastreie cliques e vendas de cada link.'
     },
     {
-      icon: '🌎',
-      title: 'Geolocalização',
-      description: 'Exiba país, estado e cidade automaticamente. Personalize mensagens por região.'
+      icon: '📈',
+      title: 'Funil de Vendas Completo',
+      description: 'Acompanhe a jornada do cliente: Lead Frio (topo), Lead Quente (meio) e Cliente (fundo) com métricas detalhadas.'
     },
     {
       icon: '🔄',
-      title: 'Redirecionadores Inteligentes',
-      description: 'Balanceamento automático entre múltiplos bots. Evite sobrecarga e melhore performance.'
+      title: 'Remarketing Inteligente',
+      description: 'Recupere vendas perdidas com campanhas automáticas segmentadas por etapa do funil.'
     }
   ];
 

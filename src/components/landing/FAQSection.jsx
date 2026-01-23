@@ -8,7 +8,7 @@ export function FAQSection() {
     },
     {
       question: '❓ Qual é a taxa da plataforma?',
-      answer: 'Apenas R$ 0,75 por venda - a menor taxa do mercado! Sem mensalidades, sem taxas escondidas. Você só paga quando vende.'
+      answer: 'Apenas R$ 0,60 por venda - a menor taxa do mercado! Sem mensalidades, sem taxas escondidas. Você só paga quando vende.'
     },
     {
       question: '❓ Por que a taxa é tão baixa?',
@@ -23,8 +23,8 @@ export function FAQSection() {
       answer: 'Sim, nossa plataforma permite vendas de conteúdo +18 dentro da legalidade. Respeitamos a privacidade e liberdade dos criadores.'
     },
     {
-      question: '❓ Como funcionam as variáveis regionais?',
-      answer: 'O sistema detecta automaticamente a localização do usuário via IP e exibe país, estado e cidade nas mensagens. Perfeito para personalização.'
+      question: '❓ Como funciona o sistema de redirecionamento?',
+      answer: 'Você cria pastas organizadas por plataforma (Instagram, Facebook, TikTok, etc) e dentro delas cria links específicos (Stories, Feed, Bio). Cada link é rastreável e você acompanha cliques e vendas.'
     },
     {
       question: '❓ Preciso de conhecimento técnico?',
@@ -36,7 +36,7 @@ export function FAQSection() {
     },
     {
       question: '❓ Tem período de teste grátis?',
-      answer: 'Sim! Crie sua conta gratuitamente e só pague a taxa de R$ 0,75 quando realizar uma venda. Sem risco, sem compromisso.'
+      answer: 'Sim! Crie sua conta gratuitamente e só pague a taxa de R$ 0,60 quando realizar uma venda. Sem risco, sem compromisso.'
     },
     {
       question: '❓ Como funciona o suporte?',

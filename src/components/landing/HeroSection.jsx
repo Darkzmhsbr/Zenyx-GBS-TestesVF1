@@ -14,6 +14,18 @@ export function HeroSection() {
     <section className="hero-section">
       <div className="hero-background"></div>
       <div className="hero-container">
+        {/* Logo acima do badge */}
+        <img 
+          src="/favicon.png" 
+          alt="Zenyx Logo" 
+          style={{ 
+            width: '100px', 
+            height: '100px', 
+            marginBottom: '20px',
+            filter: 'drop-shadow(0 0 20px rgba(195, 51, 255, 0.5))'
+          }} 
+        />
+
         <div className="hero-badge">
           ✨ MENOR TAXA DO MERCADO
         </div>
@@ -25,7 +37,7 @@ export function HeroSection() {
 
         <p className="hero-subtitle">
           Gerencie assinaturas, pagamentos e automações para seus grupos e canais VIPs 
-          com a <span className="hero-highlight">menor taxa do mercado: apenas R$ 0,75 por venda!</span>
+          com a <span className="hero-highlight">menor taxa do mercado: apenas R$ 0,60 por venda!</span>
         </p>
 
         <div className="hero-cta-group">

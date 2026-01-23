@@ -1,24 +1,47 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
-
-const API_URL = import.meta.env.VITE_API_URL || 'https://zenyxvips.com/api';
+import { publicService } from '../../api';
 
 export function ActivityFeed() {
   const [activities, setActivities] = useState([]);
+  const [displayedActivities, setDisplayedActivities] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     fetchActivities();
-    // Atualiza a cada 10 segundos para simular tempo real
-    const interval = setInterval(fetchActivities, 10000);
+    // Atualiza do backend a cada 30 segundos
+    const interval = setInterval(fetchActivities, 30000);
     return () => clearInterval(interval);
   }, []);
 
+  // Animação rotativa local (a cada 3 segundos)
+  useEffect(() => {
+    if (activities.length > 0) {
+      // Mostra primeiros 5
+      setDisplayedActivities(activities.slice(0, 5));
+      
+      let currentIndex = 0;
+      const rotateInterval = setInterval(() => {
+        currentIndex = (currentIndex + 1) % activities.length;
+        
+        // Cria array com 5 itens começando do índice atual
+        const newDisplay = [];
+        for (let i = 0; i < 5; i++) {
+          const idx = (currentIndex + i) % activities.length;
+          newDisplay.push(activities[idx]);
+        }
+        
+        setDisplayedActivities(newDisplay);
+      }, 3000); // Roda a cada 3 segundos
+      
+      return () => clearInterval(rotateInterval);
+    }
+  }, [activities]);
+
   const fetchActivities = async () => {
     try {
-      const response = await axios.get(`${API_URL}/public/activity-feed`);
-      if (response.data && response.data.activities) {
-        setActivities(response.data.activities);
+      const data = await publicService.getActivityFeed();
+      if (data && data.activities) {
+        setActivities(data.activities);
       }
       setLoading(false);
     } catch (error) {
@@ -55,8 +78,8 @@ export function ActivityFeed() {
                   Carregando atividades...
                 </div>
               ) : (
-                activities.map((activity, index) => (
-                  <div key={index} className="activity-item" style={{ animationDelay: `${index * 0.1}s` }}>
+                displayedActivities.map((activity, index) => (
+                  <div key={`${activity.name}-${index}`} className="activity-item">
                     <div className="activity-icon">{activity.icon}</div>
                     <div className="activity-details">
                       <p className="activity-name">

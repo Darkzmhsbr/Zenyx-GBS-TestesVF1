@@ -80,7 +80,7 @@ export function Login() {
     
     try {
       await login(username, password, turnstileToken);
-      navigate('/');
+      navigate('/dashboard');
     } catch (error) {
       console.error("Login falhou:", error);
       
