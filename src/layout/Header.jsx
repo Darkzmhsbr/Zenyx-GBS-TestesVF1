@@ -2,7 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useBot } from '../context/BotContext';
-import { Bot, ChevronDown, Check, Bell, Moon, Sun, Menu, User, Settings, LogOut } from 'lucide-react'; 
+import { notificationService } from '../services/api'; // 🔥 VAMOS CRIAR ISSO DEPOIS
+import { Bot, ChevronDown, Check, Bell, Moon, Sun, Menu, User, Settings, LogOut, X } from 'lucide-react'; 
 import './Header.css'; 
 
 export function Header({ onToggleMenu }) {
@@ -15,6 +16,11 @@ export function Header({ onToggleMenu }) {
   const [isNotificationOpen, setIsNotificationOpen] = useState(false);
   const [isDarkMode, setIsDarkMode] = useState(true);
 
+  // 🔔 ESTADOS PARA NOTIFICAÇÕES
+  const [notifications, setNotifications] = useState([]);
+  const [unreadCount, setUnreadCount] = useState(0);
+  const [loadingNotifs, setLoadingNotifs] = useState(false);
+
   // ============================================================
   // INICIALIZA TEMA AO CARREGAR
   // ============================================================
@@ -26,216 +32,251 @@ export function Header({ onToggleMenu }) {
   }, []);
 
   // ============================================================
+  // BUSCAR NOTIFICAÇÕES REAIS
+  // ============================================================
+  const fetchNotifications = async () => {
+    if (!user) return;
+    try {
+      // Nota: Se der erro aqui é porque ainda não atualizamos o api.js, 
+      // mas o código já está pronto para quando atualizarmos!
+      if (notificationService) {
+        const data = await notificationService.getAll();
+        setNotifications(data.notifications || []);
+        setUnreadCount(data.unread_count || 0);
+      }
+    } catch (error) {
+      console.error("Erro ao buscar notificações", error);
+    }
+  };
+
+  // Carrega ao iniciar e a cada 60 segundos
+  useEffect(() => {
+    fetchNotifications();
+    const interval = setInterval(fetchNotifications, 60000);
+    return () => clearInterval(interval);
+  }, [user]);
+
+  // ============================================================
+  // MARCAR COMO LIDA
+  // ============================================================
+  const handleMarkAsRead = async (id) => {
+    try {
+      await notificationService.markRead(id);
+      // Atualiza localmente para parecer instantâneo
+      setNotifications(prev => prev.map(n => 
+        n.id === id ? { ...n, read: true } : n
+      ));
+      setUnreadCount(prev => Math.max(0, prev - 1));
+    } catch (error) {
+      console.error("Erro ao marcar como lida", error);
+    }
+  };
+
+  const handleMarkAllRead = async () => {
+    try {
+      await notificationService.markAllRead();
+      setNotifications(prev => prev.map(n => ({ ...n, read: true })));
+      setUnreadCount(0);
+    } catch (error) {
+      console.error("Erro ao marcar todas", error);
+    }
+  };
+
+  // ============================================================
   // FUNÇÃO: APLICAR TEMA
   // ============================================================
   const applyTheme = (isDark) => {
     const root = document.documentElement;
     
     if (isDark) {
-      root.style.setProperty('--background', '#0f0b14');
-      root.style.setProperty('--foreground', '#f2f2f2');
-      root.style.setProperty('--card', '#1b1730');
-      root.style.setProperty('--card-border', '#2d2647');
-      root.style.setProperty('--muted', '#1f1a2e');
-      root.style.setProperty('--muted-foreground', '#b9b6c9');
-      
-      document.body.classList.remove('light-theme');
-      document.body.classList.add('dark-theme');
+      root.style.setProperty('--background', '#0f0c29');
+      root.style.setProperty('--card-bg', '#1b1730'); // Roxo escuro original
+      root.style.setProperty('--text-primary', '#ffffff');
+      root.style.setProperty('--text-secondary', '#a0a0b0');
+      root.style.setProperty('--border-color', '#302b63');
     } else {
-      root.style.setProperty('--background', '#fafafa');
-      root.style.setProperty('--foreground', '#0a0a0a');
-      root.style.setProperty('--card', '#ffffff');
-      root.style.setProperty('--card-border', '#e5e5e5');
-      root.style.setProperty('--muted', '#f4f4f5');
-      root.style.setProperty('--muted-foreground', '#71717a');
-      
-      document.body.classList.remove('dark-theme');
-      document.body.classList.add('light-theme');
+      root.style.setProperty('--background', '#f4f6f9');
+      root.style.setProperty('--card-bg', '#ffffff');
+      root.style.setProperty('--text-primary', '#1a1a2e');
+      root.style.setProperty('--text-secondary', '#666666');
+      root.style.setProperty('--border-color', '#e1e4e8');
     }
   };
 
-  // ============================================================
-  // FUNÇÃO: TOGGLE DARK MODE
-  // ============================================================
   const toggleTheme = () => {
     const newTheme = !isDarkMode;
     setIsDarkMode(newTheme);
     localStorage.setItem('zenyx_theme', newTheme ? 'dark' : 'light');
     applyTheme(newTheme);
-    
-    console.log('🎨 Tema alterado para:', newTheme ? 'DARK' : 'LIGHT');
   };
 
-  // ============================================================
-  // 🔥 FUNÇÃO: LOGOUT FORÇADO (SEM DEPENDER DO CONTEXT)
-  // ============================================================
   const handleLogout = () => {
-    console.log('🚪 LOGOUT FORÇADO - Iniciando...');
-    
-    // Fecha dropdown
-    setIsProfileMenuOpen(false);
-    
-    // LIMPA TUDO DO LOCALSTORAGE
-    console.log('🗑️ Limpando localStorage...');
-    localStorage.removeItem('zenyx_admin_user');
-    localStorage.removeItem('zenyx_selected_bot');
-    localStorage.removeItem('zenyx_theme');
-    localStorage.clear(); // Limpa TUDO mesmo
-    
-    console.log('✅ LocalStorage limpo!');
-    
-    // Tenta chamar logout do context (se existir)
-    if (logout) {
-      console.log('📞 Chamando logout do AuthContext...');
-      try {
-        logout();
-      } catch (error) {
-        console.error('❌ Erro no logout do context:', error);
-      }
+    logout();
+    navigate('/login');
+  };
+
+  // Formata data amigável (Ex: "Há 5 min")
+  const formatTime = (dateString) => {
+    const date = new Date(dateString);
+    const now = new Date();
+    const diff = Math.floor((now - date) / 1000); // segundos
+
+    if (diff < 60) return 'Agora';
+    if (diff < 3600) return `Há ${Math.floor(diff / 60)} min`;
+    if (diff < 86400) return `Há ${Math.floor(diff / 3600)} h`;
+    return date.toLocaleDateString('pt-BR');
+  };
+
+  // Cores por tipo
+  const getTypeColor = (type) => {
+    switch(type) {
+      case 'success': return '#00d26a'; // Verde
+      case 'warning': return '#fcd535'; // Amarelo
+      case 'error': return '#f8312f';   // Vermelho
+      default: return '#c333ff';        // Roxo (Info)
     }
-    
-    // FORÇA REDIRECT ABSOLUTO
-    console.log('🚀 Redirecionando para /login...');
-    setTimeout(() => {
-      window.location.href = '/login';
-    }, 200);
   };
 
   return (
-    <header className="header">
-      {/* Lado Esquerdo */}
+    <header className="app-header">
+      {/* Lado Esquerdo: Botão Menu Mobile + Seletor de Bots */}
       <div className="header-left">
-        <button className="mobile-menu-btn" onClick={onToggleMenu}>
+        <button className="menu-toggle-btn" onClick={onToggleMenu}>
           <Menu size={24} />
         </button>
-        <h2 style={{margin:0, fontSize:'1.2rem'}}>Painel de Controle</h2>
-      </div>
 
-      {/* Lado Direito */}
-      <div className="header-right">
-        
-        {/* SELETOR DE BOT */}
-        <div className="bot-selector-wrapper">
+        <div className="bot-selector-container">
           <button 
-            className={`bot-selector-btn ${isBotMenuOpen ? 'active' : ''}`} 
+            className="bot-selector-btn"
             onClick={() => setIsBotMenuOpen(!isBotMenuOpen)}
           >
-            <div className="bot-icon-circle">
+            <div className="bot-icon-wrapper">
               <Bot size={20} />
             </div>
             <span className="bot-name">
-              {selectedBot ? selectedBot.nome : "Selecione um Bot"}
+              {selectedBot ? selectedBot.nome : 'Selecionar Bot'}
             </span>
-            <ChevronDown size={16} />
+            <ChevronDown size={16} className={`chevron ${isBotMenuOpen ? 'rotate' : ''}`} />
           </button>
 
           {isBotMenuOpen && (
-            <div className="bot-dropdown-menu">
-              <div className="dropdown-header">Meus bots ativos</div>
+            <div className="bot-dropdown">
+              <div className="bot-dropdown-header">Seus Bots</div>
               
               {bots.length === 0 ? (
-                <div className="dropdown-item empty">Nenhum bot cadastrado</div>
+                <div className="bot-dropdown-empty">Nenhum bot encontrado</div>
               ) : (
                 bots.map(bot => (
                   <div 
                     key={bot.id} 
-                    className={`dropdown-item ${selectedBot?.id === bot.id ? 'selected' : ''}`}
+                    className={`bot-dropdown-item ${selectedBot?.id === bot.id ? 'active' : ''}`}
                     onClick={() => {
                       changeBot(bot);
                       setIsBotMenuOpen(false);
                     }}
                   >
-                    <div className="bot-mini-icon"><Bot size={16}/></div>
                     <span>{bot.nome}</span>
-                    {selectedBot?.id === bot.id && <Check size={16} className="check-icon"/>}
+                    {selectedBot?.id === bot.id && <Check size={16} className="check-icon" />}
                   </div>
                 ))
               )}
               
-              <div className="dropdown-footer">
-                <a href="/bots/new">Configurar Novos →</a>
+              <div className="bot-dropdown-divider"></div>
+              <div 
+                className="bot-dropdown-action"
+                onClick={() => {
+                   navigate('/bots/new');
+                   setIsBotMenuOpen(false);
+                }}
+              >
+                + Criar Novo Bot
               </div>
             </div>
           )}
         </div>
+      </div>
+
+      {/* Lado Direito: Ações e Perfil */}
+      <div className="header-right">
         
+        {/* TEMA DARK/LIGHT */}
+        <button className="icon-btn theme-toggle" onClick={toggleTheme} title="Alternar Tema">
+          {isDarkMode ? <Sun size={20} /> : <Moon size={20} />}
+        </button>
+
         {/* NOTIFICAÇÕES */}
-        <div className="notification-dropdown-wrapper">
+        <div className="notification-wrapper">
           <button 
-            className={`icon-btn ${isNotificationOpen ? 'active' : ''}`}
-            onClick={() => setIsNotificationOpen(!isNotificationOpen)}
-            title="Notificações"
+            className="icon-btn"
+            onClick={() => {
+               setIsNotificationOpen(!isNotificationOpen);
+               setIsProfileMenuOpen(false);
+               if(!isNotificationOpen) fetchNotifications(); // Atualiza ao abrir
+            }}
           >
             <Bell size={20} />
-            <span className="notification-badge">3</span>
+            {unreadCount > 0 && <span className="notification-badge">{unreadCount}</span>}
           </button>
 
           {isNotificationOpen && (
-            <div className="notification-dropdown-menu">
+            <div className="notification-dropdown">
               <div className="notification-header">
-                <h4>Notificações</h4>
-                <button className="mark-all-read">Marcar todas como lidas</button>
+                <span>Notificações</span>
+                {unreadCount > 0 && (
+                  <button className="mark-read-btn" onClick={handleMarkAllRead}>
+                    Ler todas
+                  </button>
+                )}
               </div>
-
+              
               <div className="notification-list">
-                <div className="notification-item unread">
-                  <div className="notification-icon success">💰</div>
-                  <div className="notification-content">
-                    <p className="notification-title">Nova venda!</p>
-                    <p className="notification-text">João comprou o plano Mensal</p>
-                    <p className="notification-time">Há 5 minutos</p>
+                {notifications.length === 0 ? (
+                  <div className="empty-state">
+                    <p>Tudo limpo por aqui! ✨</p>
                   </div>
-                </div>
-
-                <div className="notification-item unread">
-                  <div className="notification-icon warning">⚠️</div>
-                  <div className="notification-content">
-                    <p className="notification-title">Bot pausado</p>
-                    <p className="notification-text">VIPEZERA está offline</p>
-                    <p className="notification-time">Há 1 hora</p>
-                  </div>
-                </div>
-
-                <div className="notification-item">
-                  <div className="notification-icon info">ℹ️</div>
-                  <div className="notification-content">
-                    <p className="notification-title">Atualização disponível</p>
-                    <p className="notification-text">Nova versão do Flow Chat V5</p>
-                    <p className="notification-time">Há 2 horas</p>
-                  </div>
-                </div>
-              </div>
-
-              <div className="notification-footer">
-                <a href="/notificacoes">Ver todas →</a>
+                ) : (
+                  notifications.map((notif) => (
+                    <div 
+                      key={notif.id} 
+                      className={`notification-item ${!notif.read ? 'unread' : ''}`}
+                      onClick={() => !notif.read && handleMarkAsRead(notif.id)}
+                    >
+                      <div className="notif-indicator" style={{ backgroundColor: getTypeColor(notif.type) }}></div>
+                      <div className="notif-content">
+                        <div className="notif-title">{notif.title}</div>
+                        <div className="notif-message">{notif.message}</div>
+                        <div className="notif-time">{formatTime(notif.created_at)}</div>
+                      </div>
+                    </div>
+                  ))
+                )}
               </div>
             </div>
           )}
         </div>
 
-        {/* DARK MODE */}
-        <button 
-          className="icon-btn" 
-          onClick={toggleTheme}
-          title={isDarkMode ? "Modo Claro" : "Modo Escuro"}
-        >
-          {isDarkMode ? <Moon size={20} /> : <Sun size={20} />}
-        </button>
-
         {/* PERFIL */}
-        <div className="profile-dropdown-wrapper">
-          <div 
-            className="user-avatar" 
-            onClick={() => setIsProfileMenuOpen(!isProfileMenuOpen)}
-            style={{ cursor: 'pointer' }}
+        <div className="profile-wrapper">
+          <button 
+            className="profile-btn"
+            onClick={() => {
+              setIsProfileMenuOpen(!isProfileMenuOpen);
+              setIsNotificationOpen(false);
+            }}
           >
-            {user?.name ? user.name.substring(0, 2).toUpperCase() : 'AD'}
-          </div>
+            <div className="avatar-placeholder">
+              {user?.name ? user.name.substring(0, 2).toUpperCase() : 'AD'}
+            </div>
+            <div className="profile-info-desk">
+               <span className="profile-name-text">{user?.name || 'Admin'}</span>
+               <ChevronDown size={14} />
+            </div>
+          </button>
 
           {isProfileMenuOpen && (
-            <div className="profile-dropdown-menu">
+            <div className="profile-dropdown">
               <div className="profile-dropdown-header">
-                <div className="profile-avatar-large">
+                <div className="avatar-large">
                   {user?.name ? user.name.substring(0, 2).toUpperCase() : 'AD'}
                 </div>
                 <div>
@@ -270,7 +311,7 @@ export function Header({ onToggleMenu }) {
 
               <div className="profile-dropdown-divider"></div>
 
-              {/* 🔥 BOTÃO SAIR COM LOGOUT FORÇADO */}
+              {/* BOTÃO SAIR */}
               <div 
                 className="profile-dropdown-item danger"
                 onClick={handleLogout}

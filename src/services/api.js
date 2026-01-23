@@ -479,6 +479,26 @@ export const auditService = {
 };
 
 // ============================================================
+// 🔔 SERVIÇO DE NOTIFICAÇÕES (NOVO - ATUALIZAÇÃO DO SITE)
+// ============================================================
+export const notificationService = {
+  getAll: async (limit = 20) => {
+    const response = await api.get(`/api/notifications?limit=${limit}`);
+    return response.data;
+  },
+
+  markAllRead: async () => {
+    const response = await api.put('/api/notifications/read-all');
+    return response.data;
+  },
+
+  markRead: async (notifId) => {
+    const response = await api.put(`/api/notifications/${notifId}/read`);
+    return response.data;
+  }
+};
+
+// ============================================================
 // 👑 SERVIÇO SUPER ADMIN
 // ============================================================
 export const superAdminService = {
