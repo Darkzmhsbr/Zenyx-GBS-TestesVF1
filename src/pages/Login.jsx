@@ -6,7 +6,6 @@ import { Button } from '../components/Button';
 import Swal from 'sweetalert2';
 import './Login.css';
 
-// Sua chave do Cloudflare
 const TURNSTILE_SITE_KEY = '0x4AAAAAACOUmpPNTu0O44Tfoa_r8qOZzJs';
 
 export function Login() {
@@ -15,51 +14,84 @@ export function Login() {
   const [turnstileToken, setTurnstileToken] = useState('');
   const [loading, setLoading] = useState(false);
   
-  // Referência para o elemento onde o widget vai ser desenhado
-  const turnstileContainer = useRef(null);
-  
+  // Referência para o container onde o widget VAI aparecer
+  const turnstileRef = useRef(null);
+  // ID para rastrear o widget renderizado
+  const widgetId = useRef(null);
+
   const { login } = useAuth();
   const navigate = useNavigate();
 
-  // ✅ EFEITO MÁGICO: Força o widget a aparecer assim que a tela carrega
+  // --- LÓGICA DE FORÇA BRUTA PARA EXIBIR O WIDGET ---
   useEffect(() => {
-    // Função para renderizar o widget
-    const renderTurnstile = () => {
-      if (window.turnstile && turnstileContainer.current) {
-        // Limpa qualquer instância anterior para não duplicar
-        turnstileContainer.current.innerHTML = ''; 
-        
-        window.turnstile.render(turnstileContainer.current, {
-          sitekey: TURNSTILE_SITE_KEY,
-          theme: 'dark', // Tema escuro para combinar com seu site
-          callback: function(token) {
-            console.log('Token recebido:', token);
-            setTurnstileToken(token);
-          },
-          'expired-callback': function() {
-            setTurnstileToken(''); // Reseta se expirar
-          }
-        });
+    // 1. Injetar o script dinamicamente se não existir
+    const scriptId = 'cloudflare-turnstile-script';
+    if (!document.getElementById(scriptId)) {
+      const script = document.createElement('script');
+      script.id = scriptId;
+      script.src = "https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit";
+      script.async = true;
+      script.defer = true;
+      document.head.appendChild(script);
+    }
+
+    // 2. Função para renderizar o widget
+    const renderWidget = () => {
+      if (window.turnstile && turnstileRef.current && !widgetId.current) {
+        try {
+          // Limpa conteúdo anterior para evitar duplicação
+          turnstileRef.current.innerHTML = '';
+          
+          const id = window.turnstile.render(turnstileRef.current, {
+            sitekey: TURNSTILE_SITE_KEY,
+            theme: 'dark',
+            callback: (token) => {
+              console.log('Token Cloudflare Gerado:', token);
+              setTurnstileToken(token);
+            },
+            'expired-callback': () => {
+              setTurnstileToken('');
+            },
+            'error-callback': () => {
+              console.error('Erro no Cloudflare');
+            }
+          });
+          widgetId.current = id;
+        } catch (error) {
+          console.error("Erro ao renderizar Turnstile:", error);
+        }
       }
     };
 
-    // Tenta renderizar imediatamente
-    renderTurnstile();
+    // 3. Tenta renderizar a cada 500ms até conseguir (limite de 10 tentativas)
+    let attempts = 0;
+    const interval = setInterval(() => {
+      attempts++;
+      if (window.turnstile) {
+        renderWidget();
+        clearInterval(interval); // Para de tentar quando consegue
+      }
+      if (attempts > 20) clearInterval(interval); // Desiste após 10 segundos
+    }, 500);
 
-    // Segurança extra: Se o script demorar um pouco, tenta de novo em 1 segundo
-    const timer = setTimeout(renderTurnstile, 1000);
-
-    return () => clearTimeout(timer);
+    return () => {
+      clearInterval(interval);
+      // Opcional: remover o widget ao sair da tela
+      if (window.turnstile && widgetId.current) {
+        window.turnstile.remove(widgetId.current);
+        widgetId.current = null;
+      }
+    };
   }, []);
+  // --------------------------------------------------
 
   const handleLogin = async (e) => {
     e.preventDefault();
 
-    // Trava de segurança: Se não clicou no "não sou robô"
     if (!turnstileToken) {
       Swal.fire({
-        title: 'Verificação Necessária',
-        text: 'Por favor, complete a verificação de segurança (Não sou um robô).',
+        title: 'Atenção',
+        text: 'Aguarde o carregamento da verificação de segurança.',
         icon: 'warning',
         background: '#1b1730',
         color: '#fff',
@@ -71,14 +103,14 @@ export function Login() {
     setLoading(true);
     
     try {
-      // Passamos o token junto (mesmo que seu backend ainda não use, o front valida)
+      // Passa o token para o login (se seu backend validar)
       const success = await login(username, password, turnstileToken);
       
       if (success) {
         navigate('/');
       } else {
-        // Se errar a senha, reseta o token para forçar nova verificação
-        if (window.turnstile) window.turnstile.reset();
+        // Reseta o widget em caso de erro
+        if (window.turnstile) window.turnstile.reset(widgetId.current);
         setTurnstileToken('');
         
         Swal.fire({
@@ -136,23 +168,22 @@ export function Login() {
             />
           </div>
 
-          {/* ONDE O CLOUDFLARE VAI APARECER */}
+          {/* ÁREA RESERVADA PARA O WIDGET - COM ALTURA MÍNIMA PARA NÃO PISCAR */}
           <div 
+            ref={turnstileRef}
             style={{ 
               display: 'flex', 
               justifyContent: 'center', 
-              margin: '20px 0', 
+              marginTop: '15px', 
+              marginBottom: '15px',
               minHeight: '65px' 
             }}
-          >
-            <div ref={turnstileContainer}></div> 
-          </div>
+          ></div>
 
           <Button 
             type="submit" 
             style={{ width: '100%', marginTop: '10px' }}
-            disabled={loading || !turnstileToken} 
-            title={!turnstileToken ? "Complete o desafio acima primeiro" : ""}
+            disabled={loading || !turnstileToken}
           >
             {loading ? 'Entrando...' : 'Entrar no Sistema'} <ArrowRight size={18} />
           </Button>
