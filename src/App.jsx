@@ -3,6 +3,7 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import { BotProvider } from './context/BotContext';
 import { AuthProvider } from './context/AuthContext';
 import { MainLayout } from './layout/MainLayout';
+// ✅ CORREÇÃO: Importação nomeada com chaves { Login }
 import { Login } from './pages/Login';
 import { Register } from './pages/Register';
 

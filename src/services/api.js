@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-// 🔗 SEU DOMÍNIO DO RAILWAY
+// 🔗 SEU DOMÍNIO DO RAILWAY (Confirmado conforme seus logs)
 const API_URL = 'https://zenyx-gbs-testesv1-production.up.railway.app';
 
 const api = axios.create({
@@ -283,9 +283,6 @@ export const profileService = {
 
 // ============================================================
 // 📊 SERVIÇO DE TRACKING (RASTREAMENTO)
-// ============================================================
-// ⚠️ ADICIONE ESTE CÓDIGO NO SEU api.js
-// COLE ANTES DA LINHA: export default api;
 // ============================================================
 
 export const trackingService = {
