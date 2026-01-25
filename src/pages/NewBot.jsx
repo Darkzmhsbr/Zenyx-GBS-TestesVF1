@@ -6,13 +6,13 @@ import { Button } from '../components/Button';
 import { Input } from '../components/Input';
 import { botService } from '../services/api';
 import { useBot } from '../context/BotContext';
-import { useAuth } from '../context/AuthContext'; // 🆕 Importado para o status
+import { useAuth } from '../context/AuthContext'; 
 import './Bots.css';
 
 export function NewBot() {
   const navigate = useNavigate();
   const { refreshBots } = useBot();
-  const { hasBot, updateHasBotStatus } = useAuth(); // 🔑 Pegamos a trava e a função
+  const { hasBot, updateHasBotStatus } = useAuth();
   
   // Controle de Passos: 'selection' | 'form'
   const [step, setStep] = useState('selection');
@@ -45,12 +45,12 @@ export function NewBot() {
 
       // 1. Cria o Bot
       const response = await botService.createBot(dados);
-
-      // 🔥 2. Atualiza status de onboarding para liberar o menu
+      
+      // 2. Notifica o sistema que agora o usuário TEM um bot (Desbloqueia Sidebar)
       if (updateHasBotStatus) {
         updateHasBotStatus(true);
       }
-      
+
       // 3. Atualiza lista no contexto
       await refreshBots();
 
@@ -84,10 +84,10 @@ export function NewBot() {
   return (
     <div className="new-bot-container" style={{ padding: '30px', maxWidth: '900px', margin: '0 auto', color: '#fff' }}>
       
-      {/* HEADER COM VOLTAR */}
+      {/* HEADER PRINCIPAL */}
       <div style={{ marginBottom: '30px', display: 'flex', alignItems: 'center', gap: '15px' }}>
-        {/* LÓGICA DE VOLTAR: No form ele volta para seleção. Na seleção ele só volta para lista se JÁ TIVER bot. */}
-        {(step === 'form' || hasBot) && (
+        {/* LÓGICA DE VOLTAR: Se estiver na seleção, volta para a lista (se tiver bots). Se estiver no form, volta para seleção. */}
+        {(hasBot || step === 'form') && (
           <Button variant="ghost" onClick={() => step === 'form' ? setStep('selection') : navigate('/bots')}>
             <ArrowLeft size={20} /> Voltar
           </Button>
@@ -97,7 +97,7 @@ export function NewBot() {
         </h1>
       </div>
 
-      {/* --- PASSO 1: SELEÇÃO (TEXTOS CORRIGIDOS) --- */}
+      {/* --- PASSO 1: SELEÇÃO --- */}
       {step === 'selection' && (
         <div className="selection-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '20px' }}>
           
@@ -154,6 +154,18 @@ export function NewBot() {
       {step === 'form' && (
         <div className="form-container" style={{ maxWidth: '500px', margin: '0 auto', animation: 'fadeIn 0.3s ease' }}>
           <div style={{ background: '#151515', padding: '30px', borderRadius: '12px', border: '1px solid #333' }}>
+            
+            {/* BOTÃO VOLTAR PARA SELEÇÃO DENTRO DO FORMULÁRIO */}
+            <button 
+              onClick={() => setStep('selection')}
+              style={{ 
+                background: 'none', border: 'none', color: '#888', cursor: 'pointer', 
+                display: 'flex', alignItems: 'center', gap: '5px', marginBottom: '20px', fontSize: '0.9rem' 
+              }}
+            >
+              <ArrowLeft size={16} /> Alterar tipo de tecnologia
+            </button>
+
             <div style={{ marginBottom: '20px', textAlign: 'center' }}>
               <div style={{ 
                 background: targetTab === 'miniapp' ? 'rgba(16, 185, 129, 0.1)' : 'rgba(195, 51, 255, 0.1)', 
