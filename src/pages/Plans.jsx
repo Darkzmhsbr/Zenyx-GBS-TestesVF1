@@ -27,7 +27,7 @@ export function Plans() {
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
 
   useEffect(() => {
-    if (selectedBot) {
+    if (selectedBot && selectedBot.id) {
         carregarPlanos();
     } else {
         setPlans([]);
@@ -35,9 +35,12 @@ export function Plans() {
   }, [selectedBot]);
 
   const carregarPlanos = async () => {
-    if (!selectedBot?.id) return;
+    // 🔥 CORREÇÃO: Garante que estamos usando o ID numérico
+    const botId = selectedBot?.id;
+    if (!botId) return;
+
     try {
-      const lista = await planService.listPlans(selectedBot.id);
+      const lista = await planService.listPlans(botId);
       setPlans(lista);
     } catch (error) {
       console.error(error);
@@ -52,15 +55,24 @@ export function Plans() {
   };
 
   const handleCreate = async () => {
+    // 🔥 CORREÇÃO: Garante que o bot_id seja apenas o número
+    const botId = selectedBot?.id;
+
     if (!newPlan.nome_exibicao || !newPlan.preco_atual || !newPlan.dias_duracao) {
       return Swal.fire('Atenção', 'Preencha todos os campos.', 'warning');
     }
 
+    if (!botId) {
+      return Swal.fire('Erro', 'Selecione um bot primeiro.', 'error');
+    }
+
     try {
       setLoading(true);
+      
+      // Enviamos o ID isolado para evitar o erro [object Object]
       await planService.createPlan({
         ...newPlan,
-        bot_id: selectedBot.id
+        bot_id: botId 
       });
       
       setNewPlan({ nome_exibicao: '', preco_atual: '', dias_duracao: '' });
@@ -76,6 +88,7 @@ export function Plans() {
         color: '#fff'
       });
     } catch (error) {
+      console.error(error);
       Swal.fire('Erro', 'Falha ao criar plano.', 'error');
     } finally {
       setLoading(false);
