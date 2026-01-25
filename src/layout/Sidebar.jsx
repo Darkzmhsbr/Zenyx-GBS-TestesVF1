@@ -22,20 +22,20 @@ import {
   ShoppingBag,
   User, 
   Target,
-  Crown // ðŸ‘‘ Ãcone do Super Admin
+  Crown // 👑 Ícone do Super Admin
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import './Sidebar.css';
 
 // -------------------------------------------------------
-// ARQUIVO CORRIGIDO: ROTA DO DASHBOARD AJUSTADA PARA /dashboard
+// ARQUIVO CORRIGIDO: TEXTOS E ROTAS SINCRONIZADOS
 // -------------------------------------------------------
 
 export function Sidebar({ isOpen, onClose }) {
   const location = useLocation();
   const navigate = useNavigate();
   
-  // Adicionado 'user' para verificar permissÃ£o
+  // Adicionado 'user' para verificar permissão
   const { user, logout } = useAuth();
   
   const currentPath = location.pathname;
@@ -48,11 +48,11 @@ export function Sidebar({ isOpen, onClose }) {
   const handleLogout = () => {
     if (onClose) onClose();
     logout();
-    // ForÃ§a redirecionamento limpo
+    // Força redirecionamento limpo
     window.location.href = '/login';
   };
 
-  // FunÃ§Ã£o auxiliar para verificar se o link estÃ¡ ativo
+  // Função auxiliar para verificar se o link está ativo
   const isActive = (path) => {
     return currentPath === path ? 'active' : '';
   };
@@ -67,7 +67,7 @@ export function Sidebar({ isOpen, onClose }) {
 
       <div className={`sidebar ${isOpen ? 'open' : ''}`}>
         <div className="sidebar-header">
-          {/* Logo ou TÃ­tulo */}
+          {/* Logo ou Título */}
           <div className="logo-area" style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
             <div style={{ 
               width: '32px', 
@@ -92,11 +92,11 @@ export function Sidebar({ isOpen, onClose }) {
 
         <nav className="sidebar-nav">
           
-          {/* ðŸ”¥ ÃREA MESTRA (SUPER ADMIN) ðŸ”¥ */}
+          {/* 🔥 ÁREA MESTRA (SUPER ADMIN) 🔥 */}
           {(user?.is_superuser || user?.username === 'AdminZenyx') && (
             <div className="admin-section">
               <div className="admin-section-title">
-                ÃREA MESTRA
+                ÁREA MESTRA
               </div>
               <Link 
                 to="/superadmin" 
@@ -110,7 +110,7 @@ export function Sidebar({ isOpen, onClose }) {
           )}
 
           {/* MENU GERAL */}
-          {/* ðŸ”§ CORREÃ‡ÃƒO AQUI: Mudado de "/" para "/dashboard" */}
+          {/* 🛠️ CORREÇÃO: Sincronizado com a rota /dashboard */}
           <Link to="/dashboard" className={`nav-item ${isActive('/dashboard')}`} onClick={onClose}>
             <LayoutDashboard size={20} />
             <span>Dashboard</span>
@@ -144,7 +144,7 @@ export function Sidebar({ isOpen, onClose }) {
                 <Link to="/bots" className={`nav-item ${isActive('/bots')}`} onClick={onClose}>
                   <Zap size={18} /> <span>Gerenciar Bots</span>
                 </Link>
-                {/* âœ… ROTA CORRETA: /bots/new */}
+                {/* ✅ ROTA CORRETA: /bots/new */}
                 <Link to="/bots/new" className={`nav-item ${isActive('/bots/new')}`} onClick={onClose}>
                   <PlusCircle size={18} /> <span>Novo Bot</span>
                 </Link>
@@ -228,9 +228,10 @@ export function Sidebar({ isOpen, onClose }) {
           
           <div className="divider"></div>
 
+          {/* ✅ CORREÇÃO: Texto "Integrações" corrigido de encoding */}
           <Link to="/integracoes" className={`nav-item ${isActive('/integracoes')}`} onClick={onClose}>
             <Settings size={20} />
-            <span>IntegraÃ§Ãµes</span>
+            <span>Integrações</span>
           </Link>
 
           <Link to="/perfil" className={`nav-item ${isActive('/perfil')}`} onClick={onClose}>
