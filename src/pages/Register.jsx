@@ -1,9 +1,9 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext';
 import { Lock, User, Mail, UserPlus, ArrowRight } from 'lucide-react';
 import { Button } from '../components/Button';
 import { authService } from '../services/api';
+import { useAuth } from '../context/AuthContext'; // Importamos para usar a função login do contexto
 import Swal from 'sweetalert2';
 import './Login.css';
 
@@ -18,109 +18,130 @@ export function Register() {
   const [turnstileToken, setTurnstileToken] = useState('');
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
-  const { login } = useAuth();
+  const { login } = useAuth(); // Usamos o login do contexto para configurar o estado global
   const turnstileRef = useRef(null);
-  const widgetId = useRef(null);
 
   // 🛡️ Carrega o Script do Turnstile e Renderiza o Widget
   useEffect(() => {
-    const initTurnstile = () => {
+    const scriptId = 'cloudflare-turnstile-script';
+    
+    const renderWidget = () => {
       if (window.turnstile && turnstileRef.current) {
-        if (widgetId.current) window.turnstile.remove(widgetId.current);
-
-        try {
-          const id = window.turnstile.render(turnstileRef.current, {
-            sitekey: '0x4AAAAAACOaNAV9wTIXZkZy',
-            theme: 'dark',
-            callback: (token) => {
-              setTurnstileToken(token);
-            },
-          });
-          widgetId.current = id;
-        } catch (err) {
-          console.error("Erro ao renderizar Turnstile:", err);
-        }
+        window.turnstile.render(turnstileRef.current, {
+          sitekey: '0x4AAAAAACOaNAV9wTIXZkZy',
+          theme: 'dark',
+          callback: (token) => {
+            setTurnstileToken(token);
+          },
+          'expired-callback': () => {
+            setTurnstileToken('');
+          },
+        });
       }
     };
 
-    if (!window.turnstile) {
+    if (!document.getElementById(scriptId)) {
       const script = document.createElement('script');
+      script.id = scriptId;
       script.src = 'https://challenges.cloudflare.com/turnstile/v0/api.js';
       script.async = true;
       script.defer = true;
-      script.onload = initTurnstile;
+      script.onload = renderWidget;
       document.body.appendChild(script);
     } else {
-      initTurnstile();
+      setTimeout(renderWidget, 500);
     }
   }, []);
 
   const handleChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
+    setFormData({
+      ...formData,
+      [e.target.name]: e.target.value
+    });
   };
 
-  const handleSubmit = async (e) => {
+  const handleRegister = async (e) => {
     e.preventDefault();
     
     if (formData.password !== formData.confirmPassword) {
-      return Swal.fire({
+      Swal.fire({
+        title: 'Senhas Não Coincidem',
+        text: 'As senhas digitadas não são iguais.',
         icon: 'error',
-        title: 'Senhas Diferentes',
-        text: 'A confirmação de senha não confere.',
-        confirmButtonColor: 'var(--primary)'
+        background: '#1b1730',
+        color: '#fff',
+        confirmButtonColor: '#c333ff'
       });
+      return;
     }
 
     if (!turnstileToken) {
-      return Swal.fire({
-        icon: 'warning',
+      Swal.fire({
         title: 'Verificação Necessária',
-        text: 'Por favor, complete o desafio de segurança.',
-        confirmButtonColor: 'var(--primary)'
+        text: 'Por favor, complete a verificação de segurança.',
+        icon: 'warning',
+        background: '#1b1730',
+        color: '#fff',
+        confirmButtonColor: '#c333ff'
       });
+      return;
     }
 
     setLoading(true);
-    try {
-      // 1. Criar a conta
-      await authService.register({
-        username: formData.username,
-        email: formData.email,
-        password: formData.password,
-        full_name: formData.fullName,
-        turnstile_token: turnstileToken
-      });
 
-      // 2. Fazer login automático para obter o token/contexto
+    try {
+      // 1. REGISTRO: Enviamos os campos exatamente como o UserCreate do main.py espera
+      // Note o uso de full_name (com underline) para casar com o Pydantic do Backend
+      await authService.register(
+        formData.username,
+        formData.email,
+        formData.password,
+        formData.fullName || formData.username, // full_name
+        turnstileToken
+      );
+
+      // 2. LOGIN AUTOMÁTICO: Chamamos a função login do context para setar token e user
       await login(formData.username, formData.password, turnstileToken);
 
-      // 3. Sucesso e Redirecionamento Direto para o Dashboard
+      // 3. SUCESSO E REDIRECIONAMENTO
       Swal.fire({
+        title: 'Cadastro Realizado!',
+        text: 'Sua conta foi criada com sucesso. Bem-vindo(a)!',
         icon: 'success',
-        title: 'Conta Criada!',
-        text: 'Bem-vindo ao sistema! Você será redirecionado para o seu painel agora.',
+        background: '#1b1730',
+        color: '#fff',
+        confirmButtonColor: '#c333ff',
         timer: 2000,
         showConfirmButton: false,
-        background: '#1a1a1a',
-        color: '#fff'
+        timerProgressBar: true
       }).then(() => {
-        navigate('/dashboard'); // 🚀 ALTERADO: Agora vai direto para o Dashboard
+        // 🚀 REDIRECIONAMENTO PARA O DASHBOARD
+        navigate('/dashboard');
       });
 
     } catch (error) {
-      console.error("Erro no registro:", error);
-      Swal.fire({
-        icon: 'error',
-        title: 'Falha no Cadastro',
-        text: error.response?.data?.detail || 'Ocorreu um erro ao criar sua conta.',
-        confirmButtonColor: 'var(--primary)'
-      });
+      console.error("❌ Erro no cadastro:", error);
       
-      // Reseta o Turnstile em caso de erro
-      if (window.turnstile && widgetId.current) {
-        window.turnstile.reset(widgetId.current);
-        setTurnstileToken('');
+      let errorMessage = 'Erro ao criar conta. Tente novamente.';
+      
+      // Tratamento para exibir erros de validação do Backend de forma legível
+      if (error.response?.data?.detail) {
+        const detail = error.response.data.detail;
+        errorMessage = typeof detail === 'string' ? detail : "Erro de validação nos dados.";
       }
+
+      Swal.fire({
+        title: 'Erro no Cadastro',
+        text: errorMessage,
+        icon: 'error',
+        background: '#1b1730',
+        color: '#fff',
+        confirmButtonColor: '#c333ff'
+      });
+
+      if (window.turnstile) window.turnstile.reset();
+      setTurnstileToken('');
+
     } finally {
       setLoading(false);
     }
@@ -130,32 +151,17 @@ export function Register() {
     <div className="login-container">
       <div className="login-card">
         <div className="login-header">
-          <div className="login-logo">
-            <UserPlus size={32} color="var(--primary)" />
-          </div>
-          <h1>Criar Conta</h1>
-          <p>Junte-se à nossa plataforma</p>
+          <div className="logo-glow">Zenyx</div>
+          <p>Criar Nova Conta</p>
         </div>
-
-        <form className="login-form" onSubmit={handleSubmit}>
-          <div className="input-group-login">
-            <User size={20} className="input-icon" />
-            <input 
-              type="text" 
-              name="fullName"
-              placeholder="Nome Completo *" 
-              value={formData.fullName}
-              onChange={handleChange}
-              required
-            />
-          </div>
-
+        
+        <form onSubmit={handleRegister} className="login-form">
           <div className="input-group-login">
             <User size={20} className="input-icon" />
             <input 
               type="text" 
               name="username"
-              placeholder="Nome de Usuário *" 
+              placeholder="Usuário *" 
               value={formData.username}
               onChange={handleChange}
               required
@@ -167,10 +173,21 @@ export function Register() {
             <input 
               type="email" 
               name="email"
-              placeholder="E-mail *" 
+              placeholder="Email *" 
               value={formData.email}
               onChange={handleChange}
               required
+            />
+          </div>
+
+          <div className="input-group-login">
+            <UserPlus size={20} className="input-icon" />
+            <input 
+              type="text" 
+              name="fullName"
+              placeholder="Nome Completo (opcional)" 
+              value={formData.fullName}
+              onChange={handleChange}
             />
           </div>
 
@@ -198,16 +215,10 @@ export function Register() {
             />
           </div>
 
-          {/* 🛡️ WIDGET CLOUDFLARE TURNSTILE */}
           <div 
             ref={turnstileRef} 
-            style={{ 
-              minHeight: '65px',
-              margin: '15px 0', 
-              display: 'flex', 
-              justifyContent: 'center' 
-            }}
-          />
+            style={{ margin: '15px 0', display: 'flex', justifyContent: 'center' }}
+          ></div>
 
           <Button 
             type="submit" 
