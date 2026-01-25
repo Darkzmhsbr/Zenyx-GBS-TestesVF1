@@ -70,7 +70,7 @@ export function Plans() {
       setLoading(true);
       
       // 🔥 LÓGICA DA VERSÃO FUNCIONAL: 
-      // Enviamos o bot_id DENTRO do objeto, como o main.py espera
+      // 🔥 Chamada simplificada: O ID já vai dentro do objeto (bot_id)
       await planService.createPlan({
         nome_exibicao: newPlan.nome_exibicao,
         preco_atual: parseFloat(newPlan.preco_atual),
