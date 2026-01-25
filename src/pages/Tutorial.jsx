@@ -9,13 +9,12 @@ import {
   Gem, 
   MessageSquare, 
   CreditCard,
-  BookOpen,
-  HelpCircle,
-  Zap
+  Zap,
+  HelpCircle
 } from 'lucide-react';
 
-// ✅ CORREÇÃO DO CAMINHO: Saindo de pages e entrando em styles
-import '../styles/LandingPage.css'; 
+// ✅ Caminho corrigido para o seu CSS premium
+import '../styles/LandingPage.css';
 
 export function Tutorial() {
   const [openIndex, setOpenIndex] = useState(null);
@@ -30,157 +29,134 @@ export function Tutorial() {
   };
 
   const steps = [
-    {
-      icon: <Bot size={24} />,
-      title: "Etapa 1 - Criando o Bot no Telegram",
-      content: "Acesse o Telegram e pesquise por @BotFather. Envie o comando /newbot, escolha o nome e o username do seu bot. Ao final, você receberá o Token API. Guarde-o com segurança."
-    },
-    {
-      icon: <ShieldCheck size={24} />,
-      title: "Etapa 2 - Canal ou Grupo VIP",
-      content: "Crie o canal ou grupo que será seu produto. Coloque-o como PRIVADO e adicione seu bot recém-criado como administrador com permissão total."
-    },
-    {
-      icon: <Fingerprint size={24} />,
-      title: "Etapa 3 - Obtendo IDs de Identificação",
-      content: "Use o bot @ScanIDBot. Encaminhe uma mensagem do seu canal para ele para obter o ID numérico (ex: -100...). Esse ID é essencial para o sistema Zenyx gerenciar os membros."
-    },
-    {
-      icon: <Rocket size={24} />,
-      title: "Etapa 4 - Cadastro na Plataforma Zenyx",
-      content: "No painel, vá em 'Meus Bots' > 'Novo Bot'. Preencha os dados e cole o Token do Telegram. Isso ativa a conexão entre a Zenyx e o seu robô."
-    },
-    {
-      icon: <Settings size={24} />,
-      title: "Etapa 5 - Configurações Gerais",
-      content: "Configure seu ID de Admin Principal para receber alertas de vendas e o @ de suporte para que seus clientes possam falar com você."
-    },
-    {
-      icon: <Gem size={24} />,
-      title: "Etapa 6 - Criar Planos de Acesso",
-      content: "Vá em 'Planos e Ofertas'. Crie planos semanais, mensais ou vitalícios. O sistema gerencia os prazos e remove quem não pagar automaticamente."
-    },
-    {
-      icon: <MessageSquare size={24} />,
-      title: "Etapa 7 - Fluxo de Mensagens (Flow Chat)",
-      content: "Crie o funil de vendas. Lembre-se da regra de ouro: cada mensagem pode ter um Botão OU um Atraso (Delay), nunca os dois no mesmo passo."
-    },
-    {
-      icon: <CreditCard size={24} />,
-      title: "Etapa 8 - Ativar Oferta e Checkout",
-      content: "Na última mensagem do seu fluxo, ative a opção 'Mostrar planos'. Isso habilitará o botão de pagamento e automatizará toda a sua escala."
-    }
+    { icon: <Bot />, title: "CRIAR BOT", content: "Acesse o @BotFather no Telegram, use /newbot e siga as instruções para obter seu Token API." },
+    { icon: <ShieldCheck />, title: "CONFIGURAR CANAL VIP", content: "Crie um canal privado e adicione seu bot como administrador com todas as permissões." },
+    { icon: <Fingerprint />, title: "OBTER IDS", content: "Use o @ScanIDBot para capturar o ID do seu canal (começa com -100)." },
+    { icon: <Rocket />, title: "VINCULAR PLATAFORMA", content: "Em 'Meus Bots' > 'Novo Bot', insira o Token e o ID do Canal." },
+    { icon: <Settings />, title: "AJUSTES GERAIS", content: "Defina seu ID de Admin e o suporte para atendimento ao cliente." },
+    { icon: <Gem />, title: "PLANOS E PREÇOS", content: "Crie as ofertas (ex: Mensal, Vitalício) com os valores desejados." },
+    { icon: <MessageSquare />, title: "FLOW CHAT", content: "Configure o funil automático de mensagens. Use Botão OU Delay." },
+    { icon: <CreditCard />, title: "ATIVAR VENDAS", content: "Marque 'Mostrar planos' na última mensagem para liberar o checkout." }
   ];
 
   return (
-    <div className="dashboard-container" style={{ marginTop: '70px', marginLeft: 'var(--sidebar-width)', padding: '40px 20px', minHeight: '100vh', background: '#050507' }}>
+    <div className="landing-page" style={{ 
+      marginTop: '70px', 
+      marginLeft: 'var(--sidebar-width)', 
+      padding: '60px 20px',
+      background: '#050507',
+      minHeight: 'calc(100vh - 70px)'
+    }}>
       <div className="max-w-4xl mx-auto">
         
-        {/* Cabeçalho Estilo Landing Page */}
-        <div className={`section-header ${isVisible ? 'animate-fade-in-up' : 'opacity-0'}`} style={{ textAlign: 'center', marginBottom: '50px' }}>
-          <span className="section-badge" style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', padding: '6px 16px', borderRadius: '100px', background: 'rgba(195, 51, 255, 0.1)', border: '1px solid rgba(195, 51, 255, 0.2)', color: 'var(--primary-color)', fontSize: '14px', fontWeight: '600', marginBottom: '16px' }}>
-            <Zap size={14} /> Guia de Configuração
+        {/* Header Premium */}
+        <div className={`section-header text-center mb-12 ${isVisible ? 'animate-fade-in-up' : ''}`}>
+          <span className="section-badge" style={{ marginBottom: '20px' }}>
+            <Zap size={14} style={{ color: 'var(--neon-purple)' }} /> 
+            CENTRAL DE AJUDA
           </span>
-          <h2 className="section-title" style={{ fontSize: '2.5rem', fontWeight: '800', color: '#fff', marginBottom: '16px' }}>
-            Tutoriais{' '}
-            <span style={{
-              background: 'linear-gradient(90deg, #c333ff 0%, #38bdf8 100%)',
-              WebkitBackgroundClip: 'text',
-              WebkitTextFillColor: 'transparent',
-              backgroundClip: 'text'
-            }}>
-              Passo a Passo
-            </span>
+          <h2 className="section-title" style={{ fontSize: '3rem', color: '#fff' }}>
+            Tutoriais <span className="text-gradient">Zenyx</span>
           </h2>
-          <p className="section-subtitle" style={{ color: 'rgba(255,255,255,0.6)', maxWidth: '600px', margin: '0 auto' }}>
-            Aprenda a configurar sua operação profissional em poucos minutos seguindo nosso guia.
+          <p className="section-subtitle" style={{ fontSize: '1.1rem', opacity: 0.7 }}>
+            Domine a plataforma e coloque sua operação para rodar no automático.
           </p>
         </div>
 
-        {/* Lista de Tutoriais */}
+        {/* Lista de Seletores (Estilo Landing Page) */}
         <div className="tutorials-list" style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-          {steps.map((tutorial, index) => (
+          {steps.map((step, index) => (
             <div 
               key={index} 
-              className={`tutorial-item ${isVisible ? 'animate-fade-in-up' : 'opacity-0'}`} 
+              className={`tutorial-item ${isVisible ? 'animate-fade-in-up' : ''}`}
               style={{ 
                 animationDelay: `${index * 0.1}s`,
-                background: 'rgba(15, 15, 25, 0.6)',
-                border: '1px solid rgba(255, 255, 255, 0.08)',
-                borderRadius: '16px',
-                overflow: 'hidden',
-                backdropFilter: 'blur(10px)'
+                background: 'var(--glass-bg)',
+                border: openIndex === index ? '1px solid var(--neon-purple)' : '1px solid var(--glass-border)',
+                borderRadius: '20px',
+                backdropFilter: 'blur(var(--glass-blur))',
+                transition: 'all 0.3s ease',
+                boxShadow: openIndex === index ? '0 0 30px rgba(168, 85, 247, 0.15)' : 'none'
               }}
             >
               <div 
                 className="tutorial-header" 
                 onClick={() => toggleTutorial(index)}
                 style={{
-                  padding: '20px 24px',
+                  padding: '24px',
                   display: 'flex',
                   alignItems: 'center',
                   gap: '20px',
                   cursor: 'pointer'
                 }}
               >
-                <div className="tutorial-icon" style={{
-                  width: '48px',
-                  height: '48px',
-                  background: 'linear-gradient(135deg, rgba(195, 51, 255, 0.2) 0%, rgba(56, 189, 248, 0.2) 100%)',
+                <div style={{
+                  width: '50px',
+                  height: '50px',
+                  background: openIndex === index ? 'var(--neon-purple)' : 'rgba(255,255,255,0.05)',
                   borderRadius: '12px',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  color: '#c333ff',
-                  border: '1px solid rgba(195, 51, 255, 0.3)'
+                  color: openIndex === index ? '#fff' : 'var(--neon-purple)',
+                  transition: 'all 0.3s ease',
+                  border: '1px solid rgba(168, 85, 247, 0.3)'
                 }}>
-                  {tutorial.icon}
+                  {React.cloneElement(step.icon, { size: 24 })}
                 </div>
-                <h3 className="tutorial-title" style={{
-                  flex: 1,
-                  fontSize: '1.1rem',
-                  fontWeight: '600',
-                  color: openIndex === index ? '#c333ff' : '#fff'
+                
+                <h3 style={{ 
+                  flex: 1, 
+                  fontSize: '1.2rem', 
+                  fontWeight: '700', 
+                  color: '#fff',
+                  letterSpacing: '1px'
                 }}>
-                  {tutorial.title}
+                  {step.title}
                 </h3>
+
                 <ChevronDown 
                   size={24} 
                   style={{
-                    color: openIndex === index ? '#c333ff' : 'rgba(255,255,255,0.4)',
+                    color: openIndex === index ? 'var(--neon-purple)' : 'rgba(255,255,255,0.3)',
                     transform: openIndex === index ? 'rotate(180deg)' : 'rotate(0)',
-                    transition: 'all 0.4s ease'
+                    transition: 'transform 0.5s cubic-bezier(0.4, 0, 0.2, 1)'
                   }}
                 />
               </div>
-              
-              <div 
-                style={{
-                  maxHeight: openIndex === index ? '400px' : '0',
-                  opacity: openIndex === index ? '1' : '0',
-                  overflow: 'hidden',
-                  transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
-                  background: 'rgba(0,0,0,0.2)'
-                }}
-              >
-                <div style={{ padding: '0 24px 24px 92px', color: 'rgba(255,255,255,0.7)', fontSize: '0.95rem', lineHeight: '1.6' }}>
-                  {tutorial.content}
+
+              <div style={{
+                maxHeight: openIndex === index ? '200px' : '0',
+                opacity: openIndex === index ? '1' : '0',
+                overflow: 'hidden',
+                transition: 'all 0.5s cubic-bezier(0.4, 0, 0.2, 1)'
+              }}>
+                <div style={{ 
+                  padding: '0 24px 30px 94px', 
+                  color: 'rgba(255,255,255,0.6)',
+                  lineHeight: '1.8',
+                  fontSize: '1rem'
+                }}>
+                  <div style={{ height: '1px', background: 'rgba(255,255,255,0.1)', marginBottom: '20px' }} />
+                  {step.content}
                 </div>
               </div>
             </div>
           ))}
         </div>
 
-        {/* Footer */}
-        <div style={{ marginTop: '60px', textAlign: 'center' }}>
-          <div style={{ padding: '30px', borderRadius: '24px', background: 'rgba(195, 51, 255, 0.05)', border: '1px solid rgba(195, 51, 255, 0.1)' }}>
-            <HelpCircle size={40} style={{ color: '#c333ff', margin: '0 auto 15px' }} />
-            <h4 style={{ color: '#fff', fontSize: '1.2rem', marginBottom: '8px' }}>Dúvidas Específicas?</h4>
-            <p style={{ color: 'rgba(255,255,255,0.5)', marginBottom: '20px' }}>Nosso suporte técnico está disponível para te ajudar em qualquer etapa.</p>
-            <button style={{ padding: '12px 30px', borderRadius: '12px', background: '#c333ff', color: '#fff', border: 'none', fontWeight: '600', cursor: 'pointer' }}>
-              Falar com Especialista
-            </button>
-          </div>
+        {/* Suporte Card */}
+        <div className={`mt-16 p-8 rounded-3xl text-center ${isVisible ? 'animate-fade-in-up' : ''}`} 
+             style={{ 
+               background: 'linear-gradient(135deg, rgba(168, 85, 247, 0.1) 0%, rgba(56, 189, 248, 0.1) 100%)',
+               border: '1px solid var(--glass-border)'
+             }}>
+          <HelpCircle size={48} style={{ color: 'var(--neon-blue)', margin: '0 auto 20px' }} />
+          <h4 style={{ color: '#fff', fontSize: '1.5rem', fontWeight: '800' }}>Ainda com dúvidas?</h4>
+          <p style={{ color: 'rgba(255,255,255,0.5)', marginBottom: '25px' }}>Nosso suporte mestre está pronto para te atender.</p>
+          <button className="btn-primary" style={{ padding: '15px 40px', fontSize: '1rem' }}>
+            CHAMAR NO WHATSAPP
+          </button>
         </div>
 
       </div>
