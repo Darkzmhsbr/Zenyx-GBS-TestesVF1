@@ -6,83 +6,75 @@ import { Button } from '../components/Button';
 import { Input } from '../components/Input';
 import { botService } from '../services/api';
 import { useBot } from '../context/BotContext';
-import { useAuth } from '../context/AuthContext'; // 🆕 Importado para atualizar o status de onboarding
+import { useAuth } from '../context/AuthContext'; // 🆕 Importado para o status
 import './Bots.css';
 
 export function NewBot() {
   const navigate = useNavigate();
   const { refreshBots } = useBot();
-  const { hasBot, updateHasBotStatus } = useAuth(); // 🔑 Pegamos a trava e a função de atualização
+  const { hasBot, updateHasBotStatus } = useAuth(); // 🔑 Pegamos a trava e a função
   
   // Controle de Passos: 'selection' | 'form'
   const [step, setStep] = useState('selection');
-  // Define para onde ir após criar: 'geral' ou 'miniapp'
+  // Define para onde ir apÃ³s criar: 'geral' ou 'miniapp'
   const [targetTab, setTargetTab] = useState('geral');
 
-  // Estados do Formulário
+  // Estados do FormulÃ¡rio
   const [token, setToken] = useState('');
   const [channelId, setChannelId] = useState('');
   const [botName, setBotName] = useState('');
   const [loading, setLoading] = useState(false);
 
-  // Seleciona o tipo e avança para o formulário
+  // Seleciona o tipo e avanÃ§a para o formulÃ¡rio
   const handleSelectType = (type) => {
     setTargetTab(type === 'custom' ? 'miniapp' : 'geral');
     setStep('form');
   };
 
   const handleSave = async () => {
-    if (!token || !channelId || !botName) {
-      return Swal.fire({
-        title: 'Campos Incompletos',
-        text: 'Preencha todos os campos para continuar.',
-        icon: 'warning',
-        background: '#1b1730',
-        color: '#fff',
-        confirmButtonColor: '#c333ff'
-      });
-    }
-
+    if (!token || !channelId) return Swal.fire('Erro', 'Preencha o Token e o ID do Canal!', 'warning');
+    
     setLoading(true);
-    try {
-      const response = await botService.createBot({
-        nome: botName,
-        token: token,
-        id_canal_vip: channelId,
-        admin_principal_id: null,
-        suporte_username: null
-      });
 
-      console.log("✅ Bot configurado:", response);
-      
-      // 🛠️ ATUALIZAÇÃO CRUCIAL: Notifica o sistema que agora o usuário TEM um bot
+    try {
+      const dados = {
+        nome: botName || "Bot Zenyx",
+        token: token.trim(),
+        id_canal_vip: channelId.trim()
+      };
+
+      // 1. Cria o Bot
+      const response = await botService.createBot(dados);
+
+      // 🔥 2. Atualiza status de onboarding para liberar o menu
       if (updateHasBotStatus) {
         updateHasBotStatus(true);
       }
-
+      
+      // 3. Atualiza lista no contexto
       await refreshBots();
 
       Swal.fire({
-        title: 'Bot Criado!',
-        text: 'Seu bot foi configurado com sucesso. Agora você tem acesso total ao sistema!',
+        title: 'Sucesso!',
+        text: 'Bot conectado com sucesso.',
         icon: 'success',
-        background: '#1b1730',
-        color: '#fff',
-        confirmButtonColor: '#c333ff'
-      }).then(() => {
-        // Após o primeiro bot, enviamos para o Dashboard já desbloqueado
-        navigate('/dashboard');
+        timer: 1500,
+        showConfirmButton: false,
+        background: '#151515', color: '#fff'
+      });
+
+      // 4. Redireciona para a configuraÃ§Ã£o JÃ NA ABA CERTA
+      navigate(`/bots/config/${response.id}`, { 
+        state: { initialTab: targetTab } 
       });
 
     } catch (error) {
-      console.error("Erro ao salvar bot:", error);
+      console.error(error);
       Swal.fire({
-        title: 'Erro ao Criar',
-        text: error.response?.data?.detail || 'Verifique os dados e tente novamente.',
+        title: 'Erro!',
+        text: error.response?.data?.detail || 'Falha ao criar bot.',
         icon: 'error',
-        background: '#1b1730',
-        color: '#fff',
-        confirmButtonColor: '#c333ff'
+        background: '#151515', color: '#fff'
       });
     } finally {
       setLoading(false);
@@ -90,60 +82,83 @@ export function NewBot() {
   };
 
   return (
-    <div className="bots-container">
-      <div className="bots-header">
-        <div className="header-info">
-          <h1>Criar Novo Bot</h1>
-          <p>Configure sua nova operação em poucos segundos.</p>
-        </div>
-        
-        {/* Só mostra o botão voltar se o usuário já tiver outros bots. 
-            Se for o primeiro (onboarding), ele não pode voltar para a lista vazia. */}
-        {hasBot && (
-          <Button variant="outline" onClick={() => navigate('/bots')}>
-            <ArrowLeft size={18} /> Voltar
+    <div className="new-bot-container" style={{ padding: '30px', maxWidth: '900px', margin: '0 auto', color: '#fff' }}>
+      
+      {/* HEADER COM VOLTAR */}
+      <div style={{ marginBottom: '30px', display: 'flex', alignItems: 'center', gap: '15px' }}>
+        {/* Só mostra o botão voltar se o usuário já tiver bots. Se for onboarding, a trava segura aqui. */}
+        {(hasBot || step === 'form') && (
+          <Button variant="ghost" onClick={() => step === 'form' ? setStep('selection') : navigate('/bots')}>
+            <ArrowLeft size={20} /> Voltar
           </Button>
         )}
+        <h1 style={{ margin: 0, fontSize: '1.8rem' }}>
+          {step === 'selection' ? 'Qual o seu objetivo?' : 'Conectar Novo Bot'}
+        </h1>
       </div>
 
-      <div className="bots-card">
-        {step === 'selection' ? (
-          <div className="selection-grid">
-            <div className="selection-item" onClick={() => handleSelectType('standard')}>
-              <div className="selection-icon">
-                <LayoutTemplate size={32} />
-              </div>
-              <div className="selection-content">
-                <h3>Template Padrão</h3>
-                <p>Ideal para vendas diretas e automação simples via chat.</p>
-              </div>
-              <ChevronRight className="arrow" />
+      {/* --- PASSO 1: SELEÃ‡ÃƒO --- */}
+      {step === 'selection' && (
+        <div className="selection-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '20px' }}>
+          
+          {/* CARD 1: TRADICIONAL */}
+          <div 
+            onClick={() => handleSelectType('traditional')}
+            className="selection-card"
+            style={{
+              background: '#151515', border: '1px solid #333', borderRadius: '12px', padding: '30px',
+              cursor: 'pointer', transition: 'all 0.2s', position: 'relative', overflow: 'hidden'
+            }}
+            onMouseEnter={(e) => e.currentTarget.style.borderColor = '#c333ff'}
+            onMouseLeave={(e) => e.currentTarget.style.borderColor = '#333'}
+          >
+            <div style={{ background: 'rgba(195, 51, 255, 0.1)', width: 60, height: 60, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 20 }}>
+              <MessageSquare size={32} color="#c333ff" />
             </div>
-
-            <div className="selection-item" onClick={() => handleSelectType('custom')}>
-              <div className="selection-icon" style={{ background: 'rgba(195, 51, 255, 0.1)', color: '#c333ff' }}>
-                <ShoppingBag size={32} />
-              </div>
-              <div className="selection-content">
-                <h3>Bot com Loja (Mini App)</h3>
-                <p>O visual mais moderno. Loja completa dentro do Telegram.</p>
-              </div>
-              <ChevronRight className="arrow" />
+            <h3 style={{ fontSize: '1.4rem', marginBottom: '10px' }}>Bot Tradicional</h3>
+            <p style={{ color: '#888', lineHeight: '1.5', marginBottom: '20px' }}>
+              Focado em atendimento e vendas diretas. Configurar planos, mensagens automÃ¡ticas, remarketing e gestÃ£o de assinaturas.
+            </p>
+            <div style={{ display: 'flex', alignItems: 'center', color: '#c333ff', fontWeight: 'bold', fontSize: '0.9rem' }}>
+              Configurar Chat <ChevronRight size={16} />
             </div>
           </div>
-        ) : (
-          <div className="bot-form">
-            <div className="form-header-row">
-              <button className="back-step" onClick={() => setStep('selection')}>
-                <ArrowLeft size={16} /> Alterar tipo
-              </button>
+
+          {/* CARD 2: PERSONALIZADO (LOJA) */}
+          <div 
+            onClick={() => handleSelectType('custom')}
+            className="selection-card"
+            style={{
+              background: '#151515', border: '1px solid #333', borderRadius: '12px', padding: '30px',
+              cursor: 'pointer', transition: 'all 0.2s'
+            }}
+            onMouseEnter={(e) => e.currentTarget.style.borderColor = '#10b981'}
+            onMouseLeave={(e) => e.currentTarget.style.borderColor = '#333'}
+          >
+            <div style={{ background: 'rgba(16, 185, 129, 0.1)', width: 60, height: 60, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 20 }}>
+              <ShoppingBag size={32} color="#10b981" />
+            </div>
+            <h3 style={{ fontSize: '1.4rem', marginBottom: '10px' }}>Bot Personalizado (Loja)</h3>
+            <p style={{ color: '#888', lineHeight: '1.5', marginBottom: '20px' }}>
+              Crie uma experiÃªncia visual rica com Mini App. Configure interface de loja, categorias, mÃ­dias, banners e catÃ¡logo de produtos.
+            </p>
+            <div style={{ display: 'flex', alignItems: 'center', color: '#10b981', fontWeight: 'bold', fontSize: '0.9rem' }}>
+              Criar Loja / MiniApp <ChevronRight size={16} />
+            </div>
+          </div>
+
+        </div>
+      )}
+
+      {/* --- PASSO 2: FORMULÃRIO --- */}
+      {step === 'form' && (
+        <div className="form-container" style={{ maxWidth: '500px', margin: '0 auto', animation: 'fadeIn 0.3s ease' }}>
+          <div style={{ background: '#151515', padding: '30px', borderRadius: '12px', border: '1px solid #333' }}>
+            <div style={{ marginBottom: '20px', textAlign: 'center' }}>
               <div style={{ 
-                fontSize: '13px', 
-                color: 'var(--primary)', 
-                fontWeight: '600',
-                display: 'inline-flex', 
-                alignItems: 'center', 
-                gap: '8px' 
+                background: targetTab === 'miniapp' ? 'rgba(16, 185, 129, 0.1)' : 'rgba(195, 51, 255, 0.1)', 
+                color: targetTab === 'miniapp' ? '#10b981' : '#c333ff',
+                padding: '10px', borderRadius: '8px', display: 'inline-flex', alignItems: 'center', gap: '8px' 
               }}>
                 {targetTab === 'miniapp' ? <ShoppingBag size={20}/> : <MessageSquare size={20}/>}
                 <span>Criando {targetTab === 'miniapp' ? 'Bot Loja' : 'Bot Tradicional'}</span>
@@ -175,12 +190,13 @@ export function NewBot() {
 
             <div style={{ paddingTop: '20px', marginTop: '10px' }}>
               <Button onClick={handleSave} style={{ width: '100%' }} disabled={loading}>
-                {loading ? 'Salvando...' : 'Finalizar e Ativar Bot'}
+                {loading ? 'Conectando...' : <><ShieldCheck size={18} /> Salvar e Continuar</>}
               </Button>
             </div>
           </div>
-        )}
-      </div>
+        </div>
+      )}
+
     </div>
   );
 }
