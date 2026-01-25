@@ -27,7 +27,8 @@ export function Plans() {
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
 
   useEffect(() => {
-    if (selectedBot && selectedBot.id) {
+    // 🔥 Blindagem: Verifica se o ID existe e é um número/string válido
+    if (selectedBot && (selectedBot.id || typeof selectedBot === 'number' || typeof selectedBot === 'string')) {
         carregarPlanos();
     } else {
         setPlans([]);
@@ -35,9 +36,9 @@ export function Plans() {
   }, [selectedBot]);
 
   const carregarPlanos = async () => {
-    // 🔥 CORREÇÃO: Garante que estamos usando o ID numérico
-    const botId = selectedBot?.id;
-    if (!botId) return;
+    // 🎯 Captura o ID de forma segura
+    const botId = typeof selectedBot === 'object' ? selectedBot.id : selectedBot;
+    if (!botId || botId === '[object Object]') return;
 
     try {
       const lista = await planService.listPlans(botId);
@@ -55,25 +56,27 @@ export function Plans() {
   };
 
   const handleCreate = async () => {
-    // 🔥 CORREÇÃO: Garante que o bot_id seja apenas o número
-    const botId = selectedBot?.id;
+    // 🎯 Captura o ID de forma segura para a URL
+    const botId = typeof selectedBot === 'object' ? selectedBot.id : selectedBot;
 
     if (!newPlan.nome_exibicao || !newPlan.preco_atual || !newPlan.dias_duracao) {
       return Swal.fire('Atenção', 'Preencha todos os campos.', 'warning');
     }
 
-    if (!botId) {
-      return Swal.fire('Erro', 'Selecione um bot primeiro.', 'error');
+    if (!botId || botId === '[object Object]') {
+      return Swal.fire('Erro', 'ID do Bot inválido ou não selecionado.', 'error');
     }
 
     try {
       setLoading(true);
       
-      // Enviamos o ID isolado para evitar o erro [object Object]
+      // 🔥 AQUI ESTÁ O PULO DO GATO:
+      // Passamos o botId explicitamente como primeiro argumento se o seu service exigir, 
+      // ou garantimos que ele vá apenas como ID no objeto.
       await planService.createPlan({
         ...newPlan,
         bot_id: botId 
-      });
+      }, botId); // Passamos o botId extra caso o service use para montar a URL
       
       setNewPlan({ nome_exibicao: '', preco_atual: '', dias_duracao: '' });
       carregarPlanos();
@@ -88,8 +91,8 @@ export function Plans() {
         color: '#fff'
       });
     } catch (error) {
-      console.error(error);
-      Swal.fire('Erro', 'Falha ao criar plano.', 'error');
+      console.error("Erro na criação:", error);
+      Swal.fire('Erro', 'Falha ao criar plano. Verifique o console.', 'error');
     } finally {
       setLoading(false);
     }
@@ -154,11 +157,10 @@ export function Plans() {
       {selectedBot ? (
         <>
           <div className="page-header">
-            <h1>Planos de Acesso: <span className="highlight-text">{selectedBot.nome}</span></h1>
+            <h1>Planos de Acesso: <span className="highlight-text">{selectedBot.nome || 'Bot Selecionado'}</span></h1>
             <p className="page-subtitle">Gerencie os valores e durações dos acessos ao seu canal VIP.</p>
           </div>
 
-          {/* CARD DE CRIAÇÃO */}
           <Card className="create-plan-card">
             <CardContent>
               <div className="card-header-title">
@@ -219,7 +221,6 @@ export function Plans() {
             ))}
           </div>
 
-          {/* MODAL DE EDIÇÃO */}
           {isEditModalOpen && (
             <div className="modal-overlay">
               <div className="modal-content">
@@ -261,7 +262,6 @@ export function Plans() {
               </div>
             </div>
           )}
-
         </>
       ) : (
         <div className="empty-state">
