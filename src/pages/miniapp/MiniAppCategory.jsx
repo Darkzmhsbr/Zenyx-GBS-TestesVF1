@@ -60,10 +60,13 @@ export function MiniAppCategory() {
                             <h2 style={{ color: category.model_name_color || '#ffffff' }}>
                                 {category.model_name}
                             </h2>
-                            <p style={{ color: category.model_desc_color || '#cccccc' }}>
-                            whiteSpace: 'pre-wrap' //
-                            </p>
-                            <p style={{ color: category.model_desc_color || '#cccccc', whiteSpace: 'pre-wrap' }}>                                {category.model_desc || category.description}
+                            <p style={{ 
+                                color: category.model_desc_color || '#cccccc', 
+                                whiteSpace: 'pre-wrap',  // ✅ FORÇA A QUEBRA DE LINHA
+                                textAlign: 'left',       // ✅ MUDE AQUI: 'left', 'center' ou 'right'
+                                margin: '10px 0'         // Um respiro para o texto não colar no título
+                            }}>
+                                {category.model_desc || category.description}
                             </p>
                         </div>
                     </div>
