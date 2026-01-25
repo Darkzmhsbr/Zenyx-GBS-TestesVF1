@@ -16,16 +16,16 @@ export function NewBot() {
   
   // Controle de Passos: 'selection' | 'form'
   const [step, setStep] = useState('selection');
-  // Define para onde ir apÃ³s criar: 'geral' ou 'miniapp'
+  // Define para onde ir após criar: 'geral' ou 'miniapp'
   const [targetTab, setTargetTab] = useState('geral');
 
-  // Estados do FormulÃ¡rio
+  // Estados do Formulário
   const [token, setToken] = useState('');
   const [channelId, setChannelId] = useState('');
   const [botName, setBotName] = useState('');
   const [loading, setLoading] = useState(false);
 
-  // Seleciona o tipo e avanÃ§a para o formulÃ¡rio
+  // Seleciona o tipo e avança para o formulário
   const handleSelectType = (type) => {
     setTargetTab(type === 'custom' ? 'miniapp' : 'geral');
     setStep('form');
@@ -63,7 +63,7 @@ export function NewBot() {
         background: '#151515', color: '#fff'
       });
 
-      // 4. Redireciona para a configuraÃ§Ã£o JÃ NA ABA CERTA
+      // 4. Redireciona para a configuração JÁ NA ABA CERTA
       navigate(`/bots/config/${response.id}`, { 
         state: { initialTab: targetTab } 
       });
@@ -86,8 +86,8 @@ export function NewBot() {
       
       {/* HEADER COM VOLTAR */}
       <div style={{ marginBottom: '30px', display: 'flex', alignItems: 'center', gap: '15px' }}>
-        {/* Só mostra o botão voltar se o usuário já tiver bots. Se for onboarding, a trava segura aqui. */}
-        {(hasBot || step === 'form') && (
+        {/* LÓGICA DE VOLTAR: No form ele volta para seleção. Na seleção ele só volta para lista se JÁ TIVER bot. */}
+        {(step === 'form' || hasBot) && (
           <Button variant="ghost" onClick={() => step === 'form' ? setStep('selection') : navigate('/bots')}>
             <ArrowLeft size={20} /> Voltar
           </Button>
@@ -97,7 +97,7 @@ export function NewBot() {
         </h1>
       </div>
 
-      {/* --- PASSO 1: SELEÃ‡ÃƒO --- */}
+      {/* --- PASSO 1: SELEÇÃO (TEXTOS CORRIGIDOS) --- */}
       {step === 'selection' && (
         <div className="selection-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '20px' }}>
           
@@ -117,7 +117,7 @@ export function NewBot() {
             </div>
             <h3 style={{ fontSize: '1.4rem', marginBottom: '10px' }}>Bot Tradicional</h3>
             <p style={{ color: '#888', lineHeight: '1.5', marginBottom: '20px' }}>
-              Focado em atendimento e vendas diretas. Configurar planos, mensagens automÃ¡ticas, remarketing e gestÃ£o de assinaturas.
+              Focado em atendimento e vendas diretas. Configurar planos, mensagens automáticas, remarketing e gestão de assinaturas.
             </p>
             <div style={{ display: 'flex', alignItems: 'center', color: '#c333ff', fontWeight: 'bold', fontSize: '0.9rem' }}>
               Configurar Chat <ChevronRight size={16} />
@@ -140,7 +140,7 @@ export function NewBot() {
             </div>
             <h3 style={{ fontSize: '1.4rem', marginBottom: '10px' }}>Bot Personalizado (Loja)</h3>
             <p style={{ color: '#888', lineHeight: '1.5', marginBottom: '20px' }}>
-              Crie uma experiÃªncia visual rica com Mini App. Configure interface de loja, categorias, mÃ­dias, banners e catÃ¡logo de produtos.
+              Crie uma experiência visual rica com Mini App. Configure interface de loja, categorias, mídias, banners e catálogo de produtos.
             </p>
             <div style={{ display: 'flex', alignItems: 'center', color: '#10b981', fontWeight: 'bold', fontSize: '0.9rem' }}>
               Criar Loja / MiniApp <ChevronRight size={16} />
@@ -150,7 +150,7 @@ export function NewBot() {
         </div>
       )}
 
-      {/* --- PASSO 2: FORMULÃRIO --- */}
+      {/* --- PASSO 2: FORMULÁRIO --- */}
       {step === 'form' && (
         <div className="form-container" style={{ maxWidth: '500px', margin: '0 auto', animation: 'fadeIn 0.3s ease' }}>
           <div style={{ background: '#151515', padding: '30px', borderRadius: '12px', border: '1px solid #333' }}>
