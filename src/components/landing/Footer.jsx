@@ -50,7 +50,7 @@ export function Footer() {
             <h4>Redes Sociais</h4>
             <ul className="footer-links">
               <li><a href="#" target="_blank" rel="noopener noreferrer">Instagram</a></li>
-              <li><a href="#" target="_blank" rel="noopener noreferrer">Telegram</a></li>
+              <li><a href="https://t.me/zenyxvips" target="_blank" rel="noopener noreferrer">Telegram</a></li>
               <li><a href="#" target="_blank" rel="noopener noreferrer">Twitter/X</a></li>
               <li><a href="#" target="_blank" rel="noopener noreferrer">YouTube</a></li>
             </ul>

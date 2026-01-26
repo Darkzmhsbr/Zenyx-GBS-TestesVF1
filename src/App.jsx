@@ -3,10 +3,16 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import { BotProvider } from './context/BotContext';
 import { AuthProvider } from './context/AuthContext';
 import { MainLayout } from './layout/MainLayout';
-// âœ… CORREÃ‡ÃƒO: ImportaÃ§Ã£o nomeada com chaves { Login }
+
+// ✅ IMPORTAÇÃO NOMEADA CORRETA
 import { Login } from './pages/Login';
 import { Register } from './pages/Register';
-import { LandingPage } from './pages/LandingPage'; // ðŸ†• LANDING PAGE
+import { LandingPage } from './pages/LandingPage'; 
+
+// ⚖️ NOVAS PÁGINAS LEGAIS
+import { Terms } from './pages/Terms';
+import { Privacy } from './pages/Privacy';
+import { Refund } from './pages/Refund';
 
 import { Dashboard } from './pages/Dashboard';
 import { Contacts } from './pages/Contacts';
@@ -23,11 +29,11 @@ import { OrderBump } from './pages/OrderBump';
 import { Profile } from './pages/Profile';
 import { Tracking } from './pages/Tracking';
 import { AuditLogs } from './pages/AuditLogs'; // FASE 3.3
-import { SuperAdmin } from './pages/SuperAdmin'; // ðŸ†• FASE 3.4
-import { SuperAdminUsers } from './pages/SuperAdminUsers'; // ðŸ†• FASE 3.4
+import { SuperAdmin } from './pages/SuperAdmin'; // 👑 FASE 3.4
+import { SuperAdminUsers } from './pages/SuperAdminUsers'; // 👑 FASE 3.4
 import { Tutorial } from './pages/Tutorial'; // 🔥 IMPORTAÇÃO DA NOVA PÁGINA
 
-// ðŸ”¥ IMPORTANDO A LOJA REAL
+// 🔥 IMPORTANDO A LOJA REAL
 import { MiniAppHome } from './pages/miniapp/MiniAppHome';
 import { MiniAppCategory } from './pages/miniapp/MiniAppCategory';
 import { MiniAppCheckout } from './pages/miniapp/MiniAppCheckout';
@@ -44,15 +50,15 @@ const Logout = () => {
 const PlaceholderPage = ({ title }) => (
   <div style={{ padding: '40px', marginTop: '70px', marginLeft: '260px' }}>
     <h1 style={{ color: 'var(--primary)' }}>{title}</h1>
-    <p style={{ color: 'var(--muted-foreground)' }}>Esta pÃ¡gina estÃ¡ em construÃ§Ã£o...</p>
+    <p style={{ color: 'var(--muted-foreground)' }}>Esta página está em construção...</p>
   </div>
 );
 
 function App() {
-  // ðŸ”¥ LÃ“GICA DE CAPTURA GLOBAL (IGUAL AO SEU OUTRO PROJETO)
-  // Isso roda uma vez quando o app abre e garante que o usuÃ¡rio seja identificado
+  // 🔥 LÓGICA DE CAPTURA GLOBAL (IGUAL AO SEU OUTRO PROJETO)
+  // Isso roda uma vez quando o app abre e garante que o usuário seja identificado
   useEffect(() => {
-    // Verifica se o script do Telegram jÃ¡ carregou ou injeta se necessÃ¡rio (fallback)
+    // Verifica se o script do Telegram já carregou ou injeta se necessário (fallback)
     if (!window.Telegram) {
         const script = document.createElement('script');
         script.src = "https://telegram.org/js/telegram-web-app.js";
@@ -70,16 +76,16 @@ function App() {
             const user = tg.initDataUnsafe?.user;
             
             if (user) {
-                console.log("âœ… [App.js] Cliente Telegram Detectado:", user.first_name);
+                console.log("✅ [App.js] Cliente Telegram Detectado:", user.first_name);
                 
-                // ðŸ’¾ SALVA NO LOCALSTORAGE (A Chave do Sucesso)
+                // 💾 SALVA NO LOCALSTORAGE (A Chave do Sucesso)
                 localStorage.setItem('telegram_user_id', user.id);
                 localStorage.setItem('telegram_user_first_name', user.first_name);
                 
                 if (user.username) {
                     localStorage.setItem('telegram_username', user.username);
                 } else {
-                    localStorage.removeItem('telegram_username'); // Limpa se nÃ£o tiver
+                    localStorage.removeItem('telegram_username'); // Limpa se não tiver
                 }
                 
                 // Aplica cores do tema
@@ -93,7 +99,7 @@ function App() {
         }
     }, 200); // Verifica a cada 200ms
 
-    // Para de tentar depois de 5 segundos para nÃ£o ficar rodando pra sempre
+    // Para de tentar depois de 5 segundos para não ficar rodando pra sempre
     setTimeout(() => clearInterval(checkTelegram), 5000);
 
     return () => clearInterval(checkTelegram);
@@ -104,15 +110,20 @@ function App() {
       <BotProvider>
         <Router>
           <Routes>
-            {/* ðŸ†• ROTA DA LANDING PAGE NA RAIZ */}
+            {/* 🆕 ROTA DA LANDING PAGE NA RAIZ */}
             <Route path="/" element={<LandingPage />} />
             
-            {/* Rotas de AutenticaÃ§Ã£o */}
+            {/* ⚖️ ROTAS DE DOCUMENTOS LEGAIS (Públicas) */}
+            <Route path="/termos" element={<Terms />} />
+            <Route path="/privacidade" element={<Privacy />} />
+            <Route path="/reembolso" element={<Refund />} />
+
+            {/* Rotas de Autenticação */}
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
             <Route path="/logout" element={<Logout />} />
             
-            {/* ðŸ”¥ ROTAS PÃšBLICAS DA LOJA (MINI APP) */}
+            {/* 🔥 ROTAS PÚBLICAS DA LOJA (MINI APP) */}
             <Route path="/loja/:botId" element={<MiniAppHome />} />
             <Route path="/loja/:botId/categoria/:slug" element={<MiniAppCategory />} />
             <Route path="/loja/:botId/checkout" element={<MiniAppCheckout />} />
@@ -140,23 +151,23 @@ function App() {
               {/* FASE 3.3: ROTA DE AUDIT LOGS */}
               <Route path="/audit-logs" element={<AuditLogs />} />
               
-              {/* ðŸ‘‘ FASE 3.4: ROTAS SUPER ADMIN */}
+              {/* 👑 FASE 3.4: ROTAS SUPER ADMIN */}
               <Route path="/superadmin" element={<SuperAdmin />} />
               <Route path="/superadmin/users" element={<SuperAdminUsers />} />
               
-              <Route path="/config" element={<PlaceholderPage title="ConfiguraÃ§Ãµes Gerais" />} />
+              <Route path="/config" element={<PlaceholderPage title="Configurações Gerais" />} />
               
-              {/* 🔥 ROTA DE TUTORIAIS ATUALIZADA - AGORA APONTANDO PARA O COMPONENTE REAL */}
+              {/* 🔥 ROTA DE TUTORIAIS ATUALIZADA */}
               <Route path="/tutorial" element={<Tutorial />} />
               <Route path="/tutoriais" element={<Tutorial />} />
               
-              <Route path="/funcoes" element={<PlaceholderPage title="FunÃ§Ãµes Extras" />} />
+              <Route path="/funcoes" element={<PlaceholderPage title="Funções Extras" />} />
               <Route path="/funcoes/admins" element={<AdminManager />} />
               <Route path="/funcoes/grupos" element={<PlaceholderPage title="Grupos e Canais" />} />
               <Route path="/funcoes/free" element={<PlaceholderPage title="Canal Free" />} />
             </Route>
 
-            {/* Qualquer outra rota nÃ£o encontrada redireciona para landing page */}
+            {/* Qualquer outra rota não encontrada redireciona para landing page */}
             <Route path="*" element={<Navigate to="/" replace />} />
 
           </Routes>
