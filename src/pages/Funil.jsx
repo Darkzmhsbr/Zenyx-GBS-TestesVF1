@@ -253,11 +253,16 @@ export function Funil() {
               {tab.count > 0 && (
                 <span style={{ 
                   marginLeft: '8px', 
-                  background: activeTab === tab.id ? '#c333ff' : '#333',
+                  background: activeTab === tab.id ? 'rgba(255, 255, 255, 0.25)' : 'rgba(195, 51, 255, 0.15)',
+                  color: '#fff', 
                   padding: '2px 8px',
                   borderRadius: '10px',
                   fontSize: '0.75rem',
-                  fontWeight: 'bold'
+                  fontWeight: 'bold',
+                  border: activeTab === tab.id ? '1px solid rgba(255, 255, 255, 0.3)' : '1px solid rgba(195, 51, 255, 0.3)',
+                  display: 'inline-block',
+                  minWidth: '24px',
+                  textAlign: 'center'
                 }}>
                   {tab.count}
                 </span>

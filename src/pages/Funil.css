@@ -73,7 +73,7 @@
   margin-top: 5px;
 }
 
-/* TABS */
+/* TABS - CORREÇÃO DE VISUALIZAÇÃO DOS FILTROS */
 .tabs-container {
   margin-bottom: 25px;
   border-bottom: 1px solid var(--card-border);
@@ -87,7 +87,7 @@
 }
 
 .filter-tab {
-  padding: 10px 20px;
+  padding: 12px 20px;
   background: transparent;
   color: var(--muted-foreground);
   border: none;
@@ -97,6 +97,8 @@
   font-size: 0.95rem;
   transition: all 0.3s;
   white-space: nowrap;
+  display: flex;
+  align-items: center;
 }
 
 .filter-tab:hover {
@@ -107,7 +109,14 @@
 .filter-tab.active {
   color: #c333ff;
   border-bottom: 2px solid #c333ff;
-  background: linear-gradient(180deg, rgba(195, 51, 255, 0.1) 0%, transparent 100%);
+  background: linear-gradient(180deg, rgba(195, 51, 255, 0.15) 0%, transparent 100%);
+}
+
+/* Ajuste no contador dentro da Tab Ativa para não "sumir" no roxo */
+.filter-tab.active span {
+  background: #c333ff !important;
+  color: #fff !important;
+  box-shadow: 0 0 10px rgba(195, 51, 255, 0.5);
 }
 
 /* TABELA */
@@ -178,29 +187,10 @@
   letter-spacing: 0.5px;
 }
 
-.funil-badge.topo { 
-  background: rgba(59, 130, 246, 0.1); 
-  color: #3b82f6; 
-  border: 1px solid rgba(59, 130, 246, 0.3); 
-}
-
-.funil-badge.meio { 
-  background: rgba(245, 158, 11, 0.1); 
-  color: #f59e0b; 
-  border: 1px solid rgba(245, 158, 11, 0.3); 
-}
-
-.funil-badge.fundo { 
-  background: rgba(16, 185, 129, 0.1); 
-  color: #10b981; 
-  border: 1px solid rgba(16, 185, 129, 0.3); 
-}
-
-.funil-badge.expirado { 
-  background: rgba(239, 68, 68, 0.1); 
-  color: #ef4444; 
-  border: 1px solid rgba(239, 68, 68, 0.3); 
-}
+.funil-badge.topo { background: rgba(59, 130, 246, 0.1); color: #3b82f6; border: 1px solid rgba(59, 130, 246, 0.3); }
+.funil-badge.meio { background: rgba(245, 158, 11, 0.1); color: #f59e0b; border: 1px solid rgba(245, 158, 11, 0.3); }
+.funil-badge.fundo { background: rgba(16, 185, 129, 0.1); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.3); }
+.funil-badge.expirado { background: rgba(239, 68, 68, 0.1); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.3); }
 
 /* PAGINAÇÃO */
 .pagination-controls {
@@ -225,34 +215,16 @@
 /* RESPONSIVIDADE */
 @media (max-width: 768px) {
   .funil-container { padding: 15px; margin-left: 0; }
-  
-  .metrics-grid {
-    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-    gap: 15px;
-  }
-  
+  .metrics-grid { grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 15px; }
   .metric-value { font-size: 1.5rem; }
-  
   .table-container { background: transparent; border: none; box-shadow: none; }
   .custom-table thead { display: none; }
   .custom-table, .custom-table tbody, .custom-table tr, .custom-table td { display: block; width: 100%; }
   .custom-table tr { background: var(--card); border: 1px solid var(--card-border); border-radius: 12px; margin-bottom: 20px; padding: 15px; }
   .custom-table td { display: flex; justify-content: space-between; text-align: right; padding: 10px 0; border-bottom: 1px solid rgba(255,255,255,0.05); }
-  
-  .pagination-controls { 
-    flex-direction: column; 
-    gap: 15px; 
-  }
-  .page-info { 
-    text-align: center; 
-  }
+  .pagination-controls { flex-direction: column; gap: 15px; }
+  .page-info { text-align: center; }
 }
 
-.spin {
-  animation: spin 1s linear infinite;
-}
-
-@keyframes spin {
-  from { transform: rotate(0deg); }
-  to { transform: rotate(360deg); }
-}
+.spin { animation: spin 1s linear infinite; }
+@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
