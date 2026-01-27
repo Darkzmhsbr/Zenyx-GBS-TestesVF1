@@ -34,8 +34,8 @@ import { SuperAdmin } from './pages/SuperAdmin';
 import { SuperAdminUsers } from './pages/SuperAdminUsers';
 import { Tutorial } from './pages/Tutorial';
 
-// 🆕 NOVA PÁGINA: Disparo Automático
-import { AutoRemarketing } from './pages/Autoremarketing';
+// 🆕 NOVA PÁGINA: Disparo Automático (Renomeada para evitar conflito)
+import { AutoRemarketing } from './pages/AutoRemarketingPage';
 
 // Mini App (Loja)
 import { MiniAppHome } from './pages/miniapp/MiniAppHome';
