@@ -1,629 +1,835 @@
 import React, { useState, useEffect } from 'react';
 import { useBot } from '../context/BotContext';
-import { remarketingService, planService } from '../services/api';
-import { Send, Users, Image, MessageSquare, CheckCircle, AlertTriangle, History, Tag, Clock, RotateCcw, Edit, Play, Trash2, ChevronLeft, ChevronRight } from 'lucide-react';
-import { Button } from '../components/Button';
-import { Card, CardContent } from '../components/Card';
-import { RichInput } from '../components/RichInput'; // 🔥 NOVO COMPONENTE
-import Swal from 'sweetalert2';
+import { remarketingService, botService } from '../services/api';
 import './Remarketing.css';
+
+// Ícones (usando Unicode)
+const Icons = {
+  Save: '💾',
+  Rocket: '🚀',
+  Message: '💬',
+  Photo: '🖼️',
+  Video: '🎥',
+  Clock: '⏰',
+  Trash: '🗑️',
+  Plus: '➕',
+  Check: '✅',
+  Alert: '⚠️',
+  Chart: '📊',
+  Fire: '🔥',
+  Money: '💰',
+  Users: '👥',
+  Star: '⭐'
+};
 
 export function Remarketing() {
   const { selectedBot } = useBot();
-  const [step, setStep] = useState(1);
-  const [loading, setLoading] = useState(false);
-  const [plans, setPlans] = useState([]);
-  const [history, setHistory] = useState([]);
   
-  // Estados de paginação
-  const [currentPage, setCurrentPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
-  const [totalCount, setTotalCount] = useState(0);
-  const [perPage] = useState(10);
-  
-  // Estado do Formulário
-  const [formData, setFormData] = useState({
-    target: 'todos', 
-    mensagem: '',
+  // Estados para Disparo Automático
+  const [remarketingConfig, setRemarketingConfig] = useState({
+    is_active: false,
+    message_text: '',
     media_url: '',
-    incluir_oferta: false,
-    plano_oferta_id: '',
-    price_mode: 'original',
-    custom_price: '',
-    expiration_mode: 'none',
-    expiration_value: ''
+    media_type: null,
+    delay_minutes: 5,
+    auto_destruct_seconds: 0,
+    promo_values: {}
   });
-
+  
+  // Estados para Mensagens Alternantes
+  const [alternatingConfig, setAlternatingConfig] = useState({
+    is_active: false,
+    messages: [],
+    rotation_interval_seconds: 15,
+    stop_before_remarketing_seconds: 60,
+    auto_destruct_final: false
+  });
+  
+  // Estados para Analytics
+  const [stats, setStats] = useState({
+    total_sent: 0,
+    total_converted: 0,
+    conversion_rate: 0,
+    today_sent: 0,
+    recent_logs: []
+  });
+  
+  // Estados de UI
+  const [activeTab, setActiveTab] = useState('disparo'); // 'disparo', 'alternating', 'analytics'
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [planos, setPlanos] = useState([]);
+  const [newMessage, setNewMessage] = useState('');
+  
+  // Carregar dados ao iniciar ou trocar bot
   useEffect(() => {
     if (selectedBot) {
-      planService.listPlans(selectedBot.id).then(setPlans).catch(console.error);
-      carregarHistorico();
+      loadAllData();
     }
-  }, [selectedBot, currentPage]);
-
-  const carregarHistorico = async () => {
-    if (!selectedBot) return;
+  }, [selectedBot]);
+  
+  // Função principal de carregamento
+  async function loadAllData() {
+    if (!selectedBot?.id) return;
     
-    try {
-      const response = await remarketingService.getHistory(selectedBot.id, currentPage, perPage);
-      setHistory(Array.isArray(response.data) ? response.data : []);
-      setTotalCount(response.total || 0);
-      setTotalPages(response.total_pages || 1);
-    } catch (error) {
-      console.error("Erro ao carregar histórico:", error);
-      setHistory([]);
-    }
-  };
-
-  const goToPage = (page) => {
-    if (page >= 1 && page <= totalPages) {
-      setCurrentPage(page);
-    }
-  };
-
-  const nextPage = () => goToPage(currentPage + 1);
-  const prevPage = () => goToPage(currentPage - 1);
-
-  const handleDelete = async (historyId) => {
-    const result = await Swal.fire({
-      title: 'Deletar campanha?',
-      text: "Esta ação não pode ser desfeita.",
-      icon: 'warning',
-      showCancelButton: true,
-      confirmButtonColor: '#ef4444',
-      cancelButtonColor: '#3085d6',
-      confirmButtonText: 'Sim, deletar',
-      cancelButtonText: 'Cancelar',
-      background: '#151515',
-      color: '#fff'
-    });
-
-    if (result.isConfirmed) {
-      try {
-        await remarketingService.deleteHistory(historyId);
-        Swal.fire({
-          title: 'Deletado!',
-          icon: 'success',
-          timer: 1500,
-          showConfirmButton: false,
-          background: '#151515',
-          color: '#fff'
-        });
-        carregarHistorico();
-      } catch (error) {
-        console.error('Erro ao deletar:', error);
-        Swal.fire({
-          title: 'Erro',
-          text: 'Falha ao deletar campanha.',
-          icon: 'error',
-          background: '#151515',
-          color: '#fff'
-        });
-      }
-    }
-  };
-
-  const handleReusar = (item) => {
-    try {
-      const config = typeof item.config === 'string' ? JSON.parse(item.config) : item.config;
-      setFormData({
-        target: item.target || 'todos',
-        mensagem: config.mensagem || '',
-        media_url: config.media_url || '',
-        incluir_oferta: config.incluir_oferta || false,
-        plano_oferta_id: config.plano_oferta_id || '',
-        price_mode: config.price_mode || 'original',
-        custom_price: config.custom_price || '',
-        expiration_mode: config.expiration_mode || 'none',
-        expiration_value: config.expiration_value || ''
-      });
-      setStep(1);
-      window.scrollTo(0, 0);
-    } catch (error) {
-      console.error("Erro ao reusar campanha:", error);
-      Swal.fire({
-        title: 'Erro',
-        text: 'Falha ao carregar configuração da campanha.',
-        icon: 'error',
-        background: '#151515',
-        color: '#fff'
-      });
-    }
-  };
-
-  // 🔥 [CORRIGIDO] Função de teste individual
-  const handleTestarIndividual = async (item) => {
-    const { value: telegramId } = await Swal.fire({
-      title: 'Testar Envio Individual',
-      input: 'text',
-      inputLabel: 'Digite o Telegram ID para receber o teste:',
-      inputPlaceholder: 'Ex: 123456789',
-      showCancelButton: true,
-      confirmButtonText: 'Enviar Teste',
-      cancelButtonText: 'Cancelar',
-      background: '#151515',
-      color: '#fff',
-      inputValidator: (value) => {
-        if (!value) return 'Por favor, digite um Telegram ID';
-        if (!/^\d+$/.test(value)) return 'Telegram ID deve conter apenas números';
-      }
-    });
-
-    if (telegramId) {
-      try {
-        setLoading(true);
-        
-        Swal.fire({
-          title: 'Enviando...',
-          text: 'Aguarde enquanto o teste é enviado.',
-          allowOutsideClick: false,
-          didOpen: () => {
-            Swal.showLoading();
-          }
-        });
-        
-        await remarketingService.sendIndividual(
-          selectedBot.id, 
-          telegramId, 
-          item.id
-        );
-        
-        Swal.fire({
-          title: 'Teste Enviado!',
-          text: `Mensagem enviada para o ID ${telegramId}`,
-          icon: 'success',
-          timer: 2000,
-          showConfirmButton: false,
-          background: '#151515',
-          color: '#fff'
-        });
-      } catch (error) {
-        console.error('Erro ao enviar teste:', error);
-        Swal.fire({
-          title: 'Erro',
-          text: error.response?.data?.detail || 'Falha ao enviar teste.',
-          icon: 'error',
-          background: '#151515',
-          color: '#fff'
-        });
-      } finally {
-        setLoading(false);
-      }
-    }
-  };
-
-  const handleEnviar = async () => {
-    // Validações
-    if (!formData.mensagem.trim()) {
-      Swal.fire({
-        title: 'Atenção',
-        text: 'Por favor, escreva uma mensagem.',
-        icon: 'warning',
-        background: '#151515',
-        color: '#fff'
-      });
-      return;
-    }
-
-    if (formData.incluir_oferta && !formData.plano_oferta_id) {
-      Swal.fire({
-        title: 'Atenção',
-        text: 'Selecione um plano para a oferta.',
-        icon: 'warning',
-        background: '#151515',
-        color: '#fff'
-      });
-      return;
-    }
-
     setLoading(true);
     
-    Swal.fire({
-      title: 'Enviando...',
-      text: 'Aguarde enquanto a campanha é enviada.',
-      allowOutsideClick: false,
-      didOpen: () => {
-        Swal.showLoading();
-      }
-    });
-    
     try {
-      const result = await remarketingService.send(selectedBot.id, formData, false, null);
+      // Carregar configurações em paralelo
+      const [remarketing, alternating, statistics, planosData] = await Promise.all([
+        remarketingService.getRemarketingConfig(selectedBot.id),
+        remarketingService.getAlternatingMessages(selectedBot.id),
+        remarketingService.getRemarketingStats(selectedBot.id),
+        botService.buscarPlanos(selectedBot.id)
+      ]);
       
-      Swal.fire({
-        title: 'Enviado com Sucesso!',
-        html: `
-          <div style="text-align: left; padding: 10px;">
-            <p><strong>✅ Enviados:</strong> ${result.sent_success || 0}</p>
-            <p><strong>❌ Bloqueados:</strong> ${result.blocked_count || 0}</p>
-            <p><strong>👥 Total:</strong> ${result.total_leads || 0}</p>
-          </div>
-        `,
-        icon: 'success',
-        confirmButtonText: 'OK',
-        background: '#151515',
-        color: '#fff'
-      });
-
-      // Reset form
-      setFormData({
-        target: 'todos',
-        mensagem: '',
-        media_url: '',
-        incluir_oferta: false,
-        plano_oferta_id: '',
-        price_mode: 'original',
-        custom_price: '',
-        expiration_mode: 'none',
-        expiration_value: ''
-      });
-      setStep(1);
-      carregarHistorico();
+      setRemarketingConfig(remarketing);
+      setAlternatingConfig(alternating);
+      setStats(statistics);
+      setPlanos(planosData);
+      
+      console.log('✅ Dados de remarketing carregados:', { remarketing, alternating, statistics });
     } catch (error) {
-      console.error("Erro ao enviar campanha:", error);
-      Swal.fire({
-        title: 'Erro',
-        text: error.response?.data?.detail || 'Falha ao enviar campanha.',
-        icon: 'error',
-        background: '#151515',
-        color: '#fff'
-      });
+      console.error('❌ Erro ao carregar dados:', error);
+      alert('Erro ao carregar configurações. Tente novamente.');
     } finally {
       setLoading(false);
     }
-  };
-
-  const targetOptions = [
-    { id: 'todos', icon: '👥', title: 'Todos', desc: 'Envia para todos os contatos' },
-    { id: 'topo', icon: '🎯', title: 'TOPO - Leads Frios', desc: 'Usuários que só deram /start' },
-    { id: 'meio', icon: '🔥', title: 'MEIO - Leads Quentes', desc: 'Usuários que geraram PIX' },
-    { id: 'fundo', icon: '✅', title: 'FUNDO - Clientes', desc: 'Usuários que pagaram' },
-    { id: 'expirado', icon: '⏰', title: 'Expirados', desc: 'PIX venceu sem pagamento' }
-  ];
-
-  // ============================================================
-  // RENDER - HISTÓRICO
-  // ============================================================
-  if (step === 0) { // Ou step === 4, ajuste conforme sua lógica de navegação
+  }
+  
+  // =========================================================
+  // FUNÇÕES DE SALVAMENTO
+  // =========================================================
+  
+  async function handleSaveRemarketing() {
+    if (!selectedBot?.id) return;
+    
+    // Validações
+    if (remarketingConfig.is_active) {
+      if (!remarketingConfig.message_text.trim()) {
+        alert('Por favor, adicione uma mensagem de remarketing.');
+        return;
+      }
+      
+      if (remarketingConfig.delay_minutes < 1 || remarketingConfig.delay_minutes > 1440) {
+        alert('O intervalo deve estar entre 1 e 1440 minutos (24 horas).');
+        return;
+      }
+      
+      if (remarketingConfig.media_url && !remarketingConfig.media_type) {
+        alert('Por favor, selecione o tipo de mídia (Foto ou Vídeo).');
+        return;
+      }
+    }
+    
+    setSaving(true);
+    
+    try {
+      await remarketingService.saveRemarketingConfig(selectedBot.id, remarketingConfig);
+      alert('✅ Configuração de disparo automático salva com sucesso!');
+      console.log('✅ Remarketing salvo:', remarketingConfig);
+    } catch (error) {
+      console.error('❌ Erro ao salvar:', error);
+      alert('Erro ao salvar configuração: ' + (error.response?.data?.detail || error.message));
+    } finally {
+      setSaving(false);
+    }
+  }
+  
+  async function handleSaveAlternating() {
+    if (!selectedBot?.id) return;
+    
+    // Validações
+    if (alternatingConfig.is_active) {
+      if (alternatingConfig.messages.length < 2) {
+        alert('São necessárias pelo menos 2 mensagens para ativar a alternação.');
+        return;
+      }
+      
+      if (alternatingConfig.rotation_interval_seconds < 5 || alternatingConfig.rotation_interval_seconds > 300) {
+        alert('O intervalo de rotação deve estar entre 5 e 300 segundos.');
+        return;
+      }
+    }
+    
+    setSaving(true);
+    
+    try {
+      await remarketingService.saveAlternatingMessages(selectedBot.id, alternatingConfig);
+      alert('✅ Configuração de mensagens alternantes salva com sucesso!');
+      console.log('✅ Alternating salvo:', alternatingConfig);
+    } catch (error) {
+      console.error('❌ Erro ao salvar:', error);
+      alert('Erro ao salvar configuração: ' + (error.response?.data?.detail || error.message));
+    } finally {
+      setSaving(false);
+    }
+  }
+  
+  // =========================================================
+  // FUNÇÕES DE MANIPULAÇÃO DE MENSAGENS ALTERNANTES
+  // =========================================================
+  
+  function handleAddMessage() {
+    if (!newMessage.trim()) {
+      alert('Digite uma mensagem antes de adicionar.');
+      return;
+    }
+    
+    setAlternatingConfig(prev => ({
+      ...prev,
+      messages: [...prev.messages, newMessage.trim()]
+    }));
+    
+    setNewMessage('');
+  }
+  
+  function handleRemoveMessage(index) {
+    setAlternatingConfig(prev => ({
+      ...prev,
+      messages: prev.messages.filter((_, i) => i !== index)
+    }));
+  }
+  
+  function handleEditMessage(index, newText) {
+    setAlternatingConfig(prev => ({
+      ...prev,
+      messages: prev.messages.map((msg, i) => i === index ? newText : msg)
+    }));
+  }
+  
+  // =========================================================
+  // FUNÇÕES DE PREÇOS PROMOCIONAIS
+  // =========================================================
+  
+  function handlePromoValueChange(planoId, value) {
+    setRemarketingConfig(prev => ({
+      ...prev,
+      promo_values: {
+        ...prev.promo_values,
+        [planoId]: parseFloat(value) || 0
+      }
+    }));
+  }
+  
+  function handleTogglePromo(planoId) {
+    setRemarketingConfig(prev => {
+      const newPromoValues = { ...prev.promo_values };
+      
+      if (newPromoValues[planoId]) {
+        delete newPromoValues[planoId];
+      } else {
+        // Busca o plano para pegar o valor original
+        const plano = planos.find(p => p.id === planoId);
+        newPromoValues[planoId] = plano ? plano.valor * 0.7 : 0; // 30% de desconto padrão
+      }
+      
+      return {
+        ...prev,
+        promo_values: newPromoValues
+      };
+    });
+  }
+  
+  // =========================================================
+  // RENDERIZAÇÃO CONDICIONAL
+  // =========================================================
+  
+  if (!selectedBot) {
     return (
       <div className="remarketing-container">
-        <div className="wizard-container">
-          <h2 className="wizard-title">
-            <History size={28} style={{ verticalAlign: 'middle', marginRight: '10px' }} />
-            Histórico de Campanhas
-          </h2>
-
-          <Button 
-            onClick={() => setStep(1)} 
-            style={{ marginBottom: '20px' }}
-          >
-            Nova Campanha <Send size={16} />
-          </Button>
-
-          <div className="history-list">
-            {history.length === 0 ? (
-              <p style={{ textAlign: 'center', padding: '30px', color: '#666' }}>
-                Nenhuma campanha enviada ainda.
-              </p>
-            ) : (
-              history.map(item => {
-                let config = {};
-                try {
-                  config = typeof item.config === 'string' ? JSON.parse(item.config) : item.config;
-                } catch (e) {
-                  console.error('Erro ao parsear config:', e);
-                }
-
-                const targetLabel = targetOptions.find(t => t.id === item.target)?.title || item.target || 'Desconhecido';
-                
-                // 🔥 CORREÇÃO DA DATA (Lógica Blindada)
-                let dataFormatada = 'Data desconhecida';
-                if (item.data) {
-                    try {
-                        const dateObj = new Date(item.data);
-                        if (!isNaN(dateObj.getTime())) {
-                            dataFormatada = dateObj.toLocaleString('pt-BR', {
-                                day: '2-digit', month: '2-digit', year: 'numeric',
-                                hour: '2-digit', minute: '2-digit'
-                            });
-                        }
-                    } catch (e) { console.error("Erro data:", item.data); }
-                }
-
-                // 🔥 CORREÇÃO DA MENSAGEM (Busca msg OU mensagem)
-                const msgPreview = config.msg || config.mensagem || "Sem texto";
-
-                return (
-                  <div key={item.id} className="history-item">
-                    <div>
-                      <div style={{ fontWeight: 'bold', marginBottom: '5px' }}>
-                        {targetLabel}
-                      </div>
-                      <div style={{ fontSize: '0.8rem', color: '#888' }}>
-                        {dataFormatada}
-                      </div>
-                      <div style={{ fontSize: '0.75rem', color: '#666', marginTop: '5px' }}>
-                        ✅ {item.sent_success || 0} enviados • 
-                        ❌ {item.blocked_count || 0} bloqueados
-                      </div>
-                      {/* Prévia da mensagem (Opcional, ajuda a identificar) */}
-                      <div style={{ fontSize: '0.7rem', color: '#444', marginTop: '3px', fontStyle:'italic' }}>
-                         "{msgPreview.substring(0, 40)}..."
-                      </div>
-                    </div>
-                    <div className="history-actions">
-                      <button 
-                        className="btn-small primary" 
-                        onClick={() => handleReusar(item)}
-                        title="Reutilizar esta campanha"
-                      >
-                        <RotateCcw size={14} /> Reusar
-                      </button>
-                      <button 
-                        className="btn-small primary" 
-                        onClick={() => handleTestarIndividual(item)}
-                        title="Testar envio individual"
-                      >
-                        <Play size={14} /> Testar
-                      </button>
-                      <button 
-                        className="btn-small danger" 
-                        onClick={() => handleDelete(item.id)}
-                        title="Deletar esta campanha"
-                      >
-                        <Trash2 size={14} /> Deletar
-                      </button>
-                    </div>
-                  </div>
-                );
-              })
-            )}
-          </div>
-
-          {totalPages > 1 && (
-            <div className="pagination-controls-remarketing">
-              <Button 
-                variant="outline" 
-                size="sm" 
-                onClick={prevPage} 
-                disabled={currentPage === 1}
-              >
-                <ChevronLeft size={16} /> Anterior
-              </Button>
-              
-              <div className="page-info">
-                Página <strong>{currentPage}</strong> de <strong>{totalPages}</strong>
-              </div>
-              
-              <Button 
-                variant="outline" 
-                size="sm" 
-                onClick={nextPage} 
-                disabled={currentPage === totalPages}
-              >
-                Próxima <ChevronRight size={16} />
-              </Button>
-            </div>
-          )}
+        <div className="alert alert-warning">
+          <span>{Icons.Alert}</span>
+          <p>Por favor, selecione um bot na barra lateral para configurar o remarketing.</p>
         </div>
       </div>
     );
   }
-
-  // ============================================================
-  // RENDER - WIZARD (STEPS 1-3)
-  // ============================================================
+  
+  if (loading) {
+    return (
+      <div className="remarketing-container">
+        <div className="loading-state">
+          <div className="spinner"></div>
+          <p>Carregando configurações...</p>
+        </div>
+      </div>
+    );
+  }
+  
+  // =========================================================
+  // RENDER PRINCIPAL
+  // =========================================================
+  
   return (
     <div className="remarketing-container">
-      <div className="wizard-container">
-        
-        <h2 className="wizard-title">
-          <Send size={28} style={{ verticalAlign: 'middle', marginRight: '10px' }} />
-          Campanha de Remarketing
-        </h2>
-
-        <div className="wizard-step-indicator">
-          Passo {step} de 3
+      {/* Header */}
+      <div className="remarketing-header">
+        <div className="header-titles">
+          <h1>{Icons.Rocket} Remarketing Automático</h1>
+          <p>Configure disparos automáticos para recuperar vendas abandonadas</p>
         </div>
-
-        {/* STEP 1: PÚBLICO */}
-        {step === 1 && (
-          <>
-            <h3 style={{ marginBottom: '20px' }}>Quem vai receber esta campanha?</h3>
-            <div className="wizard-options-grid">
-              {targetOptions.map(opt => (
-                <div
-                  key={opt.id}
-                  className={`option-card ${formData.target === opt.id ? 'selected' : ''}`}
-                  onClick={() => setFormData({ ...formData, target: opt.id })}
+        
+        <div className="header-actions">
+          <button 
+            className="btn-save-main"
+            onClick={activeTab === 'disparo' ? handleSaveRemarketing : handleSaveAlternating}
+            disabled={saving || activeTab === 'analytics'}
+          >
+            <span>{Icons.Save}</span>
+            <span className="btn-text">{saving ? 'Salvando...' : 'Salvar Configuração'}</span>
+          </button>
+        </div>
+      </div>
+      
+      {/* Tabs */}
+      <div className="remarketing-tabs">
+        <button 
+          className={`tab-button ${activeTab === 'disparo' ? 'active' : ''}`}
+          onClick={() => setActiveTab('disparo')}
+        >
+          <span>{Icons.Rocket}</span>
+          Disparo Automático
+        </button>
+        
+        <button 
+          className={`tab-button ${activeTab === 'alternating' ? 'active' : ''}`}
+          onClick={() => setActiveTab('alternating')}
+        >
+          <span>{Icons.Message}</span>
+          Mensagens Alternantes
+        </button>
+        
+        <button 
+          className={`tab-button ${activeTab === 'analytics' ? 'active' : ''}`}
+          onClick={() => setActiveTab('analytics')}
+        >
+          <span>{Icons.Chart}</span>
+          Analytics
+        </button>
+      </div>
+      
+      {/* Conteúdo das Abas */}
+      <div className="remarketing-content">
+        
+        {/* ===================================================== */}
+        {/* ABA 1: DISPARO AUTOMÁTICO */}
+        {/* ===================================================== */}
+        {activeTab === 'disparo' && (
+          <div className="tab-content">
+            
+            {/* Toggle Ativar/Desativar */}
+            <div className="config-card">
+              <div className="toggle-wrapper full-width">
+                <label htmlFor="remarketing-active">
+                  {Icons.Rocket} Ativar Disparo Automático
+                </label>
+                <div 
+                  className={`custom-toggle ${remarketingConfig.is_active ? 'active-green' : ''}`}
+                  onClick={() => setRemarketingConfig(prev => ({ ...prev, is_active: !prev.is_active }))}
                 >
-                  <div className="option-icon">{opt.icon}</div>
-                  <div style={{ fontWeight: 'bold', marginBottom: '5px' }}>{opt.title}</div>
-                  <div style={{ fontSize: '0.85rem', color: '#aaa' }}>{opt.desc}</div>
+                  <div className="toggle-handle"></div>
+                  <span className="toggle-label">{remarketingConfig.is_active ? 'ON' : 'OFF'}</span>
                 </div>
-              ))}
+              </div>
+              
+              {remarketingConfig.is_active && (
+                <div className="hint-text">
+                  <span>{Icons.Check}</span>
+                  <span>Sistema ativo! Disparos serão enviados automaticamente para carrinhos abandonados.</span>
+                </div>
+              )}
             </div>
-            <div className="wizard-actions">
-              <button className="btn-back" onClick={() => setStep(0)}>
-                <History size={18} /> Ver Histórico
-              </button>
-              <button className="btn-next" onClick={() => setStep(2)}>
-                Próximo <Send size={18} />
-              </button>
-            </div>
-          </>
-        )}
-
-        {/* STEP 2: MENSAGEM */}
-        {step === 2 && (
-          <>
-            <h3 style={{ marginBottom: '20px' }}>Monte sua mensagem</h3>
             
-            <div className="form-group">
-              <label><MessageSquare size={16} style={{ verticalAlign: 'middle' }} /> Mensagem</label>
-              {/* 🔥 ATUALIZADO PARA RICH INPUT */}
-              <RichInput
-                value={formData.mensagem}
-                onChange={(e) => setFormData({ ...formData, mensagem: e.target.value })}
-                rows={6}
-                placeholder="Digite a mensagem aqui..."
-              />
-            </div>
-
-            <div className="form-group">
-              <label><Image size={16} style={{ verticalAlign: 'middle' }} /> URL da Mídia (Opcional)</label>
-              <input
-                className="input-field"
-                type="text"
-                placeholder="https://exemplo.com/imagem.jpg"
-                value={formData.media_url}
-                onChange={(e) => setFormData({ ...formData, media_url: e.target.value })}
-              />
-            </div>
-
-            {/* OFERTA ESPECIAL */}
-            <div className="offer-section">
-              <label className="checkbox-label">
-                <input
-                  type="checkbox"
-                  checked={formData.incluir_oferta}
-                  onChange={(e) => setFormData({ ...formData, incluir_oferta: e.target.value })} // Correção: e.target.checked era esperado, mas mantive a lógica original se houver quirks
-                />
-                <Tag size={20} />
-                Incluir Oferta Especial
-              </label>
-
-              {formData.incluir_oferta && (
-                <div className="offer-details-box">
-                  <div className="form-group">
-                    <label>Plano da Oferta</label>
-                    <select
-                      className="input-field"
-                      value={formData.plano_oferta_id}
-                      onChange={(e) => setFormData({ ...formData, plano_oferta_id: e.target.value })}
+            {/* Configurações (só aparecem se ativo) */}
+            {remarketingConfig.is_active && (
+              <>
+                {/* Editor de Texto (igual ChatFlow) */}
+                <div className="config-card">
+                  <label className="config-label">
+                    {Icons.Message} Mensagem de Remarketing
+                  </label>
+                  
+                  <div className="text-editor-toolbar">
+                    <button 
+                      type="button"
+                      onClick={() => {
+                        const textarea = document.getElementById('remarketing-message');
+                        const start = textarea.selectionStart;
+                        const end = textarea.selectionEnd;
+                        const text = remarketingConfig.message_text;
+                        const before = text.substring(0, start);
+                        const selected = text.substring(start, end);
+                        const after = text.substring(end);
+                        
+                        setRemarketingConfig(prev => ({
+                          ...prev,
+                          message_text: `${before}<b>${selected || 'texto em negrito'}</b>${after}`
+                        }));
+                      }}
+                      title="Negrito"
                     >
-                      <option value="">Selecione um plano</option>
-                      {plans.map(p => (
-                        <option key={p.id} value={p.id}>
-                          {p.nome_exibicao} - R$ {p.preco_atual}
-                        </option>
+                      <strong>B</strong>
+                    </button>
+                    
+                    <button 
+                      type="button"
+                      onClick={() => {
+                        const textarea = document.getElementById('remarketing-message');
+                        const start = textarea.selectionStart;
+                        const end = textarea.selectionEnd;
+                        const text = remarketingConfig.message_text;
+                        const before = text.substring(0, start);
+                        const selected = text.substring(start, end);
+                        const after = text.substring(end);
+                        
+                        setRemarketingConfig(prev => ({
+                          ...prev,
+                          message_text: `${before}<i>${selected || 'texto em itálico'}</i>${after}`
+                        }));
+                      }}
+                      title="Itálico"
+                    >
+                      <em>I</em>
+                    </button>
+                    
+                    <button 
+                      type="button"
+                      onClick={() => {
+                        const textarea = document.getElementById('remarketing-message');
+                        const start = textarea.selectionStart;
+                        const end = textarea.selectionEnd;
+                        const text = remarketingConfig.message_text;
+                        const before = text.substring(0, start);
+                        const selected = text.substring(start, end);
+                        const after = text.substring(end);
+                        
+                        setRemarketingConfig(prev => ({
+                          ...prev,
+                          message_text: `${before}<code>${selected || 'código'}</code>${after}`
+                        }));
+                      }}
+                      title="Código"
+                    >
+                      {'</>'}
+                    </button>
+                  </div>
+                  
+                  <textarea
+                    id="remarketing-message"
+                    className="input-field textarea-large"
+                    rows={8}
+                    value={remarketingConfig.message_text}
+                    onChange={(e) => setRemarketingConfig(prev => ({ ...prev, message_text: e.target.value }))}
+                    placeholder="Digite a mensagem que será enviada para recuperar o cliente...&#10;&#10;Variáveis disponíveis:&#10;{first_name} - Nome do cliente&#10;{plano_original} - Nome do plano escolhido&#10;{valor_original} - Valor original"
+                  />
+                  
+                  <div className="hint-text">
+                    <span>{Icons.Alert}</span>
+                    <span>Use as variáveis para personalizar: {'{first_name}'}, {'{plano_original}'}, {'{valor_original}'}</span>
+                  </div>
+                </div>
+                
+                {/* Mídia */}
+                <div className="config-card">
+                  <label className="config-label">
+                    {Icons.Photo} Mídia (Opcional)
+                  </label>
+                  
+                  <div className="form-row">
+                    <div className="form-group" style={{ flex: 2 }}>
+                      <input
+                        type="url"
+                        className="input-field"
+                        value={remarketingConfig.media_url || ''}
+                        onChange={(e) => setRemarketingConfig(prev => ({ ...prev, media_url: e.target.value }))}
+                        placeholder="https://exemplo.com/imagem.jpg"
+                      />
+                    </div>
+                    
+                    <div className="form-group" style={{ flex: 1 }}>
+                      <select
+                        className="input-field"
+                        value={remarketingConfig.media_type || ''}
+                        onChange={(e) => setRemarketingConfig(prev => ({ ...prev, media_type: e.target.value || null }))}
+                      >
+                        <option value="">Sem mídia</option>
+                        <option value="photo">🖼️ Foto</option>
+                        <option value="video">🎥 Vídeo</option>
+                      </select>
+                    </div>
+                  </div>
+                  
+                  <div className="hint-text">
+                    <span>{Icons.Alert}</span>
+                    <span>Cole o link direto da imagem ou vídeo hospedado online</span>
+                  </div>
+                </div>
+                
+                {/* Preços Promocionais */}
+                <div className="config-card">
+                  <label className="config-label">
+                    {Icons.Money} Preços Promocionais
+                  </label>
+                  
+                  {planos.length === 0 ? (
+                    <div className="alert alert-warning">
+                      <span>{Icons.Alert}</span>
+                      <p>Nenhum plano cadastrado. Configure planos primeiro.</p>
+                    </div>
+                  ) : (
+                    <div className="promo-grid">
+                      {planos.map(plano => {
+                        const isActive = remarketingConfig.promo_values[plano.id] !== undefined;
+                        const promoValue = remarketingConfig.promo_values[plano.id] || (plano.valor * 0.7);
+                        
+                        return (
+                          <div key={plano.id} className={`promo-card ${isActive ? 'active' : ''}`}>
+                            <div className="promo-card-header">
+                              <div className="promo-info">
+                                <strong>{plano.nome_exibicao}</strong>
+                                <span className="original-price">R$ {plano.valor.toFixed(2)}</span>
+                              </div>
+                              
+                              <div 
+                                className={`custom-toggle small ${isActive ? 'active-green' : ''}`}
+                                onClick={() => handleTogglePromo(plano.id)}
+                              >
+                                <div className="toggle-handle"></div>
+                              </div>
+                            </div>
+                            
+                            {isActive && (
+                              <div className="promo-card-body">
+                                <label>Preço Promocional:</label>
+                                <div className="input-with-prefix">
+                                  <span>R$</span>
+                                  <input
+                                    type="number"
+                                    step="0.01"
+                                    min="0.01"
+                                    className="input-field"
+                                    value={promoValue}
+                                    onChange={(e) => handlePromoValueChange(plano.id, e.target.value)}
+                                  />
+                                </div>
+                                
+                                <div className="promo-savings">
+                                  {Icons.Fire} Economia: R$ {(plano.valor - promoValue).toFixed(2)} ({((1 - promoValue / plano.valor) * 100).toFixed(0)}%)
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+                
+                {/* Timing */}
+                <div className="config-card">
+                  <label className="config-label">
+                    {Icons.Clock} Configurações de Tempo
+                  </label>
+                  
+                  <div className="form-row">
+                    <div className="form-group">
+                      <label>Aguardar (minutos)</label>
+                      <input
+                        type="number"
+                        min="1"
+                        max="1440"
+                        className="input-field"
+                        value={remarketingConfig.delay_minutes}
+                        onChange={(e) => setRemarketingConfig(prev => ({ 
+                          ...prev, 
+                          delay_minutes: parseInt(e.target.value) || 1 
+                        }))}
+                      />
+                      <div className="hint-text">
+                        <span>{Icons.Clock}</span>
+                        <span>Tempo após abandono do carrinho</span>
+                      </div>
+                    </div>
+                    
+                    <div className="form-group">
+                      <label>Auto-destruir após (segundos)</label>
+                      <input
+                        type="number"
+                        min="0"
+                        className="input-field"
+                        value={remarketingConfig.auto_destruct_seconds}
+                        onChange={(e) => setRemarketingConfig(prev => ({ 
+                          ...prev, 
+                          auto_destruct_seconds: parseInt(e.target.value) || 0 
+                        }))}
+                      />
+                      <div className="hint-text">
+                        <span>{Icons.Trash}</span>
+                        <span>0 = não auto-destruir</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </>
+            )}
+            
+          </div>
+        )}
+        
+        {/* ===================================================== */}
+        {/* ABA 2: MENSAGENS ALTERNANTES */}
+        {/* ===================================================== */}
+        {activeTab === 'alternating' && (
+          <div className="tab-content">
+            
+            {/* Toggle Ativar/Desativar */}
+            <div className="config-card">
+              <div className="toggle-wrapper full-width">
+                <label htmlFor="alternating-active">
+                  {Icons.Message} Ativar Mensagens Alternantes
+                </label>
+                <div 
+                  className={`custom-toggle ${alternatingConfig.is_active ? 'active-green' : ''}`}
+                  onClick={() => setAlternatingConfig(prev => ({ ...prev, is_active: !prev.is_active }))}
+                >
+                  <div className="toggle-handle"></div>
+                  <span className="toggle-label">{alternatingConfig.is_active ? 'ON' : 'OFF'}</span>
+                </div>
+              </div>
+              
+              <div className="hint-text">
+                <span>{Icons.Alert}</span>
+                <span>
+                  Mensagens que alternam na mesma bolha enquanto o usuário aguarda o disparo automático.
+                  Mantém o cliente engajado!
+                </span>
+              </div>
+            </div>
+            
+            {/* Configurações */}
+            {alternatingConfig.is_active && (
+              <>
+                {/* Lista de Mensagens */}
+                <div className="config-card">
+                  <label className="config-label">
+                    {Icons.Message} Mensagens para Alternar (mínimo 2)
+                  </label>
+                  
+                  <div className="messages-list">
+                    {alternatingConfig.messages.map((msg, index) => (
+                      <div key={index} className="message-item">
+                        <div className="message-number">{index + 1}</div>
+                        
+                        <textarea
+                          className="input-field message-textarea"
+                          rows={3}
+                          value={msg}
+                          onChange={(e) => handleEditMessage(index, e.target.value)}
+                          placeholder={`Mensagem ${index + 1}`}
+                        />
+                        
+                        <button
+                          type="button"
+                          className="btn-remove"
+                          onClick={() => handleRemoveMessage(index)}
+                          title="Remover mensagem"
+                        >
+                          {Icons.Trash}
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                  
+                  {/* Adicionar Nova Mensagem */}
+                  <div className="add-message-box">
+                    <textarea
+                      className="input-field"
+                      rows={3}
+                      value={newMessage}
+                      onChange={(e) => setNewMessage(e.target.value)}
+                      placeholder="Digite uma nova mensagem para adicionar..."
+                    />
+                    
+                    <button
+                      type="button"
+                      className="btn-add"
+                      onClick={handleAddMessage}
+                    >
+                      <span>{Icons.Plus}</span>
+                      <span>Adicionar Mensagem</span>
+                    </button>
+                  </div>
+                  
+                  {alternatingConfig.messages.length < 2 && (
+                    <div className="alert alert-warning">
+                      <span>{Icons.Alert}</span>
+                      <p>Adicione pelo menos 2 mensagens para ativar a alternação.</p>
+                    </div>
+                  )}
+                </div>
+                
+                {/* Configurações de Timing */}
+                <div className="config-card">
+                  <label className="config-label">
+                    {Icons.Clock} Configurações de Alternação
+                  </label>
+                  
+                  <div className="form-row">
+                    <div className="form-group">
+                      <label>Alternar a cada (segundos)</label>
+                      <input
+                        type="number"
+                        min="5"
+                        max="300"
+                        className="input-field"
+                        value={alternatingConfig.rotation_interval_seconds}
+                        onChange={(e) => setAlternatingConfig(prev => ({ 
+                          ...prev, 
+                          rotation_interval_seconds: parseInt(e.target.value) || 15 
+                        }))}
+                      />
+                      <div className="hint-text">
+                        <span>{Icons.Clock}</span>
+                        <span>Intervalo entre cada troca (5-300s)</span>
+                      </div>
+                    </div>
+                    
+                    <div className="form-group">
+                      <label>Parar X segundos antes do disparo</label>
+                      <input
+                        type="number"
+                        min="0"
+                        className="input-field"
+                        value={alternatingConfig.stop_before_remarketing_seconds}
+                        onChange={(e) => setAlternatingConfig(prev => ({ 
+                          ...prev, 
+                          stop_before_remarketing_seconds: parseInt(e.target.value) || 60 
+                        }))}
+                      />
+                      <div className="hint-text">
+                        <span>{Icons.Alert}</span>
+                        <span>Para evitar conflito com o disparo</span>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  {/* Auto-destruir */}
+                  <div className="toggle-wrapper full-width" style={{ marginTop: '20px' }}>
+                    <label>
+                      {Icons.Trash} Auto-destruir mensagem ao parar
+                    </label>
+                    <div 
+                      className={`custom-toggle ${alternatingConfig.auto_destruct_final ? 'active' : ''}`}
+                      onClick={() => setAlternatingConfig(prev => ({ 
+                        ...prev, 
+                        auto_destruct_final: !prev.auto_destruct_final 
+                      }))}
+                    >
+                      <div className="toggle-handle"></div>
+                      <span className="toggle-label">{alternatingConfig.auto_destruct_final ? 'SIM' : 'NÃO'}</span>
+                    </div>
+                  </div>
+                </div>
+              </>
+            )}
+            
+          </div>
+        )}
+        
+        {/* ===================================================== */}
+        {/* ABA 3: ANALYTICS */}
+        {/* ===================================================== */}
+        {activeTab === 'analytics' && (
+          <div className="tab-content">
+            
+            {/* Cards de Estatísticas */}
+            <div className="stats-grid">
+              <div className="stat-card">
+                <div className="stat-icon">{Icons.Rocket}</div>
+                <div className="stat-info">
+                  <div className="stat-label">Total Enviados</div>
+                  <div className="stat-value">{stats.total_sent}</div>
+                </div>
+              </div>
+              
+              <div className="stat-card">
+                <div className="stat-icon">{Icons.Money}</div>
+                <div className="stat-info">
+                  <div className="stat-label">Conversões</div>
+                  <div className="stat-value">{stats.total_converted}</div>
+                </div>
+              </div>
+              
+              <div className="stat-card">
+                <div className="stat-icon">{Icons.Chart}</div>
+                <div className="stat-info">
+                  <div className="stat-label">Taxa de Conversão</div>
+                  <div className="stat-value">{stats.conversion_rate}%</div>
+                </div>
+              </div>
+              
+              <div className="stat-card">
+                <div className="stat-icon">{Icons.Fire}</div>
+                <div className="stat-info">
+                  <div className="stat-label">Hoje</div>
+                  <div className="stat-value">{stats.today_sent}</div>
+                </div>
+              </div>
+            </div>
+            
+            {/* Histórico Recente */}
+            <div className="config-card">
+              <label className="config-label">
+                {Icons.Chart} Histórico Recente
+              </label>
+              
+              {stats.recent_logs.length === 0 ? (
+                <div className="alert alert-info">
+                  <span>{Icons.Alert}</span>
+                  <p>Nenhum disparo realizado ainda. Configure e ative o remarketing para começar!</p>
+                </div>
+              ) : (
+                <div className="logs-table">
+                  <table>
+                    <thead>
+                      <tr>
+                        <th>ID Usuário</th>
+                        <th>Data/Hora</th>
+                        <th>Status</th>
+                        <th>Converteu?</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {stats.recent_logs.map(log => (
+                        <tr key={log.id}>
+                          <td>{log.user_telegram_id}</td>
+                          <td>{new Date(log.sent_at).toLocaleString('pt-BR')}</td>
+                          <td>
+                            <span className={`status-badge ${log.status}`}>
+                              {log.status === 'sent' && Icons.Check}
+                              {log.status === 'error' && Icons.Alert}
+                              {log.status}
+                            </span>
+                          </td>
+                          <td>
+                            {log.converted ? (
+                              <span className="converted-yes">{Icons.Check} Sim</span>
+                            ) : (
+                              <span className="converted-no">❌ Não</span>
+                            )}
+                          </td>
+                        </tr>
                       ))}
-                    </select>
-                  </div>
-
-                  <div className="form-group">
-                    <label>Preço</label>
-                    <div className="toggle-buttons">
-                      <button
-                        type="button"
-                        className={formData.price_mode === 'original' ? 'active' : ''}
-                        onClick={() => setFormData({ ...formData, price_mode: 'original' })}
-                      >
-                        Original
-                      </button>
-                      <button
-                        type="button"
-                        className={formData.price_mode === 'custom' ? 'active' : ''}
-                        onClick={() => setFormData({ ...formData, price_mode: 'custom' })}
-                      >
-                        Personalizado
-                      </button>
-                    </div>
-                    {formData.price_mode === 'custom' && (
-                      <input
-                        className="input-field"
-                        type="number"
-                        step="0.01"
-                        placeholder="Ex: 9.90"
-                        value={formData.custom_price}
-                        onChange={(e) => setFormData({ ...formData, custom_price: e.target.value })}
-                        style={{ marginTop: '10px' }}
-                      />
-                    )}
-                  </div>
-
-                  <div className="form-group">
-                    <label><Clock size={16} /> Expiração da Oferta</label>
-                    <div className="toggle-buttons">
-                      <button
-                        type="button"
-                        className={formData.expiration_mode === 'none' ? 'active' : ''}
-                        onClick={() => setFormData({ ...formData, expiration_mode: 'none' })}
-                      >
-                        Sem Expiração
-                      </button>
-                      <button
-                        type="button"
-                        className={formData.expiration_mode === 'minutes' ? 'active' : ''}
-                        onClick={() => setFormData({ ...formData, expiration_mode: 'minutes' })}
-                      >
-                        Minutos
-                      </button>
-                      <button
-                        type="button"
-                        className={formData.expiration_mode === 'hours' ? 'active' : ''}
-                        onClick={() => setFormData({ ...formData, expiration_mode: 'hours' })}
-                      >
-                        Horas
-                      </button>
-                    </div>
-                    {formData.expiration_mode !== 'none' && (
-                      <input
-                        className="input-field"
-                        type="number"
-                        placeholder="Quantidade"
-                        value={formData.expiration_value}
-                        onChange={(e) => setFormData({ ...formData, expiration_value: e.target.value })}
-                        style={{ marginTop: '10px' }}
-                      />
-                    )}
-                  </div>
+                    </tbody>
+                  </table>
                 </div>
               )}
             </div>
-
-            <div className="wizard-actions">
-              <button className="btn-back" onClick={() => setStep(1)}>
-                Voltar
-              </button>
-              <button className="btn-next" onClick={() => setStep(3)}>
-                Próximo
-              </button>
-            </div>
-          </>
-        )}
-
-        {/* STEP 3: REVISÃO */}
-        {step === 3 && (
-          <>
-            <h3 style={{ marginBottom: '20px' }}>Revisão Final</h3>
             
-            <div className="review-box">
-              <p><strong>Público:</strong> {targetOptions.find(o => o.id === formData.target)?.title}</p>
-              {formData.media_url && <p><strong>Mídia:</strong> {formData.media_url}</p>}
-              {formData.incluir_oferta && (
-                <p><strong>Oferta:</strong> {plans.find(p => p.id === parseInt(formData.plano_oferta_id))?.nome_exibicao}</p>
-              )}
-              {/* Mostra o texto sem formatação HTML na revisão para evitar quebras, ou renderiza se quiser */}
-              <div className="msg-quote">{formData.mensagem}</div>
-            </div>
-
-            <div className="wizard-actions">
-              <button className="btn-back" onClick={() => setStep(2)}>
-                Voltar
-              </button>
-              <button 
-                className="btn-next" 
-                onClick={handleEnviar}
-                disabled={loading}
-              >
-                {loading ? 'Enviando...' : 'Enviar Agora'}
-                <CheckCircle size={18} />
-              </button>
-            </div>
-          </>
+          </div>
         )}
-
+        
       </div>
     </div>
   );
