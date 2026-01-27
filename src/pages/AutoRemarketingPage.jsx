@@ -21,31 +21,34 @@ const Icons = {
   Star: '⭐'
 };
 
+// Objeto padrão para evitar erro de null
+const DEFAULT_DISPARO = {
+  is_active: false,
+  message_text: '',
+  media_url: '',
+  media_type: null,
+  delay_minutes: 5,
+  auto_destruct_seconds: 0,
+  promo_values: {} 
+};
+
+const DEFAULT_ALTERNATING = {
+  is_active: false,
+  messages: [],
+  rotation_interval_seconds: 15,
+  stop_before_remarketing_seconds: 60,
+  auto_destruct_final: false
+};
+
 export function AutoRemarketing() {
   const { selectedBot } = useBot();
   
-  // Estados para Disparo Automático
-  const [disparoConfig, setDisparoConfig] = useState({
-    is_active: false,
-    message_text: '',
-    media_url: '',
-    media_type: null,
-    delay_minutes: 5,
-    auto_destruct_seconds: 0,
-    promo_values: {} // { plan_id: { price: X, button_text: Y } }
-  });
-  
-  // Estados para Mensagens Alternantes
-  const [alternatingConfig, setAlternatingConfig] = useState({
-    is_active: false,
-    messages: [],
-    rotation_interval_seconds: 15,
-    stop_before_remarketing_seconds: 60,
-    auto_destruct_final: false
-  });
+  // Estados Inicializados com Defaults
+  const [disparoConfig, setDisparoConfig] = useState(DEFAULT_DISPARO);
+  const [alternatingConfig, setAlternatingConfig] = useState(DEFAULT_ALTERNATING);
   
   // Estados de UI
-  const [activeTab, setActiveTab] = useState('disparo'); // 'disparo', 'alternating', 'analytics'
+  const [activeTab, setActiveTab] = useState('disparo'); 
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [planos, setPlanos] = useState([]);
@@ -78,15 +81,19 @@ export function AutoRemarketing() {
         remarketingAutoService.getRemarketingStats(selectedBot.id)
       ]);
       
-      setDisparoConfig(remarketing);
-      setAlternatingConfig(alternating);
-      setPlanos(planosData);
-      setStats(statistics);
+      // 🔥 CORREÇÃO DO ERRO NULL: Se vier null da API, usa o DEFAULT
+      setDisparoConfig(remarketing || DEFAULT_DISPARO);
       
-      console.log('✅ Dados carregados:', { remarketing, alternating, planosData, statistics });
+      // 🔥 CORREÇÃO 2: Se vier null ou array vazio incorreto
+      setAlternatingConfig(alternating || DEFAULT_ALTERNATING);
+      
+      setPlanos(planosData || []);
+      setStats(statistics || { total_sent: 0, total_converted: 0, conversion_rate: 0, today_sent: 0, recent_logs: [] });
+      
+      console.log('✅ Dados carregados com segurança:', { remarketing, alternating });
     } catch (error) {
       console.error('❌ Erro ao carregar dados:', error);
-      alert('Erro ao carregar configurações.');
+      // Não alertar erro fatal, apenas logar, para não travar a tela
     } finally {
       setLoading(false);
     }
@@ -120,11 +127,17 @@ export function AutoRemarketing() {
     setSaving(true);
     
     try {
-      await remarketingAutoService.saveRemarketingConfig(selectedBot.id, disparoConfig);
+      // Garante que promo_values é um objeto
+      const payload = {
+          ...disparoConfig,
+          promo_values: disparoConfig.promo_values || {}
+      };
+      
+      await remarketingAutoService.saveRemarketingConfig(selectedBot.id, payload);
       alert('✅ Configuração de disparo automático salva!');
     } catch (error) {
       console.error('❌ Erro ao salvar:', error);
-      alert('Erro: ' + (error.response?.data?.detail || error.message));
+      alert('Erro ao salvar. Verifique o console.');
     } finally {
       setSaving(false);
     }
@@ -152,7 +165,7 @@ export function AutoRemarketing() {
       alert('✅ Mensagens alternantes salvas!');
     } catch (error) {
       console.error('❌ Erro ao salvar:', error);
-      alert('Erro: ' + (error.response?.data?.detail || error.message));
+      alert('Erro ao salvar mensagens.');
     } finally {
       setSaving(false);
     }
@@ -164,41 +177,29 @@ export function AutoRemarketing() {
   
   function applyFormatting(format) {
     const textarea = document.getElementById('disparo-message');
+    if (!textarea) return;
+    
     const start = textarea.selectionStart;
     const end = textarea.selectionEnd;
-    const text = disparoConfig.message_text;
+    const text = disparoConfig.message_text || '';
     const selected = text.substring(start, end) || 'texto';
     
     let formatted = '';
     
     switch(format) {
-      case 'bold':
-        formatted = `<b>${selected}</b>`;
-        break;
-      case 'italic':
-        formatted = `<i>${selected}</i>`;
-        break;
-      case 'underline':
-        formatted = `<u>${selected}</u>`;
-        break;
-      case 'strike':
-        formatted = `<s>${selected}</s>`;
-        break;
-      case 'spoiler':
-        formatted = `<span class="tg-spoiler">${selected}</span>`;
-        break;
-      case 'code':
-        formatted = `<code>${selected}</code>`;
-        break;
-      case 'pre':
-        formatted = `<pre>${selected}</pre>`;
-        break;
-      case 'link':
+      case 'bold': formatted = `<b>${selected}</b>`; break;
+      case 'italic': formatted = `<i>${selected}</i>`; break;
+      case 'underline': formatted = `<u>${selected}</u>`; break;
+      case 'strike': formatted = `<s>${selected}</s>`; break;
+      case 'spoiler': formatted = `<span class="tg-spoiler">${selected}</span>`; break;
+      case 'code': formatted = `<code>${selected}</code>`; break;
+      case 'pre': formatted = `<pre>${selected}</pre>`; break;
+      case 'link': 
         const url = prompt('Digite a URL:');
         if (url) formatted = `<a href="${url}">${selected}</a>`;
+        else return;
         break;
-      default:
-        return;
+      default: return;
     }
     
     const newText = text.substring(0, start) + formatted + text.substring(end);
@@ -211,7 +212,8 @@ export function AutoRemarketing() {
   
   function handleTogglePlano(planoId) {
     setDisparoConfig(prev => {
-      const newPromo = { ...prev.promo_values };
+      const currentPromos = prev.promo_values || {};
+      const newPromo = { ...currentPromos };
       
       if (newPromo[planoId]) {
         delete newPromo[planoId];
@@ -231,9 +233,9 @@ export function AutoRemarketing() {
     setDisparoConfig(prev => ({
       ...prev,
       promo_values: {
-        ...prev.promo_values,
+        ...(prev.promo_values || {}),
         [planoId]: {
-          ...prev.promo_values[planoId],
+          ...(prev.promo_values?.[planoId] || {}),
           [field]: field === 'price' ? parseFloat(value) || 0 : value
         }
       }
@@ -252,7 +254,7 @@ export function AutoRemarketing() {
     
     setAlternatingConfig(prev => ({
       ...prev,
-      messages: [...prev.messages, newMessage.trim()]
+      messages: [...(prev.messages || []), newMessage.trim()]
     }));
     
     setNewMessage('');
@@ -261,14 +263,14 @@ export function AutoRemarketing() {
   function handleRemoveMessage(index) {
     setAlternatingConfig(prev => ({
       ...prev,
-      messages: prev.messages.filter((_, i) => i !== index)
+      messages: (prev.messages || []).filter((_, i) => i !== index)
     }));
   }
   
   function handleEditMessage(index, newText) {
     setAlternatingConfig(prev => ({
       ...prev,
-      messages: prev.messages.map((msg, i) => i === index ? newText : msg)
+      messages: (prev.messages || []).map((msg, i) => i === index ? newText : msg)
     }));
   }
   
@@ -281,7 +283,7 @@ export function AutoRemarketing() {
       <div className="auto-remarketing-container">
         <div className="alert alert-warning">
           <span>{Icons.Alert}</span>
-          <p>Selecione um bot na barra lateral.</p>
+          <p>Selecione um bot na barra lateral para começar.</p>
         </div>
       </div>
     );
@@ -292,10 +294,21 @@ export function AutoRemarketing() {
       <div className="auto-remarketing-container">
         <div className="loading-state">
           <div className="spinner"></div>
-          <p>Carregando...</p>
+          <p>Carregando configurações...</p>
         </div>
       </div>
     );
+  }
+  
+  // Proteção extra antes de renderizar
+  if (!disparoConfig || !alternatingConfig) {
+      return (
+        <div className="auto-remarketing-container">
+            <div className="alert alert-warning">
+                Recarregando interface... (State recovery)
+            </div>
+        </div>
+      );
   }
   
   return (
@@ -313,7 +326,7 @@ export function AutoRemarketing() {
           disabled={saving || activeTab === 'analytics'}
         >
           <span>{Icons.Save}</span>
-          <span>{saving ? 'Salvando...' : 'Salvar'}</span>
+          <span>{saving ? 'Salvando...' : 'Salvar Configurações'}</span>
         </button>
       </div>
       
@@ -366,7 +379,7 @@ export function AutoRemarketing() {
               {disparoConfig.is_active && (
                 <div className="hint-text">
                   <span>{Icons.Check}</span>
-                  <span>Sistema ativo! Disparos automáticos habilitados.</span>
+                  <span>Sistema ativo! O bot enviará o remarketing automaticamente.</span>
                 </div>
               )}
             </div>
@@ -408,14 +421,14 @@ export function AutoRemarketing() {
                     id="disparo-message"
                     className="input-field textarea-large"
                     rows={8}
-                    value={disparoConfig.message_text}
+                    value={disparoConfig.message_text || ''}
                     onChange={(e) => setDisparoConfig(prev => ({ ...prev, message_text: e.target.value }))}
-                    placeholder="Digite a mensagem...&#10;&#10;Variáveis:&#10;{first_name} - Nome&#10;{plano_original} - Plano&#10;{valor_original} - Valor"
+                    placeholder="Digite a mensagem...&#10;&#10;Variáveis disponíveis:&#10;{first_name} - Nome do cliente&#10;{plano_original} - Nome do plano&#10;{valor_original} - Valor original"
                   />
                   
                   <div className="hint-text">
                     <span>{Icons.Alert}</span>
-                    <span>Use: {'{first_name}'}, {'{plano_original}'}, {'{valor_original}'}</span>
+                    <span>Use: {'{first_name}'}, {'{plano_original}'}, {'{valor_original}'} para personalizar.</span>
                   </div>
                 </div>
                 
@@ -430,7 +443,7 @@ export function AutoRemarketing() {
                         className="input-field"
                         value={disparoConfig.media_url || ''}
                         onChange={(e) => setDisparoConfig(prev => ({ ...prev, media_url: e.target.value }))}
-                        placeholder="https://exemplo.com/imagem.jpg"
+                        placeholder="URL da Imagem ou Vídeo (ex: https://...)"
                       />
                     </div>
                     
@@ -450,25 +463,26 @@ export function AutoRemarketing() {
                 
                 {/* Planos Promocionais */}
                 <div className="config-card">
-                  <label className="config-label">{Icons.Money} Planos Promocionais</label>
+                  <label className="config-label">{Icons.Money} Ofertas nos Planos</label>
                   
                   {planos.length === 0 ? (
                     <div className="alert alert-warning">
                       <span>{Icons.Alert}</span>
-                      <p>Configure planos primeiro.</p>
+                      <p>Você não possui planos cadastrados neste bot.</p>
                     </div>
                   ) : (
                     <div className="planos-grid">
                       {planos.map(plano => {
-                        const isActive = !!disparoConfig.promo_values[plano.id];
-                        const promoData = disparoConfig.promo_values[plano.id] || { price: plano.valor * 0.7, button_text: '' };
+                        const promoValues = disparoConfig.promo_values || {};
+                        const isActive = !!promoValues[plano.id];
+                        const promoData = promoValues[plano.id] || { price: plano.valor * 0.7, button_text: '' };
                         
                         return (
                           <div key={plano.id} className={`plano-card ${isActive ? 'active' : ''}`}>
                             <div className="plano-card-header">
                               <div className="plano-info">
                                 <strong>{plano.nome_exibicao}</strong>
-                                <span className="original-price">R$ {plano.valor.toFixed(2)}</span>
+                                <span className="original-price">De: R$ {plano.valor.toFixed(2)}</span>
                               </div>
                               
                               <div 
@@ -481,7 +495,7 @@ export function AutoRemarketing() {
                             
                             {isActive && (
                               <div className="plano-card-body">
-                                <label>Preço Promocional:</label>
+                                <label>Novo Preço:</label>
                                 <div className="input-with-prefix">
                                   <span>R$</span>
                                   <input
@@ -499,11 +513,11 @@ export function AutoRemarketing() {
                                   className="input-field"
                                   value={promoData.button_text}
                                   onChange={(e) => handlePromoChange(plano.id, 'button_text', e.target.value)}
-                                  placeholder="🔥 Nome do Plano - Oferta!"
+                                  placeholder="Ex: 🔥 Quero com Desconto!"
                                 />
                                 
                                 <div className="plano-savings">
-                                  {Icons.Fire} Economia: R$ {(plano.valor - promoData.price).toFixed(2)}
+                                  {Icons.Fire} Economia de R$ {(plano.valor - promoData.price).toFixed(2)}
                                 </div>
                               </div>
                             )}
@@ -516,17 +530,17 @@ export function AutoRemarketing() {
                 
                 {/* Timing */}
                 <div className="config-card">
-                  <label className="config-label">{Icons.Clock} Configurações de Tempo</label>
+                  <label className="config-label">{Icons.Clock} Tempo de Espera</label>
                   
                   <div className="form-row">
                     <div className="form-group">
-                      <label>Aguardar (minutos)</label>
+                      <label>Aguardar X minutos após abandono</label>
                       <input
                         type="number"
                         min="1"
                         max="1440"
                         className="input-field"
-                        value={disparoConfig.delay_minutes}
+                        value={disparoConfig.delay_minutes || 5}
                         onChange={(e) => setDisparoConfig(prev => ({ 
                           ...prev, 
                           delay_minutes: parseInt(e.target.value) || 1 
@@ -535,12 +549,12 @@ export function AutoRemarketing() {
                     </div>
                     
                     <div className="form-group">
-                      <label>Auto-destruir após (segundos)</label>
+                      <label>Auto-destruir mensagem após (0 = nunca)</label>
                       <input
                         type="number"
                         min="0"
                         className="input-field"
-                        value={disparoConfig.auto_destruct_seconds}
+                        value={disparoConfig.auto_destruct_seconds || 0}
                         onChange={(e) => setDisparoConfig(prev => ({ 
                           ...prev, 
                           auto_destruct_seconds: parseInt(e.target.value) || 0 
@@ -575,23 +589,23 @@ export function AutoRemarketing() {
               
               <div className="hint-text">
                 <span>{Icons.Alert}</span>
-                <span>Mensagens que alternam enquanto aguarda o disparo.</span>
+                <span>Estas mensagens ficam trocando no botão "Gerar Pix" enquanto o usuário espera.</span>
               </div>
             </div>
             
             {alternatingConfig.is_active && (
               <>
                 <div className="config-card">
-                  <label className="config-label">{Icons.Message} Mensagens (mínimo 2)</label>
+                  <label className="config-label">{Icons.Message} Lista de Frases (Mínimo 2)</label>
                   
                   <div className="messages-list">
-                    {alternatingConfig.messages.map((msg, index) => (
+                    {(alternatingConfig.messages || []).map((msg, index) => (
                       <div key={index} className="message-item">
                         <div className="message-number">{index + 1}</div>
                         
                         <textarea
                           className="input-field message-textarea"
-                          rows={3}
+                          rows={2}
                           value={msg}
                           onChange={(e) => handleEditMessage(index, e.target.value)}
                         />
@@ -610,30 +624,30 @@ export function AutoRemarketing() {
                   <div className="add-message-box">
                     <textarea
                       className="input-field"
-                      rows={3}
+                      rows={2}
                       value={newMessage}
                       onChange={(e) => setNewMessage(e.target.value)}
-                      placeholder="Nova mensagem..."
+                      placeholder="Nova frase persuasiva..."
                     />
                     
                     <button type="button" className="btn-add" onClick={handleAddMessage}>
-                      <span>{Icons.Plus}</span> Adicionar
+                      <span>{Icons.Plus}</span> Adicionar Frase
                     </button>
                   </div>
                 </div>
                 
                 <div className="config-card">
-                  <label className="config-label">{Icons.Clock} Timing</label>
+                  <label className="config-label">{Icons.Clock} Configuração de Rotação</label>
                   
                   <div className="form-row">
                     <div className="form-group">
-                      <label>Alternar a cada (segundos)</label>
+                      <label>Trocar mensagem a cada (segundos)</label>
                       <input
                         type="number"
                         min="5"
                         max="300"
                         className="input-field"
-                        value={alternatingConfig.rotation_interval_seconds}
+                        value={alternatingConfig.rotation_interval_seconds || 15}
                         onChange={(e) => setAlternatingConfig(prev => ({ 
                           ...prev, 
                           rotation_interval_seconds: parseInt(e.target.value) || 15 
@@ -642,12 +656,12 @@ export function AutoRemarketing() {
                     </div>
                     
                     <div className="form-group">
-                      <label>Parar X seg antes do disparo</label>
+                      <label>Parar X segundos antes do Remarketing</label>
                       <input
                         type="number"
                         min="0"
                         className="input-field"
-                        value={alternatingConfig.stop_before_remarketing_seconds}
+                        value={alternatingConfig.stop_before_remarketing_seconds || 60}
                         onChange={(e) => setAlternatingConfig(prev => ({ 
                           ...prev, 
                           stop_before_remarketing_seconds: parseInt(e.target.value) || 60 
@@ -657,7 +671,7 @@ export function AutoRemarketing() {
                   </div>
                   
                   <div className="toggle-wrapper" style={{ marginTop: '20px' }}>
-                    <label>{Icons.Trash} Auto-destruir ao parar</label>
+                    <label>{Icons.Trash} Auto-destruir mensagem final ao parar?</label>
                     <div 
                       className={`custom-toggle ${alternatingConfig.auto_destruct_final ? 'active' : ''}`}
                       onClick={() => setAlternatingConfig(prev => ({ 
@@ -686,7 +700,7 @@ export function AutoRemarketing() {
               <div className="stat-card">
                 <div className="stat-icon">{Icons.Rocket}</div>
                 <div className="stat-info">
-                  <div className="stat-label">Enviados</div>
+                  <div className="stat-label">Total Enviados</div>
                   <div className="stat-value">{stats.total_sent}</div>
                 </div>
               </div>
@@ -702,7 +716,7 @@ export function AutoRemarketing() {
               <div className="stat-card">
                 <div className="stat-icon">{Icons.Chart}</div>
                 <div className="stat-info">
-                  <div className="stat-label">Taxa</div>
+                  <div className="stat-label">Taxa de Conv.</div>
                   <div className="stat-value">{stats.conversion_rate}%</div>
                 </div>
               </div>
@@ -710,26 +724,26 @@ export function AutoRemarketing() {
               <div className="stat-card">
                 <div className="stat-icon">{Icons.Fire}</div>
                 <div className="stat-info">
-                  <div className="stat-label">Hoje</div>
+                  <div className="stat-label">Envios Hoje</div>
                   <div className="stat-value">{stats.today_sent}</div>
                 </div>
               </div>
             </div>
             
             <div className="config-card">
-              <label className="config-label">{Icons.Chart} Histórico</label>
+              <label className="config-label">{Icons.Chart} Histórico Recente</label>
               
-              {stats.recent_logs.length === 0 ? (
+              {(!stats.recent_logs || stats.recent_logs.length === 0) ? (
                 <div className="alert alert-info">
                   <span>{Icons.Alert}</span>
-                  <p>Nenhum disparo ainda.</p>
+                  <p>Nenhum disparo registrado recentemente.</p>
                 </div>
               ) : (
                 <div className="logs-table">
                   <table>
                     <thead>
                       <tr>
-                        <th>ID</th>
+                        <th>ID Usuário</th>
                         <th>Data/Hora</th>
                         <th>Status</th>
                         <th>Converteu?</th>
