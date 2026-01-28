@@ -185,6 +185,7 @@ export function Tutorial() {
             </div>
             
             <div className="tut-bot-type-card tut-bot-featured">
+              <div className="tut-featured-badge">EM BREVE</div>  
               <div className="tut-bot-type-icon">
                 <Smartphone size={32} />
               </div>
