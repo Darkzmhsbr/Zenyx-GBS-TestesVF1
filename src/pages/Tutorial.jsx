@@ -171,6 +171,7 @@ export function Tutorial() {
           
           <div className="tut-bot-types-grid">
             <div className="tut-bot-type-card">
+              <div className="tut-featured-badge">RECOMENDADO</div>
               <div className="tut-bot-type-icon">
                 <Bot size={32} />
               </div>
@@ -184,7 +185,6 @@ export function Tutorial() {
             </div>
             
             <div className="tut-bot-type-card tut-bot-featured">
-              <div className="tut-featured-badge">RECOMENDADO</div>
               <div className="tut-bot-type-icon">
                 <Smartphone size={32} />
               </div>
