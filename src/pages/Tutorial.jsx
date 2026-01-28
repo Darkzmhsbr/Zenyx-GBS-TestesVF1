@@ -169,7 +169,7 @@ export function Tutorial() {
           
           <h4 className="tut-subtitle">Escolha o tipo de bot</h4>
           
-          <div className="tut-bot-types-grid">
+          <div className="tut-bot-type-card tut-bot-featured">
             <div className="tut-bot-type-card">
               <div className="tut-featured-badge">RECOMENDADO</div>
               <div className="tut-bot-type-icon">
