@@ -173,7 +173,7 @@ export function Tutorial() {
             <div className="tut-bot-type-card">
               <div className="tut-featured-badge">RECOMENDADO</div>
               <div className="tut-bot-type-icon">
-                <Bot size={32} />
+                <Smartphone size={32} />
               </div>
               <h5>Bot Tradicional</h5>
               <p>Interação via comandos e botões inline no chat do Telegram</p>
