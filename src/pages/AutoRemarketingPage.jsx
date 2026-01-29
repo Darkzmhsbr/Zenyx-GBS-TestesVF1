@@ -293,70 +293,108 @@ export function AutoRemarketing() {
   return (
     <div className="auto-remarketing-container">
       
-      {/* === HEADER === */}
+      {/* HEADER */}
       <div className="auto-remarketing-header">
         <div className="header-titles">
           <h1>{Icons.Rocket} Disparo Automático</h1>
           <p>Configure mensagens de remarketing inteligentes</p>
         </div>
-        <button 
-          className="btn-save-main" 
-          onClick={activeTab === 'disparo' ? handleSaveDisparo : handleSaveAlternating}
-          disabled={saving}
-        >
-          <span>{Icons.Save}</span>
-          {saving ? 'Salvando...' : 'Salvar Alterações'}
-        </button>
+        <div className="header-actions">
+           <button className="btn-save-main" onClick={activeTab === 'disparo' ? handleSaveDisparo : handleSaveAlternating} disabled={saving}>
+             {saving ? 'Salvando...' : <>{Icons.Save} Salvar Alterações</>}
+           </button>
+        </div>
       </div>
-      
-      {/* === TABS === */}
-      <div className="auto-remarketing-tabs">
+
+      {/* TABS (Classe Ajustada para o CSS Responsivo) */}
+      <div className="tabs-nav">
         <button 
           className={`tab-btn ${activeTab === 'disparo' ? 'active' : ''}`}
           onClick={() => setActiveTab('disparo')}
         >
-          <span>{Icons.Rocket}</span> Configuração Principal
+          {Icons.Rocket} Mensagem de Disparo
         </button>
         <button 
           className={`tab-btn ${activeTab === 'alternating' ? 'active' : ''}`}
           onClick={() => setActiveTab('alternating')}
         >
-          <span>{Icons.Message}</span> Mensagens Alternantes
+          {Icons.Message} Mensagens Alternantes
         </button>
         <button 
           className={`tab-btn ${activeTab === 'analytics' ? 'active' : ''}`}
           onClick={() => setActiveTab('analytics')}
         >
-          <span>{Icons.Chart}</span> Analytics
+          {Icons.Chart} Analytics
         </button>
       </div>
-      
-      {/* === CONTEÚDO === */}
-      <div className="auto-remarketing-content">
+
+      {/* CONTENT */}
+      <div className="content-area">
         
         {/* === ABA 1: DISPARO AUTOMÁTICO === */}
         {activeTab === 'disparo' && (
-          <div className="tab-content">
+          <div className="config-layout">
             
-            {/* Toggle Principal */}
-            <div className="config-card">
-              <div className="toggle-wrapper">
-                <label>{Icons.Rocket} Ativar Disparo Automático</label>
-                <div 
-                  className={`custom-toggle ${disparoConfig.is_active ? 'active' : ''}`}
-                  onClick={() => setDisparoConfig(prev => ({ ...prev, is_active: !prev.is_active }))}
-                >
-                  <div className="toggle-handle"></div>
-                  <span className="toggle-label">{disparoConfig.is_active ? 'ON' : 'OFF'}</span>
+            {/* COLUNA ESQUERDA: CONFIGURAÇÃO */}
+            <div className="config-form">
+              
+              {/* Card 1: Ativação */}
+              <div className="config-card mb-4">
+                <div className="switch-wrapper">
+                  <div className="switch-label">
+                    <span>Ativar Disparo Automático</span>
+                    <small>Envia mensagem X minutos após gerar PIX</small>
+                  </div>
+                  <label className="toggle-switch">
+                    <input 
+                      type="checkbox" 
+                      checked={disparoConfig.is_active}
+                      onChange={e => setDisparoConfig({...disparoConfig, is_active: e.target.checked})}
+                    />
+                    <span className="slider round"></span>
+                  </label>
                 </div>
+
+                {disparoConfig.is_active && (
+                   <div className="form-group mt-3">
+                     <label>{Icons.Clock} Tempo de espera (minutos)</label>
+                     <input 
+                       type="number" 
+                       className="input-field"
+                       value={disparoConfig.delay_minutes}
+                       onChange={e => setDisparoConfig({...disparoConfig, delay_minutes: parseInt(e.target.value)})}
+                     />
+                   </div>
+                )}
               </div>
-            </div>
-            
-            {disparoConfig.is_active && (
-              <>
-                {/* Mensagem */}
-                <div className="config-card">
-                  <label className="config-label">{Icons.Message} Mensagem de Oferta</label>
+
+              {/* Card 2: Conteúdo da Mensagem */}
+              <div className="config-card mb-4">
+                <div className="card-header">
+                  <h3>{Icons.Message} Conteúdo da Mensagem</h3>
+                </div>
+                
+                <div className="form-group">
+                  <label>Mídia URL (Opcional - Foto ou Vídeo)</label>
+                  <input 
+                    type="text" 
+                    className="input-field" 
+                    placeholder="https://..."
+                    value={disparoConfig.media_url || ''}
+                    onChange={e => {
+                        const url = e.target.value;
+                        let type = null;
+                        if (url.match(/\.(jpeg|jpg|png|gif)$/i)) type = 'photo';
+                        if (url.match(/\.(mp4|mov|avi)$/i)) type = 'video';
+                        setDisparoConfig({...disparoConfig, media_url: url, media_type: type});
+                    }}
+                  />
+                </div>
+
+                <div className="form-group">
+                  <label>Legenda / Texto</label>
+                  
+                  {/* Toolbar do Editor */}
                   <div className="text-editor-toolbar">
                     <button type="button" onClick={() => applyFormatting('bold')} title="Negrito"><b>B</b></button>
                     <button type="button" onClick={() => applyFormatting('italic')} title="Itálico"><i>I</i></button>
@@ -365,304 +403,268 @@ export function AutoRemarketing() {
                     <button type="button" onClick={() => applyFormatting('code')} title="Código">&lt;/&gt;</button>
                     <button type="button" onClick={() => applyFormatting('link')} title="Link">🔗</button>
                   </div>
-                  <textarea
+
+                  <textarea 
                     id="disparo-message"
-                    className="input-field textarea-large"
-                    placeholder="Digite sua mensagem de remarketing aqui..."
-                    value={disparoConfig.message_text || ''}
-                    onChange={(e) => setDisparoConfig(prev => ({ ...prev, message_text: e.target.value }))}
+                    className="textarea-field" 
+                    rows="5"
+                    placeholder="Olá {first_name}, vi que gerou um PIX..."
+                    value={disparoConfig.message_text}
+                    onChange={e => setDisparoConfig({...disparoConfig, message_text: e.target.value})}
                   />
-                  <div className="hint-text">
-                    <span>{Icons.Alert}</span>
-                    Suporte a HTML: &lt;b&gt;, &lt;i&gt;, &lt;u&gt;, &lt;s&gt;, &lt;code&gt;, &lt;a&gt;
-                  </div>
+                  <small style={{color:'#666', display:'block', marginTop:'5px'}}>
+                    Use: <code>{'{first_name}'}</code>, <code>{'{plano_original}'}</code>, <code>{'{valor_original}'}</code>
+                  </small>
+                </div>
+              </div>
+
+              {/* Card 3: Auto-Destruição */}
+              <div className="config-card mb-4" style={{ borderLeft: '4px solid #c333ff', background: 'rgba(195, 51, 255, 0.03)' }}>
+                <div className="card-header">
+                  <h3>{Icons.Bomb} Auto-Destruição</h3>
                 </div>
                 
-                {/* Mídia */}
-                <div className="config-card">
-                  <label className="config-label">{Icons.Photo} Mídia (Opcional)</label>
-                  <div className="form-row">
-                    <div className="form-group">
-                      <label>URL da Mídia</label>
-                      <input
-                        type="url"
-                        className="input-field"
-                        placeholder="https://exemplo.com/imagem.jpg"
-                        value={disparoConfig.media_url || ''}
-                        onChange={(e) => setDisparoConfig(prev => ({ ...prev, media_url: e.target.value }))}
-                      />
+                <div className="switch-wrapper">
+                    <div className="switch-label">
+                        <span>Ativar Auto-Destruição</span>
+                        <small>Apaga a mensagem após um tempo</small>
                     </div>
-                    <div className="form-group">
-                      <label>Tipo</label>
-                      <select
-                        className="input-field"
-                        value={disparoConfig.media_type || ''}
-                        onChange={(e) => setDisparoConfig(prev => ({ ...prev, media_type: e.target.value || null }))}
-                      >
-                        <option value="">Nenhuma</option>
-                        <option value="photo">Foto</option>
-                        <option value="video">Vídeo</option>
-                      </select>
-                    </div>
-                  </div>
-                </div>
-                
-                {/* Planos Promocionais */}
-                <div className="config-card">
-                  <label className="config-label">{Icons.Money} Valores Promocionais</label>
-                  {planos.length === 0 ? (
-                    <div className="alert alert-info">
-                      <span>{Icons.Alert}</span>
-                      Nenhum plano cadastrado ainda.
-                    </div>
-                  ) : (
-                    <div className="planos-grid">
-                      {planos.map(plano => {
-                        // 🔥 CORREÇÃO: Usando 'preco_atual' em vez de 'valor'
-                        const valorOriginal = Number(plano.preco_atual) || 0;
-                        
-                        const promoValues = disparoConfig.promo_values || {};
-                        const isActive = !!promoValues[plano.id];
-                        const promoData = promoValues[plano.id] || { price: valorOriginal * 0.7, button_text: '' };
-                        
-                        const valorPromocional = Number(promoData.price) || 0;
-                        const economia = valorOriginal - valorPromocional;
-                        
-                        return (
-                          <div key={plano.id} className={`plano-card ${isActive ? 'active' : ''}`}>
-                            <div className="plano-card-header">
-                              <div className="plano-info">
-                                <strong>{plano.nome_exibicao}</strong>
-                                <span className="original-price">De: R$ {valorOriginal.toFixed(2)}</span>
-                              </div>
-                              <div 
-                                className={`custom-toggle small ${isActive ? 'active' : ''}`}
-                                onClick={() => handleTogglePlano(plano.id)}
-                              >
-                                <div className="toggle-handle"></div>
-                              </div>
-                            </div>
-                            
-                            {isActive && (
-                              <div className="plano-card-body">
-                                <label>Novo Preço:</label>
-                                <div className="input-with-prefix">
-                                  <span>R$</span>
-                                  <input
-                                    type="number"
-                                    step="0.01"
-                                    className="input-field"
-                                    value={valorPromocional}
-                                    onChange={(e) => handlePromoChange(plano.id, 'price', e.target.value)}
-                                  />
-                                </div>
-                                
-                                <label style={{ marginTop: '10px' }}>Botão:</label>
-                                <input
-                                  type="text"
-                                  className="input-field"
-                                  value={promoData.button_text || ''}
-                                  onChange={(e) => handlePromoChange(plano.id, 'button_text', e.target.value)}
-                                  placeholder="Ex: 🔥 Quero Desconto!"
-                                />
-                                
-                                <div className="plano-savings">
-                                  {Icons.Fire} Economia de R$ {economia.toFixed(2)}
-                                </div>
-                              </div>
-                            )}
-                          </div>
-                        );
-                      })}
-                    </div>
-                  )}
-                </div>
-                
-                {/* Tempo de Espera */}
-                <div className="config-card">
-                  <label className="config-label">{Icons.Clock} Tempo de Espera</label>
-                  <div className="form-group">
-                    <label>Aguardar (minutos) antes de enviar o disparo</label>
-                    <input
-                      type="number"
-                      min="1"
-                      max="1440"
-                      className="input-field"
-                      value={disparoConfig.delay_minutes || 5}
-                      onChange={(e) => setDisparoConfig(prev => ({ ...prev, delay_minutes: parseInt(e.target.value) || 1 }))}
-                    />
-                    <div className="hint-text">
-                      <span>{Icons.Alert}</span>
-                      Tempo entre o PIX inicial e o envio da oferta promocional (1-1440 minutos)
-                    </div>
-                  </div>
+                    <label className="toggle-switch">
+                        <input 
+                            type="checkbox" 
+                            checked={disparoConfig.auto_destruct_enabled}
+                            onChange={e => setDisparoConfig({...disparoConfig, auto_destruct_enabled: e.target.checked})}
+                        />
+                        <span className="slider round"></span>
+                    </label>
                 </div>
 
-                {/* ✅ NOVA SEÇÃO: AUTO-DESTRUIÇÃO OPCIONAL */}
-                <div className="config-card" style={{ borderLeft: '4px solid #c333ff', background: 'rgba(195, 51, 255, 0.03)' }}>
-                  <label className="config-label">{Icons.Bomb} Auto-Destruição da Mensagem</label>
-                  
-                  {/* Toggle para ativar auto-destruição */}
-                  <div className="toggle-wrapper" style={{ marginBottom: '20px' }}>
-                    <label>Ativar Auto-Destruição</label>
-                    <div 
-                      className={`custom-toggle ${disparoConfig.auto_destruct_enabled ? 'active' : ''}`}
-                      onClick={() => setDisparoConfig(prev => ({ ...prev, auto_destruct_enabled: !prev.auto_destruct_enabled }))}
-                    >
-                      <div className="toggle-handle"></div>
-                      <span className="toggle-label">{disparoConfig.auto_destruct_enabled ? 'ON' : 'OFF'}</span>
-                    </div>
-                  </div>
-
-                  <div className="hint-text" style={{ marginBottom: '20px' }}>
+                <div className="hint-text" style={{ marginBottom: '20px' }}>
                     <span>{Icons.Alert}</span>
                     Quando ativado, a mensagem de disparo será automaticamente apagada após o tempo configurado
+                </div>
+
+                {disparoConfig.auto_destruct_enabled && (
+                    <>
+                        <div className="form-group mt-3">
+                            <label>⏱️ Destruir em (segundos)</label>
+                            <input 
+                                type="number" 
+                                className="input-field"
+                                value={disparoConfig.auto_destruct_seconds}
+                                onChange={e => setDisparoConfig({...disparoConfig, auto_destruct_seconds: parseInt(e.target.value) || 0})}
+                            />
+                        </div>
+
+                        <div className="switch-wrapper mt-3">
+                            <div className="switch-label">
+                                <span>👆 Destruir SÓ após clicar?</span>
+                                <small>Se ativo, conta o tempo só depois que o user clica no botão.</small>
+                            </div>
+                            <label className="toggle-switch">
+                                <input 
+                                    type="checkbox" 
+                                    checked={disparoConfig.auto_destruct_after_click}
+                                    onChange={e => setDisparoConfig({...disparoConfig, auto_destruct_after_click: e.target.checked})}
+                                />
+                                <span className="slider round"></span>
+                            </label>
+                        </div>
+                    </>
+                )}
+              </div>
+
+              {/* Card 4: Oferta Promocional */}
+              <div className="config-card mb-4">
+                <div className="card-header">
+                  <h3>{Icons.Money} Oferta Promocional (Botões)</h3>
+                </div>
+                
+                <div className="alert alert-info mb-3">
+                   Configure um preço menor para recuperar a venda. O botão já vai com o link de pagamento atualizado.
+                </div>
+
+                {planos.length === 0 ? (
+                    <div className="alert alert-warning">
+                      <span>{Icons.Alert}</span> Nenhum plano cadastrado.
+                    </div>
+                ) : (
+                    <div className="planos-grid">
+                        {planos.map(plano => {
+                           const promo = (disparoConfig.promo_values || {})[plano.id] || {};
+                           const isActive = !!(disparoConfig.promo_values || {})[plano.id];
+                           const valorOriginal = Number(plano.preco_atual) || 0;
+                           
+                           return (
+                             <div key={plano.id} className={`plano-card ${isActive ? 'active' : ''}`}>
+                                <div className="plano-card-header">
+                                    <div className="plano-info">
+                                        <strong>{plano.nome_exibicao}</strong>
+                                        <span className="original-price">De: R$ {valorOriginal.toFixed(2)}</span>
+                                    </div>
+                                    <div 
+                                        className={`custom-toggle small ${isActive ? 'active' : ''}`}
+                                        onClick={() => handleTogglePlano(plano.id)}
+                                    >
+                                        <div className="toggle-handle"></div>
+                                    </div>
+                                </div>
+                                
+                                {isActive && (
+                                    <div className="plano-card-body">
+                                       <div className="form-group">
+                                          <label>Novo Preço (R$)</label>
+                                          <input 
+                                            type="number" 
+                                            step="0.01"
+                                            className="input-field"
+                                            value={promo.price || ''}
+                                            onChange={e => handlePromoChange(plano.id, 'price', parseFloat(e.target.value))}
+                                          />
+                                       </div>
+                                       <div className="form-group">
+                                          <label>Texto do Botão</label>
+                                          <input 
+                                            type="text" 
+                                            className="input-field"
+                                            placeholder="Ver Oferta 🔥"
+                                            value={promo.button_text || ''}
+                                            onChange={e => handlePromoChange(plano.id, 'button_text', e.target.value)}
+                                          />
+                                       </div>
+                                    </div>
+                                )}
+                             </div>
+                           )
+                        })}
+                    </div>
+                )}
+              </div>
+
+            </div>
+
+            {/* COLUNA DIREITA: PREVIEW */}
+            <div className="preview-wrapper">
+              <div className="iphone-mockup">
+                <div className="screen-content">
+                  
+                  {/* Msg de Disparo */}
+                  <div className="msg-bubble">
+                     {disparoConfig.media_url && (
+                        <div className="media-preview" style={{backgroundImage: `url(${disparoConfig.media_url})`}}></div>
+                     )}
+                     <div className="msg-text">
+                        {disparoConfig.message_text || 'Configure a mensagem...'}
+                     </div>
+                     <div className="msg-time">10:05</div>
+                     
+                     {/* Botão Fake */}
+                     <div className="inline-btn">
+                        Ver Oferta 🔥
+                     </div>
                   </div>
 
-                  {/* Opções aparecem apenas se auto_destruct_enabled = true */}
-                  {disparoConfig.auto_destruct_enabled && (
-                    <>
-                      {/* Modo de auto-destruição */}
-                      <div className="form-group" style={{ marginBottom: '20px', paddingLeft: '20px', borderLeft: '2px solid #333' }}>
-                        <label style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '10px', cursor: 'pointer' }}>
-                          <input
-                            type="radio"
-                            name="destruct_mode"
-                            checked={disparoConfig.auto_destruct_after_click === true}
-                            onChange={() => setDisparoConfig(prev => ({ ...prev, auto_destruct_after_click: true }))}
-                            style={{ width: '18px', height: '18px' }}
-                          />
-                          <span>Destruir APÓS o usuário clicar no botão</span>
-                        </label>
-                        <div className="hint-text" style={{ marginLeft: '28px' }}>
-                          <span>✅</span>
-                          Recomendado: A mensagem só será apagada depois que o usuário escolher um plano
+                  {/* Mensagem Alternante (Exemplo) */}
+                  {alternatingConfig.is_active && alternatingConfig.messages.length > 0 && (
+                     <div className="msg-bubble" style={{opacity:0.7}}>
+                        <div className="msg-text">
+                           {alternatingConfig.messages[0].content || alternatingConfig.messages[0]}
                         </div>
-                      </div>
-
-                      <div className="form-group" style={{ marginBottom: '20px', paddingLeft: '20px', borderLeft: '2px solid #333' }}>
-                        <label style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '10px', cursor: 'pointer' }}>
-                          <input
-                            type="radio"
-                            name="destruct_mode"
-                            checked={disparoConfig.auto_destruct_after_click === false}
-                            onChange={() => setDisparoConfig(prev => ({ ...prev, auto_destruct_after_click: false }))}
-                            style={{ width: '18px', height: '18px' }}
-                          />
-                          <span>Destruir imediatamente após envio</span>
-                        </label>
-                        <div className="hint-text" style={{ marginLeft: '28px' }}>
-                          <span>⚠️</span>
-                          A mensagem será apagada automaticamente mesmo se o usuário não clicar
-                        </div>
-                      </div>
-
-                      {/* Tempo de auto-destruição */}
-                      <div className="form-group" style={{ paddingLeft: '20px', borderLeft: '2px solid #333' }}>
-                        <label>Tempo para auto-destruir (segundos)</label>
-                        <input
-                          type="number"
-                          min="1"
-                          max="60"
-                          className="input-field"
-                          value={disparoConfig.auto_destruct_seconds || 3}
-                          onChange={(e) => setDisparoConfig(prev => ({ ...prev, auto_destruct_seconds: parseInt(e.target.value) || 3 }))}
-                          style={{ maxWidth: '200px' }}
-                        />
-                        <div className="hint-text">
-                          <span>{Icons.Clock}</span>
-                          Tempo de espera antes de apagar a mensagem (1-60 segundos)
-                        </div>
-                      </div>
-                    </>
+                        <div className="msg-time">10:02</div>
+                     </div>
                   )}
+
                 </div>
-              </>
-            )}
-            
+              </div>
+            </div>
+
           </div>
         )}
         
         {/* === ABA 2: MENSAGENS ALTERNANTES === */}
         {activeTab === 'alternating' && (
-          <div className="tab-content">
-            <div className="config-card">
-              <div className="toggle-wrapper">
-                <label>{Icons.Message} Ativar Mensagens Alternantes</label>
-                <div 
-                  className={`custom-toggle ${alternatingConfig.is_active ? 'active' : ''}`}
-                  onClick={() => setAlternatingConfig(prev => ({ ...prev, is_active: !prev.is_active }))}
-                >
-                  <div className="toggle-handle"></div>
-                  <span className="toggle-label">{alternatingConfig.is_active ? 'ON' : 'OFF'}</span>
+          <div className="config-layout" style={{ gridTemplateColumns: '1fr' }}> {/* Alternating ocupa largura total */}
+            <div className="config-form">
+                <div className="config-card">
+                    <div className="card-header">
+                        <h3>🔄 Mensagens Alternantes (Anti-Bloqueio)</h3>
+                    </div>
+                    
+                    <div className="switch-wrapper">
+                        <div className="switch-label">
+                        <span>Ativar Alternância</span>
+                        <small>Envia mensagens aleatórias enquanto o usuário não paga</small>
+                        </div>
+                        <label className="toggle-switch">
+                            <input 
+                                type="checkbox" 
+                                checked={alternatingConfig.is_active}
+                                onChange={e => setAlternatingConfig({...alternatingConfig, is_active: e.target.checked})}
+                            />
+                            <span className="slider round"></span>
+                        </label>
+                    </div>
+
+                    {alternatingConfig.is_active && (
+                        <div className="alternating-msgs mt-3">
+                            <div className="messages-list">
+                                {alternatingConfig.messages.map((msg, idx) => (
+                                    <div key={idx} className="message-item">
+                                        <div className="message-number">{idx + 1}</div>
+                                        <input 
+                                            type="text" 
+                                            className="input-field" 
+                                            value={typeof msg === 'string' ? msg : msg.content}
+                                            onChange={e => {
+                                                // Suporte para string simples ou objeto
+                                                if (typeof msg === 'string') {
+                                                    handleEditMessage(idx, e.target.value);
+                                                } else {
+                                                    const updatedMsg = { ...msg, content: e.target.value };
+                                                    const newMsgs = [...alternatingConfig.messages];
+                                                    newMsgs[idx] = updatedMsg;
+                                                    setAlternatingConfig(prev => ({ ...prev, messages: newMsgs }));
+                                                }
+                                            }}
+                                            placeholder={`Mensagem ${idx+1}`}
+                                        />
+                                        <button onClick={() => handleRemoveMessage(idx)} className="btn-remove">
+                                            {Icons.Trash}
+                                        </button>
+                                    </div>
+                                ))}
+                            </div>
+                            
+                            <div className="add-message-box">
+                                <input 
+                                    type="text"
+                                    className="input-field"
+                                    placeholder="Nova frase..."
+                                    value={newMessage}
+                                    onChange={(e) => setNewMessage(e.target.value)}
+                                />
+                                <button onClick={handleAddMessage} className="btn-add w-100">
+                                    {Icons.Plus} Adicionar Variação
+                                </button>
+                            </div>
+
+                            <div className="form-group mt-3">
+                                <label>Parar X segundos antes do remarketing oficial</label>
+                                <input 
+                                    type="number"
+                                    min="0"
+                                    className="input-field"
+                                    value={alternatingConfig.stop_before_remarketing_seconds || 60}
+                                    onChange={(e) => setAlternatingConfig(prev => ({ ...prev, stop_before_remarketing_seconds: parseInt(e.target.value) || 60 }))}
+                                />
+                            </div>
+                        </div>
+                    )}
                 </div>
-              </div>
             </div>
-            
-            {alternatingConfig.is_active && (
-              <>
-                <div className="config-card">
-                  <label className="config-label">{Icons.Message} Frases (Mínimo 2)</label>
-                  <div className="messages-list">
-                    {(alternatingConfig.messages || []).map((msg, index) => (
-                      <div key={index} className="message-item">
-                        <div className="message-number">{index + 1}</div>
-                        <textarea
-                          className="input-field message-textarea"
-                          rows={2}
-                          value={msg}
-                          onChange={(e) => handleEditMessage(index, e.target.value)}
-                        />
-                        <button type="button" className="btn-remove" onClick={() => handleRemoveMessage(index)}>
-                          {Icons.Trash}
-                        </button>
-                      </div>
-                    ))}
-                  </div>
-                  <div className="add-message-box">
-                    <textarea
-                      className="input-field"
-                      rows={2}
-                      value={newMessage}
-                      onChange={(e) => setNewMessage(e.target.value)}
-                      placeholder="Nova frase..."
-                    />
-                    <button type="button" className="btn-add" onClick={handleAddMessage}>
-                      <span>{Icons.Plus}</span> Adicionar Frase
-                    </button>
-                  </div>
-                </div>
-                
-                <div className="config-card">
-                  <label className="config-label">{Icons.Clock} Rotação</label>
-                  <div className="form-row">
-                    <div className="form-group">
-                      <label>Trocar a cada (segundos)</label>
-                      <input
-                        type="number"
-                        min="5"
-                        className="input-field"
-                        value={alternatingConfig.rotation_interval_seconds || 15}
-                        onChange={(e) => setAlternatingConfig(prev => ({ ...prev, rotation_interval_seconds: parseInt(e.target.value) || 15 }))}
-                      />
-                    </div>
-                    <div className="form-group">
-                      <label>Parar antes do Remarketing (seg)</label>
-                      <input
-                        type="number"
-                        min="0"
-                        className="input-field"
-                        value={alternatingConfig.stop_before_remarketing_seconds || 60}
-                        onChange={(e) => setAlternatingConfig(prev => ({ ...prev, stop_before_remarketing_seconds: parseInt(e.target.value) || 60 }))}
-                      />
-                    </div>
-                  </div>
-                </div>
-              </>
-            )}
           </div>
         )}
-        
+
         {/* === ABA 3: ANALYTICS === */}
         {activeTab === 'analytics' && (
           <div className="tab-content">
@@ -681,8 +683,64 @@ export function AutoRemarketing() {
                   <div className="stat-value">{stats.total_converted}</div>
                 </div>
               </div>
+              <div className="stat-card">
+                <div className="stat-icon">{Icons.Check}</div>
+                <div className="stat-info">
+                  <div className="stat-label">Taxa de Abertura</div>
+                  <div className="stat-value">--%</div>
+                </div>
+              </div>
+              <div className="stat-card">
+                <div className="stat-icon">{Icons.Star}</div>
+                <div className="stat-info">
+                  <div className="stat-label">Receita Recuperada</div>
+                  <div className="stat-value">R$ --</div>
+                </div>
+              </div>
             </div>
-            {/* Tabela de logs omitida por brevidade (já estava ok) */}
+            
+            {/* Tabela de logs (Classe Ajustada para Scroll Horizontal Responsivo) */}
+            <div className="config-card">
+                <div className="card-header">
+                    <h3>📜 Histórico de Envios</h3>
+                </div>
+                <div className="logs-table-container">
+                    <table className="logs-table">
+                        <thead>
+                            <tr>
+                                <th>Data</th>
+                                <th>Usuário</th>
+                                <th>Status</th>
+                                <th>Convertido?</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {stats.logs && stats.logs.length > 0 ? (
+                                stats.logs.map((log) => (
+                                    <tr key={log.id}>
+                                        <td>{new Date(log.sent_at).toLocaleString()}</td>
+                                        <td>{log.user_id}</td>
+                                        <td>
+                                            <span className={`status-badge ${log.status}`}>
+                                                {log.status}
+                                            </span>
+                                        </td>
+                                        <td>
+                                            {log.converted ? '✅ Sim' : '❌ Não'}
+                                        </td>
+                                    </tr>
+                                ))
+                            ) : (
+                                <tr>
+                                    <td colSpan="4" style={{textAlign:'center', padding:'20px'}}>
+                                        Nenhum envio registrado ainda.
+                                    </td>
+                                </tr>
+                            )}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
           </div>
         )}
         
