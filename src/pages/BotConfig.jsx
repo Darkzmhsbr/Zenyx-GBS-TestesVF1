@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { useParams, useNavigate, useLocation } from 'react-router-dom'; // 🔥 Adicionado useLocation
+import { useParams, useNavigate, useLocation } from 'react-router-dom'; 
 import { 
   Save, ArrowLeft, MessageSquare, Key, Headphones, 
-  Smartphone, Layout, PlayCircle, Type, Plus, Trash2, Edit, Image as ImageIcon, Link, User, Palette, Shield, Radio
-} from 'lucide-react';
+  Smartphone, Layout, PlayCircle, Type, Plus, Trash2, Edit, Image as ImageIcon, Link, User, Palette, Shield, Radio, Wifi
+} from 'lucide-react'; // 🔥 Adicionado Wifi
 import { Button } from '../components/Button';
 import { Card, CardContent } from '../components/Card';
 import { botService, miniappService } from '../services/api'; 
@@ -13,7 +13,7 @@ import './Bots.css';
 export function BotConfig() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const location = useLocation(); // 🔥 Hook para ler o estado da navegação
+  const location = useLocation(); 
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('geral');
   
@@ -47,14 +47,13 @@ export function BotConfig() {
   const [currentCat, setCurrentCat] = useState(null);
 
   useEffect(() => {
-    // 🔥 Verifica se veio algum comando de aba do NewBot.jsx
+    // Verifica se veio algum comando de aba do NewBot.jsx
     if (location.state?.initialTab) {
         setActiveTab(location.state.initialTab);
-        // Limpa o state para não ficar preso na aba se der F5 (opcional, mas boa prática)
         window.history.replaceState({}, document.title);
     }
     carregarDados();
-  }, [id, location.state]); // Adicionado location.state nas dependências
+  }, [id, location.state]); 
 
   const carregarDados = async () => {
     try {
@@ -89,6 +88,37 @@ export function BotConfig() {
       Swal.fire('Erro', 'Falha ao carregar configurações', 'error');
     } finally {
       setLoading(false);
+    }
+  };
+
+  // --- FUNÇÃO DE TESTE DE CANAL (NOVA) ---
+  const handleTestChannel = async () => {
+    if (!config.token || !config.id_canal_vip) {
+      return Swal.fire('Erro', 'Preencha o Token e o ID do Canal antes de testar.', 'warning');
+    }
+    
+    try {
+      Swal.fire({ 
+        title: 'Testando conexão...', 
+        html: 'Verificando permissões de admin...',
+        didOpen: () => Swal.showLoading() 
+      });
+      
+      const res = await botService.testChannel(config.token, config.id_canal_vip);
+      
+      Swal.fire({
+        title: 'Conectado!',
+        text: res.message,
+        icon: 'success',
+        background: '#151515', color: '#fff'
+      });
+    } catch (error) {
+      Swal.fire({
+        title: 'Falha na Conexão',
+        text: error.detail || error.message || 'Erro ao conectar. Verifique se o bot é ADMIN.',
+        icon: 'error',
+        background: '#151515', color: '#fff'
+      });
     }
   };
 
@@ -277,14 +307,27 @@ export function BotConfig() {
                         />
                     </div>
 
+                    {/* 🔥 CAMPO ID CANAL COM BOTÃO DE TESTE */}
                     <div className="form-group">
                       <label>ID do Canal VIP</label>
-                      <input 
-                        className="input-field" 
-                        value={config.id_canal_vip} 
-                        onChange={(e) => setConfig({...config, id_canal_vip: e.target.value})} 
-                        placeholder="-100..."
-                      />
+                      <div style={{ display: 'flex', gap: '10px' }}>
+                        <input 
+                            className="input-field" 
+                            style={{ flex: 1 }}
+                            value={config.id_canal_vip} 
+                            onChange={(e) => setConfig({...config, id_canal_vip: e.target.value})} 
+                            placeholder="-100..."
+                        />
+                        <Button 
+                            type="button" 
+                            onClick={handleTestChannel}
+                            style={{ height: '42px', marginTop: '1px', background: '#3b82f6', minWidth: '110px' }}
+                            title="Testar Conexão"
+                        >
+                            <Wifi size={18} style={{marginRight:5}}/> Testar
+                        </Button>
+                      </div>
+                      <small style={{color:'#666'}}>O bot precisa ser ADMIN do canal para funcionar.</small>
                     </div>
 
                     <div style={{marginTop: 20}}>

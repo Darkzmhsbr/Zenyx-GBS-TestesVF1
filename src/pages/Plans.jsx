@@ -1,9 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import Swal from 'sweetalert2';
 import { 
-  Plus, Trash2, Calendar, DollarSign, Edit2, Check, X, Tag, Infinity, Hash, Info 
+  Plus, Trash2, Calendar, DollarSign, Edit2, Check, X, Tag, Infinity, Hash, Info, Wifi 
 } from 'lucide-react';
-import { planService } from '../services/api';
+import { planService, botService } from '../services/api';
 import { useBot } from '../context/BotContext'; 
 import { Button } from '../components/Button';
 import { Card, CardContent } from '../components/Card';
@@ -44,6 +44,30 @@ export function Plans() {
     } catch (error) {
       console.error(error);
       Swal.fire('Erro', 'Falha ao carregar planos', 'error');
+    }
+  };
+
+  // --- FUNÇÃO PARA TESTAR CANAL DO PLANO ---
+  const handleTestPlanChannel = async (channelId) => {
+    if (!channelId) return Swal.fire('Ops', 'Digite um ID para testar', 'warning');
+    if (!selectedBot?.token) return Swal.fire('Erro', 'Token do bot não encontrado', 'error');
+
+    try {
+      Swal.fire({ title: 'Testando...', didOpen: () => Swal.showLoading() });
+      const res = await botService.testChannel(selectedBot.token, channelId);
+      Swal.fire({
+        title: 'Sucesso!',
+        text: res.message,
+        icon: 'success',
+        background: '#151515', color: '#fff'
+      });
+    } catch (error) {
+      Swal.fire({
+        title: 'Erro',
+        text: error.detail || 'Não foi possível conectar ao canal.',
+        icon: 'error',
+        background: '#151515', color: '#fff'
+      });
     }
   };
 
@@ -195,7 +219,6 @@ export function Plans() {
 
               {/* 🔥 OPÇÕES AVANÇADAS: CANAL DE DESTINO */}
               <div className="advanced-options-row">
-                {/* EXPLICAÇÃO VISUAL */}
                 <div className="info-banner">
                   <Info size={20} />
                   <div className="info-content">
@@ -207,13 +230,30 @@ export function Plans() {
                   </div>
                 </div>
 
-                <Input 
-                  label="ID do Canal/Grupo de Destino (Ex: -100123456789)" 
-                  placeholder="Deixe vazio para usar o padrão do Bot" 
-                  value={newPlan.id_canal_destino}
-                  onChange={e => setNewPlan({...newPlan, id_canal_destino: e.target.value})}
-                  icon={<Hash size={18}/>}
-                />
+                <div style={{ display: 'flex', gap: '8px', alignItems: 'flex-end' }}>
+                    <div style={{ flex: 1 }}>
+                        <Input 
+                            label="ID do Canal/Grupo de Destino (Ex: -100123456789)" 
+                            placeholder="Deixe vazio para usar o padrão do Bot" 
+                            value={newPlan.id_canal_destino}
+                            onChange={e => setNewPlan({...newPlan, id_canal_destino: e.target.value})}
+                            icon={<Hash size={18}/>}
+                        />
+                    </div>
+                    <button 
+                        type="button"
+                        onClick={() => handleTestPlanChannel(newPlan.id_canal_destino)}
+                        style={{
+                            background: '#2563eb', border: 'none', borderRadius: '8px', 
+                            color: '#fff', padding: '0 15px', cursor: 'pointer', height: '42px',
+                            display: 'flex', alignItems: 'center', justifyContent: 'center',
+                            marginBottom: '2px'
+                        }}
+                        title="Testar Conexão"
+                    >
+                        <Wifi size={18} style={{marginRight:5}}/> Testar
+                    </button>
+                </div>
               </div>
 
             </CardContent>
@@ -318,13 +358,29 @@ export function Plans() {
                       </div>
                     </div>
 
-                    <Input 
-                      label="ID do Canal VIP Específico" 
-                      placeholder="Deixe vazio para usar padrão" 
-                      value={editingPlan.id_canal_destino}
-                      onChange={e => setEditingPlan({...editingPlan, id_canal_destino: e.target.value})}
-                      icon={<Hash size={16}/>}
-                    />
+                    <label className="input-label" style={{marginBottom:5, display:'block'}}>ID do Canal VIP Específico</label>
+                    <div style={{ display: 'flex', gap: '8px' }}>
+                        <div style={{ flex: 1 }}>
+                            <Input 
+                                placeholder="Deixe vazio para usar padrão" 
+                                value={editingPlan.id_canal_destino}
+                                onChange={e => setEditingPlan({...editingPlan, id_canal_destino: e.target.value})}
+                                icon={<Hash size={16}/>}
+                            />
+                        </div>
+                        <button 
+                            type="button"
+                            onClick={() => handleTestPlanChannel(editingPlan.id_canal_destino)}
+                            style={{
+                                background: '#2563eb', border: 'none', borderRadius: '8px', 
+                                color: '#fff', padding: '0 12px', cursor: 'pointer', height: '42px',
+                                display: 'flex', alignItems: 'center', justifyContent: 'center'
+                            }}
+                            title="Testar acesso a este canal"
+                        >
+                            <Wifi size={18} />
+                        </button>
+                    </div>
                   </div>
 
                 </div>
