@@ -343,7 +343,7 @@
   background: var(--card);
   border: 1px solid var(--card-border);
   border-radius: var(--radius-sm);
-  color: var(--foreground-secondary);
+  color: var(--dashboard-bg);
   font-size: 0.875rem;
   font-weight: 500;
   cursor: pointer;
