@@ -33,6 +33,8 @@
   --accent-soft: rgba(139, 92, 246, 0.12);
   --danger: #ef4444;
   --danger-soft: rgba(239, 68, 68, 0.12);
+  --orange: #878503;
+
   
   /* Chart Colors */
   --chart-primary: #c333ff;
@@ -868,7 +870,7 @@
 .kpi-value {
   font-size: 1.375rem;
   font-weight: 700;
-  color: var(--danger);
+  color: var(--orange);
   letter-spacing: -0.02em;
 }
 
