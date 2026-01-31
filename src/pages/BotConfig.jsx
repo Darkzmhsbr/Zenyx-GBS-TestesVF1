@@ -331,7 +331,7 @@ export function BotConfig() {
                         onChange={(e) => setConfig({...config, id_canal_vip: e.target.value})} 
                         placeholder="-100..."
                       />
-                      <small style={{color:'#ffffff'}}>O bot precisa ser ADMIN do canal para funcionar.</small>
+                      <small style={{color:'#ff1616'}}>O bot precisa ser ADMIN do canal para funcionar.</small>
                     </div>
 
                     {/* 🔥 SEÇÃO NOVA: CENTRAL DE CONEXÕES */}
