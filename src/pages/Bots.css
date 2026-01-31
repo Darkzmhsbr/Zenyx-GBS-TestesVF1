@@ -235,7 +235,7 @@
   margin: 0 auto;
   margin-top: 60px;
   margin-left: 260px;
-  color: #fff;
+  color: color(xyz-d50 0.07 0.12 0.08);
   transition: margin-left 0.3s ease;
 }
 
@@ -323,7 +323,7 @@
   border-bottom: 1px solid #222;
 }
 
-.card-header-line h3 { margin: 0; color: #eee; font-size: 1.1rem; }
+.card-header-line h3 { margin: 0; color: #5f7561; font-size: 1.1rem; }
 
 .form-group { margin-bottom: 15px; }
 

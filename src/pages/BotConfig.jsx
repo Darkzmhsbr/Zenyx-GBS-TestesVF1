@@ -295,7 +295,7 @@ export function BotConfig() {
                         onChange={(e) => setConfig({...config, token: e.target.value})} 
                         placeholder="Cole o novo token aqui se necessário..."
                       />
-                      <small style={{color:'#666'}}>*Se o bot foi banido, cole o token do novo bot aqui para manter os dados.</small>
+                      <small style={{color:'#ffffff'}}>*Se o bot foi banido, cole o token do novo bot aqui para manter os dados.</small>
                     </div>
                   </CardContent>
                 </Card>
@@ -331,7 +331,7 @@ export function BotConfig() {
                         onChange={(e) => setConfig({...config, id_canal_vip: e.target.value})} 
                         placeholder="-100..."
                       />
-                      <small style={{color:'#666'}}>O bot precisa ser ADMIN do canal para funcionar.</small>
+                      <small style={{color:'#ffffff'}}>O bot precisa ser ADMIN do canal para funcionar.</small>
                     </div>
 
                     {/* 🔥 SEÇÃO NOVA: CENTRAL DE CONEXÕES */}
@@ -402,7 +402,7 @@ export function BotConfig() {
                             ))}
 
                             {plansWithChannel.length === 0 && (
-                                <div style={{fontSize:'0.8rem', color:'#666', fontStyle:'italic', padding: 5}}>
+                                <div style={{fontSize:'0.8rem', color:'#ffffff', fontStyle:'italic', padding: 5}}>
                                     Nenhum plano com canal extra configurado.
                                 </div>
                             )}
@@ -500,7 +500,7 @@ export function BotConfig() {
                                     <div className="form-group">
                                         <label>Slug (URL Amigável)</label>
                                         <input className="input-field" value={currentCat.slug} onChange={(e) => setCurrentCat({...currentCat, slug: e.target.value})} placeholder="ex: praia-de-nudismo" />
-                                        <small style={{color:'#666'}}>Deixe vazio para gerar automático</small>
+                                        <small style={{color:'#ffffff'}}>Deixe vazio para gerar automático</small>
                                     </div>
                                     <div className="form-group" style={{gridColumn:'span 2'}}>
                                         <label>Descrição SEO (Opcional)</label>
@@ -582,7 +582,7 @@ export function BotConfig() {
                                     </div>
                                 </div>
                             ))}
-                            {categories.length === 0 && <p style={{color:'#666'}}>Nenhuma categoria criada.</p>}
+                            {categories.length === 0 && <p style={{color:'#ffffff'}}>Nenhuma categoria criada.</p>}
                         </div>
                     )}
                 </div>
