@@ -109,6 +109,19 @@ export const botService = {
   toggleBot: async (botId) => (await api.post(`/api/admin/bots/${botId}/toggle`)).data,
   deleteBot: async (botId) => (await api.delete(`/api/admin/bots/${botId}`)).data,
   getStats: async (botId, start, end) => (await api.get(`/api/admin/dashboard/stats?bot_id=${botId}&start_date=${start}&end_date=${end}`)).data,
+  // ... dentro de botService ...
+  deleteBot: async (botId) => (await api.delete(`/api/admin/bots/${botId}`)).data,
+  getStats: async (botId, start, end) => (await api.get(`/api/admin/dashboard/stats?bot_id=${botId}&start_date=${start}&end_date=${end}`)).data,
+  
+  // 🔥 NOVA FUNÇÃO: TESTAR CANAL
+  testChannel: async (token, channelId) => {
+    try {
+      const response = await api.post('/api/admin/utils/test-channel', { token, channel_id: channelId });
+      return response.data;
+    } catch (error) {
+      throw error.response ? error.response.data : error;
+    }
+  }
 };
 
 // ============================================================
