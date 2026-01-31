@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import Swal from 'sweetalert2';
 import { 
-  Plus, Trash2, Calendar, DollarSign, Edit2, Check, X, Tag, Infinity 
+  Plus, Trash2, Calendar, DollarSign, Edit2, Check, X, Tag, Infinity, Hash, Info 
 } from 'lucide-react';
 import { planService } from '../services/api';
 import { useBot } from '../context/BotContext'; 
@@ -20,7 +20,8 @@ export function Plans() {
     nome_exibicao: '', 
     preco_atual: '',
     dias_duracao: '',
-    is_lifetime: false  // ← NOVO CAMPO
+    is_lifetime: false,
+    id_canal_destino: '' // 🔥 NOVO CAMPO
   });
 
   // Estado para edição (Modal)
@@ -61,12 +62,13 @@ export function Plans() {
       await planService.createPlan(selectedBot.id, {
         nome_exibicao: newPlan.nome_exibicao,
         preco_atual: parseFloat(newPlan.preco_atual),
-        dias_duracao: newPlan.is_lifetime ? 9999 : parseInt(newPlan.dias_duracao),  // Se vitalício, valor simbólico
-        is_lifetime: newPlan.is_lifetime  // ← ENVIA PARA BACKEND
+        dias_duracao: newPlan.is_lifetime ? 9999 : parseInt(newPlan.dias_duracao),
+        is_lifetime: newPlan.is_lifetime,
+        id_canal_destino: newPlan.id_canal_destino || null // 🔥 ENVIA PARA O BACKEND
       });
       
       Swal.fire('Sucesso', 'Plano criado!', 'success');
-      setNewPlan({ nome_exibicao: '', preco_atual: '', dias_duracao: '', is_lifetime: false });
+      setNewPlan({ nome_exibicao: '', preco_atual: '', dias_duracao: '', is_lifetime: false, id_canal_destino: '' });
       carregarPlanos();
     } catch (error) {
       Swal.fire('Erro', 'Não foi possível criar o plano', 'error');
@@ -78,7 +80,8 @@ export function Plans() {
   const openEditModal = (plan) => {
     setEditingPlan({ 
       ...plan,
-      is_lifetime: plan.is_lifetime || false  // Garante que sempre tenha valor
+      is_lifetime: plan.is_lifetime || false,
+      id_canal_destino: plan.id_canal_destino || '' 
     });
     setIsEditModalOpen(true);
   };
@@ -100,7 +103,8 @@ export function Plans() {
             preco_atual: parseFloat(editingPlan.preco_atual),
             dias_duracao: editingPlan.is_lifetime ? 9999 : parseInt(editingPlan.dias_duracao),
             descricao: editingPlan.descricao || "",
-            is_lifetime: editingPlan.is_lifetime  // ← ENVIA PARA BACKEND
+            is_lifetime: editingPlan.is_lifetime,
+            id_canal_destino: editingPlan.id_canal_destino || null // 🔥 ATUALIZA NO BACKEND
           }
       );
       
@@ -147,7 +151,7 @@ export function Plans() {
           <Card className="create-plan-card">
             <CardContent>
               <h3>Novo Plano</h3>
-              <div className="form-row">
+              <div className="create-plan-form">
                 <Input 
                   placeholder="Nome (Ex: Mensal)" 
                   value={newPlan.nome_exibicao}
@@ -161,7 +165,7 @@ export function Plans() {
                   icon={<DollarSign size={18}/>}
                 />
                 
-                {/* ← NOVO BLOCO: Toggle Vitalício */}
+                {/* BLOCO: Toggle Vitalício */}
                 <div className="form-group-inline">
                   <label className="checkbox-label">
                     <input 
@@ -184,44 +188,72 @@ export function Plans() {
                   />
                 )}
                 
-                <Button onClick={handleCreate} disabled={loading}>
+                <Button onClick={handleCreate} disabled={loading} className="form-action-btn">
                   <Plus size={20} /> Criar
                 </Button>
               </div>
+
+              {/* 🔥 OPÇÕES AVANÇADAS: CANAL DE DESTINO */}
+              <div className="advanced-options-row">
+                {/* EXPLICAÇÃO VISUAL */}
+                <div className="info-banner">
+                  <Info size={20} />
+                  <div className="info-content">
+                    <h5>Múltiplos Canais / Grupos (Opcional)</h5>
+                    <p>
+                      Deseja que este plano libere acesso a um <b>Canal ou Grupo diferente</b> do padrão do bot? 
+                      <br/>Cole o ID abaixo. Se deixar vazio, o cliente entrará no canal principal.
+                    </p>
+                  </div>
+                </div>
+
+                <Input 
+                  label="ID do Canal/Grupo de Destino (Ex: -100123456789)" 
+                  placeholder="Deixe vazio para usar o padrão do Bot" 
+                  value={newPlan.id_canal_destino}
+                  onChange={e => setNewPlan({...newPlan, id_canal_destino: e.target.value})}
+                  icon={<Hash size={18}/>}
+                />
+              </div>
+
             </CardContent>
           </Card>
 
           {/* LISTA DE PLANOS */}
           <div className="plans-grid">
             {plans.map(plan => (
-              <Card key={plan.id} className="plan-card">
+              <Card key={plan.id} className="plan-card-item">
                 <CardContent>
-                  <div className="plan-header">
-                    <h4>
-                      {plan.nome_exibicao}
-                      {plan.is_lifetime && (
-                        <span style={{marginLeft: 8, color: '#10b981'}}>
-                          <Infinity size={16} style={{verticalAlign: 'middle'}} />
+                  <div className="plan-card-top">
+                    <div className="plan-icon">
+                      {plan.is_lifetime ? <Infinity size={24} /> : <Calendar size={24} />}
+                    </div>
+                    <div className="plan-info">
+                      <h4 className="plan-title">{plan.nome_exibicao}</h4>
+                      <span className="plan-badge">
+                        {plan.is_lifetime ? 'Vitalício' : `${plan.dias_duracao} dias`}
+                      </span>
+                      {/* Badge visual se tiver canal customizado */}
+                      {plan.id_canal_destino && (
+                        <span className="plan-badge" style={{color: '#3b82f6', marginTop: 4, display:'block', borderColor: 'rgba(59,130,246,0.3)'}}>
+                          <Hash size={10} style={{marginRight:2}}/> Canal Específico
                         </span>
                       )}
-                    </h4>
-                    <div className="plan-actions">
-                      <button className="btn-icon edit" onClick={() => openEditModal(plan)}>
-                        <Edit2 size={18} />
-                      </button>
-                      <button className="btn-icon delete" onClick={() => handleDelete(plan.id)}>
-                        <Trash2 size={18} />
-                      </button>
                     </div>
                   </div>
-                  <div className="plan-details">
-                    <p><strong>R$ {parseFloat(plan.preco_atual).toFixed(2)}</strong></p>
-                    <p>
-                      {plan.is_lifetime 
-                        ? '♾️ Acesso Vitalício' 
-                        : `${plan.dias_duracao} dias de acesso`
-                      }
-                    </p>
+
+                  <div className="plan-price-area">
+                    <span className="currency">R$</span>
+                    <span className="amount">{parseFloat(plan.preco_atual).toFixed(2)}</span>
+                  </div>
+
+                  <div className="plan-actions">
+                    <button className="btn-icon edit" onClick={() => openEditModal(plan)} title="Editar">
+                      <Edit2 size={18} />
+                    </button>
+                    <button className="btn-icon delete" onClick={() => handleDelete(plan.id)} title="Excluir">
+                      <Trash2 size={18} />
+                    </button>
                   </div>
                 </CardContent>
               </Card>
@@ -234,25 +266,27 @@ export function Plans() {
               <div className="modal-content">
                 <div className="modal-header">
                   <h3>Editar Plano</h3>
-                  <button onClick={() => setIsEditModalOpen(false)}><X size={20}/></button>
+                  <button className="close-btn" onClick={() => setIsEditModalOpen(false)}><X size={20}/></button>
                 </div>
                 
                 <div className="modal-body">
-                  <Input 
-                    label="Nome do Plano"
-                    value={editingPlan.nome_exibicao}
-                    onChange={e => setEditingPlan({...editingPlan, nome_exibicao: e.target.value})}
-                  />
+                  <div className="modal-row">
+                    <Input 
+                      label="Nome do Plano"
+                      value={editingPlan.nome_exibicao}
+                      onChange={e => setEditingPlan({...editingPlan, nome_exibicao: e.target.value})}
+                    />
+                    
+                    <Input 
+                      label="Preço (R$)" type="number"
+                      value={editingPlan.preco_atual}
+                      onChange={e => setEditingPlan({...editingPlan, preco_atual: e.target.value})}
+                      icon={<DollarSign size={16}/>}
+                    />
+                  </div>
                   
-                  <Input 
-                    label="Preço (R$)" type="number"
-                    value={editingPlan.preco_atual}
-                    onChange={e => setEditingPlan({...editingPlan, preco_atual: e.target.value})}
-                    icon={<DollarSign size={16}/>}
-                  />
-                  
-                  {/* ← NOVO BLOCO: Toggle Vitalício no Modal */}
-                  <div className="form-group" style={{marginTop: 16}}>
+                  {/* BLOCO: Toggle Vitalício no Modal */}
+                  <div className="form-group" style={{marginTop: 5}}>
                     <label className="checkbox-label">
                       <input 
                         type="checkbox" 
@@ -273,6 +307,26 @@ export function Plans() {
                       icon={<Calendar size={16}/>}
                     />
                   )}
+
+                  {/* 🔥 BLOCO: Canal Específico (Edição) */}
+                  <div style={{marginTop: 15, paddingTop: 15, borderTop: '1px solid #333'}}>
+                    <div className="info-banner" style={{fontSize: '0.8rem', padding: '8px'}}>
+                      <Info size={16} />
+                      <div className="info-content">
+                        <h5>Acesso Diferenciado</h5>
+                        <p>Configure um ID abaixo apenas se quiser desviar o cliente para outro canal.</p>
+                      </div>
+                    </div>
+
+                    <Input 
+                      label="ID do Canal VIP Específico" 
+                      placeholder="Deixe vazio para usar padrão" 
+                      value={editingPlan.id_canal_destino}
+                      onChange={e => setEditingPlan({...editingPlan, id_canal_destino: e.target.value})}
+                      icon={<Hash size={16}/>}
+                    />
+                  </div>
+
                 </div>
 
                 <div className="modal-footer">
