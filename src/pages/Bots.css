@@ -329,7 +329,7 @@
 
 .form-group label {
   display: flex; align-items: center; gap: 6px;
-  font-size: 0.9rem; color: #ff1616; margin-bottom: 5px;
+  font-size: 0.9rem; color: #ed0000; margin-bottom: 5px;
 }
 
 .input-field {
@@ -338,7 +338,7 @@
   background: #0a0a0a;
   border: 1px solid #333;
   border-radius: 6px;
-  color: #fff;
+  color: #ed0000;
   font-size: 0.95rem;
   box-sizing: border-box; /* Importante para não estourar width */
 }
