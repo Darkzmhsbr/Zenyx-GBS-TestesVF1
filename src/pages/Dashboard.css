@@ -299,7 +299,7 @@
 .dashboard-title {
   font-size: 1.875rem;
   font-weight: 700;
-  color: var(--foreground);
+  color: var(--foreground-secondary);
   margin: 0;
   letter-spacing: -0.03em;
   line-height: 1.2;
