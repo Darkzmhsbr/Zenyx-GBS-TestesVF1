@@ -2,11 +2,11 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom'; 
 import { 
   Save, ArrowLeft, MessageSquare, Key, Headphones, 
-  Smartphone, Layout, PlayCircle, Type, Plus, Trash2, Edit, Image as ImageIcon, Link, User, Palette, Shield, Radio, Wifi
-} from 'lucide-react'; // 🔥 Adicionado Wifi
+  Smartphone, Layout, PlayCircle, Type, Plus, Trash2, Edit, Image as ImageIcon, Link, User, Palette, Shield, Radio, Wifi, CheckCircle, XCircle, AlertTriangle
+} from 'lucide-react'; 
 import { Button } from '../components/Button';
 import { Card, CardContent } from '../components/Card';
-import { botService, miniappService } from '../services/api'; 
+import { botService, miniappService, planService } from '../services/api'; 
 import Swal from 'sweetalert2';
 import './Bots.css';
 
@@ -26,6 +26,10 @@ export function BotConfig() {
     suporte_username: '', 
     status: 'desconectado'
   });
+
+  // --- PLANOS DO BOT (PARA LISTAGEM DE CANAIS) ---
+  const [botPlans, setBotPlans] = useState([]);
+  const [testResults, setTestResults] = useState({}); // Armazena resultado dos testes { channel_id: { status: 'ok', msg: '...' } }
 
   // --- CONFIGURAÇÃO MINI APP (COMPLETA) ---
   const [miniAppConfig, setMiniAppConfig] = useState({
@@ -47,7 +51,6 @@ export function BotConfig() {
   const [currentCat, setCurrentCat] = useState(null);
 
   useEffect(() => {
-    // Verifica se veio algum comando de aba do NewBot.jsx
     if (location.state?.initialTab) {
         setActiveTab(location.state.initialTab);
         window.history.replaceState({}, document.title);
@@ -72,6 +75,14 @@ export function BotConfig() {
           suporte_username: currentBot.suporte_username || '', 
           status: currentBot.status || 'desconectado'
         });
+
+        // 1.1 Carrega Planos para listar canais extras
+        try {
+            const plans = await planService.listPlans(currentBot.id);
+            setBotPlans(plans);
+        } catch (err) {
+            console.error("Erro ao carregar planos", err);
+        }
       }
 
       // 2. Carrega Dados da Loja (MiniApp)
@@ -91,34 +102,38 @@ export function BotConfig() {
     }
   };
 
-  // --- FUNÇÃO DE TESTE DE CANAL (NOVA) ---
-  const handleTestChannel = async () => {
-    if (!config.token || !config.id_canal_vip) {
-      return Swal.fire('Erro', 'Preencha o Token e o ID do Canal antes de testar.', 'warning');
+  // --- FUNÇÃO DE TESTE DE CANAL (GENÉRICA) ---
+  const handleTestChannel = async (channelId, contextKey) => {
+    if (!config.token || !channelId) {
+      return Swal.fire('Atenção', 'Token ou ID do Canal ausente.', 'warning');
     }
     
+    // Define estado de carregamento local
+    setTestResults(prev => ({
+        ...prev,
+        [contextKey]: { loading: true }
+    }));
+    
     try {
-      Swal.fire({ 
-        title: 'Testando conexão...', 
-        html: 'Verificando permissões de admin...',
-        didOpen: () => Swal.showLoading() 
-      });
+      const res = await botService.testChannel(config.token, channelId);
       
-      const res = await botService.testChannel(config.token, config.id_canal_vip);
-      
-      Swal.fire({
-        title: 'Conectado!',
-        text: res.message,
-        icon: 'success',
-        background: '#151515', color: '#fff'
-      });
+      setTestResults(prev => ({
+        ...prev,
+        [contextKey]: { 
+            status: 'success', 
+            msg: res.message, 
+            chatTitle: res.chat_title 
+        }
+      }));
+
     } catch (error) {
-      Swal.fire({
-        title: 'Falha na Conexão',
-        text: error.detail || error.message || 'Erro ao conectar. Verifique se o bot é ADMIN.',
-        icon: 'error',
-        background: '#151515', color: '#fff'
-      });
+      setTestResults(prev => ({
+        ...prev,
+        [contextKey]: { 
+            status: 'error', 
+            msg: error.detail || error.message || 'Falha ao conectar.' 
+        }
+      }));
     }
   };
 
@@ -222,10 +237,13 @@ export function BotConfig() {
 
   if (loading) return <div className="loading-screen">Carregando...</div>;
 
+  // Filtra planos que têm canal específico configurado
+  const plansWithChannel = botPlans.filter(p => p.id_canal_destino && p.id_canal_destino.trim() !== '');
+
   return (
     <div className="bot-config-container">
       
-      {/* HEADER (Mantido) */}
+      {/* HEADER */}
       <div className="config-header-bar">
         <div style={{display:'flex', alignItems:'center', gap: 15}}>
             <Button variant="ghost" onClick={() => navigate('/bots')}>
@@ -235,7 +253,7 @@ export function BotConfig() {
         </div>
       </div>
 
-      {/* ABAS (RESTAURADO PARA O PADRÃO ORIGINAL) */}
+      {/* ABAS */}
       <div className="config-tabs-wrapper">
         <button 
             className={`config-tab-btn ${activeTab === 'geral' ? 'active' : ''}`}
@@ -271,7 +289,6 @@ export function BotConfig() {
 
                     <div className="form-group">
                       <label>Token do Bot (Telegram API)</label>
-                      {/* 🔥 TOKEN LIBERADO */}
                       <input 
                         className="input-field" 
                         value={config.token} 
@@ -296,7 +313,6 @@ export function BotConfig() {
                       />
                     </div>
 
-                    {/* 🔥 SUPORTE RESTAURADO */}
                     <div className="form-group">
                         <label><Headphones size={16} style={{verticalAlign:'middle', marginRight:'5px'}}/> Username do Suporte</label>
                         <input 
@@ -307,27 +323,91 @@ export function BotConfig() {
                         />
                     </div>
 
-                    {/* 🔥 CAMPO ID CANAL COM BOTÃO DE TESTE */}
                     <div className="form-group">
-                      <label>ID do Canal VIP</label>
-                      <div style={{ display: 'flex', gap: '10px' }}>
-                        <input 
-                            className="input-field" 
-                            style={{ flex: 1 }}
-                            value={config.id_canal_vip} 
-                            onChange={(e) => setConfig({...config, id_canal_vip: e.target.value})} 
-                            placeholder="-100..."
-                        />
-                        <Button 
-                            type="button" 
-                            onClick={handleTestChannel}
-                            style={{ height: '42px', marginTop: '1px', background: '#3b82f6', minWidth: '110px' }}
-                            title="Testar Conexão"
-                        >
-                            <Wifi size={18} style={{marginRight:5}}/> Testar
-                        </Button>
-                      </div>
+                      <label>ID do Canal VIP (Padrão)</label>
+                      <input 
+                        className="input-field" 
+                        value={config.id_canal_vip} 
+                        onChange={(e) => setConfig({...config, id_canal_vip: e.target.value})} 
+                        placeholder="-100..."
+                      />
                       <small style={{color:'#666'}}>O bot precisa ser ADMIN do canal para funcionar.</small>
+                    </div>
+
+                    {/* 🔥 SEÇÃO NOVA: CENTRAL DE CONEXÕES */}
+                    <div style={{marginTop: 30, borderTop: '1px solid rgba(255,255,255,0.1)', paddingTop: 20}}>
+                        <div className="card-header-line"><Wifi size={20} color="#3b82f6" /><h3>Central de Conexões</h3></div>
+                        <p style={{fontSize:'0.85rem', color:'#888', marginBottom: 15}}>
+                            Teste o acesso do bot em todos os canais configurados (Principal + Planos).
+                        </p>
+
+                        <div className="channels-test-list" style={{display:'flex', flexDirection:'column', gap: 10}}>
+                            
+                            {/* 1. CANAL PRINCIPAL */}
+                            <div className="channel-test-item" style={{background:'rgba(255,255,255,0.03)', padding: 12, borderRadius: 8, display:'flex', alignItems:'center', justifyContent:'space-between'}}>
+                                <div>
+                                    <div style={{fontWeight:'bold', fontSize:'0.9rem', color:'#fff'}}>Canal Principal (Padrão)</div>
+                                    <div style={{fontSize:'0.8rem', color:'#888'}}>{config.id_canal_vip || 'Não configurado'}</div>
+                                    
+                                    {/* Resultado do Teste */}
+                                    {testResults['main'] && (
+                                        <div style={{marginTop: 5, fontSize: '0.85rem', display:'flex', alignItems:'center', gap:5, 
+                                            color: testResults['main'].status === 'success' ? '#10b981' : '#ef4444'}}>
+                                            {testResults['main'].status === 'success' ? <CheckCircle size={14}/> : <XCircle size={14}/>}
+                                            {testResults['main'].chatTitle ? 
+                                                <span>Conectado: <b>{testResults['main'].chatTitle}</b></span> : 
+                                                <span>{testResults['main'].msg}</span>
+                                            }
+                                        </div>
+                                    )}
+                                </div>
+                                <Button 
+                                    size="sm" 
+                                    onClick={() => handleTestChannel(config.id_canal_vip, 'main')}
+                                    disabled={!config.id_canal_vip || testResults['main']?.loading}
+                                    style={{background: '#333', border: '1px solid #444'}}
+                                >
+                                    {testResults['main']?.loading ? '...' : 'Testar'}
+                                </Button>
+                            </div>
+
+                            {/* 2. CANAIS DE PLANOS (SE HOUVER) */}
+                            {plansWithChannel.map(plan => (
+                                <div key={plan.id} className="channel-test-item" style={{background:'rgba(255,255,255,0.03)', padding: 12, borderRadius: 8, display:'flex', alignItems:'center', justifyContent:'space-between'}}>
+                                    <div>
+                                        <div style={{fontWeight:'bold', fontSize:'0.9rem', color:'#c333ff'}}>Plano: {plan.nome_exibicao}</div>
+                                        <div style={{fontSize:'0.8rem', color:'#888'}}>ID: {plan.id_canal_destino}</div>
+                                        
+                                        {/* Resultado do Teste */}
+                                        {testResults[`plan_${plan.id}`] && (
+                                            <div style={{marginTop: 5, fontSize: '0.85rem', display:'flex', alignItems:'center', gap:5, 
+                                                color: testResults[`plan_${plan.id}`].status === 'success' ? '#10b981' : '#ef4444'}}>
+                                                {testResults[`plan_${plan.id}`].status === 'success' ? <CheckCircle size={14}/> : <XCircle size={14}/>}
+                                                {testResults[`plan_${plan.id}`].chatTitle ? 
+                                                    <span>Conectado: <b>{testResults[`plan_${plan.id}`].chatTitle}</b></span> : 
+                                                    <span>{testResults[`plan_${plan.id}`].msg}</span>
+                                                }
+                                            </div>
+                                        )}
+                                    </div>
+                                    <Button 
+                                        size="sm" 
+                                        onClick={() => handleTestChannel(plan.id_canal_destino, `plan_${plan.id}`)}
+                                        disabled={testResults[`plan_${plan.id}`]?.loading}
+                                        style={{background: '#333', border: '1px solid #444'}}
+                                    >
+                                        {testResults[`plan_${plan.id}`]?.loading ? '...' : 'Testar'}
+                                    </Button>
+                                </div>
+                            ))}
+
+                            {plansWithChannel.length === 0 && (
+                                <div style={{fontSize:'0.8rem', color:'#666', fontStyle:'italic', padding: 5}}>
+                                    Nenhum plano com canal extra configurado.
+                                </div>
+                            )}
+
+                        </div>
                     </div>
 
                     <div style={{marginTop: 20}}>
