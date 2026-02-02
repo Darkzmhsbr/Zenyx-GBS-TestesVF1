@@ -113,22 +113,45 @@ export function ChatFlow() {
       setFlow(prev => ({ ...prev, [field]: cleanValue }));
   };
 
+  // ✅ SALVAMENTO BLINDADO (CORREÇÃO DE [object Object] e UNDEFINED)
   const handleSave = async () => {
     if (!selectedBot) return;
     setLoading(true);
+    
     try {
-        // Limpeza final antes de enviar pro Backend
+        // Função auxiliar para garantir string limpa
+        const sanitize = (val) => {
+            if (val === undefined || val === null) return "";
+            if (typeof val === 'object') return ""; // Mata o [object Object]
+            return cleanHtmlForTelegram(String(val));
+        };
+
+        // Monta o objeto garantindo que tudo seja string válida
         const flowToSave = {
             ...flow,
-            msg_boas_vindas: cleanHtmlForTelegram(flow.msg_boas_vindas),
-            msg_2_texto: cleanHtmlForTelegram(flow.msg_2_texto),
+            msg_boas_vindas: sanitize(flow.msg_boas_vindas),
+            msg_2_texto: sanitize(flow.msg_2_texto),
+            media_url: flow.media_url || "",
+            miniapp_url: flow.miniapp_url || "",
+            btn_text_1: flow.btn_text_1 || "",
+            // Garante booleanos
+            autodestruir_1: !!flow.autodestruir_1,
+            mostrar_planos_2: flow.mostrar_planos_2 !== undefined ? !!flow.mostrar_planos_2 : true,
+            mostrar_planos_1: !!flow.mostrar_planos_1,
+            
+            // Limpa passos dinâmicos também
             steps: steps.map(step => ({
                 ...step,
-                msg_texto: cleanHtmlForTelegram(step.msg_texto)
+                msg_texto: sanitize(step.msg_texto),
+                msg_media: step.msg_media || "",
+                btn_texto: step.btn_texto || ""
             }))
         };
 
+        console.log("📤 Enviando Flow:", flowToSave); // Debug no console do navegador
+
         await flowService.updateFlow(selectedBot.id, flowToSave);
+        
         Swal.fire({
             icon: 'success',
             title: 'Fluxo Salvo!',
@@ -137,11 +160,12 @@ export function ChatFlow() {
             showConfirmButton: false
         });
         
-        // Recarrega para garantir que estamos vendo o que foi salvo e limpo
-        loadData(); 
+        // Recarrega para confirmar
+        loadData();
         
     } catch (error) {
-        Swal.fire('Erro', 'Não foi possível salvar o fluxo.', 'error');
+        console.error("❌ Erro ao salvar:", error);
+        Swal.fire('Erro', 'Não foi possível salvar o fluxo. Verifique o console.', 'error');
     } finally {
         setLoading(false);
     }
