@@ -47,7 +47,8 @@ export function ChatFlow() {
     msg_2_texto: '',
     msg_2_media: '',
     mostrar_planos_2: true,
-    mostrar_planos_1: false 
+    mostrar_planos_1: false,
+    msg_pix: '' // 🔥 NOVO CAMPO: Mensagem do PIX
   });
 
   // Estado dos Passos Dinâmicos (Lista)
@@ -91,7 +92,8 @@ export function ChatFlow() {
                 msg_2_texto: safe(flowData.msg_2_texto), // 🔥 Limpeza na carga
                 msg_2_media: flowData.msg_2_media || '',
                 mostrar_planos_2: flowData.mostrar_planos_2 !== false,
-                mostrar_planos_1: flowData.mostrar_planos_1 || false
+                mostrar_planos_1: flowData.mostrar_planos_1 || false,
+                msg_pix: safe(flowData.msg_pix) // 🔥 CARREGA MENSAGEM DO PIX
             });
         }
         const stepsData = await flowService.getSteps(selectedBot.id);
@@ -129,6 +131,7 @@ export function ChatFlow() {
           ...flow,
           msg_boas_vindas: decodeHtml(flow.msg_boas_vindas),
           msg_2_texto: decodeHtml(flow.msg_2_texto), // Limpa a oferta
+          msg_pix: decodeHtml(flow.msg_pix), // 🔥 LIMPA E SALVA O PIX
           steps: steps.map(s => ({
               ...s,
               msg_texto: decodeHtml(s.msg_texto)
@@ -395,6 +398,32 @@ export function ChatFlow() {
                                         <div className="toggle-handle"></div><span className="toggle-label">{flow.mostrar_planos_2 ? 'SIM' : 'OCULTAR'}</span>
                                     </div>
                                 </div>
+                            </div>
+                        </CardContent>
+                    </Card>
+
+                    {/* 🔥 NOVA CARD: MENSAGEM DO PIX 🔥 */}
+                    <div className="connector-line"></div><div className="connector-arrow"><ArrowDown size={24} color="#444" /></div>
+                    <Card className="step-card">
+                        <div className="step-badge" style={{background: '#10b981', color: '#fff'}}>Mensagem do Pix</div>
+                        <CardContent>
+                            <div className="step-header">
+                                <div className="step-title-row"><Zap size={20} color="#10b981"/><h3>Personalizar Mensagem do PIX</h3></div>
+                            </div>
+                            <div className="form-grid">
+                                <div className="alert-box" style={{background: 'rgba(16, 185, 129, 0.1)', padding: '10px', borderRadius: '8px', marginBottom: '15px', fontSize: '0.85rem', color: '#fff', border: '1px solid rgba(16, 185, 129, 0.2)'}}>
+                                    ℹ️ <b>Variáveis disponíveis:</b><br/>
+                                    <code>{'{nome}'}</code> = Nome do Cliente &nbsp; | &nbsp; 
+                                    <code>{'{plano}'}</code> = Nome do Plano<br/>
+                                    <code>{'{valor}'}</code> = Valor (R$) &nbsp; | &nbsp; 
+                                    <code>{'{qrcode}'}</code> = Código Pix Copia e Cola
+                                </div>
+                                <RichInput 
+                                    label="Texto da Mensagem Pix" 
+                                    value={flow.msg_pix} 
+                                    onChange={val => handleRichChange('msg_pix', val)}
+                                    placeholder="Olá {nome}, seu pedido do plano {plano} no valor de R$ {valor} foi gerado! Copie o código abaixo..." 
+                                />
                             </div>
                         </CardContent>
                     </Card>
