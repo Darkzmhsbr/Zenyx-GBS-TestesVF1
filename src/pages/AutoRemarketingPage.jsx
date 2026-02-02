@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useBot } from '../context/BotContext';
 import { remarketingAutoService, planService } from '../services/api';
+import { RichInput } from '../components/RichInput'; // 🔥 IMPORTAÇÃO DO COMPONENTE RICO
 import './AutoRemarketingPage.css';
 
 // Ícones (Unicode)
@@ -156,42 +157,7 @@ export function AutoRemarketing() {
       setSaving(false);
     }
   }
-  
-  // =========================================================
-  // EDITOR E FORMATADORES
-  // =========================================================
-  
-  function applyFormatting(format) {
-    const textarea = document.getElementById('disparo-message');
-    if (!textarea) return;
-    
-    const start = textarea.selectionStart;
-    const end = textarea.selectionEnd;
-    const text = disparoConfig.message_text || '';
-    const selected = text.substring(start, end) || 'texto';
-    
-    let formatted = '';
-    
-    switch(format) {
-      case 'bold': formatted = `<b>${selected}</b>`; break;
-      case 'italic': formatted = `<i>${selected}</i>`; break;
-      case 'underline': formatted = `<u>${selected}</u>`; break;
-      case 'strike': formatted = `<s>${selected}</s>`; break;
-      case 'spoiler': formatted = `<span class="tg-spoiler">${selected}</span>`; break;
-      case 'code': formatted = `<code>${selected}</code>`; break;
-      case 'pre': formatted = `<pre>${selected}</pre>`; break;
-      case 'link': 
-        const url = prompt('Digite a URL:');
-        if (url) formatted = `<a href="${url}">${selected}</a>`;
-        else return;
-        break;
-      default: return;
-    }
-    
-    const newText = text.substring(0, start) + formatted + text.substring(end);
-    setDisparoConfig(prev => ({ ...prev, message_text: newText }));
-  }
-  
+
   // =========================================================
   // PLANOS PROMOCIONAIS (CORRIGIDO: preco_atual)
   // =========================================================
@@ -368,7 +334,7 @@ export function AutoRemarketing() {
                 )}
               </div>
 
-              {/* Card 2: Conteúdo da Mensagem */}
+              {/* Card 2: Conteúdo da Mensagem (AGORA COM RICHINPUT 🔥) */}
               <div className="config-card mb-4">
                 <div className="card-header">
                   <h3>{Icons.Message} Conteúdo da Mensagem</h3>
@@ -392,25 +358,12 @@ export function AutoRemarketing() {
                 </div>
 
                 <div className="form-group">
-                  <label>Legenda / Texto</label>
-                  
-                  {/* Toolbar do Editor */}
-                  <div className="text-editor-toolbar">
-                    <button type="button" onClick={() => applyFormatting('bold')} title="Negrito"><b>B</b></button>
-                    <button type="button" onClick={() => applyFormatting('italic')} title="Itálico"><i>I</i></button>
-                    <button type="button" onClick={() => applyFormatting('underline')} title="Sublinhado"><u>U</u></button>
-                    <button type="button" onClick={() => applyFormatting('strike')} title="Riscado"><s>S</s></button>
-                    <button type="button" onClick={() => applyFormatting('code')} title="Código">&lt;/&gt;</button>
-                    <button type="button" onClick={() => applyFormatting('link')} title="Link">🔗</button>
-                  </div>
-
-                  <textarea 
-                    id="disparo-message"
-                    className="textarea-field" 
-                    rows="5"
-                    placeholder="Olá {first_name}, vi que gerou um PIX..."
+                  <RichInput
+                    label="Legenda / Texto"
                     value={disparoConfig.message_text}
-                    onChange={e => setDisparoConfig({...disparoConfig, message_text: e.target.value})}
+                    onChange={(e) => setDisparoConfig({...disparoConfig, message_text: e.target.value})}
+                    placeholder="Olá {first_name}, vi que gerou um PIX..."
+                    rows={6}
                   />
                   <small style={{color:'#666', display:'block', marginTop:'5px'}}>
                     Use: <code>{'{first_name}'}</code>, <code>{'{plano_original}'}</code>, <code>{'{valor_original}'}</code>
@@ -553,14 +506,12 @@ export function AutoRemarketing() {
                      {disparoConfig.media_url && (
                         <div className="media-preview" style={{backgroundImage: `url(${disparoConfig.media_url})`}}></div>
                      )}
-                     <div className="msg-text">
-                        {disparoConfig.message_text || 'Configure a mensagem...'}
-                     </div>
+                     <div className="msg-text" dangerouslySetInnerHTML={{ __html: disparoConfig.message_text || 'Configure a mensagem...' }}></div>
                      <div className="msg-time">10:05</div>
                      
                      {/* Botão Fake */}
                      <div className="inline-btn">
-                        Ver Oferta 🔥
+                       Ver Oferta 🔥
                      </div>
                   </div>
 
@@ -568,7 +519,9 @@ export function AutoRemarketing() {
                   {alternatingConfig.is_active && alternatingConfig.messages.length > 0 && (
                      <div className="msg-bubble" style={{opacity:0.7}}>
                         <div className="msg-text">
-                           {alternatingConfig.messages[0].content || alternatingConfig.messages[0]}
+                           {typeof alternatingConfig.messages[0] === 'string' 
+                              ? alternatingConfig.messages[0] 
+                              : alternatingConfig.messages[0].content}
                         </div>
                         <div className="msg-time">10:02</div>
                      </div>
