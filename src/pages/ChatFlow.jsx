@@ -9,26 +9,27 @@ import { Input } from '../components/Input';
 import { RichInput } from '../components/RichInput';
 import './ChatFlow.css';
 
-// --- FUNÇÃO DE LIMPEZA E DECODIFICAÇÃO (CORREÇÃO DE FORMATAÇÃO) ---
-const decodeHtml = (html) => {
-    if (!html) return "";
-    // Garante que é string
-    const str = String(html);
-    
-    // 1. Cria área temporária para o navegador decodificar as entidades (&lt; para <)
-    const txt = document.createElement("textarea");
-    txt.innerHTML = str;
-    let decoded = txt.value;
+// 🔧 FUNÇÃO AUXILIAR: Limpa o HTML para o Telegram
+// Transforma &lt;b&gt; de volta em <b> e remove tags de bloco indesejadas
+const prepareHtmlForTelegram = (input) => {
+    if (!input) return "";
+    let text = String(input);
 
-    // 2. Remove tags de bloco que o Telegram não aceita (<p>, <div>) e troca por quebra de linha
-    decoded = decoded
+    // 1. Decodifica entidades HTML (Correção dos símbolos aparecendo)
+    text = text
+        .replace(/&lt;/g, '<')
+        .replace(/&gt;/g, '>')
+        .replace(/&amp;/g, '&');
+
+    // 2. Remove tags de bloco (<p>, <div>) trocando por quebra de linha
+    text = text
         .replace(/<p[^>]*>/gi, "")
         .replace(/<\/p>/gi, "\n")
         .replace(/<div[^>]*>/gi, "")
         .replace(/<\/div>/gi, "\n")
         .replace(/<br\s*\/?>/gi, "\n");
 
-    return decoded.trim();
+    return text.trim();
 };
 
 export function ChatFlow() {
@@ -37,7 +38,7 @@ export function ChatFlow() {
   
   // Estado do Fluxo
   const [flow, setFlow] = useState({
-    start_mode: 'padrao', // 'padrao' ou 'miniapp'
+    start_mode: 'padrao', 
     miniapp_url: '',
     miniapp_btn_text: 'ABRIR LOJA 🛍️',
     msg_boas_vindas: '',
@@ -50,10 +51,7 @@ export function ChatFlow() {
     mostrar_planos_1: false 
   });
 
-  // Estado dos Passos Dinâmicos (Lista)
   const [steps, setSteps] = useState([]);
-  
-  // Estado do Modal
   const [showModal, setShowModal] = useState(false);
   const [editingStep, setEditingStep] = useState(null); 
   const [modalData, setModalData] = useState({
@@ -65,30 +63,36 @@ export function ChatFlow() {
     delay_seconds: 0 
   });
 
-  // Carrega tudo ao mudar o bot
   useEffect(() => {
     if (selectedBot) {
       carregarTudo();
     }
   }, [selectedBot]);
 
+  // ✅ FUNÇÃO SEGURA DE EXTRAÇÃO DE TEXTO (Correção do [object Object])
+  const extractTextValue = (val) => {
+      if (val === null || val === undefined) return '';
+      // Se for um evento, pega o target.value
+      if (typeof val === 'object' && val.target) return val.target.value;
+      // Se for objeto mas não evento, retorna vazio para evitar erro
+      if (typeof val === 'object') return '';
+      return String(val);
+  };
+
   const carregarTudo = async () => {
     setLoading(true);
     try {
         const flowData = await flowService.getFlow(selectedBot.id);
         if (flowData) {
-            // Garante que campos nulos virem string vazia para evitar erro no input
-            const safe = (val) => (val === null || val === undefined || val === '[object Object]') ? '' : String(val);
-
             setFlow({
                 ...flowData,
                 start_mode: flowData.start_mode || 'padrao',
                 miniapp_btn_text: flowData.miniapp_btn_text || 'ABRIR LOJA 🛍️',
-                msg_boas_vindas: safe(flowData.msg_boas_vindas),
+                msg_boas_vindas: extractTextValue(flowData.msg_boas_vindas),
                 media_url: flowData.media_url || '',
                 btn_text_1: flowData.btn_text_1 || '🔓 DESBLOQUEAR ACESSO',
                 autodestruir_1: flowData.autodestruir_1 || false,
-                msg_2_texto: safe(flowData.msg_2_texto), // 🔥 Limpeza na carga
+                msg_2_texto: extractTextValue(flowData.msg_2_texto), // 🔥 Garante carga limpa
                 msg_2_media: flowData.msg_2_media || '',
                 mostrar_planos_2: flowData.mostrar_planos_2 !== false,
                 mostrar_planos_1: flowData.mostrar_planos_1 || false
@@ -103,19 +107,6 @@ export function ChatFlow() {
     }
   };
 
-  // ✅ CORREÇÃO DO [object Object]: Extrai o valor corretamente
-  const handleRichChange = (field, val) => {
-      let cleanValue = val;
-      // Se vier um evento (e.target.value), extrai. Se vier string, usa direto.
-      if (val && typeof val === 'object' && val.target) {
-          cleanValue = val.target.value;
-      }
-      // Proteção final: se ainda for objeto, vira string vazia
-      if (typeof cleanValue === 'object') cleanValue = '';
-      
-      setFlow(prev => ({ ...prev, [field]: cleanValue }));
-  };
-
   const handleSaveFixed = async () => {
     if (flow.start_mode === 'miniapp' && !flow.miniapp_url) {
         return Swal.fire('Atenção', 'Cole o link do seu Mini App para salvar.', 'warning');
@@ -123,15 +114,15 @@ export function ChatFlow() {
     
     setLoading(true);
     try {
-      // 🔥 AQUI APLICAMOS A CORREÇÃO DE FORMATAÇÃO
-      // Limpamos o HTML e decodificamos as entidades ANTES de enviar pro banco
+      // 🔥 AQUI APLICAMOS A CORREÇÃO DE FORMATAÇÃO AO SALVAR
       const flowToSave = {
           ...flow,
-          msg_boas_vindas: decodeHtml(flow.msg_boas_vindas),
-          msg_2_texto: decodeHtml(flow.msg_2_texto), // Limpa a oferta
-          steps: steps.map(s => ({
-              ...s,
-              msg_texto: decodeHtml(s.msg_texto)
+          msg_boas_vindas: prepareHtmlForTelegram(flow.msg_boas_vindas),
+          msg_2_texto: prepareHtmlForTelegram(flow.msg_2_texto), // Limpa a oferta
+          // Aplica limpeza também nos passos extras se houver
+          steps: steps.map(step => ({
+              ...step,
+              msg_texto: prepareHtmlForTelegram(step.msg_texto)
           }))
       };
 
@@ -144,17 +135,17 @@ export function ChatFlow() {
         background: '#151515', color: '#fff'
       });
       
-      // Recarrega para garantir que os dados limpos voltem do banco
+      // Recarrega os dados para garantir sincronia
       carregarTudo();
 
     } catch (error) {
-      console.error("Erro ao salvar:", error);
       Swal.fire('Erro', 'Falha ao salvar.', 'error');
     } finally {
-      setLoading(false);
+        setLoading(false);
     }
   };
 
+  // --- RESTO DAS FUNÇÕES DE MODAL (Mantidas iguais) ---
   const handleOpenCreateModal = () => {
     setEditingStep(null);
     setModalData({ msg_texto: '', msg_media: '', btn_texto: 'Próximo ▶️', autodestruir: false, mostrar_botao: true, delay_seconds: 0 });
@@ -164,7 +155,7 @@ export function ChatFlow() {
   const handleOpenEditModal = (step) => {
     setEditingStep(step);
     setModalData({
-      msg_texto: step.msg_texto || '',
+      msg_texto: extractTextValue(step.msg_texto),
       msg_media: step.msg_media || '',
       btn_texto: step.btn_texto || 'Próximo ▶️',
       autodestruir: step.autodestruir || false,
@@ -180,16 +171,16 @@ export function ChatFlow() {
     }
     try {
         // Limpeza no modal também
-        const cleanedData = {
+        const stepDataClean = {
             ...modalData,
-            msg_texto: decodeHtml(modalData.msg_texto)
+            msg_texto: prepareHtmlForTelegram(modalData.msg_texto)
         };
 
         if (editingStep) {
-            await flowService.updateStep(selectedBot.id, editingStep.id, cleanedData);
+            await flowService.updateStep(selectedBot.id, editingStep.id, stepDataClean);
             Swal.fire({ icon: 'success', title: 'Passo Atualizado!', timer: 1500, showConfirmButton: false, background: '#151515', color: '#fff' });
         } else {
-            await flowService.addStep(selectedBot.id, { ...cleanedData, step_order: steps.length + 1 });
+            await flowService.addStep(selectedBot.id, { ...stepDataClean, step_order: steps.length + 1 });
             Swal.fire({ icon: 'success', title: 'Passo Adicionado!', timer: 1500, showConfirmButton: false, background: '#151515', color: '#fff' });
         }
         setShowModal(false);
@@ -226,8 +217,6 @@ export function ChatFlow() {
 
   return (
     <div className="chatflow-container">
-      
-      {/* HEADER */}
       <div className="chatflow-header">
         <div className="header-titles">
           <h1>Editor de Fluxo</h1>
@@ -261,7 +250,7 @@ export function ChatFlow() {
                                     {flow.media_url.includes('mp4') ? <Video size={20}/> : <ImageIcon size={20}/>} Mídia
                                 </div>
                             )}
-                            <p dangerouslySetInnerHTML={{__html: (typeof flow.msg_boas_vindas === 'string' ? flow.msg_boas_vindas : '') || "Olá! Configure sua mensagem..."}}></p>
+                            <p dangerouslySetInnerHTML={{__html: extractTextValue(flow.msg_boas_vindas) || "Olá! Configure sua mensagem..."}}></p>
                         </div>
                         {flow.start_mode === 'padrao' && flow.btn_text_1 && (
                             <div className="btn-bubble">{flow.btn_text_1}</div>
@@ -276,7 +265,7 @@ export function ChatFlow() {
                             <div key={idx} style={{opacity: 0.7, marginTop: 10}}>
                                 <div className="msg-bubble bot">
                                     {s.msg_media && <div className="media-preview-mock"><ImageIcon size={14}/></div>}
-                                    <p dangerouslySetInnerHTML={{__html: s.msg_texto}}></p>
+                                    <p dangerouslySetInnerHTML={{__html: extractTextValue(s.msg_texto)}}></p>
                                 </div>
                                 {s.btn_texto && <div className="btn-bubble">{s.btn_texto}</div>}
                             </div>
@@ -326,9 +315,12 @@ export function ChatFlow() {
                         <div className="step-title-row"><MessageSquare size={20} color="#d65ad1"/><h3>Mensagem de Boas-Vindas</h3></div>
                     </div>
                     <div className="form-grid">
-                        {/* 🔥 USO DA FUNÇÃO DE MUDANÇA SEGURA */}
-                        <RichInput label="Texto da Mensagem" value={flow.msg_boas_vindas} onChange={val => handleRichChange('msg_boas_vindas', val)} />
-                        
+                        <RichInput 
+                            label="Texto da Mensagem" 
+                            value={flow.msg_boas_vindas} 
+                            // ✅ USO DO EXTRACTOR SEGURO
+                            onChange={val => setFlow({...flow, msg_boas_vindas: extractTextValue(val)})} 
+                        />
                         <Input label="Link da Mídia (Opcional)" value={flow.media_url} onChange={e => setFlow({...flow, media_url: e.target.value})} icon={<ImageIcon size={16}/>} />
                         {flow.start_mode === 'padrao' && (
                             <div className="buttons-config">
@@ -370,7 +362,7 @@ export function ChatFlow() {
                                             <button className="icon-btn danger" onClick={() => handleDeleteStep(step.id)}><Trash2 size={18} color="#ef4444"/></button>
                                         </div>
                                     </div>
-                                    <div className="preview-box"><p>{step.msg_texto ? step.msg_texto.substring(0, 100) : '(Mídia)'}</p></div>
+                                    <div className="preview-box"><p>{extractTextValue(step.msg_texto).substring(0, 100)}</p></div>
                                 </CardContent>
                             </Card>
                             <div className="connector-line"></div><div className="connector-arrow"><ArrowDown size={24} color="#444" /></div>
@@ -385,9 +377,12 @@ export function ChatFlow() {
                         <CardContent>
                             <div className="step-header"><div className="step-title-row"><ShoppingBag size={20} color="#10b981"/><h3>Mensagem de Oferta & Checkout</h3></div></div>
                             <div className="form-grid">
-                                {/* 🔥 AQUI ESTÁ A CORREÇÃO PRINCIPAL */}
-                                <RichInput label="Texto da Oferta" value={flow.msg_2_texto} onChange={val => handleRichChange('msg_2_texto', val)} />
-                                
+                                <RichInput 
+                                    label="Texto da Oferta" 
+                                    value={flow.msg_2_texto} 
+                                    // ✅ USO DO EXTRACTOR SEGURO NA OFERTA
+                                    onChange={val => setFlow({...flow, msg_2_texto: extractTextValue(val)})} 
+                                />
                                 <Input label="Mídia da Oferta (Opcional)" value={flow.msg_2_media} onChange={e => setFlow({...flow, msg_2_media: e.target.value})} icon={<Video size={16}/>} />
                                 <div className="toggle-wrapper full-width">
                                     <label>Mostrar botões de Planos automaticamente?</label>
@@ -408,16 +403,11 @@ export function ChatFlow() {
             <div className="modal-content">
                 <div className="modal-header-row"><h2>{editingStep ? 'Editar Mensagem' : 'Nova Mensagem'}</h2><button className="btn-close-modal" onClick={() => setShowModal(false)}>✕</button></div>
                 <div className="modal-body">
-                    {/* 🔥 CORREÇÃO MODAL TAMBÉM */}
                     <RichInput 
                         label="Texto" 
                         value={modalData.msg_texto} 
-                        onChange={val => {
-                            let clean = val;
-                            if (val && typeof val === 'object' && val.target) clean = val.target.value;
-                            if (typeof clean === 'object') clean = '';
-                            setModalData({...modalData, msg_texto: clean});
-                        }} 
+                        // ✅ USO DO EXTRACTOR SEGURO NO MODAL
+                        onChange={val => setModalData({...modalData, msg_texto: extractTextValue(val)})} 
                     />
                     <Input label="Mídia URL" value={modalData.msg_media} onChange={e => setModalData({...modalData, msg_media: e.target.value})} />
                     <div className="modal-options-box">
