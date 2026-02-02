@@ -9,18 +9,25 @@ import { Input } from '../components/Input';
 import { RichInput } from '../components/RichInput';
 import './ChatFlow.css';
 
-// 🧼 FUNÇÃO DE LIMPEZA DE HTML PARA TELEGRAM
+// 🧼 FUNÇÃO DE LIMPEZA DE HTML PARA TELEGRAM (CORRIGIDA)
 const cleanHtmlForTelegram = (html) => {
+    // 1. Proteção contra null/undefined ou objetos
     if (!html) return "";
+    if (typeof html !== 'string') return String(html); // Força string se vier objeto
+    if (html === '[object Object]') return ""; // Limpa lixo se existir
+
+    // 2. Decodificação e limpeza
     const txt = document.createElement("textarea");
     txt.innerHTML = html;
     let decoded = txt.value;
+    
     decoded = decoded
         .replace(/<p[^>]*>/gi, "")
         .replace(/<\/p>/gi, "\n")
         .replace(/<div[^>]*>/gi, "")
         .replace(/<\/div>/gi, "\n")
         .replace(/<br\s*\/?>/gi, "\n");
+        
     return decoded.trim();
 };
 
@@ -30,7 +37,7 @@ export function ChatFlow() {
   
   // Estado do Fluxo
   const [flow, setFlow] = useState({
-    start_mode: 'padrao', // 'padrao' ou 'miniapp'
+    start_mode: 'padrao', 
     miniapp_url: '',
     miniapp_btn_text: 'ABRIR LOJA 🛍️',
     msg_boas_vindas: '',
@@ -40,7 +47,7 @@ export function ChatFlow() {
     msg_2_texto: '',
     msg_2_media: '',
     mostrar_planos_2: true,
-    mostrar_planos_1: false // 🔥 A opção que faltava
+    mostrar_planos_1: false 
   });
 
   const [steps, setSteps] = useState([]);
@@ -62,18 +69,27 @@ export function ChatFlow() {
     }
   }, [selectedBot]);
 
+  // Função auxiliar para limpar dados corrompidos na carga
+  const safeText = (txt) => {
+      if (!txt) return '';
+      if (txt === '[object Object]') return '';
+      return txt;
+  };
+
   const loadData = async () => {
     try {
         const data = await flowService.getFlow(selectedBot.id);
+        
+        // Aplica safeText para limpar se vier [object Object] do banco
         setFlow({
             start_mode: data.start_mode || 'padrao',
             miniapp_url: data.miniapp_url || '',
             miniapp_btn_text: data.miniapp_btn_text || 'ABRIR LOJA 🛍️',
-            msg_boas_vindas: data.msg_boas_vindas || '',
+            msg_boas_vindas: safeText(data.msg_boas_vindas),
             media_url: data.media_url || '',
             btn_text_1: data.btn_text_1 || '',
             autodestruir_1: data.autodestruir_1 || false,
-            msg_2_texto: data.msg_2_texto || '',
+            msg_2_texto: safeText(data.msg_2_texto), // 🔥 Limpeza aqui
             msg_2_media: data.msg_2_media || '',
             mostrar_planos_2: data.mostrar_planos_2 !== undefined ? data.mostrar_planos_2 : true,
             mostrar_planos_1: data.mostrar_planos_1 || false
@@ -84,10 +100,24 @@ export function ChatFlow() {
     }
   };
 
+  // ✅ HELPER PARA MUDANÇA DE TEXTO RICO (EVITA [object Object])
+  const handleRichChange = (field, value) => {
+      // Se por acaso o RichInput enviar um evento em vez de valor, extraímos
+      let cleanValue = value;
+      if (value && typeof value === 'object' && value.target) {
+          cleanValue = value.target.value;
+      }
+      // Se ainda for objeto (erro crítico), forçamos string vazia
+      if (typeof cleanValue === 'object') cleanValue = '';
+      
+      setFlow(prev => ({ ...prev, [field]: cleanValue }));
+  };
+
   const handleSave = async () => {
     if (!selectedBot) return;
     setLoading(true);
     try {
+        // Limpeza final antes de enviar pro Backend
         const flowToSave = {
             ...flow,
             msg_boas_vindas: cleanHtmlForTelegram(flow.msg_boas_vindas),
@@ -106,6 +136,10 @@ export function ChatFlow() {
             timer: 2000,
             showConfirmButton: false
         });
+        
+        // Recarrega para garantir que estamos vendo o que foi salvo e limpo
+        loadData(); 
+        
     } catch (error) {
         Swal.fire('Erro', 'Não foi possível salvar o fluxo.', 'error');
     } finally {
@@ -117,7 +151,10 @@ export function ChatFlow() {
   const handleOpenModal = (step = null) => {
     if (step) {
         setEditingStep(step);
-        setModalData({...step});
+        setModalData({
+            ...step,
+            msg_texto: safeText(step.msg_texto) // Limpa também no modal
+        });
     } else {
         setEditingStep(null);
         setModalData({
@@ -193,7 +230,7 @@ export function ChatFlow() {
                 <div className="step-badge">INÍCIO</div>
                 <h3>👋 Configuração Inicial</h3>
                 
-                {/* 🔥 MODO DE INÍCIO (CARDS VISUAIS RESTAURADOS) */}
+                {/* MODO DE INÍCIO (CARDS VISUAIS) */}
                 <div className="mode-selector-grid">
                     <div 
                         className={`mode-card ${flow.start_mode === 'padrao' ? 'selected-padrao' : ''}`}
@@ -242,12 +279,13 @@ export function ChatFlow() {
                             <label>Mensagem de Saudação</label>
                             <RichInput 
                                 value={flow.msg_boas_vindas}
-                                onChange={(val) => setFlow({...flow, msg_boas_vindas: val})}
+                                // Usando o helper blindado
+                                onChange={(val) => handleRichChange('msg_boas_vindas', val)}
                                 placeholder="Olá {nome}, seja bem vindo!"
                             />
                         </div>
                         
-                        {/* 🔥 OPÇÃO DE MOSTRAR PLANOS RESTAURADA 🔥 */}
+                        {/* OPÇÃO DE MOSTRAR PLANOS */}
                         <div className="toggle-wrapper full-width" style={{marginTop: '10px', marginBottom: '15px'}}>
                             <div style={{display:'flex', justifyContent:'space-between', alignItems:'center'}}>
                                 <label style={{color: flow.mostrar_planos_1 ? '#10b981' : '#ccc', fontWeight: flow.mostrar_planos_1 ? 'bold' : 'normal'}}>
@@ -296,7 +334,7 @@ export function ChatFlow() {
                 )}
             </div>
 
-            {/* SE MOSTRAR PLANOS NA 1ª, ESCONDE O RESTO DO FLUXO VISUALMENTE PARA NÃO CONFUNDIR */}
+            {/* FLUXO SEGUINTE (SE NÃO MOSTRAR PLANOS NA 1ª) */}
             {!flow.mostrar_planos_1 && flow.start_mode !== 'miniapp' && (
                 <>
                     <div className="connector-line">
@@ -317,7 +355,7 @@ export function ChatFlow() {
                                     </div>
                                 </div>
                                 <div className="step-preview">
-                                    <p><strong>Msg:</strong> {step.msg_texto.replace(/<[^>]*>/g, '').substring(0, 50)}...</p>
+                                    <p><strong>Msg:</strong> {safeText(step.msg_texto).replace(/<[^>]*>/g, '').substring(0, 50)}...</p>
                                     {step.mostrar_botao ? (
                                         <span className="tag-btn">Botão: {step.btn_texto}</span>
                                     ) : (
@@ -344,9 +382,10 @@ export function ChatFlow() {
                         
                         <div className="input-group">
                             <label>Mensagem de Oferta</label>
+                            {/* 🔥 APLICAÇÃO DO HELPER AQUI TAMBÉM */}
                             <RichInput 
                                 value={flow.msg_2_texto}
-                                onChange={(val) => setFlow({...flow, msg_2_texto: val})}
+                                onChange={(val) => handleRichChange('msg_2_texto', val)}
                                 placeholder="Ex: Essa é a sua chance..."
                             />
                         </div>
@@ -385,9 +424,9 @@ export function ChatFlow() {
                         {/* Mensagem 1 */}
                         <div className="msg-bubble bot">
                             {flow.media_url && <div className="msg-media-placeholder">📷 Mídia</div>}
-                            <div className="msg-text" dangerouslySetInnerHTML={{__html: flow.msg_boas_vindas || '...'}} />
+                            <div className="msg-text" dangerouslySetInnerHTML={{__html: safeText(flow.msg_boas_vindas) || '...'}} />
                             
-                            {/* 🔥 PREVIEW: SE MOSTRAR PLANOS AQUI, EXIBE BOTÕES DE COMPRA */}
+                            {/* PREVIEW: PLANOS */}
                             {flow.mostrar_planos_1 ? (
                                 <>
                                     <div className="msg-btn">🔥 Plano Mensal - R$ 14,90</div>
@@ -398,7 +437,7 @@ export function ChatFlow() {
                             )}
                         </div>
 
-                        {/* SE NÃO MOSTRAR PLANOS NA 1ª, MOSTRA O RESTO DO PREVIEW */}
+                        {/* RESTO DO PREVIEW */}
                         {!flow.mostrar_planos_1 && flow.start_mode !== 'miniapp' && (
                             <>
                                 {steps.length > 0 && (
@@ -410,7 +449,7 @@ export function ChatFlow() {
                                 {/* Mensagem Oferta */}
                                 <div className="msg-bubble bot">
                                     {flow.msg_2_media && <div className="msg-media-placeholder">📹 Vídeo</div>}
-                                    <div className="msg-text" dangerouslySetInnerHTML={{__html: flow.msg_2_texto || '...'}} />
+                                    <div className="msg-text" dangerouslySetInnerHTML={{__html: safeText(flow.msg_2_texto) || '...'}} />
                                     <div className="msg-btn">🔥 Plano Mensal - R$ 14,90</div>
                                     <div className="msg-btn">💎 Vitalício - R$ 19,90</div>
                                 </div>
@@ -433,7 +472,14 @@ export function ChatFlow() {
                 <div className="modal-body">
                     <div className="input-group">
                         <label>Mensagem</label>
-                        <RichInput value={modalData.msg_texto} onChange={val => setModalData({...modalData, msg_texto: val})} />
+                        <RichInput 
+                            value={modalData.msg_texto} 
+                            onChange={val => {
+                                let clean = val;
+                                if (val && typeof val === 'object' && val.target) clean = val.target.value;
+                                setModalData({...modalData, msg_texto: clean});
+                            }} 
+                        />
                     </div>
                     <Input label="Mídia (URL)" value={modalData.msg_media} onChange={e => setModalData({...modalData, msg_media: e.target.value})} />
                     <div className="modal-options-box">
