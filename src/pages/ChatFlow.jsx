@@ -9,13 +9,35 @@ import { Input } from '../components/Input';
 import { RichInput } from '../components/RichInput';
 import './ChatFlow.css';
 
+// 🧼 FUNÇÃO DE LIMPEZA (CORREÇÃO DA FORMATAÇÃO)
+// Remove tags de bloco (<p>, <div>) e converte para quebras de linha
+// Decodifica entidades HTML para que o Telegram entenda <b> como negrito
+const cleanHtmlForTelegram = (html) => {
+    if (!html) return "";
+    if (typeof html !== 'string') return String(html); 
+
+    // Cria elemento temporário para decodificar (ex: &lt;b&gt; -> <b>)
+    const txt = document.createElement("textarea");
+    txt.innerHTML = html;
+    let decoded = txt.value;
+
+    decoded = decoded
+        .replace(/<p[^>]*>/gi, "")
+        .replace(/<\/p>/gi, "\n")
+        .replace(/<div[^>]*>/gi, "")
+        .replace(/<\/div>/gi, "\n")
+        .replace(/<br\s*\/?>/gi, "\n");
+
+    return decoded.trim();
+};
+
 export function ChatFlow() {
   const { selectedBot } = useBot(); 
   const [loading, setLoading] = useState(false);
   
   // Estado do Fluxo
   const [flow, setFlow] = useState({
-    start_mode: 'padrao', // 'padrao' ou 'miniapp'
+    start_mode: 'padrao', 
     miniapp_url: '',
     miniapp_btn_text: 'ABRIR LOJA 🛍️',
     msg_boas_vindas: '',
@@ -28,318 +50,431 @@ export function ChatFlow() {
     mostrar_planos_1: false 
   });
 
-  // Estado dos Passos Dinâmicos (Lista)
   const [steps, setSteps] = useState([]);
-  
-  // Estado do Modal
   const [showModal, setShowModal] = useState(false);
   const [editingStep, setEditingStep] = useState(null); 
   const [modalData, setModalData] = useState({
+    tipo: 'mensagem',
     msg_texto: '',
     msg_media: '',
-    btn_texto: 'Próximo ▶️',
-    autodestruir: false,
     mostrar_botao: true,
-    delay_seconds: 0 
+    btn_texto: 'Continuar',
+    delay_seconds: 0,
+    autodestruir: false
   });
 
-  // Carrega tudo ao mudar o bot
   useEffect(() => {
     if (selectedBot) {
-      carregarTudo();
+        loadData();
     }
   }, [selectedBot]);
 
-  const carregarTudo = async () => {
-    setLoading(true);
+  const loadData = async () => {
     try {
-        const flowData = await flowService.getFlow(selectedBot.id);
-        if (flowData) {
-            setFlow({
-                ...flowData,
-                start_mode: flowData.start_mode || 'padrao',
-                miniapp_btn_text: flowData.miniapp_btn_text || 'ABRIR LOJA 🛍️',
-                msg_boas_vindas: flowData.msg_boas_vindas || '',
-                media_url: flowData.media_url || '',
-                btn_text_1: flowData.btn_text_1 || '🔓 DESBLOQUEAR ACESSO',
-                autodestruir_1: flowData.autodestruir_1 || false,
-                msg_2_texto: flowData.msg_2_texto || '',
-                msg_2_media: flowData.msg_2_media || '',
-                mostrar_planos_2: flowData.mostrar_planos_2 !== false,
-                mostrar_planos_1: flowData.mostrar_planos_1 || false
-            });
-        }
-        const stepsData = await flowService.getSteps(selectedBot.id);
-        setSteps(stepsData || []);
+        const data = await flowService.getFlow(selectedBot.id);
+        // Garante que não venha null ou object do banco
+        const safeStr = (val) => (val && typeof val === 'string' && val !== '[object Object]') ? val : '';
+
+        setFlow({
+            start_mode: data.start_mode || 'padrao',
+            miniapp_url: data.miniapp_url || '',
+            miniapp_btn_text: data.miniapp_btn_text || 'ABRIR LOJA 🛍️',
+            msg_boas_vindas: safeStr(data.msg_boas_vindas),
+            media_url: data.media_url || '',
+            btn_text_1: data.btn_text_1 || '',
+            autodestruir_1: data.autodestruir_1 || false,
+            msg_2_texto: safeStr(data.msg_2_texto),
+            msg_2_media: data.msg_2_media || '',
+            mostrar_planos_2: data.mostrar_planos_2 !== undefined ? data.mostrar_planos_2 : true,
+            mostrar_planos_1: data.mostrar_planos_1 || false
+        });
+        setSteps(data.steps || []);
     } catch (error) {
         console.error("Erro ao carregar fluxo:", error);
+    }
+  };
+
+  // ✅ CORREÇÃO DO "[object Object]" AO DIGITAR
+  const handleRichChange = (field, val) => {
+      let cleanValue = val;
+      // Se vier um evento em vez de valor, extrai o value
+      if (val && typeof val === 'object' && val.target) {
+          cleanValue = val.target.value;
+      }
+      // Se ainda for objeto, zera
+      if (typeof cleanValue === 'object') cleanValue = '';
+      
+      setFlow(prev => ({ ...prev, [field]: cleanValue }));
+  };
+
+  // ✅ SALVAMENTO COM LIMPEZA DE HTML
+  const handleSave = async () => {
+    if (!selectedBot) return;
+    setLoading(true);
+    try {
+        const flowToSave = {
+            ...flow,
+            // Limpa o HTML antes de enviar para o Telegram não mostrar tags
+            msg_boas_vindas: cleanHtmlForTelegram(flow.msg_boas_vindas),
+            msg_2_texto: cleanHtmlForTelegram(flow.msg_2_texto),
+            steps: steps.map(step => ({
+                ...step,
+                msg_texto: cleanHtmlForTelegram(step.msg_texto)
+            }))
+        };
+
+        await flowService.updateFlow(selectedBot.id, flowToSave);
+        Swal.fire({
+            icon: 'success',
+            title: 'Fluxo Salvo!',
+            text: 'As configurações foram atualizadas com sucesso.',
+            timer: 2000,
+            showConfirmButton: false
+        });
+        loadData(); // Recarrega para mostrar estado limpo
+    } catch (error) {
+        Swal.fire('Erro', 'Não foi possível salvar o fluxo.', 'error');
     } finally {
         setLoading(false);
     }
   };
 
-  const handleSaveFixed = async () => {
-    if (flow.start_mode === 'miniapp' && !flow.miniapp_url) {
-        return Swal.fire('Atenção', 'Cole o link do seu Mini App para salvar.', 'warning');
-    }
-    try {
-      await flowService.saveFlow(selectedBot.id, flow);
-      Swal.fire({
-        icon: 'success',
-        title: 'Fluxo Salvo!',
-        toast: true, position: 'top-end', showConfirmButton: false, timer: 3000,
-        background: '#151515', color: '#fff'
-      });
-    } catch (error) {
-      Swal.fire('Erro', 'Falha ao salvar.', 'error');
-    }
-  };
+  // --- FUNÇÕES DOS PASSOS DINÂMICOS ---
 
-  const handleOpenCreateModal = () => {
-    setEditingStep(null);
-    setModalData({ msg_texto: '', msg_media: '', btn_texto: 'Próximo ▶️', autodestruir: false, mostrar_botao: true, delay_seconds: 0 });
-    setShowModal(true);
-  };
-
-  const handleOpenEditModal = (step) => {
-    setEditingStep(step);
-    setModalData({
-      msg_texto: step.msg_texto || '',
-      msg_media: step.msg_media || '',
-      btn_texto: step.btn_texto || 'Próximo ▶️',
-      autodestruir: step.autodestruir || false,
-      mostrar_botao: step.mostrar_botao !== false,
-      delay_seconds: step.delay_seconds || 0
-    });
-    setShowModal(true);
-  };
-
-  const handleSaveStep = async () => {
-    if (!modalData.msg_texto && !modalData.msg_media) {
-      return Swal.fire('Atenção', 'O passo precisa ter texto ou mídia!', 'warning');
-    }
-    try {
-        if (editingStep) {
-            await flowService.updateStep(selectedBot.id, editingStep.id, modalData);
-            Swal.fire({ icon: 'success', title: 'Passo Atualizado!', timer: 1500, showConfirmButton: false, background: '#151515', color: '#fff' });
-        } else {
-            await flowService.addStep(selectedBot.id, { ...modalData, step_order: steps.length + 1 });
-            Swal.fire({ icon: 'success', title: 'Passo Adicionado!', timer: 1500, showConfirmButton: false, background: '#151515', color: '#fff' });
-        }
-        setShowModal(false);
+  const handleOpenModal = (step = null) => {
+    if (step) {
+        setEditingStep(step);
+        // Proteção na abertura do modal também
+        const safeMsg = (step.msg_texto && typeof step.msg_texto === 'string') ? step.msg_texto : '';
+        setModalData({...step, msg_texto: safeMsg});
+    } else {
         setEditingStep(null);
-        carregarTudo(); 
-    } catch (error) {
-        Swal.fire('Erro', 'Falha ao salvar passo.', 'error');
+        setModalData({
+            tipo: 'mensagem',
+            msg_texto: '',
+            msg_media: '',
+            mostrar_botao: true,
+            btn_texto: 'Próximo',
+            delay_seconds: 0,
+            autodestruir: false
+        });
     }
+    setShowModal(true);
   };
 
-  const handleDeleteStep = async (stepId) => {
-    const result = await Swal.fire({
-        title: 'Excluir Passo?',
-        text: "Isso removerá esta mensagem do fluxo.",
-        icon: 'warning',
-        showCancelButton: true,
-        confirmButtonColor: '#d33',
-        cancelButtonColor: '#3085d6',
-        confirmButtonText: 'Sim, excluir',
-        background: '#151515', 
-        color: '#fff'
-    });
-    if (result.isConfirmed) {
-        try {
-            await flowService.deleteStep(selectedBot.id, stepId);
-            carregarTudo();
-        } catch (error) {
-            Swal.fire('Erro', 'Falha ao excluir.', 'error');
-        }
+  const handleSaveStep = () => {
+    if (!modalData.msg_texto && !modalData.msg_media) {
+        return Swal.fire('Atenção', 'Adicione pelo menos um texto ou mídia.', 'warning');
     }
+    
+    // Limpeza ao salvar passo
+    const cleanedData = {
+        ...modalData,
+        msg_texto: cleanHtmlForTelegram(modalData.msg_texto)
+    };
+
+    if (editingStep) {
+        setSteps(steps.map(s => s.uid === editingStep.uid ? { ...cleanedData, uid: editingStep.uid } : s));
+    } else {
+        setSteps([...steps, { ...cleanedData, uid: Date.now() }]);
+    }
+    setShowModal(false);
   };
 
-  if (!selectedBot) return <div className="chatflow-container">Selecione um bot...</div>;
+  const handleDeleteStep = (uid) => {
+    setSteps(steps.filter(s => s.uid !== uid));
+  };
+
+  const moveStep = (index, direction) => {
+    const newSteps = [...steps];
+    if (direction === 'up' && index > 0) {
+        [newSteps[index], newSteps[index - 1]] = [newSteps[index - 1], newSteps[index]];
+    } else if (direction === 'down' && index < newSteps.length - 1) {
+        [newSteps[index], newSteps[index + 1]] = [newSteps[index + 1], newSteps[index]];
+    }
+    setSteps(newSteps);
+  };
+
+  if (!selectedBot) {
+    return (
+        <div className="empty-state">
+            <h2>👈 Selecione um bot no menu lateral para configurar o fluxo.</h2>
+        </div>
+    );
+  }
 
   return (
     <div className="chatflow-container">
-      
-      {/* 🔥 CLASSE NOVA: chatflow-header */}
       <div className="chatflow-header">
         <div className="header-titles">
-          <h1>Editor de Fluxo</h1>
-          <p>Configure a sequência de mensagens do seu bot.</p>
+            <h1>Fluxo de Conversa</h1>
+            <p>Personalize como seu bot interage com os clientes.</p>
         </div>
-        <div className="header-actions">
-          <Button onClick={handleSaveFixed} disabled={loading} className="btn-save-main">
-            <Save size={20} style={{marginRight: '8px'}} /> 
-            SALVAR ALTERAÇÕES
-          </Button>
-        </div>
+        <Button onClick={handleSave} disabled={loading}>
+            {loading ? 'Salvando...' : 'Salvar Alterações'}
+            <Save size={18} style={{ marginLeft: 8 }} />
+        </Button>
       </div>
 
       <div className="flow-grid">
-         {/* COLUNA ESQUERDA: VISUALIZAÇÃO CELULAR */}
-         <div className="preview-column">
+        {/* COLUNA DA ESQUERDA - CONFIGURAÇÃO */}
+        <div className="config-column">
+            
+            {/* 1. START / BOAS VINDAS */}
+            <div className="flow-step-card start-step">
+                <div className="step-badge">INÍCIO</div>
+                <h3>👋 Boas Vindas</h3>
+                
+                {/* SELETOR DE MODO (Cards lado a lado - Mantido do seu original) */}
+                <div className="mode-selector-grid">
+                    <div 
+                        className={`mode-card ${flow.start_mode === 'padrao' ? 'selected-padrao' : ''}`}
+                        onClick={() => setFlow({...flow, start_mode: 'padrao'})}
+                    >
+                        <div className="mode-icon"><MessageSquare size={24} /></div>
+                        <div className="mode-info">
+                            <h4>Modo Padrão</h4>
+                            <p>Mensagem + Botão</p>
+                        </div>
+                        {flow.start_mode === 'padrao' && <div className="check-badge">ATIVO</div>}
+                    </div>
+
+                    <div 
+                        className={`mode-card ${flow.start_mode === 'miniapp' ? 'selected-miniapp' : ''}`}
+                        onClick={() => setFlow({...flow, start_mode: 'miniapp'})}
+                    >
+                        <div className="mode-icon"><Smartphone size={24} /></div>
+                        <div className="mode-info">
+                            <h4>Mini-App</h4>
+                            <p>Abre o site direto</p>
+                        </div>
+                        {flow.start_mode === 'miniapp' && <div className="check-badge">ATIVO</div>}
+                    </div>
+                </div>
+
+                {flow.start_mode === 'miniapp' ? (
+                    <div className="miniapp-config">
+                        <Input 
+                            label="URL do Mini-App" 
+                            placeholder="https://seu-site.com"
+                            value={flow.miniapp_url}
+                            onChange={(e) => setFlow({...flow, miniapp_url: e.target.value})}
+                            icon={<Globe size={16}/>}
+                        />
+                        <Input 
+                            label="Texto do Botão" 
+                            value={flow.miniapp_btn_text}
+                            onChange={(e) => setFlow({...flow, miniapp_btn_text: e.target.value})}
+                            icon={<Smartphone size={16}/>}
+                        />
+                    </div>
+                ) : (
+                    <>
+                        <div className="input-group">
+                            <label>Mensagem de Saudação</label>
+                            {/* 🔥 USO DO HANDLE SEGURO AQUI */}
+                            <RichInput 
+                                value={flow.msg_boas_vindas}
+                                onChange={(val) => handleRichChange('msg_boas_vindas', val)}
+                                placeholder="Olá {nome}, seja bem vindo!"
+                            />
+                        </div>
+
+                        {/* TOGGLE MOSTRAR PLANOS (Mantido do seu original) */}
+                        <div className="toggle-wrapper full-width" style={{marginTop: '10px', marginBottom: '15px'}}>
+                            <div style={{display:'flex', justifyContent:'space-between', alignItems:'center'}}>
+                                <label style={{color: flow.mostrar_planos_1 ? '#10b981' : '#ccc', fontWeight: flow.mostrar_planos_1 ? 'bold' : 'normal'}}>
+                                    {flow.mostrar_planos_1 ? '🛒 Planos visíveis na 1ª Mensagem' : '👁️ Mostrar planos nesta mensagem?'}
+                                </label>
+                                <div 
+                                    className={`custom-toggle ${flow.mostrar_planos_1 ? 'active-green' : ''}`}
+                                    onClick={() => setFlow({...flow, mostrar_planos_1: !flow.mostrar_planos_1})}
+                                >
+                                    <div className="toggle-handle"></div>
+                                </div>
+                            </div>
+                            <small className="hint-text" style={{marginTop: 5}}>
+                                {flow.mostrar_planos_1 
+                                    ? "⚠️ Atenção: O fluxo encerrará aqui. Passos seguintes serão ignorados." 
+                                    : "Os planos aparecerão apenas no final do fluxo."}
+                            </small>
+                        </div>
+
+                        <Input 
+                            label="Mídia (URL Imagem/Vídeo) - Opcional"
+                            value={flow.media_url}
+                            onChange={(e) => setFlow({...flow, media_url: e.target.value})}
+                            icon={<ImageIcon size={16}/>}
+                        />
+                        
+                        {!flow.mostrar_planos_1 && (
+                            <div className="row-inputs">
+                                <Input 
+                                    label="Texto do Botão" 
+                                    value={flow.btn_text_1}
+                                    onChange={(e) => setFlow({...flow, btn_text_1: e.target.value})}
+                                />
+                                <div className="toggle-wrapper">
+                                    <label>Auto-destruir?</label>
+                                    <div 
+                                        className={`custom-toggle ${flow.autodestruir_1 ? 'active' : ''}`}
+                                        onClick={() => setFlow({...flow, autodestruir_1: !flow.autodestruir_1})}
+                                    >
+                                        <div className="toggle-handle"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+                    </>
+                )}
+            </div>
+
+            {!flow.mostrar_planos_1 && flow.start_mode !== 'miniapp' && (
+                <>
+                    <div className="connector-line">
+                        <ArrowDown size={24} />
+                    </div>
+
+                    {/* 2. PASSOS DINÂMICOS */}
+                    {steps.map((step, index) => (
+                        <React.Fragment key={step.uid || index}>
+                            <div className="flow-step-card dynamic-step">
+                                <div className="step-header">
+                                    <span className="step-number">#{index + 1}</span>
+                                    <div className="step-actions">
+                                        <button onClick={() => moveStep(index, 'up')} disabled={index === 0}>⬆</button>
+                                        <button onClick={() => moveStep(index, 'down')} disabled={index === steps.length - 1}>⬇</button>
+                                        <button className="edit-btn" onClick={() => handleOpenModal(step)}><Edit size={14}/></button>
+                                        <button className="delete-btn" onClick={() => handleDeleteStep(step.uid)}><Trash2 size={14}/></button>
+                                    </div>
+                                </div>
+                                <div className="step-preview">
+                                    <p><strong>Msg:</strong> {(typeof step.msg_texto === 'string' ? step.msg_texto : '').replace(/<[^>]*>/g, '').substring(0, 50)}...</p>
+                                    {step.mostrar_botao ? (
+                                        <span className="tag-btn">Botão: {step.btn_texto}</span>
+                                    ) : (
+                                        <span className="tag-delay">Wait: {step.delay_seconds}s</span>
+                                    )}
+                                </div>
+                            </div>
+                            <div className="connector-line"><ArrowDown size={24} /></div>
+                        </React.Fragment>
+                    ))}
+
+                    <div className="add-step-wrapper">
+                        <button className="btn-add-step" onClick={() => handleOpenModal()}>
+                            <Plus size={20} /> Adicionar Passo Intermediário
+                        </button>
+                    </div>
+
+                    <div className="connector-line"><ArrowDown size={24} /></div>
+
+                    {/* 3. CHECKOUT / OFERTA */}
+                    <div className="flow-step-card end-step">
+                        <div className="step-badge final">FINAL</div>
+                        <h3>💰 Oferta & Checkout</h3>
+                        
+                        <div className="input-group">
+                            <label>Mensagem de Oferta</label>
+                            {/* 🔥 USO DO HANDLE SEGURO AQUI */}
+                            <RichInput 
+                                value={flow.msg_2_texto}
+                                onChange={(val) => handleRichChange('msg_2_texto', val)}
+                                placeholder="Ex: Essa é a sua chance..."
+                            />
+                        </div>
+                        <Input 
+                            label="Mídia da Oferta (URL)"
+                            value={flow.msg_2_media}
+                            onChange={(e) => setFlow({...flow, msg_2_media: e.target.value})}
+                            icon={<Video size={16}/>}
+                        />
+                        
+                        <div className="info-box" style={{marginTop: 15, padding: 15, background: 'rgba(16, 185, 129, 0.1)', borderRadius: 8, display: 'flex', gap: 10, alignItems: 'center'}}>
+                            <ShoppingBag size={20} color="#10b981" />
+                            <p style={{margin:0, fontSize: '0.9rem', color: '#fff'}}>
+                                Botões de compra serão exibidos automaticamente aqui.
+                            </p>
+                        </div>
+                    </div>
+                </>
+            )}
+
+        </div>
+
+        {/* COLUNA DA DIREITA - PREVIEW (MOCKUP) */}
+        <div className="preview-column">
             <div className="iphone-mockup">
-                <div className="notch"></div>
-                <div className="screen-content">
-                    <div className="chat-header-mock">
-                        <div className="bot-avatar-mock">🤖</div>
-                        <div className="bot-info-mock">
-                            <strong>{selectedBot?.nome || "Seu Bot"}</strong>
+                <div className="iphone-notch"></div>
+                <div className="iphone-screen">
+                    <div className="telegram-header">
+                        <div className="bot-avatar">🤖</div>
+                        <div className="bot-info">
+                            <h4>{selectedBot.nome || 'Seu Bot'}</h4>
                             <span>bot</span>
                         </div>
                     </div>
-                    <div className="messages-area">
+                    <div className="chat-content">
+                        {/* Mensagem 1 */}
                         <div className="msg-bubble bot">
-                            {flow.media_url && (
-                                <div className="media-preview-mock">
-                                    {flow.media_url.includes('mp4') ? <Video size={20}/> : <ImageIcon size={20}/>} Mídia
-                                </div>
+                            {flow.media_url && <div className="msg-media-placeholder">📷 Mídia</div>}
+                            <div className="msg-text" dangerouslySetInnerHTML={{__html: (typeof flow.msg_boas_vindas === 'string' ? flow.msg_boas_vindas : '...')}} />
+                            
+                            {/* Lógica de Preview do Botão ou Planos */}
+                            {flow.mostrar_planos_1 ? (
+                                <>
+                                    <div className="msg-btn">🔥 Plano Mensal - R$ 14,90</div>
+                                    <div className="msg-btn">💎 Vitalício - R$ 19,90</div>
+                                </>
+                            ) : (
+                                flow.btn_text_1 && <div className="msg-btn">{flow.btn_text_1}</div>
                             )}
-                            <p>{flow.msg_boas_vindas || "Olá! Configure sua mensagem..."}</p>
                         </div>
-                        {flow.start_mode === 'padrao' && flow.btn_text_1 && (
-                            <div className="btn-bubble">{flow.btn_text_1}</div>
-                        )}
-                        {flow.start_mode === 'miniapp' && (
-                             <div className="btn-bubble store-btn">
-                                <Smartphone size={14} style={{marginRight:4}}/>
-                                {flow.miniapp_btn_text}
-                             </div>
-                        )}
-                        {steps.map((s, idx) => (
-                            <div key={idx} style={{opacity: 0.7, marginTop: 10}}>
-                                <div className="msg-bubble bot">
-                                    {s.msg_media && <div className="media-preview-mock"><ImageIcon size={14}/></div>}
-                                    <p>{s.msg_texto}</p>
-                                </div>
-                                {s.btn_texto && <div className="btn-bubble">{s.btn_texto}</div>}
+
+                        {/* Passos Dinâmicos */}
+                        {!flow.mostrar_planos_1 && steps.length > 0 && (
+                            <div className="msg-divider">
+                                <span>+ {steps.length} passos...</span>
                             </div>
-                        ))}
+                        )}
+
+                        {/* Mensagem Oferta */}
+                        {!flow.mostrar_planos_1 && flow.start_mode !== 'miniapp' && (
+                            <div className="msg-bubble bot">
+                                {flow.msg_2_media && <div className="msg-media-placeholder">📹 Vídeo</div>}
+                                <div className="msg-text" dangerouslySetInnerHTML={{__html: (typeof flow.msg_2_texto === 'string' ? flow.msg_2_texto : '...')}} />
+                                <div className="msg-btn">🔥 Plano Mensal - R$ 14,90</div>
+                                <div className="msg-btn">💎 Vitalício - R$ 19,90</div>
+                            </div>
+                        )}
                     </div>
                 </div>
             </div>
-         </div>
-
-         {/* COLUNA DIREITA: CONFIGURAÇÃO */}
-         <div className="config-column">
-            <Card className="step-card start-mode-card">
-                <CardContent>
-                    <div className="card-header-row">
-                        <Layout size={24} color="#c333ff" />
-                        <h3>Modo de Início do Bot (/start)</h3>
-                    </div>
-                    <div className="mode-selector-grid">
-                        <div className={`mode-card ${flow.start_mode === 'padrao' ? 'selected-padrao' : ''}`}
-                             onClick={() => setFlow({...flow, start_mode: 'padrao'})}>
-                            <div className="mode-icon"><MessageSquare size={28} /></div>
-                            <div className="mode-info"><h4>Fluxo Padrão</h4><p>Mensagem + Botão que libera conteúdo.</p></div>
-                            {flow.start_mode === 'padrao' && <div className="check-badge">ATIVO</div>}
-                        </div>
-                        <div className={`mode-card ${flow.start_mode === 'miniapp' ? 'selected-miniapp' : ''}`}
-                             onClick={() => setFlow({...flow, start_mode: 'miniapp'})}>
-                            <div className="mode-icon"><Smartphone size={28} /></div>
-                            <div className="mode-info"><h4>Mini App / Loja</h4><p>Botão Web App que abre a loja direta.</p></div>
-                            {flow.start_mode === 'miniapp' && <div className="check-badge">ATIVO</div>}
-                        </div>
-                    </div>
-                    {flow.start_mode === 'miniapp' && (
-                        <div className="miniapp-config-box">
-                            <Input label="Link da Loja / Mini App" value={flow.miniapp_url} onChange={e => setFlow({...flow, miniapp_url: e.target.value})} icon={<Globe size={16} />} />
-                            <Input label="Texto do Botão" value={flow.miniapp_btn_text} onChange={e => setFlow({...flow, miniapp_btn_text: e.target.value})} />
-                        </div>
-                    )}
-                </CardContent>
-            </Card>
-
-            <div className="flow-connector"><ArrowDown size={24} /></div>
-
-            <Card className="step-card">
-                <div className="step-badge">Passo 1 (Início)</div>
-                <CardContent>
-                    <div className="step-header">
-                        <div className="step-title-row"><MessageSquare size={20} color="#d65ad1"/><h3>Mensagem de Boas-Vindas</h3></div>
-                    </div>
-                    <div className="form-grid">
-                        <RichInput label="Texto da Mensagem" value={flow.msg_boas_vindas} onChange={val => setFlow({...flow, msg_boas_vindas: typeof val === 'object' ? val.target.value : val})} />
-                        <Input label="Link da Mídia (Opcional)" value={flow.media_url} onChange={e => setFlow({...flow, media_url: e.target.value})} icon={<ImageIcon size={16}/>} />
-                        {flow.start_mode === 'padrao' && (
-                            <div className="buttons-config">
-                                <div className="toggle-wrapper full-width">
-                                    <label>Mostrar botões de Planos (Checkout) nesta mensagem?</label>
-                                    <div className={`custom-toggle ${flow.mostrar_planos_1 ? 'active-green' : ''}`} onClick={() => setFlow({...flow, mostrar_planos_1: !flow.mostrar_planos_1})}>
-                                        <div className="toggle-handle"></div><span className="toggle-label">{flow.mostrar_planos_1 ? 'SIM' : 'NÃO'}</span>
-                                    </div>
-                                </div>
-                                {!flow.mostrar_planos_1 && (
-                                    <div className="row-inputs">
-                                        <Input label="Texto do Botão de Ação" value={flow.btn_text_1} onChange={e => setFlow({...flow, btn_text_1: e.target.value})} />
-                                        <div className="toggle-wrapper">
-                                            <label>Auto-destruir ao clicar?</label>
-                                            <div className={`custom-toggle ${flow.autodestruir_1 ? 'active' : ''}`} onClick={() => setFlow({...flow, autodestruir_1: !flow.autodestruir_1})}>
-                                                <div className="toggle-handle"></div><span className="toggle-label">{flow.autodestruir_1 ? 'SIM' : 'NÃO'}</span>
-                                            </div>
-                                        </div>
-                                    </div>
-                                )}
-                            </div>
-                        )}
-                    </div>
-                </CardContent>
-            </Card>
-
-            {flow.start_mode === 'padrao' && (
-                <>
-                    <div className="connector-line"></div><div className="connector-arrow"><ArrowDown size={24} color="#444" /></div>
-                    {steps.map((step, index) => (
-                        <React.Fragment key={step.id}>
-                            <Card className="step-card step-card-dynamic">
-                                <div className="step-badge dynamic-badge">Passo Extra {index + 1}</div>
-                                <CardContent>
-                                    <div className="step-header">
-                                        <div className="step-title-row"><Zap size={20} color="#fff"/><h3>Mensagem Intermediária</h3></div>
-                                        <div className="step-actions">
-                                            <button className="icon-btn edit" onClick={() => handleOpenEditModal(step)}><Edit size={18} color="#3b82f6"/></button>
-                                            <button className="icon-btn danger" onClick={() => handleDeleteStep(step.id)}><Trash2 size={18} color="#ef4444"/></button>
-                                        </div>
-                                    </div>
-                                    <div className="preview-box"><p>{step.msg_texto ? step.msg_texto.substring(0, 100) : '(Mídia)'}</p></div>
-                                </CardContent>
-                            </Card>
-                            <div className="connector-line"></div><div className="connector-arrow"><ArrowDown size={24} color="#444" /></div>
-                        </React.Fragment>
-                    ))}
-                    <div className="add-step-wrapper">
-                        <button className="btn-add-step" onClick={handleOpenCreateModal}><Plus size={20} /> Adicionar Nova Mensagem</button>
-                    </div>
-                    <div className="connector-line"></div><div className="connector-arrow"><ArrowDown size={24} color="#444" /></div>
-                    <Card className="step-card">
-                        <div className="step-badge final">Passo Final (Oferta)</div>
-                        <CardContent>
-                            <div className="step-header"><div className="step-title-row"><ShoppingBag size={20} color="#10b981"/><h3>Mensagem de Oferta & Checkout</h3></div></div>
-                            <div className="form-grid">
-                                <RichInput label="Texto da Oferta" value={flow.msg_2_texto} onChange={val => setFlow({...flow, msg_2_texto: typeof val === 'object' ? val.target.value : val})} />
-                                <Input label="Mídia da Oferta (Opcional)" value={flow.msg_2_media} onChange={e => setFlow({...flow, msg_2_media: e.target.value})} icon={<Video size={16}/>} />
-                                <div className="toggle-wrapper full-width">
-                                    <label>Mostrar botões de Planos automaticamente?</label>
-                                    <div className={`custom-toggle ${flow.mostrar_planos_2 ? 'active-green' : ''}`} onClick={() => setFlow({...flow, mostrar_planos_2: !flow.mostrar_planos_2})}>
-                                        <div className="toggle-handle"></div><span className="toggle-label">{flow.mostrar_planos_2 ? 'SIM' : 'OCULTAR'}</span>
-                                    </div>
-                                </div>
-                            </div>
-                        </CardContent>
-                    </Card>
-                </>
-            )}
-         </div>
+        </div>
       </div>
 
+      {/* MODAL DE EDIÇÃO DE PASSOS */}
       {showModal && (
         <div className="modal-overlay">
             <div className="modal-content">
-                <div className="modal-header-row"><h2>{editingStep ? 'Editar Mensagem' : 'Nova Mensagem'}</h2><button className="btn-close-modal" onClick={() => setShowModal(false)}>✕</button></div>
+                <div className="modal-header">
+                    <h3>{editingStep ? 'Editar Passo' : 'Novo Passo'}</h3>
+                    <button onClick={() => setShowModal(false)}><Trash2 size={18}/></button>
+                </div>
                 <div className="modal-body">
-                    <RichInput label="Texto" value={modalData.msg_texto} onChange={val => setModalData({...modalData, msg_texto: typeof val === 'object' ? val.target.value : val})} />
-                    <Input label="Mídia URL" value={modalData.msg_media} onChange={e => setModalData({...modalData, msg_media: e.target.value})} />
+                    <div className="input-group">
+                        <label>Mensagem</label>
+                        {/* Correção do Modal também */}
+                        <RichInput 
+                            value={modalData.msg_texto} 
+                            onChange={val => {
+                                let clean = val;
+                                if (val && typeof val === 'object' && val.target) clean = val.target.value;
+                                setModalData({...modalData, msg_texto: clean});
+                            }} 
+                        />
+                    </div>
+                    <Input label="Mídia (URL)" value={modalData.msg_media} onChange={e => setModalData({...modalData, msg_media: e.target.value})} />
                     <div className="modal-options-box">
                         <label className="checkbox-label"><input type="checkbox" checked={modalData.mostrar_botao} onChange={e => setModalData({...modalData, mostrar_botao: e.target.checked})} /> Mostrar botão "Próximo"?</label>
                         {modalData.mostrar_botao ? (<Input label="Texto do Botão" value={modalData.btn_texto} onChange={e => setModalData({...modalData, btn_texto: e.target.value})} />) : (<div className="delay-input-wrapper"><Input label="Intervalo (s)" type="number" value={modalData.delay_seconds} onChange={e => setModalData({...modalData, delay_seconds: parseInt(e.target.value) || 0})} icon={<Clock size={16}/>} /></div>)}
