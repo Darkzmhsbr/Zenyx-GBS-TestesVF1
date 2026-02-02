@@ -100,18 +100,25 @@ export function ChatFlow() {
         return Swal.fire('Atenção', 'Cole o link do seu Mini App para salvar.', 'warning');
     }
     
-    setLoading(true); // Ativa loading no botão
+    setLoading(true);
     
     try {
-      // 🔥 AQUI ESTÁ A CORREÇÃO PRINCIPAL 🔥
-      // Criamos um objeto limpo para enviar, garantindo que as tags HTML estejam corretas
+      // 🔥 CORREÇÃO APLICADA AQUI 🔥
+      // Removemos o 'fixTelegramFormatting' da hora de SALVAR.
+      // O RichInput já entrega o texto com as tags corretas (<b>, <i>).
+      // Mandamos o dado "cru" (raw) para garantir que o banco receba exatamente o que foi digitado.
+      
       const flowToSend = {
           ...flow,
-          msg_boas_vindas: fixTelegramFormatting(flow.msg_boas_vindas),
-          msg_2_texto: fixTelegramFormatting(flow.msg_2_texto), // <--- OFERTA CORRIGIDA
+          // msg_boas_vindas: fixTelegramFormatting(flow.msg_boas_vindas), // Se este funciona, pode manter, mas o ideal é remover também.
+          msg_boas_vindas: flow.msg_boas_vindas, 
+          
+          // AQUI ESTAVA O PROBLEMA DO PASSO FINAL:
+          msg_2_texto: flow.msg_2_texto, // ✅ Enviamos direto do estado, sem processar
+          
           steps: steps.map(s => ({
               ...s,
-              msg_texto: fixTelegramFormatting(s.msg_texto)
+              msg_texto: s.msg_texto // ✅ Aplicamos a mesma lógica para os passos extras
           }))
       };
 
@@ -124,10 +131,11 @@ export function ChatFlow() {
         background: '#151515', color: '#fff'
       });
       
-      // Atualiza o estado local para garantir que tudo esteja sincronizado
+      // Atualiza o estado local
       setFlow(flowToSend);
 
     } catch (error) {
+      console.error(error); // Bom para debug
       Swal.fire('Erro', 'Falha ao salvar.', 'error');
     } finally {
         setLoading(false);
