@@ -31,6 +31,19 @@ const decodeHtml = (html) => {
     return decoded.trim();
 };
 
+// 🔥 MENSAGEM PADRÃO DO PIX (TEMPLATE)
+const DEFAULT_PIX_TEMPLATE = `🌟 Seu pagamento foi gerado:
+
+🎁 Plano: <b>{plano}</b>
+💰 Valor: <b>R$ {valor}</b>
+
+🔐 Pix Copia e Cola:
+
+{qrcode}
+
+👆 Toque na chave PIX para copiar
+⚡ Acesso liberado automaticamente!`;
+
 export function ChatFlow() {
   const { selectedBot } = useBot(); 
   const [loading, setLoading] = useState(false);
@@ -81,6 +94,12 @@ export function ChatFlow() {
             // Garante que campos nulos virem string vazia para evitar erro no input
             const safe = (val) => (val === null || val === undefined || val === '[object Object]') ? '' : String(val);
 
+            // 🔥 SE msg_pix FOR NULO, USA O TEMPLATE PADRÃO
+            let pixMsg = safe(flowData.msg_pix);
+            if (!pixMsg.trim()) {
+                pixMsg = DEFAULT_PIX_TEMPLATE;
+            }
+
             setFlow({
                 ...flowData,
                 start_mode: flowData.start_mode || 'padrao',
@@ -93,7 +112,7 @@ export function ChatFlow() {
                 msg_2_media: flowData.msg_2_media || '',
                 mostrar_planos_2: flowData.mostrar_planos_2 !== false,
                 mostrar_planos_1: flowData.mostrar_planos_1 || false,
-                msg_pix: safe(flowData.msg_pix) // 🔥 CARREGA MENSAGEM DO PIX
+                msg_pix: pixMsg // 🔥 CARREGA MENSAGEM DO PIX (OU PADRÃO)
             });
         }
         const stepsData = await flowService.getSteps(selectedBot.id);
@@ -423,6 +442,7 @@ export function ChatFlow() {
                                     value={flow.msg_pix} 
                                     onChange={val => handleRichChange('msg_pix', val)}
                                     placeholder="Olá {nome}, seu pedido do plano {plano} no valor de R$ {valor} foi gerado! Copie o código abaixo..." 
+                                    rows={8}
                                 />
                             </div>
                         </CardContent>
