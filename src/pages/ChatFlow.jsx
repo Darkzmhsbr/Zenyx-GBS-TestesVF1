@@ -9,17 +9,18 @@ import { Input } from '../components/Input';
 import { RichInput } from '../components/RichInput';
 import './ChatFlow.css';
 
-// --- FUNÇÃO DE LIMPEZA E DECODIFICAÇÃO ---
+// --- FUNÇÃO DE LIMPEZA E DECODIFICAÇÃO (CORREÇÃO DE FORMATAÇÃO) ---
 const decodeHtml = (html) => {
     if (!html) return "";
+    // Garante que é string
     const str = String(html);
     
-    // Cria área temporária para o navegador decodificar as entidades (&lt; para <)
+    // 1. Cria área temporária para o navegador decodificar as entidades (&lt; para <)
     const txt = document.createElement("textarea");
     txt.innerHTML = str;
     let decoded = txt.value;
 
-    // Remove tags de bloco e troca por quebra de linha
+    // 2. Remove tags de bloco que o Telegram não aceita (<p>, <div>) e troca por quebra de linha
     decoded = decoded
         .replace(/<p[^>]*>/gi, "")
         .replace(/<\/p>/gi, "\n")
@@ -30,26 +31,13 @@ const decodeHtml = (html) => {
     return decoded.trim();
 };
 
-// 🔥 MENSAGEM PADRÃO DO PIX (TEMPLATE BASE)
-const DEFAULT_PIX_TEMPLATE = `🌟 Seu pagamento foi gerado:
-
-🎁 Plano: <b>{plano}</b>
-💰 Valor: <b>R$ {valor}</b>
-
-🔐 Pix Copia e Cola:
-
-{qrcode}
-
-👆 Toque para copiar
-⚡ Acesso automático!`;
-
 export function ChatFlow() {
   const { selectedBot } = useBot(); 
   const [loading, setLoading] = useState(false);
   
   // Estado do Fluxo
   const [flow, setFlow] = useState({
-    start_mode: 'padrao', 
+    start_mode: 'padrao', // 'padrao' ou 'miniapp'
     miniapp_url: '',
     miniapp_btn_text: 'ABRIR LOJA 🛍️',
     msg_boas_vindas: '',
@@ -59,8 +47,7 @@ export function ChatFlow() {
     msg_2_texto: '',
     msg_2_media: '',
     mostrar_planos_2: true,
-    mostrar_planos_1: false,
-    msg_pix: '' 
+    mostrar_planos_1: false 
   });
 
   // Estado dos Passos Dinâmicos (Lista)
@@ -89,40 +76,26 @@ export function ChatFlow() {
     setLoading(true);
     try {
         const flowData = await flowService.getFlow(selectedBot.id);
-        
         if (flowData) {
-            // Helper para evitar null/undefined, mas PRESERVANDO dados antigos
-            const safe = (val) => {
-                if (val === null || val === undefined) return '';
-                if (typeof val === 'object') return ''; // Proteção contra objetos vazios
-                return String(val);
-            };
-
-            // 🔥 LÓGICA DO PIX: Se vier vazio do banco, usa o padrão
-            let pixMsg = safe(flowData.msg_pix);
-            if (!pixMsg || pixMsg.trim() === '') {
-                pixMsg = DEFAULT_PIX_TEMPLATE;
-            }
+            // Garante que campos nulos virem string vazia para evitar erro no input
+            const safe = (val) => (val === null || val === undefined || val === '[object Object]') ? '' : String(val);
 
             setFlow({
-                ...flowData, // Espalha propriedades existentes para garantir que nada se perca
+                ...flowData,
                 start_mode: flowData.start_mode || 'padrao',
                 miniapp_btn_text: flowData.miniapp_btn_text || 'ABRIR LOJA 🛍️',
                 msg_boas_vindas: safe(flowData.msg_boas_vindas),
                 media_url: flowData.media_url || '',
                 btn_text_1: flowData.btn_text_1 || '🔓 DESBLOQUEAR ACESSO',
                 autodestruir_1: flowData.autodestruir_1 || false,
-                msg_2_texto: safe(flowData.msg_2_texto), 
+                msg_2_texto: safe(flowData.msg_2_texto), // 🔥 Limpeza na carga
                 msg_2_media: flowData.msg_2_media || '',
                 mostrar_planos_2: flowData.mostrar_planos_2 !== false,
-                mostrar_planos_1: flowData.mostrar_planos_1 || false,
-                msg_pix: pixMsg // ✅ Carrega o padrão se estiver vazio
+                mostrar_planos_1: flowData.mostrar_planos_1 || false
             });
         }
-        
         const stepsData = await flowService.getSteps(selectedBot.id);
         setSteps(stepsData || []);
-        
     } catch (error) {
         console.error("Erro ao carregar fluxo:", error);
     } finally {
@@ -156,7 +129,6 @@ export function ChatFlow() {
           ...flow,
           msg_boas_vindas: decodeHtml(flow.msg_boas_vindas),
           msg_2_texto: decodeHtml(flow.msg_2_texto), // Limpa a oferta
-          msg_pix: decodeHtml(flow.msg_pix), // 🔥 LIMPA E SALVA O PIX
           steps: steps.map(s => ({
               ...s,
               msg_texto: decodeHtml(s.msg_texto)
@@ -423,33 +395,6 @@ export function ChatFlow() {
                                         <div className="toggle-handle"></div><span className="toggle-label">{flow.mostrar_planos_2 ? 'SIM' : 'OCULTAR'}</span>
                                     </div>
                                 </div>
-                            </div>
-                        </CardContent>
-                    </Card>
-
-                    {/* 🔥 NOVA CARD: MENSAGEM DO PIX 🔥 */}
-                    <div className="connector-line"></div><div className="connector-arrow"><ArrowDown size={24} color="#444" /></div>
-                    <Card className="step-card">
-                        <div className="step-badge" style={{background: '#10b981', color: '#fff'}}>Mensagem do Pix</div>
-                        <CardContent>
-                            <div className="step-header">
-                                <div className="step-title-row"><Zap size={20} color="#10b981"/><h3>Personalizar Mensagem do PIX</h3></div>
-                            </div>
-                            <div className="form-grid">
-                                <div className="alert-box" style={{background: 'rgba(16, 185, 129, 0.1)', padding: '10px', borderRadius: '8px', marginBottom: '15px', fontSize: '0.85rem', color: '#fff', border: '1px solid rgba(16, 185, 129, 0.2)'}}>
-                                    ℹ️ <b>Variáveis disponíveis:</b><br/>
-                                    <code>{'{nome}'}</code> = Nome do Cliente &nbsp; | &nbsp; 
-                                    <code>{'{plano}'}</code> = Nome do Plano<br/>
-                                    <code>{'{valor}'}</code> = Valor (R$) &nbsp; | &nbsp; 
-                                    <code>{'{qrcode}'}</code> = Código Pix Copia e Cola
-                                </div>
-                                <RichInput 
-                                    label="Texto da Mensagem Pix" 
-                                    value={flow.msg_pix} 
-                                    onChange={val => handleRichChange('msg_pix', val)}
-                                    placeholder="Olá {nome}, seu pedido do plano {plano} no valor de R$ {valor} foi gerado! Copie o código abaixo..." 
-                                    rows={8}
-                                />
                             </div>
                         </CardContent>
                     </Card>
