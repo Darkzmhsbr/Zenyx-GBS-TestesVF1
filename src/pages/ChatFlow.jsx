@@ -13,10 +13,13 @@ import './ChatFlow.css';
 const decodeHtml = (html) => {
     if (!html) return "";
     const str = String(html);
+    
+    // Cria área temporária para o navegador decodificar as entidades (&lt; para <)
     const txt = document.createElement("textarea");
     txt.innerHTML = str;
     let decoded = txt.value;
 
+    // Remove tags de bloco e troca por quebra de linha
     decoded = decoded
         .replace(/<p[^>]*>/gi, "")
         .replace(/<\/p>/gi, "\n")
@@ -27,11 +30,11 @@ const decodeHtml = (html) => {
     return decoded.trim();
 };
 
-// 🔥 MENSAGEM PADRÃO DO PIX (TEMPLATE)
+// 🔥 MENSAGEM PADRÃO DO PIX (TEMPLATE INTELIGENTE COM {oferta})
 const DEFAULT_PIX_TEMPLATE = `🌟 Seu pagamento foi gerado:
 
 🎁 Plano: <b>{plano}</b>
-💰 Valor: <b>R$ {valor}</b>
+{oferta}
 
 🔐 Pix Copia e Cola:
 
@@ -61,7 +64,10 @@ export function ChatFlow() {
     use_custom_pix: false // Estado do toggle visual (controle local)
   });
 
+  // Estado dos Passos Dinâmicos (Lista)
   const [steps, setSteps] = useState([]);
+  
+  // Estado do Modal
   const [showModal, setShowModal] = useState(false);
   const [editingStep, setEditingStep] = useState(null); 
   const [modalData, setModalData] = useState({
@@ -73,6 +79,7 @@ export function ChatFlow() {
     delay_seconds: 0 
   });
 
+  // Carrega tudo ao mudar o bot
   useEffect(() => {
     if (selectedBot) {
       carregarTudo();
@@ -85,13 +92,23 @@ export function ChatFlow() {
         const flowData = await flowService.getFlow(selectedBot.id);
         
         if (flowData) {
-            const safe = (val) => (val === null || val === undefined || val === '[object Object]') ? '' : String(val);
+            // Helper para evitar null/undefined, mas PRESERVANDO dados antigos
+            const safe = (val) => {
+                if (val === null || val === undefined) return '';
+                if (typeof val === 'object') return ''; // Proteção contra objetos vazios
+                return String(val);
+            };
 
-            // Se msg_pix tiver conteúdo no banco, ativamos o modo personalizado
-            const hasCustomPix = safe(flowData.msg_pix).length > 0;
+            // 🔥 LÓGICA DO PIX: Se vier vazio do banco, usa o padrão
+            let pixMsg = safe(flowData.msg_pix);
+            const hasCustomPix = pixMsg.length > 0;
+            
+            if (!hasCustomPix) {
+                pixMsg = DEFAULT_PIX_TEMPLATE;
+            }
 
             setFlow({
-                ...flowData,
+                ...flowData, // Espalha propriedades existentes para garantir que nada se perca
                 start_mode: flowData.start_mode || 'padrao',
                 miniapp_btn_text: flowData.miniapp_btn_text || 'ABRIR LOJA 🛍️',
                 msg_boas_vindas: safe(flowData.msg_boas_vindas),
@@ -102,8 +119,8 @@ export function ChatFlow() {
                 msg_2_media: flowData.msg_2_media || '',
                 mostrar_planos_2: flowData.mostrar_planos_2 !== false,
                 mostrar_planos_1: flowData.mostrar_planos_1 || false,
-                msg_pix: hasCustomPix ? safe(flowData.msg_pix) : DEFAULT_PIX_TEMPLATE, // Carrega do banco ou põe o default na memória
-                use_custom_pix: hasCustomPix // Define o estado do switch
+                msg_pix: pixMsg, // ✅ Carrega o padrão (com {oferta}) se estiver vazio
+                use_custom_pix: hasCustomPix // Define estado inicial do toggle
             });
         }
         
@@ -117,10 +134,16 @@ export function ChatFlow() {
     }
   };
 
+  // ✅ CORREÇÃO DO [object Object]: Extrai o valor corretamente
   const handleRichChange = (field, val) => {
       let cleanValue = val;
-      if (val && typeof val === 'object' && val.target) cleanValue = val.target.value;
+      // Se vier um evento (e.target.value), extrai. Se vier string, usa direto.
+      if (val && typeof val === 'object' && val.target) {
+          cleanValue = val.target.value;
+      }
+      // Proteção final: se ainda for objeto, vira string vazia
       if (typeof cleanValue === 'object') cleanValue = '';
+      
       setFlow(prev => ({ ...prev, [field]: cleanValue }));
   };
 
@@ -131,15 +154,19 @@ export function ChatFlow() {
     
     setLoading(true);
     try {
-      // Se o usuário desligou a personalização, enviamos msg_pix VAZIA para o banco
-      // Assim o backend sabe que deve usar o padrão hardcoded.
+      // 🔥 LÓGICA DO TOGGLE:
+      // Se use_custom_pix for FALSE, enviamos string vazia "".
+      // O backend reconhece "" e usa o padrão hardcoded (com preço tachado).
+      // Se for TRUE, enviamos o texto editado.
       const pixToSend = flow.use_custom_pix ? decodeHtml(flow.msg_pix) : "";
 
+      // 🔥 AQUI APLICAMOS A CORREÇÃO DE FORMATAÇÃO
+      // Limpamos o HTML e decodificamos as entidades ANTES de enviar pro banco
       const flowToSave = {
           ...flow,
           msg_boas_vindas: decodeHtml(flow.msg_boas_vindas),
-          msg_2_texto: decodeHtml(flow.msg_2_texto),
-          msg_pix: pixToSend, // 🔥 Lógica do Toggle aplicada aqui
+          msg_2_texto: decodeHtml(flow.msg_2_texto), // Limpa a oferta
+          msg_pix: pixToSend, // 🔥 SALVA O PIX (OU VAZIO SE DESATIVADO)
           steps: steps.map(s => ({
               ...s,
               msg_texto: decodeHtml(s.msg_texto)
@@ -155,6 +182,7 @@ export function ChatFlow() {
         background: '#151515', color: '#fff'
       });
       
+      // Recarrega para garantir que os dados limpos voltem do banco
       carregarTudo();
 
     } catch (error) {
@@ -165,7 +193,6 @@ export function ChatFlow() {
     }
   };
 
-  // Funções do Modal (Mantidas Iguais)
   const handleOpenCreateModal = () => {
     setEditingStep(null);
     setModalData({ msg_texto: '', msg_media: '', btn_texto: 'Próximo ▶️', autodestruir: false, mostrar_botao: true, delay_seconds: 0 });
@@ -186,9 +213,16 @@ export function ChatFlow() {
   };
 
   const handleSaveStep = async () => {
-    if (!modalData.msg_texto && !modalData.msg_media) return Swal.fire('Atenção', 'O passo precisa ter texto ou mídia!', 'warning');
+    if (!modalData.msg_texto && !modalData.msg_media) {
+      return Swal.fire('Atenção', 'O passo precisa ter texto ou mídia!', 'warning');
+    }
     try {
-        const cleanedData = { ...modalData, msg_texto: decodeHtml(modalData.msg_texto) };
+        // Limpeza no modal também
+        const cleanedData = {
+            ...modalData,
+            msg_texto: decodeHtml(modalData.msg_texto)
+        };
+
         if (editingStep) {
             await flowService.updateStep(selectedBot.id, editingStep.id, cleanedData);
             Swal.fire({ icon: 'success', title: 'Passo Atualizado!', timer: 1500, showConfirmButton: false, background: '#151515', color: '#fff' });
@@ -196,19 +230,42 @@ export function ChatFlow() {
             await flowService.addStep(selectedBot.id, { ...cleanedData, step_order: steps.length + 1 });
             Swal.fire({ icon: 'success', title: 'Passo Adicionado!', timer: 1500, showConfirmButton: false, background: '#151515', color: '#fff' });
         }
-        setShowModal(false); setEditingStep(null); carregarTudo(); 
-    } catch (error) { Swal.fire('Erro', 'Falha ao salvar passo.', 'error'); }
+        setShowModal(false);
+        setEditingStep(null);
+        carregarTudo(); 
+    } catch (error) {
+        Swal.fire('Erro', 'Falha ao salvar passo.', 'error');
+    }
   };
 
   const handleDeleteStep = async (stepId) => {
-    const result = await Swal.fire({ title: 'Excluir Passo?', text: "Isso removerá esta mensagem do fluxo.", icon: 'warning', showCancelButton: true, confirmButtonColor: '#d33', cancelButtonColor: '#3085d6', confirmButtonText: 'Sim, excluir', background: '#151515', color: '#fff' });
-    if (result.isConfirmed) { try { await flowService.deleteStep(selectedBot.id, stepId); carregarTudo(); } catch (error) { Swal.fire('Erro', 'Falha ao excluir.', 'error'); } }
+    const result = await Swal.fire({
+        title: 'Excluir Passo?',
+        text: "Isso removerá esta mensagem do fluxo.",
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#d33',
+        cancelButtonColor: '#3085d6',
+        confirmButtonText: 'Sim, excluir',
+        background: '#151515', 
+        color: '#fff'
+    });
+    if (result.isConfirmed) {
+        try {
+            await flowService.deleteStep(selectedBot.id, stepId);
+            carregarTudo();
+        } catch (error) {
+            Swal.fire('Erro', 'Falha ao excluir.', 'error');
+        }
+    }
   };
 
   if (!selectedBot) return <div className="chatflow-container">Selecione um bot...</div>;
 
   return (
     <div className="chatflow-container">
+      
+      {/* HEADER */}
       <div className="chatflow-header">
         <div className="header-titles">
           <h1>Editor de Fluxo</h1>
@@ -223,7 +280,7 @@ export function ChatFlow() {
       </div>
 
       <div className="flow-grid">
-         {/* COLUNA ESQUERDA: PREVIEW */}
+         {/* COLUNA ESQUERDA: VISUALIZAÇÃO CELULAR */}
          <div className="preview-column">
             <div className="iphone-mockup">
                 <div className="notch"></div>
@@ -237,11 +294,22 @@ export function ChatFlow() {
                     </div>
                     <div className="messages-area">
                         <div className="msg-bubble bot">
-                            {flow.media_url && (<div className="media-preview-mock">{flow.media_url.includes('mp4') ? <Video size={20}/> : <ImageIcon size={20}/>} Mídia</div>)}
+                            {flow.media_url && (
+                                <div className="media-preview-mock">
+                                    {flow.media_url.includes('mp4') ? <Video size={20}/> : <ImageIcon size={20}/>} Mídia
+                                </div>
+                            )}
                             <p dangerouslySetInnerHTML={{__html: (typeof flow.msg_boas_vindas === 'string' ? flow.msg_boas_vindas : '') || "Olá! Configure sua mensagem..."}}></p>
                         </div>
-                        {flow.start_mode === 'padrao' && flow.btn_text_1 && (<div className="btn-bubble">{flow.btn_text_1}</div>)}
-                        {flow.start_mode === 'miniapp' && (<div className="btn-bubble store-btn"><Smartphone size={14} style={{marginRight:4}}/>{flow.miniapp_btn_text}</div>)}
+                        {flow.start_mode === 'padrao' && flow.btn_text_1 && (
+                            <div className="btn-bubble">{flow.btn_text_1}</div>
+                        )}
+                        {flow.start_mode === 'miniapp' && (
+                             <div className="btn-bubble store-btn">
+                                <Smartphone size={14} style={{marginRight:4}}/>
+                                {flow.miniapp_btn_text}
+                             </div>
+                        )}
                         {steps.map((s, idx) => (
                             <div key={idx} style={{opacity: 0.7, marginTop: 10}}>
                                 <div className="msg-bubble bot">
@@ -265,12 +333,14 @@ export function ChatFlow() {
                         <h3>Modo de Início do Bot (/start)</h3>
                     </div>
                     <div className="mode-selector-grid">
-                        <div className={`mode-card ${flow.start_mode === 'padrao' ? 'selected-padrao' : ''}`} onClick={() => setFlow({...flow, start_mode: 'padrao'})}>
+                        <div className={`mode-card ${flow.start_mode === 'padrao' ? 'selected-padrao' : ''}`}
+                             onClick={() => setFlow({...flow, start_mode: 'padrao'})}>
                             <div className="mode-icon"><MessageSquare size={28} /></div>
                             <div className="mode-info"><h4>Fluxo Padrão</h4><p>Mensagem + Botão que libera conteúdo.</p></div>
                             {flow.start_mode === 'padrao' && <div className="check-badge">ATIVO</div>}
                         </div>
-                        <div className={`mode-card ${flow.start_mode === 'miniapp' ? 'selected-miniapp' : ''}`} onClick={() => setFlow({...flow, start_mode: 'miniapp'})}>
+                        <div className={`mode-card ${flow.start_mode === 'miniapp' ? 'selected-miniapp' : ''}`}
+                             onClick={() => setFlow({...flow, start_mode: 'miniapp'})}>
                             <div className="mode-icon"><Smartphone size={28} /></div>
                             <div className="mode-info"><h4>Mini App / Loja</h4><p>Botão Web App que abre a loja direta.</p></div>
                             {flow.start_mode === 'miniapp' && <div className="check-badge">ATIVO</div>}
@@ -294,7 +364,9 @@ export function ChatFlow() {
                         <div className="step-title-row"><MessageSquare size={20} color="#d65ad1"/><h3>Mensagem de Boas-Vindas</h3></div>
                     </div>
                     <div className="form-grid">
+                        {/* 🔥 USO DA FUNÇÃO DE MUDANÇA SEGURA */}
                         <RichInput label="Texto da Mensagem" value={flow.msg_boas_vindas} onChange={val => handleRichChange('msg_boas_vindas', val)} />
+                        
                         <Input label="Link da Mídia (Opcional)" value={flow.media_url} onChange={e => setFlow({...flow, media_url: e.target.value})} icon={<ImageIcon size={16}/>} />
                         {flow.start_mode === 'padrao' && (
                             <div className="buttons-config">
@@ -351,7 +423,9 @@ export function ChatFlow() {
                         <CardContent>
                             <div className="step-header"><div className="step-title-row"><ShoppingBag size={20} color="#10b981"/><h3>Mensagem de Oferta & Checkout</h3></div></div>
                             <div className="form-grid">
+                                {/* 🔥 AQUI ESTÁ A CORREÇÃO PRINCIPAL */}
                                 <RichInput label="Texto da Oferta" value={flow.msg_2_texto} onChange={val => handleRichChange('msg_2_texto', val)} />
+                                
                                 <Input label="Mídia da Oferta (Opcional)" value={flow.msg_2_media} onChange={e => setFlow({...flow, msg_2_media: e.target.value})} icon={<Video size={16}/>} />
                                 <div className="toggle-wrapper full-width">
                                     <label>Mostrar botões de Planos automaticamente?</label>
@@ -363,13 +437,13 @@ export function ChatFlow() {
                         </CardContent>
                     </Card>
 
-                    {/* 🔥 CARD MENSAGEM DO PIX (COM TOGGLE) */}
+                    {/* 🔥 CARD MENSAGEM DO PIX (COM TOGGLE E {oferta}) */}
                     <div className="connector-line"></div><div className="connector-arrow"><ArrowDown size={24} color="#444" /></div>
                     <Card className="step-card">
                         <div className="step-badge" style={{background: '#10b981', color: '#fff'}}>Mensagem do Pix</div>
                         <CardContent>
                             <div className="step-header">
-                                <div className="step-title-row"><Zap size={20} color="#10b981"/><h3>Mensagem do PIX</h3></div>
+                                <div className="step-title-row"><Zap size={20} color="#10b981"/><h3>Personalizar Mensagem do PIX</h3></div>
                                 
                                 {/* TOGGLE DE ATIVAÇÃO */}
                                 <div className="toggle-wrapper">
@@ -388,7 +462,7 @@ export function ChatFlow() {
                                 <div className="form-grid fade-in-up">
                                     <div className="alert-box" style={{background: 'rgba(16, 185, 129, 0.1)', padding: '10px', borderRadius: '8px', marginBottom: '15px', fontSize: '0.85rem', color: '#fff', border: '1px solid rgba(16, 185, 129, 0.2)'}}>
                                         ℹ️ <b>Variáveis disponíveis:</b><br/>
-                                        <code>{'{nome}'}</code>, <code>{'{plano}'}</code>, <code>{'{valor}'}</code>, <code>{'{qrcode}'}</code>
+                                        <code>{'{nome}'}</code>, <code>{'{plano}'}</code>, <code>{'{valor}'}</code>, <code>{'{oferta}'}</code>, <code>{'{qrcode}'}</code>
                                     </div>
                                     <RichInput 
                                         label="Texto da Mensagem Pix" 
@@ -415,6 +489,7 @@ export function ChatFlow() {
             <div className="modal-content">
                 <div className="modal-header-row"><h2>{editingStep ? 'Editar Mensagem' : 'Nova Mensagem'}</h2><button className="btn-close-modal" onClick={() => setShowModal(false)}>✕</button></div>
                 <div className="modal-body">
+                    {/* 🔥 CORREÇÃO MODAL TAMBÉM */}
                     <RichInput 
                         label="Texto" 
                         value={modalData.msg_texto} 
