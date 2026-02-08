@@ -73,10 +73,10 @@ export function ChatFlow() {
   const [availablePlans, setAvailablePlans] = useState([]);
 
   // Estado auxiliar para adicionar novos botões (MENSAGEM 1)
-  const [newBtnData, setNewBtnData] = useState({ type: 'link', text: '', value: '' });
+  const [newBtnData, setNewBtnData] = useState({ type: 'action', text: '', value: 'step_1' });
   
   // 🔥 Estado auxiliar para adicionar novos botões (MENSAGEM 2 - FINAL)
-  const [newBtnData2, setNewBtnData2] = useState({ type: 'link', text: '', value: '' });
+  const [newBtnData2, setNewBtnData2] = useState({ type: 'action', text: '', value: 'step_1' });
   
   // Estado do Modal
   const [showModal, setShowModal] = useState(false);
@@ -186,7 +186,7 @@ export function ChatFlow() {
   // --- GERENCIADOR DE BOTÕES MENSAGEM 1 (FUNÇÕES) ---
   const handleAddButton = () => {
     if (!newBtnData.text.trim()) return Swal.fire('Erro', 'O botão precisa de um texto.', 'warning');
-    if (!newBtnData.value) return Swal.fire('Erro', 'O valor (URL ou Plano) é obrigatório.', 'warning');
+    if (!newBtnData.value) return Swal.fire('Erro', 'O valor (URL, Plano ou Ação) é obrigatório.', 'warning');
 
     const newBtn = {
         id: Date.now(),
@@ -199,7 +199,7 @@ export function ChatFlow() {
         ...prev,
         buttons_config: [...prev.buttons_config, newBtn]
     }));
-    setNewBtnData({ type: 'link', text: '', value: '' }); // Reseta form
+    setNewBtnData({ type: 'action', text: '', value: 'step_1' }); // Reseta form
     
     // 🔥 Feedback visual
     Swal.fire({
@@ -252,7 +252,7 @@ export function ChatFlow() {
   // 🔥 FUNÇÕES PARA GERENCIAR BOTÕES DA MENSAGEM 2 (FINAL)
   const handleAddButton2 = () => {
     if (!newBtnData2.text.trim()) return Swal.fire('Erro', 'O botão precisa de um texto.', 'warning');
-    if (!newBtnData2.value) return Swal.fire('Erro', 'O valor (URL ou Plano) é obrigatório.', 'warning');
+    if (!newBtnData2.value) return Swal.fire('Erro', 'O valor (URL, Plano ou Ação) é obrigatório.', 'warning');
 
     const newBtn = {
         id: Date.now(),
@@ -265,7 +265,7 @@ export function ChatFlow() {
         ...prev,
         buttons_config_2: [...prev.buttons_config_2, newBtn]
     }));
-    setNewBtnData2({ type: 'link', text: '', value: '' });
+    setNewBtnData2({ type: 'action', text: '', value: 'step_1' });
     
     Swal.fire({
         icon: 'success',
@@ -475,10 +475,10 @@ export function ChatFlow() {
                                     flow.buttons_config.map((btn, i) => (
                                         <div key={i} className="btn-bubble" style={{
                                             display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '5px',
-                                            borderColor: btn.type === 'plan' ? '#c333ff' : '#3b82f6',
-                                            color: btn.type === 'plan' ? '#c333ff' : '#3b82f6'
+                                            borderColor: btn.type === 'plan' ? '#c333ff' : btn.type === 'action' ? '#10b981' : '#3b82f6',
+                                            color: btn.type === 'plan' ? '#c333ff' : btn.type === 'action' ? '#10b981' : '#3b82f6'
                                         }}>
-                                            {btn.type === 'plan' ? <CreditCard size={12}/> : <LinkIcon size={12}/>}
+                                            {btn.type === 'plan' ? <CreditCard size={12}/> : btn.type === 'action' ? <ArrowDown size={12}/> : <LinkIcon size={12}/>}
                                             {btn.text}
                                         </div>
                                     ))
@@ -567,12 +567,15 @@ export function ChatFlow() {
                                                 <div key={index} className={`btn-config-item type-${btn.type}`}>
                                                     <div className="btn-config-info">
                                                         <span className="btn-label-main">
-                                                            {btn.type === 'plan' ? <CreditCard size={12} style={{marginRight:5}}/> : <LinkIcon size={12} style={{marginRight:5}}/>}
+                                                            {btn.type === 'plan' ? <CreditCard size={12} style={{marginRight:5}}/> : 
+                                                             btn.type === 'action' ? <ArrowDown size={12} style={{marginRight:5}}/> : 
+                                                             <LinkIcon size={12} style={{marginRight:5}}/>}
                                                             {btn.text}
                                                         </span>
                                                         <span className="btn-label-sub">
-                                                            {/* 🔥 CORREÇÃO: Usa getPlanName com nome_exibicao */}
-                                                            {btn.type === 'plan' ? `Plano: ${getPlanName(btn.value)}` : btn.value}
+                                                            {btn.type === 'plan' ? `Plano: ${getPlanName(btn.value)}` : 
+                                                             btn.type === 'action' ? `Ação: ${btn.value}` : 
+                                                             btn.value}
                                                         </span>
                                                     </div>
                                                     <div className="btn-controls">
@@ -599,8 +602,9 @@ export function ChatFlow() {
                                             <select 
                                                 className="select-type" 
                                                 value={newBtnData.type} 
-                                                onChange={e => setNewBtnData({...newBtnData, type: e.target.value, value: '', text: ''})}
+                                                onChange={e => setNewBtnData({...newBtnData, type: e.target.value, value: e.target.value === 'action' ? 'step_1' : '', text: ''})}
                                             >
+                                                <option value="action">▶️ Ação (Próximo Passo)</option>
                                                 <option value="link">🔗 Link (URL)</option>
                                                 <option value="plan">💳 Plano (Checkout)</option>
                                             </select>
@@ -614,7 +618,7 @@ export function ChatFlow() {
                                         <div className="add-controls-row">
                                             <div className="input-group">
                                                 {newBtnData.type === 'plan' ? (
-                                                    /* 🔥 DROPDOWN DE PLANOS AUTOMÁTICO - CORRIGIDO */
+                                                    /* 🔥 DROPDOWN DE PLANOS AUTOMÁTICO */
                                                     <select 
                                                         className="select-type" 
                                                         value={newBtnData.value} 
@@ -625,7 +629,6 @@ export function ChatFlow() {
                                                         {availablePlans && availablePlans.length > 0 ? (
                                                             availablePlans.map(plan => (
                                                                 <option key={plan.id} value={plan.id}>
-                                                                    {/* 🔥 CORREÇÃO: nome_exibicao e preco_atual */}
                                                                     {plan.nome_exibicao} - R$ {plan.preco_atual ? parseFloat(plan.preco_atual).toFixed(2) : '0.00'}
                                                                 </option>
                                                             ))
@@ -633,6 +636,13 @@ export function ChatFlow() {
                                                             <option value="" disabled>Nenhum plano cadastrado</option>
                                                         )}
                                                     </select>
+                                                ) : newBtnData.type === 'action' ? (
+                                                    /* 🔥 INPUT PARA AÇÃO (callback_data) */
+                                                    <Input 
+                                                        placeholder="step_1" 
+                                                        value={newBtnData.value} 
+                                                        onChange={e => setNewBtnData({...newBtnData, value: e.target.value})} 
+                                                    />
                                                 ) : (
                                                     /* INPUT NORMAL PARA LINKS */
                                                     <Input 
@@ -648,7 +658,7 @@ export function ChatFlow() {
                                         </div>
                                     </div>
                                 </div>
-                                <p className="hint-text">💡 Dica: Arraste os botões para mudar a ordem. Botões de "Plano" irão gerar o checkout automaticamente.</p>
+                                <p className="hint-text">💡 Dica: Arraste os botões para mudar a ordem. Botões de "Plano" geram checkout, "Ação" avança no fluxo.</p>
                             </div>
                         )}
                     </div>
@@ -703,11 +713,15 @@ export function ChatFlow() {
                                                     <div key={index} className={`btn-config-item type-${btn.type}`}>
                                                         <div className="btn-config-info">
                                                             <span className="btn-label-main">
-                                                                {btn.type === 'plan' ? <CreditCard size={12} style={{marginRight:5}}/> : <LinkIcon size={12} style={{marginRight:5}}/>}
+                                                                {btn.type === 'plan' ? <CreditCard size={12} style={{marginRight:5}}/> : 
+                                                                 btn.type === 'action' ? <ArrowDown size={12} style={{marginRight:5}}/> : 
+                                                                 <LinkIcon size={12} style={{marginRight:5}}/>}
                                                                 {btn.text}
                                                             </span>
                                                             <span className="btn-label-sub">
-                                                                {btn.type === 'plan' ? `Plano: ${getPlanName(btn.value)}` : btn.value}
+                                                                {btn.type === 'plan' ? `Plano: ${getPlanName(btn.value)}` : 
+                                                                 btn.type === 'action' ? `Ação: ${btn.value}` : 
+                                                                 btn.value}
                                                             </span>
                                                         </div>
                                                         <div className="btn-controls">
@@ -734,8 +748,9 @@ export function ChatFlow() {
                                                 <select 
                                                     className="select-type" 
                                                     value={newBtnData2.type} 
-                                                    onChange={e => setNewBtnData2({...newBtnData2, type: e.target.value, value: '', text: ''})}
+                                                    onChange={e => setNewBtnData2({...newBtnData2, type: e.target.value, value: e.target.value === 'action' ? 'step_1' : '', text: ''})}
                                                 >
+                                                    <option value="action">▶️ Ação (Próximo Passo)</option>
                                                     <option value="link">🔗 Link (URL)</option>
                                                     <option value="plan">💳 Plano (Checkout)</option>
                                                 </select>
@@ -766,6 +781,12 @@ export function ChatFlow() {
                                                                 <option value="" disabled>Nenhum plano cadastrado</option>
                                                             )}
                                                         </select>
+                                                    ) : newBtnData2.type === 'action' ? (
+                                                        <Input 
+                                                            placeholder="step_1" 
+                                                            value={newBtnData2.value} 
+                                                            onChange={e => setNewBtnData2({...newBtnData2, value: e.target.value})} 
+                                                        />
                                                     ) : (
                                                         <Input 
                                                             placeholder="https://..." 
@@ -780,7 +801,7 @@ export function ChatFlow() {
                                             </div>
                                         </div>
                                     </div>
-                                    <p className="hint-text">💡 Dica: Botões de "Plano" irão gerar o checkout automaticamente na mensagem final.</p>
+                                    <p className="hint-text">💡 Dica: Botões de "Plano" geram checkout automaticamente. Botões de "Ação" avançam no fluxo.</p>
                                 </div>
                             </div>
                         </CardContent>
