@@ -137,7 +137,10 @@ export function ChatFlow() {
 
         // 3. 🔥 CARREGA OS PLANOS DO BOT (Para o Dropdown)
         try {
+            console.log("🔄 Buscando planos para o bot:", selectedBot.id);
             const plans = await flowService.getPlans(selectedBot.id);
+            console.log("✅ Planos recebidos:", plans);
+
             // ✅ Garante que seja um array antes de setar
             if (Array.isArray(plans)) {
                 setAvailablePlans(plans);
@@ -212,7 +215,7 @@ export function ChatFlow() {
       setNewBtnData({
           ...newBtnData,
           value: planId,
-          // 🔥 CORREÇÃO: Usa nome_exibicao
+          // 🔥 CORREÇÃO: Usa 'nome_exibicao' em vez de 'nome'
           text: newBtnData.text ? newBtnData.text : (selectedPlan ? `Adquirir ${selectedPlan.nome_exibicao}` : '')
       });
   };
@@ -220,7 +223,7 @@ export function ChatFlow() {
   // Helper para mostrar nome do plano na lista visual
   const getPlanName = (id) => {
       const p = availablePlans.find(plan => String(plan.id) === String(id));
-      // 🔥 CORREÇÃO: Usa nome_exibicao
+      // 🔥 CORREÇÃO: Usa 'nome_exibicao'
       return p ? p.nome_exibicao : `ID: ${id}`;
   };
 
@@ -474,7 +477,7 @@ export function ChatFlow() {
                                                             {btn.text}
                                                         </span>
                                                         <span className="btn-label-sub">
-                                                            {/* 🔥 CORREÇÃO: Usa getPlanName corretamente */}
+                                                            {/* 🔥 CORREÇÃO: Usa getPlanName com nome_exibicao */}
                                                             {btn.type === 'plan' ? `Plano: ${getPlanName(btn.value)}` : btn.value}
                                                         </span>
                                                     </div>
@@ -519,7 +522,7 @@ export function ChatFlow() {
                                                 {newBtnData.type === 'plan' ? (
                                                     /* 🔥 DROPDOWN DE PLANOS AUTOMÁTICO - CORRIGIDO */
                                                     <select 
-                                                        className="select-type" // Reusando estilo do select
+                                                        className="select-type" 
                                                         value={newBtnData.value} 
                                                         onChange={handleSelectPlan}
                                                         style={{width: '100%', height: '42px', background: '#111', color: '#fff', border: '1px solid #333', borderRadius: '6px', padding: '0 10px'}}
@@ -527,7 +530,7 @@ export function ChatFlow() {
                                                         <option value="">Selecione um plano...</option>
                                                         {availablePlans.map(plan => (
                                                             <option key={plan.id} value={plan.id}>
-                                                                {/* 🔥 CORREÇÃO: Usa nome_exibicao e preco_atual */}
+                                                                {/* 🔥 CORREÇÃO: nome_exibicao e preco_atual */}
                                                                 {plan.nome_exibicao} - R$ {plan.preco_atual ? parseFloat(plan.preco_atual).toFixed(2) : '0.00'}
                                                             </option>
                                                         ))}
