@@ -131,7 +131,7 @@ export const flowService = {
     return response.data;
   },
   saveFlow: async (botId, flowData) => {
-    const response = await api.put(`/api/admin/bots/${botId}/flow`, flowData);
+    const response = await api.post(`/api/admin/bots/${botId}/flow`, flowData);
     return response.data;
   },
   getSteps: async (botId) => {
