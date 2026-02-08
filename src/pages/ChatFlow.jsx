@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import Swal from 'sweetalert2';
-import { Save, MessageSquare, ArrowDown, Zap, Image as ImageIcon, Video, Plus, Trash2, Edit, Clock, Layout, Globe, Smartphone, ShoppingBag } from 'lucide-react';
+import { Save, MessageSquare, ArrowDown, Zap, Image as ImageIcon, Video, Plus, Trash2, Edit, Clock, Layout, Globe, Smartphone, ShoppingBag, Link as LinkIcon, CreditCard, ArrowUp, ChevronDown, ChevronUp } from 'lucide-react';
 import { flowService } from '../services/api'; 
 import { useBot } from '../context/BotContext'; 
 import { Button } from '../components/Button';
@@ -54,18 +54,24 @@ export function ChatFlow() {
     miniapp_btn_text: 'ABRIR LOJA 🛍️',
     msg_boas_vindas: '',
     media_url: '',
-    btn_text_1: '',
+    btn_text_1: '', // Mantido para compatibilidade, mas o buttons_config tem prioridade
     autodestruir_1: false,
     msg_2_texto: '',
     msg_2_media: '',
     mostrar_planos_2: true,
-    mostrar_planos_1: false,
+    mostrar_planos_1: false, // Legacy toggle
     msg_pix: '',  // Conteúdo da mensagem
-    use_custom_pix: false // Estado do toggle visual (controle local)
+    use_custom_pix: false, // Estado do toggle visual
+    
+    // 🔥 NOVO: Configuração Avançada de Botões (Lista JSON)
+    buttons_config: [] 
   });
 
   // Estado dos Passos Dinâmicos (Lista)
   const [steps, setSteps] = useState([]);
+
+  // Estado auxiliar para adicionar novos botões
+  const [newBtnData, setNewBtnData] = useState({ type: 'link', text: '', value: '' });
   
   // Estado do Modal
   const [showModal, setShowModal] = useState(false);
@@ -107,8 +113,14 @@ export function ChatFlow() {
                 pixMsg = DEFAULT_PIX_TEMPLATE;
             }
 
+            // Garante que buttons_config seja um array
+            let loadedButtons = flowData.buttons_config;
+            if (!Array.isArray(loadedButtons)) {
+                loadedButtons = [];
+            }
+
             setFlow({
-                ...flowData, // Espalha propriedades existentes para garantir que nada se perca
+                ...flowData, // Espalha propriedades existentes
                 start_mode: flowData.start_mode || 'padrao',
                 miniapp_btn_text: flowData.miniapp_btn_text || 'ABRIR LOJA 🛍️',
                 msg_boas_vindas: safe(flowData.msg_boas_vindas),
@@ -119,8 +131,9 @@ export function ChatFlow() {
                 msg_2_media: flowData.msg_2_media || '',
                 mostrar_planos_2: flowData.mostrar_planos_2 !== false,
                 mostrar_planos_1: flowData.mostrar_planos_1 || false,
-                msg_pix: pixMsg, // ✅ Carrega o padrão (com {oferta}) se estiver vazio
-                use_custom_pix: hasCustomPix // Define estado inicial do toggle
+                msg_pix: pixMsg, 
+                use_custom_pix: hasCustomPix,
+                buttons_config: loadedButtons // ✅ Carrega a lista de botões
             });
         }
         
@@ -137,14 +150,49 @@ export function ChatFlow() {
   // ✅ CORREÇÃO DO [object Object]: Extrai o valor corretamente
   const handleRichChange = (field, val) => {
       let cleanValue = val;
-      // Se vier um evento (e.target.value), extrai. Se vier string, usa direto.
       if (val && typeof val === 'object' && val.target) {
           cleanValue = val.target.value;
       }
-      // Proteção final: se ainda for objeto, vira string vazia
       if (typeof cleanValue === 'object') cleanValue = '';
       
       setFlow(prev => ({ ...prev, [field]: cleanValue }));
+  };
+
+  // --- GERENCIADOR DE BOTÕES (FUNÇÕES) ---
+  const handleAddButton = () => {
+    if (!newBtnData.text.trim()) return Swal.fire('Erro', 'O botão precisa de um texto.', 'warning');
+    
+    // Se for link, precisa de URL. Se for plano, idealmente teria ID, mas vamos deixar passar se for genérico
+    if (newBtnData.type === 'link' && !newBtnData.value.trim()) return Swal.fire('Erro', 'Informe a URL do link.', 'warning');
+
+    const newBtn = {
+        id: Date.now(), // ID temporário para key do React
+        type: newBtnData.type,
+        text: newBtnData.text,
+        value: newBtnData.value // Pode ser URL ou ID do Plano
+    };
+
+    setFlow(prev => ({
+        ...prev,
+        buttons_config: [...prev.buttons_config, newBtn]
+    }));
+    setNewBtnData({ type: 'link', text: '', value: '' }); // Reseta form
+  };
+
+  const handleRemoveButton = (index) => {
+    const newButtons = [...flow.buttons_config];
+    newButtons.splice(index, 1);
+    setFlow(prev => ({ ...prev, buttons_config: newButtons }));
+  };
+
+  const handleMoveButton = (index, direction) => {
+    const newButtons = [...flow.buttons_config];
+    if (direction === 'up' && index > 0) {
+        [newButtons[index], newButtons[index - 1]] = [newButtons[index - 1], newButtons[index]];
+    } else if (direction === 'down' && index < newButtons.length - 1) {
+        [newButtons[index], newButtons[index + 1]] = [newButtons[index + 1], newButtons[index]];
+    }
+    setFlow(prev => ({ ...prev, buttons_config: newButtons }));
   };
 
   const handleSaveFixed = async () => {
@@ -155,18 +203,15 @@ export function ChatFlow() {
     setLoading(true);
     try {
       // 🔥 LÓGICA DO TOGGLE:
-      // Se use_custom_pix for FALSE, enviamos string vazia "".
-      // O backend reconhece "" e usa o padrão hardcoded (com preço tachado).
-      // Se for TRUE, enviamos o texto editado.
       const pixToSend = flow.use_custom_pix ? decodeHtml(flow.msg_pix) : "";
 
-      // 🔥 AQUI APLICAMOS A CORREÇÃO DE FORMATAÇÃO
-      // Limpamos o HTML e decodificamos as entidades ANTES de enviar pro banco
+      // 🔥 PREPARA O PAYLOAD
       const flowToSave = {
           ...flow,
           msg_boas_vindas: decodeHtml(flow.msg_boas_vindas),
-          msg_2_texto: decodeHtml(flow.msg_2_texto), // Limpa a oferta
-          msg_pix: pixToSend, // 🔥 SALVA O PIX (OU VAZIO SE DESATIVADO)
+          msg_2_texto: decodeHtml(flow.msg_2_texto),
+          msg_pix: pixToSend,
+          // buttons_config já está no state flow, será enviado automaticamente
           steps: steps.map(s => ({
               ...s,
               msg_texto: decodeHtml(s.msg_texto)
@@ -182,7 +227,6 @@ export function ChatFlow() {
         background: '#151515', color: '#fff'
       });
       
-      // Recarrega para garantir que os dados limpos voltem do banco
       carregarTudo();
 
     } catch (error) {
@@ -217,7 +261,6 @@ export function ChatFlow() {
       return Swal.fire('Atenção', 'O passo precisa ter texto ou mídia!', 'warning');
     }
     try {
-        // Limpeza no modal também
         const cleanedData = {
             ...modalData,
             msg_texto: decodeHtml(modalData.msg_texto)
@@ -301,9 +344,29 @@ export function ChatFlow() {
                             )}
                             <p dangerouslySetInnerHTML={{__html: (typeof flow.msg_boas_vindas === 'string' ? flow.msg_boas_vindas : '') || "Olá! Configure sua mensagem..."}}></p>
                         </div>
-                        {flow.start_mode === 'padrao' && flow.btn_text_1 && (
-                            <div className="btn-bubble">{flow.btn_text_1}</div>
+                        
+                        {/* 🔥 RENDERIZAÇÃO DINÂMICA DOS BOTÕES NO MOCKUP */}
+                        {flow.start_mode === 'padrao' && (
+                            <>
+                                {/* Se tiver configuração nova de botões, usa ela */}
+                                {flow.buttons_config && flow.buttons_config.length > 0 ? (
+                                    flow.buttons_config.map((btn, i) => (
+                                        <div key={i} className="btn-bubble" style={{
+                                            display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '5px',
+                                            borderColor: btn.type === 'plan' ? '#c333ff' : '#3b82f6',
+                                            color: btn.type === 'plan' ? '#c333ff' : '#3b82f6'
+                                        }}>
+                                            {btn.type === 'plan' ? <CreditCard size={12}/> : <LinkIcon size={12}/>}
+                                            {btn.text}
+                                        </div>
+                                    ))
+                                ) : (
+                                    /* Fallback para o modo antigo simples */
+                                    flow.btn_text_1 && <div className="btn-bubble">{flow.btn_text_1}</div>
+                                )}
+                            </>
                         )}
+
                         {flow.start_mode === 'miniapp' && (
                              <div className="btn-bubble store-btn">
                                 <Smartphone size={14} style={{marginRight:4}}/>
@@ -368,25 +431,78 @@ export function ChatFlow() {
                         <RichInput label="Texto da Mensagem" value={flow.msg_boas_vindas} onChange={val => handleRichChange('msg_boas_vindas', val)} />
                         
                         <Input label="Link da Mídia (Opcional)" value={flow.media_url} onChange={e => setFlow({...flow, media_url: e.target.value})} icon={<ImageIcon size={16}/>} />
+                        
                         {flow.start_mode === 'padrao' && (
                             <div className="buttons-config">
-                                <div className="toggle-wrapper full-width">
-                                    <label>Mostrar botões de Planos (Checkout) nesta mensagem?</label>
-                                    <div className={`custom-toggle ${flow.mostrar_planos_1 ? 'active-green' : ''}`} onClick={() => setFlow({...flow, mostrar_planos_1: !flow.mostrar_planos_1})}>
-                                        <div className="toggle-handle"></div><span className="toggle-label">{flow.mostrar_planos_1 ? 'SIM' : 'NÃO'}</span>
+                                {/* 🔥🔥 NOVO GERENCIADOR DE BOTÕES 🔥🔥 */}
+                                <div className="card-header-row" style={{marginBottom: '10px', borderBottom: 'none'}}>
+                                    <h4 style={{margin:0, color: '#ccc', fontSize: '0.9rem'}}>Botões de Ação (Playlist)</h4>
+                                </div>
+                                
+                                <div className="button-manager-container">
+                                    {/* Lista de Botões */}
+                                    <div className="btn-list">
+                                        {flow.buttons_config && flow.buttons_config.length > 0 ? (
+                                            flow.buttons_config.map((btn, index) => (
+                                                <div key={index} className={`btn-config-item type-${btn.type}`}>
+                                                    <div className="btn-config-info">
+                                                        <span className="btn-label-main">
+                                                            {btn.type === 'plan' ? <CreditCard size={12} style={{marginRight:5}}/> : <LinkIcon size={12} style={{marginRight:5}}/>}
+                                                            {btn.text}
+                                                        </span>
+                                                        <span className="btn-label-sub">{btn.type === 'plan' ? `Plano (ID: ${btn.value})` : btn.value}</span>
+                                                    </div>
+                                                    <div className="btn-controls">
+                                                        <button className="mini-action-btn" onClick={() => handleMoveButton(index, 'up')} title="Mover para cima">
+                                                            <ChevronUp size={14}/>
+                                                        </button>
+                                                        <button className="mini-action-btn" onClick={() => handleMoveButton(index, 'down')} title="Mover para baixo">
+                                                            <ChevronDown size={14}/>
+                                                        </button>
+                                                        <button className="mini-action-btn delete" onClick={() => handleRemoveButton(index)} title="Remover">
+                                                            <Trash2 size={14}/>
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                            ))
+                                        ) : (
+                                            <p style={{color: '#666', fontSize: '0.8rem', fontStyle: 'italic', textAlign: 'center'}}>Nenhum botão adicionado.</p>
+                                        )}
+                                    </div>
+
+                                    {/* Área de Adicionar */}
+                                    <div className="add-btn-area">
+                                        <div className="row-inputs">
+                                            <select 
+                                                className="select-type" 
+                                                value={newBtnData.type} 
+                                                onChange={e => setNewBtnData({...newBtnData, type: e.target.value})}
+                                            >
+                                                <option value="link">🔗 Link (URL)</option>
+                                                <option value="plan">💳 Plano (Checkout)</option>
+                                            </select>
+                                            <Input 
+                                                placeholder="Texto do Botão (Ex: Assinar Agora)" 
+                                                value={newBtnData.text} 
+                                                onChange={e => setNewBtnData({...newBtnData, text: e.target.value})} 
+                                            />
+                                        </div>
+                                        <div className="add-controls-row">
+                                            <div className="input-group">
+                                                <Input 
+                                                    placeholder={newBtnData.type === 'plan' ? "ID do Plano (Numérico)" : "https://..."} 
+                                                    value={newBtnData.value} 
+                                                    type={newBtnData.type === 'plan' ? "number" : "text"}
+                                                    onChange={e => setNewBtnData({...newBtnData, value: e.target.value})} 
+                                                />
+                                            </div>
+                                            <button className="btn-add-action" onClick={handleAddButton}>
+                                                <Plus size={16} /> Adicionar
+                                            </button>
+                                        </div>
                                     </div>
                                 </div>
-                                {!flow.mostrar_planos_1 && (
-                                    <div className="row-inputs">
-                                            <Input label="Texto do Botão de Ação" value={flow.btn_text_1} onChange={e => setFlow({...flow, btn_text_1: e.target.value})} />
-                                            <div className="toggle-wrapper">
-                                                <label>Auto-destruir ao clicar?</label>
-                                                <div className={`custom-toggle ${flow.autodestruir_1 ? 'active' : ''}`} onClick={() => setFlow({...flow, autodestruir_1: !flow.autodestruir_1})}>
-                                                    <div className="toggle-handle"></div><span className="toggle-label">{flow.autodestruir_1 ? 'SIM' : 'NÃO'}</span>
-                                                </div>
-                                            </div>
-                                    </div>
-                                )}
+                                <p className="hint-text">💡 Dica: Arraste os botões para mudar a ordem. Botões de "Plano" irão gerar o checkout automaticamente.</p>
                             </div>
                         )}
                     </div>
