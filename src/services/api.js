@@ -109,9 +109,6 @@ export const botService = {
   toggleBot: async (botId) => (await api.post(`/api/admin/bots/${botId}/toggle`)).data,
   deleteBot: async (botId) => (await api.delete(`/api/admin/bots/${botId}`)).data,
   getStats: async (botId, start, end) => (await api.get(`/api/admin/dashboard/stats?bot_id=${botId}&start_date=${start}&end_date=${end}`)).data,
-  // ... dentro de botService ...
-  deleteBot: async (botId) => (await api.delete(`/api/admin/bots/${botId}`)).data,
-  getStats: async (botId, start, end) => (await api.get(`/api/admin/dashboard/stats?bot_id=${botId}&start_date=${start}&end_date=${end}`)).data,
   
   // 🔥 NOVA FUNÇÃO: TESTAR CANAL
   testChannel: async (token, channelId) => {
@@ -154,7 +151,8 @@ export const flowService = {
     return response.data;
   },
   
-  // 🔥 [NOVO] BUSCAR PLANOS PARA O DROPDOWN
+  // 🔥 [NOVO] BUSCAR PLANOS PARA O DROPDOWN DO CHATFLOW
+  // Essa função é essencial para que o "ChatFlow.jsx" consiga listar os planos no select
   getPlans: async (botId) => {
     const response = await api.get(`/api/admin/bots/${botId}/plans`);
     return response.data;
