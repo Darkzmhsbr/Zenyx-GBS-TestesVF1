@@ -138,9 +138,15 @@ export function ChatFlow() {
         // 3. 🔥 CARREGA OS PLANOS DO BOT (Para o Dropdown)
         try {
             const plans = await flowService.getPlans(selectedBot.id);
-            setAvailablePlans(plans || []);
+            // ✅ Garante que seja um array antes de setar
+            if (Array.isArray(plans)) {
+                setAvailablePlans(plans);
+            } else {
+                setAvailablePlans([]);
+            }
         } catch (e) {
             console.warn("Não foi possível carregar planos:", e);
+            setAvailablePlans([]);
         }
         
     } catch (error) {
@@ -206,9 +212,16 @@ export function ChatFlow() {
       setNewBtnData({
           ...newBtnData,
           value: planId,
-          // Se o texto estiver vazio, preenche automaticamente com o nome do plano
-          text: newBtnData.text ? newBtnData.text : (selectedPlan ? `Adquirir ${selectedPlan.nome}` : '')
+          // 🔥 CORREÇÃO: Usa nome_exibicao
+          text: newBtnData.text ? newBtnData.text : (selectedPlan ? `Adquirir ${selectedPlan.nome_exibicao}` : '')
       });
+  };
+
+  // Helper para mostrar nome do plano na lista visual
+  const getPlanName = (id) => {
+      const p = availablePlans.find(plan => String(plan.id) === String(id));
+      // 🔥 CORREÇÃO: Usa nome_exibicao
+      return p ? p.nome_exibicao : `ID: ${id}`;
   };
 
   const handleSaveFixed = async () => {
@@ -314,12 +327,6 @@ export function ChatFlow() {
             Swal.fire('Erro', 'Falha ao excluir.', 'error');
         }
     }
-  };
-
-  // Helper para mostrar nome do plano na lista visual
-  const getPlanName = (id) => {
-      const p = availablePlans.find(plan => String(plan.id) === String(id));
-      return p ? p.nome : `ID: ${id}`;
   };
 
   if (!selectedBot) return <div className="chatflow-container">Selecione um bot...</div>;
@@ -467,6 +474,7 @@ export function ChatFlow() {
                                                             {btn.text}
                                                         </span>
                                                         <span className="btn-label-sub">
+                                                            {/* 🔥 CORREÇÃO: Usa getPlanName corretamente */}
                                                             {btn.type === 'plan' ? `Plano: ${getPlanName(btn.value)}` : btn.value}
                                                         </span>
                                                     </div>
@@ -509,7 +517,7 @@ export function ChatFlow() {
                                         <div className="add-controls-row">
                                             <div className="input-group">
                                                 {newBtnData.type === 'plan' ? (
-                                                    /* 🔥 DROPDOWN DE PLANOS AUTOMÁTICO */
+                                                    /* 🔥 DROPDOWN DE PLANOS AUTOMÁTICO - CORRIGIDO */
                                                     <select 
                                                         className="select-type" // Reusando estilo do select
                                                         value={newBtnData.value} 
@@ -519,7 +527,8 @@ export function ChatFlow() {
                                                         <option value="">Selecione um plano...</option>
                                                         {availablePlans.map(plan => (
                                                             <option key={plan.id} value={plan.id}>
-                                                                {plan.nome} - R$ {plan.valor ? parseFloat(plan.valor).toFixed(2) : '0.00'}
+                                                                {/* 🔥 CORREÇÃO: Usa nome_exibicao e preco_atual */}
+                                                                {plan.nome_exibicao} - R$ {plan.preco_atual ? parseFloat(plan.preco_atual).toFixed(2) : '0.00'}
                                                             </option>
                                                         ))}
                                                     </select>

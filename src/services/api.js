@@ -127,7 +127,7 @@ export const botService = {
 // ============================================================
 // 💬 SERVIÇO DE FLUXO E MENSAGENS
 // ============================================================
-// 🔥 SERVIÇO DE FLUXO E PLANOS (ATUALIZADO)
+// 🔥 SERVIÇO DE FLUXO (ATUALIZADO)
 export const flowService = {
   getFlow: async (botId) => {
     const response = await api.get(`/api/admin/bots/${botId}/flow`);
@@ -154,7 +154,7 @@ export const flowService = {
     return response.data;
   },
   
-  // 🔥 [NOVO] BUSCAR PLANOS PARA O DROPDOWN
+  // 🔥 [IMPORTANTE] Reusa a rota de planos para o dropdown funcionar
   getPlans: async (botId) => {
     const response = await api.get(`/api/admin/bots/${botId}/plans`);
     return response.data;
@@ -164,22 +164,29 @@ export const flowService = {
 // ============================================================
 // 💲 SERVIÇO DE PLANOS
 // ============================================================
+// SERVIÇO DE PLANOS (USADO PELA PÁGINA PLANS)
 export const planService = {
-  listPlans: async (botId) => (await api.get(`/api/admin/bots/${botId}/plans`)).data,
-  
-  createPlan: async (botId, planData) => {
-    return (await api.post(`/api/admin/bots/${botId}/plans`, planData)).data;
-  },
-  
-  updatePlan: async (botId, planId, planData) => {
-    const pid = String(planId); 
-    return (await api.put(`/api/admin/bots/${botId}/plans/${pid}`, planData)).data;
-  },
-  
-  deletePlan: async (botId, planId) => {
-    const pid = String(planId);
-    return (await api.delete(`/api/admin/bots/${botId}/plans/${pid}`)).data;
-  },
+    getPlans: async (botId) => {
+      const response = await api.get(`/api/admin/bots/${botId}/plans`);
+      return response.data;
+    },
+    createPlan: async (botId, planData) => {
+      const response = await api.post(`/api/admin/bots/${botId}/plans`, planData);
+      return response.data;
+    },
+    updatePlan: async (botId, planId, planData) => {
+      const response = await api.put(`/api/admin/bots/${botId}/plans/${planId}`, planData);
+      return response.data;
+    },
+    deletePlan: async (botId, planId) => {
+      const response = await api.delete(`/api/admin/bots/${botId}/plans/${planId}`);
+      return response.data;
+    },
+    // Teste de Canal
+    testChannel: async (channelId) => {
+        const response = await api.post(`/api/admin/test-channel`, { channel_id: channelId });
+        return response.data;
+    }
 };
 
 // ============================================================
