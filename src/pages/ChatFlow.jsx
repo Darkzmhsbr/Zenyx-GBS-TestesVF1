@@ -73,10 +73,20 @@ export function ChatFlow() {
   const [availablePlans, setAvailablePlans] = useState([]);
 
   // Estado auxiliar para adicionar novos botões (MENSAGEM 1)
-  const [newBtnData, setNewBtnData] = useState({ type: 'action', text: '', value: 'step_1' });
+  const [newBtnData, setNewBtnData] = useState({ 
+    type: 'action', 
+    text: '', 
+    value: 'step_1',
+    autodestruir: false  // 🔥 NOVO
+  });
   
   // 🔥 Estado auxiliar para adicionar novos botões (MENSAGEM 2 - FINAL)
-  const [newBtnData2, setNewBtnData2] = useState({ type: 'action', text: '', value: 'step_1' });
+  const [newBtnData2, setNewBtnData2] = useState({ 
+    type: 'action', 
+    text: '', 
+    value: 'step_1',
+    autodestruir: false  // 🔥 NOVO
+  });
   
   // Estado do Modal
   const [showModal, setShowModal] = useState(false);
@@ -192,14 +202,15 @@ export function ChatFlow() {
         id: Date.now(),
         type: newBtnData.type,
         text: newBtnData.text,
-        value: newBtnData.value 
+        value: newBtnData.value,
+        autodestruir: newBtnData.autodestruir  // 🔥 NOVO
     };
 
     setFlow(prev => ({
         ...prev,
         buttons_config: [...prev.buttons_config, newBtn]
     }));
-    setNewBtnData({ type: 'action', text: '', value: 'step_1' }); // Reseta form
+    setNewBtnData({ type: 'action', text: '', value: 'step_1', autodestruir: false }); // Reseta form
     
     // 🔥 Feedback visual
     Swal.fire({
@@ -258,14 +269,15 @@ export function ChatFlow() {
         id: Date.now(),
         type: newBtnData2.type,
         text: newBtnData2.text,
-        value: newBtnData2.value 
+        value: newBtnData2.value,
+        autodestruir: newBtnData2.autodestruir  // 🔥 NOVO
     };
 
     setFlow(prev => ({
         ...prev,
         buttons_config_2: [...prev.buttons_config_2, newBtn]
     }));
-    setNewBtnData2({ type: 'action', text: '', value: 'step_1' });
+    setNewBtnData2({ type: 'action', text: '', value: 'step_1', autodestruir: false });
     
     Swal.fire({
         icon: 'success',
@@ -554,7 +566,7 @@ export function ChatFlow() {
                         
                         {flow.start_mode === 'padrao' && (
                             <div className="buttons-config">
-                                {/* 🔥🔥 NOVO GERENCIADOR DE BOTÕES 🔥🔥 */}
+                                {/* 🔥🔥 GERENCIADOR DE BOTÕES COM AUTO-DESTRUIR 🔥🔥 */}
                                 <div className="card-header-row" style={{marginBottom: '10px', borderBottom: 'none'}}>
                                     <h4 style={{margin:0, color: '#ccc', fontSize: '0.9rem'}}>Botões de Ação (Playlist)</h4>
                                 </div>
@@ -574,7 +586,7 @@ export function ChatFlow() {
                                                         </span>
                                                         <span className="btn-label-sub">
                                                             {btn.type === 'plan' ? `Plano: ${getPlanName(btn.value)}` : 
-                                                             btn.type === 'action' ? `Ação: ${btn.value}` : 
+                                                             btn.type === 'action' ? `Ação: ${btn.value}${btn.autodestruir ? ' 🔥' : ''}` : 
                                                              btn.value}
                                                         </span>
                                                     </div>
@@ -602,7 +614,7 @@ export function ChatFlow() {
                                             <select 
                                                 className="select-type" 
                                                 value={newBtnData.type} 
-                                                onChange={e => setNewBtnData({...newBtnData, type: e.target.value, value: e.target.value === 'action' ? 'step_1' : '', text: ''})}
+                                                onChange={e => setNewBtnData({...newBtnData, type: e.target.value, value: e.target.value === 'action' ? 'step_1' : '', text: '', autodestruir: false})}
                                             >
                                                 <option value="action">▶️ Ação (Próximo Passo)</option>
                                                 <option value="link">🔗 Link (URL)</option>
@@ -615,6 +627,22 @@ export function ChatFlow() {
                                                 onChange={e => setNewBtnData({...newBtnData, text: e.target.value})} 
                                             />
                                         </div>
+                                        
+                                        {/* 🔥 CHECKBOX DE AUTO-DESTRUIÇÃO (apenas para botões de ação) */}
+                                        {newBtnData.type === 'action' && (
+                                            <div style={{padding: '10px', background: 'rgba(239, 68, 68, 0.1)', borderRadius: '6px', marginTop: '10px'}}>
+                                                <label style={{display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', fontSize: '0.85rem', color: '#ef4444'}}>
+                                                    <input 
+                                                        type="checkbox" 
+                                                        checked={newBtnData.autodestruir} 
+                                                        onChange={e => setNewBtnData({...newBtnData, autodestruir: e.target.checked})}
+                                                        style={{width: '16px', height: '16px'}}
+                                                    />
+                                                    🔥 Auto-destruir mensagem ao clicar
+                                                </label>
+                                            </div>
+                                        )}
+                                        
                                         <div className="add-controls-row">
                                             <div className="input-group">
                                                 {newBtnData.type === 'plan' ? (
@@ -699,7 +727,7 @@ export function ChatFlow() {
                                 
                                 <Input label="Mídia da Oferta (Opcional)" value={flow.msg_2_media} onChange={e => setFlow({...flow, msg_2_media: e.target.value})} icon={<Video size={16}/>} />
                                 
-                                {/* 🔥🔥 NOVO GERENCIADOR DE BOTÕES PARA MENSAGEM FINAL 🔥🔥 */}
+                                {/* 🔥🔥 GERENCIADOR DE BOTÕES PARA MENSAGEM FINAL COM AUTO-DESTRUIR 🔥🔥 */}
                                 <div className="buttons-config">
                                     <div className="card-header-row" style={{marginBottom: '10px', borderBottom: 'none'}}>
                                         <h4 style={{margin:0, color: '#ccc', fontSize: '0.9rem'}}>Botões de Ação (Oferta Final)</h4>
@@ -720,7 +748,7 @@ export function ChatFlow() {
                                                             </span>
                                                             <span className="btn-label-sub">
                                                                 {btn.type === 'plan' ? `Plano: ${getPlanName(btn.value)}` : 
-                                                                 btn.type === 'action' ? `Ação: ${btn.value}` : 
+                                                                 btn.type === 'action' ? `Ação: ${btn.value}${btn.autodestruir ? ' 🔥' : ''}` : 
                                                                  btn.value}
                                                             </span>
                                                         </div>
@@ -748,7 +776,7 @@ export function ChatFlow() {
                                                 <select 
                                                     className="select-type" 
                                                     value={newBtnData2.type} 
-                                                    onChange={e => setNewBtnData2({...newBtnData2, type: e.target.value, value: e.target.value === 'action' ? 'step_1' : '', text: ''})}
+                                                    onChange={e => setNewBtnData2({...newBtnData2, type: e.target.value, value: e.target.value === 'action' ? 'step_1' : '', text: '', autodestruir: false})}
                                                 >
                                                     <option value="action">▶️ Ação (Próximo Passo)</option>
                                                     <option value="link">🔗 Link (URL)</option>
@@ -761,6 +789,22 @@ export function ChatFlow() {
                                                     onChange={e => setNewBtnData2({...newBtnData2, text: e.target.value})} 
                                                 />
                                             </div>
+                                            
+                                            {/* 🔥 CHECKBOX DE AUTO-DESTRUIÇÃO (apenas para botões de ação) */}
+                                            {newBtnData2.type === 'action' && (
+                                                <div style={{padding: '10px', background: 'rgba(239, 68, 68, 0.1)', borderRadius: '6px', marginTop: '10px'}}>
+                                                    <label style={{display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', fontSize: '0.85rem', color: '#ef4444'}}>
+                                                        <input 
+                                                            type="checkbox" 
+                                                            checked={newBtnData2.autodestruir} 
+                                                            onChange={e => setNewBtnData2({...newBtnData2, autodestruir: e.target.checked})}
+                                                            style={{width: '16px', height: '16px'}}
+                                                        />
+                                                        🔥 Auto-destruir mensagem ao clicar
+                                                    </label>
+                                                </div>
+                                            )}
+                                            
                                             <div className="add-controls-row">
                                                 <div className="input-group">
                                                     {newBtnData2.type === 'plan' ? (
