@@ -62,7 +62,8 @@ export function ChatFlow() {
     mostrar_planos_1: false,
     msg_pix: '',  
     use_custom_pix: false, 
-    buttons_config: [] 
+    buttons_config: [],  // Botões mensagem 1
+    buttons_config_2: []  // 🔥 Botões mensagem final
   });
 
   // Estado dos Passos Dinâmicos (Lista)
@@ -71,8 +72,11 @@ export function ChatFlow() {
   // 🔥 ESTADO DE PLANOS (Para o Dropdown)
   const [availablePlans, setAvailablePlans] = useState([]);
 
-  // Estado auxiliar para adicionar novos botões
+  // Estado auxiliar para adicionar novos botões (MENSAGEM 1)
   const [newBtnData, setNewBtnData] = useState({ type: 'link', text: '', value: '' });
+  
+  // 🔥 Estado auxiliar para adicionar novos botões (MENSAGEM 2 - FINAL)
+  const [newBtnData2, setNewBtnData2] = useState({ type: 'link', text: '', value: '' });
   
   // Estado do Modal
   const [showModal, setShowModal] = useState(false);
@@ -112,6 +116,9 @@ export function ChatFlow() {
 
             let loadedButtons = flowData.buttons_config;
             if (!Array.isArray(loadedButtons)) loadedButtons = [];
+            
+            let loadedButtons2 = flowData.buttons_config_2;  // 🔥 NOVO
+            if (!Array.isArray(loadedButtons2)) loadedButtons2 = [];  // 🔥 NOVO
 
             setFlow({
                 ...flowData,
@@ -127,7 +134,8 @@ export function ChatFlow() {
                 mostrar_planos_1: flowData.mostrar_planos_1 || false,
                 msg_pix: pixMsg, 
                 use_custom_pix: hasCustomPix,
-                buttons_config: loadedButtons 
+                buttons_config: loadedButtons,  // Mensagem 1
+                buttons_config_2: loadedButtons2  // 🔥 Mensagem final
             });
         }
         
@@ -175,7 +183,7 @@ export function ChatFlow() {
       setFlow(prev => ({ ...prev, [field]: cleanValue }));
   };
 
-  // --- GERENCIADOR DE BOTÕES (FUNÇÕES) ---
+  // --- GERENCIADOR DE BOTÕES MENSAGEM 1 (FUNÇÕES) ---
   const handleAddButton = () => {
     if (!newBtnData.text.trim()) return Swal.fire('Erro', 'O botão precisa de um texto.', 'warning');
     if (!newBtnData.value) return Swal.fire('Erro', 'O valor (URL ou Plano) é obrigatório.', 'warning');
@@ -223,7 +231,7 @@ export function ChatFlow() {
     setFlow(prev => ({ ...prev, buttons_config: newButtons }));
   };
 
-  // 🔥 SELECIONAR PLANO NO DROPDOWN
+  // 🔥 SELECIONAR PLANO NO DROPDOWN (MENSAGEM 1)
   const handleSelectPlan = (e) => {
       const planId = e.target.value;
       if (!planId) return;
@@ -236,8 +244,68 @@ export function ChatFlow() {
       setNewBtnData({
           ...newBtnData,
           value: planId,
-          // 🔥 CORREÇÃO: Usa 'nome_exibicao' em vez de 'nome'
-          text: newBtnData.text ? newBtnData.text : (selectedPlan ? ` ${selectedPlan.nome_exibicao}` : '')
+          // 🔥 APENAS O NOME DO PLANO (com emojis/formatação)
+          text: newBtnData.text ? newBtnData.text : (selectedPlan ? selectedPlan.nome_exibicao : '')
+      });
+  };
+
+  // 🔥 FUNÇÕES PARA GERENCIAR BOTÕES DA MENSAGEM 2 (FINAL)
+  const handleAddButton2 = () => {
+    if (!newBtnData2.text.trim()) return Swal.fire('Erro', 'O botão precisa de um texto.', 'warning');
+    if (!newBtnData2.value) return Swal.fire('Erro', 'O valor (URL ou Plano) é obrigatório.', 'warning');
+
+    const newBtn = {
+        id: Date.now(),
+        type: newBtnData2.type,
+        text: newBtnData2.text,
+        value: newBtnData2.value 
+    };
+
+    setFlow(prev => ({
+        ...prev,
+        buttons_config_2: [...prev.buttons_config_2, newBtn]
+    }));
+    setNewBtnData2({ type: 'link', text: '', value: '' });
+    
+    Swal.fire({
+        icon: 'success',
+        title: 'Botão adicionado!',
+        text: 'Não esqueça de salvar as alterações.',
+        toast: true,
+        position: 'top-end',
+        showConfirmButton: false,
+        timer: 2000,
+        background: '#151515',
+        color: '#fff'
+    });
+  };
+
+  const handleRemoveButton2 = (index) => {
+    const newButtons = [...flow.buttons_config_2];
+    newButtons.splice(index, 1);
+    setFlow(prev => ({ ...prev, buttons_config_2: newButtons }));
+  };
+
+  const handleMoveButton2 = (index, direction) => {
+    const newButtons = [...flow.buttons_config_2];
+    if (direction === 'up' && index > 0) {
+        [newButtons[index], newButtons[index - 1]] = [newButtons[index - 1], newButtons[index]];
+    } else if (direction === 'down' && index < newButtons.length - 1) {
+        [newButtons[index], newButtons[index + 1]] = [newButtons[index + 1], newButtons[index]];
+    }
+    setFlow(prev => ({ ...prev, buttons_config_2: newButtons }));
+  };
+
+  const handleSelectPlan2 = (e) => {
+      const planId = e.target.value;
+      if (!planId) return;
+
+      const selectedPlan = availablePlans.find(p => String(p.id) === String(planId));
+      
+      setNewBtnData2({
+          ...newBtnData2,
+          value: planId,
+          text: newBtnData2.text ? newBtnData2.text : (selectedPlan ? selectedPlan.nome_exibicao : '')
       });
   };
 
@@ -262,7 +330,8 @@ export function ChatFlow() {
           msg_boas_vindas: decodeHtml(flow.msg_boas_vindas),
           msg_2_texto: decodeHtml(flow.msg_2_texto),
           msg_pix: pixToSend,
-          buttons_config: flow.buttons_config, // 🔥 ENVIANDO O BUTTONS_CONFIG
+          buttons_config: flow.buttons_config,  // Mensagem 1
+          buttons_config_2: flow.buttons_config_2,  // 🔥 Mensagem final
           steps: steps.map(s => ({
               ...s,
               msg_texto: decodeHtml(s.msg_texto)
@@ -270,6 +339,7 @@ export function ChatFlow() {
       };
 
       console.log("💾 Salvando flow com buttons_config:", flowToSave.buttons_config);
+      console.log("💾 Salvando flow com buttons_config_2:", flowToSave.buttons_config_2);
 
       await flowService.saveFlow(selectedBot.id, flowToSave);
       
@@ -618,11 +688,99 @@ export function ChatFlow() {
                                 <RichInput label="Texto da Oferta" value={flow.msg_2_texto} onChange={val => handleRichChange('msg_2_texto', val)} />
                                 
                                 <Input label="Mídia da Oferta (Opcional)" value={flow.msg_2_media} onChange={e => setFlow({...flow, msg_2_media: e.target.value})} icon={<Video size={16}/>} />
-                                <div className="toggle-wrapper full-width">
-                                    <label>Mostrar botões de Planos automaticamente?</label>
-                                    <div className={`custom-toggle ${flow.mostrar_planos_2 ? 'active-green' : ''}`} onClick={() => setFlow({...flow, mostrar_planos_2: !flow.mostrar_planos_2})}>
-                                        <div className="toggle-handle"></div><span className="toggle-label">{flow.mostrar_planos_2 ? 'SIM' : 'OCULTAR'}</span>
+                                
+                                {/* 🔥🔥 NOVO GERENCIADOR DE BOTÕES PARA MENSAGEM FINAL 🔥🔥 */}
+                                <div className="buttons-config">
+                                    <div className="card-header-row" style={{marginBottom: '10px', borderBottom: 'none'}}>
+                                        <h4 style={{margin:0, color: '#ccc', fontSize: '0.9rem'}}>Botões de Ação (Oferta Final)</h4>
                                     </div>
+                                    
+                                    <div className="button-manager-container">
+                                        {/* Lista de Botões */}
+                                        <div className="btn-list">
+                                            {flow.buttons_config_2 && flow.buttons_config_2.length > 0 ? (
+                                                flow.buttons_config_2.map((btn, index) => (
+                                                    <div key={index} className={`btn-config-item type-${btn.type}`}>
+                                                        <div className="btn-config-info">
+                                                            <span className="btn-label-main">
+                                                                {btn.type === 'plan' ? <CreditCard size={12} style={{marginRight:5}}/> : <LinkIcon size={12} style={{marginRight:5}}/>}
+                                                                {btn.text}
+                                                            </span>
+                                                            <span className="btn-label-sub">
+                                                                {btn.type === 'plan' ? `Plano: ${getPlanName(btn.value)}` : btn.value}
+                                                            </span>
+                                                        </div>
+                                                        <div className="btn-controls">
+                                                            <button className="mini-action-btn" onClick={() => handleMoveButton2(index, 'up')} title="Mover para cima">
+                                                                <ChevronUp size={14}/>
+                                                            </button>
+                                                            <button className="mini-action-btn" onClick={() => handleMoveButton2(index, 'down')} title="Mover para baixo">
+                                                                <ChevronDown size={14}/>
+                                                            </button>
+                                                            <button className="mini-action-btn delete" onClick={() => handleRemoveButton2(index)} title="Remover">
+                                                                <Trash2 size={14}/>
+                                                            </button>
+                                                        </div>
+                                                    </div>
+                                                ))
+                                            ) : (
+                                                <p style={{color: '#666', fontSize: '0.8rem', fontStyle: 'italic', textAlign: 'center'}}>Nenhum botão adicionado.</p>
+                                            )}
+                                        </div>
+
+                                        {/* Área de Adicionar */}
+                                        <div className="add-btn-area">
+                                            <div className="row-inputs">
+                                                <select 
+                                                    className="select-type" 
+                                                    value={newBtnData2.type} 
+                                                    onChange={e => setNewBtnData2({...newBtnData2, type: e.target.value, value: '', text: ''})}
+                                                >
+                                                    <option value="link">🔗 Link (URL)</option>
+                                                    <option value="plan">💳 Plano (Checkout)</option>
+                                                </select>
+                                                
+                                                <Input 
+                                                    placeholder="Texto do Botão" 
+                                                    value={newBtnData2.text} 
+                                                    onChange={e => setNewBtnData2({...newBtnData2, text: e.target.value})} 
+                                                />
+                                            </div>
+                                            <div className="add-controls-row">
+                                                <div className="input-group">
+                                                    {newBtnData2.type === 'plan' ? (
+                                                        <select 
+                                                            className="select-type" 
+                                                            value={newBtnData2.value} 
+                                                            onChange={handleSelectPlan2}
+                                                            style={{width: '100%', height: '42px', background: '#111', color: '#fff', border: '1px solid #333', borderRadius: '6px', padding: '0 10px'}}
+                                                        >
+                                                            <option value="">Selecione um plano...</option>
+                                                            {availablePlans && availablePlans.length > 0 ? (
+                                                                availablePlans.map(plan => (
+                                                                    <option key={plan.id} value={plan.id}>
+                                                                        {plan.nome_exibicao} - R$ {plan.preco_atual ? parseFloat(plan.preco_atual).toFixed(2) : '0.00'}
+                                                                    </option>
+                                                                ))
+                                                            ) : (
+                                                                <option value="" disabled>Nenhum plano cadastrado</option>
+                                                            )}
+                                                        </select>
+                                                    ) : (
+                                                        <Input 
+                                                            placeholder="https://..." 
+                                                            value={newBtnData2.value} 
+                                                            onChange={e => setNewBtnData2({...newBtnData2, value: e.target.value})} 
+                                                        />
+                                                    )}
+                                                </div>
+                                                <button className="btn-add-action" onClick={handleAddButton2}>
+                                                    <Plus size={16} /> Adicionar
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <p className="hint-text">💡 Dica: Botões de "Plano" irão gerar o checkout automaticamente na mensagem final.</p>
                                 </div>
                             </div>
                         </CardContent>
