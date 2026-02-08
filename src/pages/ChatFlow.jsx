@@ -138,17 +138,23 @@ export function ChatFlow() {
         // 3. 🔥 CARREGA OS PLANOS DO BOT (Para o Dropdown)
         try {
             console.log("🔄 Buscando planos para o bot:", selectedBot.id);
-            const plans = await flowService.getPlans(selectedBot.id);
-            console.log("✅ Planos recebidos:", plans);
+            const plansResponse = await flowService.getPlans(selectedBot.id);
+            console.log("✅ Resposta da API de planos:", plansResponse);
 
             // ✅ Garante que seja um array antes de setar
-            if (Array.isArray(plans)) {
-                setAvailablePlans(plans);
+            if (Array.isArray(plansResponse)) {
+                console.log(`📦 ${plansResponse.length} plano(s) carregado(s)`);
+                setAvailablePlans(plansResponse);
+            } else if (plansResponse && Array.isArray(plansResponse.plans)) {
+                // Caso a API retorne { plans: [...] }
+                console.log(`📦 ${plansResponse.plans.length} plano(s) carregado(s) (formato encapsulado)`);
+                setAvailablePlans(plansResponse.plans);
             } else {
+                console.warn("⚠️ Resposta de planos não está em formato de array:", plansResponse);
                 setAvailablePlans([]);
             }
         } catch (e) {
-            console.warn("Não foi possível carregar planos:", e);
+            console.error("❌ Erro ao carregar planos:", e);
             setAvailablePlans([]);
         }
         
@@ -186,6 +192,19 @@ export function ChatFlow() {
         buttons_config: [...prev.buttons_config, newBtn]
     }));
     setNewBtnData({ type: 'link', text: '', value: '' }); // Reseta form
+    
+    // 🔥 Feedback visual
+    Swal.fire({
+        icon: 'success',
+        title: 'Botão adicionado!',
+        text: 'Não esqueça de salvar as alterações.',
+        toast: true,
+        position: 'top-end',
+        showConfirmButton: false,
+        timer: 2000,
+        background: '#151515',
+        color: '#fff'
+    });
   };
 
   const handleRemoveButton = (index) => {
@@ -212,11 +231,13 @@ export function ChatFlow() {
       // Encontra o plano escolhido para pegar o nome
       const selectedPlan = availablePlans.find(p => String(p.id) === String(planId));
       
+      console.log("🎯 Plano selecionado:", selectedPlan);
+      
       setNewBtnData({
           ...newBtnData,
           value: planId,
           // 🔥 CORREÇÃO: Usa 'nome_exibicao' em vez de 'nome'
-          text: newBtnData.text ? newBtnData.text : (selectedPlan ? `Adquirir ${selectedPlan.nome_exibicao}` : '')
+          text: newBtnData.text ? newBtnData.text : (selectedPlan ? `💳 Adquirir ${selectedPlan.nome_exibicao}` : '')
       });
   };
 
@@ -224,7 +245,7 @@ export function ChatFlow() {
   const getPlanName = (id) => {
       const p = availablePlans.find(plan => String(plan.id) === String(id));
       // 🔥 CORREÇÃO: Usa 'nome_exibicao'
-      return p ? p.nome_exibicao : `ID: ${id}`;
+      return p ? p.nome_exibicao : `Plano ID: ${id}`;
   };
 
   const handleSaveFixed = async () => {
@@ -241,11 +262,14 @@ export function ChatFlow() {
           msg_boas_vindas: decodeHtml(flow.msg_boas_vindas),
           msg_2_texto: decodeHtml(flow.msg_2_texto),
           msg_pix: pixToSend,
+          buttons_config: flow.buttons_config, // 🔥 ENVIANDO O BUTTONS_CONFIG
           steps: steps.map(s => ({
               ...s,
               msg_texto: decodeHtml(s.msg_texto)
           }))
       };
+
+      console.log("💾 Salvando flow com buttons_config:", flowToSave.buttons_config);
 
       await flowService.saveFlow(selectedBot.id, flowToSave);
       
@@ -505,7 +529,7 @@ export function ChatFlow() {
                                             <select 
                                                 className="select-type" 
                                                 value={newBtnData.type} 
-                                                onChange={e => setNewBtnData({...newBtnData, type: e.target.value, value: ''})}
+                                                onChange={e => setNewBtnData({...newBtnData, type: e.target.value, value: '', text: ''})}
                                             >
                                                 <option value="link">🔗 Link (URL)</option>
                                                 <option value="plan">💳 Plano (Checkout)</option>
@@ -528,12 +552,16 @@ export function ChatFlow() {
                                                         style={{width: '100%', height: '42px', background: '#111', color: '#fff', border: '1px solid #333', borderRadius: '6px', padding: '0 10px'}}
                                                     >
                                                         <option value="">Selecione um plano...</option>
-                                                        {availablePlans.map(plan => (
-                                                            <option key={plan.id} value={plan.id}>
-                                                                {/* 🔥 CORREÇÃO: nome_exibicao e preco_atual */}
-                                                                {plan.nome_exibicao} - R$ {plan.preco_atual ? parseFloat(plan.preco_atual).toFixed(2) : '0.00'}
-                                                            </option>
-                                                        ))}
+                                                        {availablePlans && availablePlans.length > 0 ? (
+                                                            availablePlans.map(plan => (
+                                                                <option key={plan.id} value={plan.id}>
+                                                                    {/* 🔥 CORREÇÃO: nome_exibicao e preco_atual */}
+                                                                    {plan.nome_exibicao} - R$ {plan.preco_atual ? parseFloat(plan.preco_atual).toFixed(2) : '0.00'}
+                                                                </option>
+                                                            ))
+                                                        ) : (
+                                                            <option value="" disabled>Nenhum plano cadastrado</option>
+                                                        )}
                                                     </select>
                                                 ) : (
                                                     /* INPUT NORMAL PARA LINKS */
