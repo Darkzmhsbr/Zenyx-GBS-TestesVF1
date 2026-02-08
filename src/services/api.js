@@ -109,6 +109,9 @@ export const botService = {
   toggleBot: async (botId) => (await api.post(`/api/admin/bots/${botId}/toggle`)).data,
   deleteBot: async (botId) => (await api.delete(`/api/admin/bots/${botId}`)).data,
   getStats: async (botId, start, end) => (await api.get(`/api/admin/dashboard/stats?bot_id=${botId}&start_date=${start}&end_date=${end}`)).data,
+  // ... dentro de botService ...
+  deleteBot: async (botId) => (await api.delete(`/api/admin/bots/${botId}`)).data,
+  getStats: async (botId, start, end) => (await api.get(`/api/admin/dashboard/stats?bot_id=${botId}&start_date=${start}&end_date=${end}`)).data,
   
   // 🔥 NOVA FUNÇÃO: TESTAR CANAL
   testChannel: async (token, channelId) => {
@@ -122,57 +125,15 @@ export const botService = {
 };
 
 // ============================================================
-// 💬 SERVIÇO DE FLUXO E MENSAGENS (✅ ATUALIZADO E COMPLETO)
+// 💬 SERVIÇO DE FLUXO E MENSAGENS
 // ============================================================
 export const flowService = {
-  getFlow: async (botId) => {
-    const response = await api.get(`/api/admin/bots/${botId}/flow`);
-    return response.data;
-  },
-  
-  saveFlow: async (botId, flowData) => {
-    const response = await api.post(`/api/admin/bots/${botId}/flow`, flowData);
-    return response.data;
-  },
-  
-  // 🔥 ESSENCIAL: Salvar o Layout (posições e conexões visuais)
-  // Se o seu botão não salva a conexão com o próximo passo, o problema geralmente é a falta dessa função
-  saveLayout: async (botId, layoutData) => {
-      const response = await api.put(`/api/admin/bots/${botId}/flow/layout`, layoutData);
-      return response.data;
-  },
-
-  getSteps: async (botId) => {
-    const response = await api.get(`/api/admin/bots/${botId}/flow/steps`);
-    return response.data;
-  },
-  
-  // Mantemos addStep e createStep para garantir compatibilidade
-  addStep: async (botId, stepData) => {
-    const response = await api.post(`/api/admin/bots/${botId}/flow/steps`, stepData);
-    return response.data;
-  },
-  
-  createStep: async (botId, stepData) => {
-    const response = await api.post(`/api/admin/bots/${botId}/flow/steps`, stepData);
-    return response.data;
-  },
-
-  updateStep: async (botId, stepId, stepData) => {
-    const response = await api.put(`/api/admin/bots/${botId}/flow/steps/${stepId}`, stepData);
-    return response.data;
-  },
-  
-  deleteStep: async (botId, stepId) => {
-    const response = await api.delete(`/api/admin/bots/${botId}/flow/steps/${stepId}`);
-    return response.data;
-  },
-  
-  // 🔥 [NOVO] BUSCAR PLANOS PARA O DROPDOWN DO CHATFLOW
-  getPlans: async (botId) => {
-    const response = await api.get(`/api/admin/bots/${botId}/plans`);
-    return response.data;
-  }
+  getFlow: async (botId) => (await api.get(`/api/admin/bots/${botId}/flow`)).data,
+  saveFlow: async (botId, flowData) => (await api.post(`/api/admin/bots/${botId}/flow`, flowData)).data,
+  getSteps: async (botId) => (await api.get(`/api/admin/bots/${botId}/flow/steps`)).data,
+  addStep: async (botId, stepData) => (await api.post(`/api/admin/bots/${botId}/flow/steps`, stepData)).data,
+  updateStep: async (botId, stepId, stepData) => (await api.put(`/api/admin/bots/${botId}/flow/steps/${stepId}`, stepData)).data,
+  deleteStep: async (botId, stepId) => (await api.delete(`/api/admin/bots/${botId}/flow/steps/${stepId}`)).data,
 };
 
 // ============================================================
