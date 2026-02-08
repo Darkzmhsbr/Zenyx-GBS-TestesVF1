@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import Swal from 'sweetalert2';
 import { Save, MessageSquare, ArrowDown, Zap, Image as ImageIcon, Video, Plus, Trash2, Edit, Clock, Layout, Globe, Smartphone, ShoppingBag, Link as LinkIcon, CreditCard, ArrowUp, ChevronDown, ChevronUp } from 'lucide-react';
+// 🔥 CORREÇÃO 1: Importação desestruturada para garantir compatibilidade com o novo api.js
 import { flowService } from '../services/api'; 
 import { useBot } from '../context/BotContext'; 
 import { Button } from '../components/Button';
@@ -124,11 +125,12 @@ export function ChatFlow() {
             const hasCustomPix = pixMsg.length > 0;
             if (!hasCustomPix) pixMsg = DEFAULT_PIX_TEMPLATE;
 
+            // 🔥 PROTEÇÃO: Garante que os botões sejam sempre arrays
             let loadedButtons = flowData.buttons_config;
             if (!Array.isArray(loadedButtons)) loadedButtons = [];
             
-            let loadedButtons2 = flowData.buttons_config_2;  // 🔥 NOVO
-            if (!Array.isArray(loadedButtons2)) loadedButtons2 = [];  // 🔥 NOVO
+            let loadedButtons2 = flowData.buttons_config_2;
+            if (!Array.isArray(loadedButtons2)) loadedButtons2 = [];
 
             setFlow({
                 ...flowData,
@@ -144,8 +146,8 @@ export function ChatFlow() {
                 mostrar_planos_1: flowData.mostrar_planos_1 || false,
                 msg_pix: pixMsg, 
                 use_custom_pix: hasCustomPix,
-                buttons_config: loadedButtons,  // Mensagem 1
-                buttons_config_2: loadedButtons2  // 🔥 Mensagem final
+                buttons_config: loadedButtons, 
+                buttons_config_2: loadedButtons2 
             });
         }
         
@@ -208,7 +210,7 @@ export function ChatFlow() {
 
     setFlow(prev => ({
         ...prev,
-        buttons_config: [...prev.buttons_config, newBtn]
+        buttons_config: [...(prev.buttons_config || []), newBtn] // Proteção contra null
     }));
     setNewBtnData({ type: 'action', text: '', value: 'step_1', autodestruir: false }); // Reseta form
     
@@ -275,7 +277,7 @@ export function ChatFlow() {
 
     setFlow(prev => ({
         ...prev,
-        buttons_config_2: [...prev.buttons_config_2, newBtn]
+        buttons_config_2: [...(prev.buttons_config_2 || []), newBtn] // Proteção contra null
     }));
     setNewBtnData2({ type: 'action', text: '', value: 'step_1', autodestruir: false });
     
@@ -329,6 +331,9 @@ export function ChatFlow() {
   };
 
   const handleSaveFixed = async () => {
+    if (!selectedBot) {
+        return Swal.fire('Erro', 'Nenhum bot selecionado.', 'error');
+    }
     if (flow.start_mode === 'miniapp' && !flow.miniapp_url) {
         return Swal.fire('Atenção', 'Cole o link do seu Mini App para salvar.', 'warning');
     }
@@ -342,18 +347,20 @@ export function ChatFlow() {
           msg_boas_vindas: decodeHtml(flow.msg_boas_vindas),
           msg_2_texto: decodeHtml(flow.msg_2_texto),
           msg_pix: pixToSend,
-          buttons_config: flow.buttons_config,  // Mensagem 1
-          buttons_config_2: flow.buttons_config_2,  // 🔥 Mensagem final
+          // 🔥 GARANTIA: Envia explicitamente os arrays de botões
+          buttons_config: flow.buttons_config || [], 
+          buttons_config_2: flow.buttons_config_2 || [], 
           steps: steps.map(s => ({
               ...s,
               msg_texto: decodeHtml(s.msg_texto)
           }))
       };
 
-      console.log("💾 Salvando flow com buttons_config:", flowToSave.buttons_config);
-      console.log("💾 Salvando flow com buttons_config_2:", flowToSave.buttons_config_2);
+      console.log("💾 TENTANDO SALVAR FLUXO COMPLETO...");
+      console.log("Payload:", flowToSave);
 
       await flowService.saveFlow(selectedBot.id, flowToSave);
+      console.log("✅ SALVO COM SUCESSO!");
       
       Swal.fire({
         icon: 'success',
@@ -365,8 +372,8 @@ export function ChatFlow() {
       carregarTudo();
 
     } catch (error) {
-      console.error("Erro ao salvar:", error);
-      Swal.fire('Erro', 'Falha ao salvar.', 'error');
+      console.error("❌ ERRO AO SALVAR:", error);
+      Swal.fire('Erro', 'Falha ao salvar. Verifique o console.', 'error');
     } finally {
       setLoading(false);
     }
@@ -400,6 +407,8 @@ export function ChatFlow() {
             ...modalData,
             msg_texto: decodeHtml(modalData.msg_texto)
         };
+        
+        console.log("💾 TENTANDO SALVAR PASSO ÚNICO...", cleanedData);
 
         if (editingStep) {
             await flowService.updateStep(selectedBot.id, editingStep.id, cleanedData);
@@ -412,6 +421,7 @@ export function ChatFlow() {
         setEditingStep(null);
         carregarTudo(); 
     } catch (error) {
+        console.error("❌ ERRO AO SALVAR PASSO:", error);
         Swal.fire('Erro', 'Falha ao salvar passo.', 'error');
     }
   };
