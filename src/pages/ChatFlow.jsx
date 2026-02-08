@@ -54,21 +54,22 @@ export function ChatFlow() {
     miniapp_btn_text: 'ABRIR LOJA 🛍️',
     msg_boas_vindas: '',
     media_url: '',
-    btn_text_1: '', // Mantido para compatibilidade, mas o buttons_config tem prioridade
+    btn_text_1: '', 
     autodestruir_1: false,
     msg_2_texto: '',
     msg_2_media: '',
     mostrar_planos_2: true,
-    mostrar_planos_1: false, // Legacy toggle
-    msg_pix: '',  // Conteúdo da mensagem
-    use_custom_pix: false, // Estado do toggle visual
-    
-    // 🔥 NOVO: Configuração Avançada de Botões (Lista JSON)
+    mostrar_planos_1: false,
+    msg_pix: '',  
+    use_custom_pix: false, 
     buttons_config: [] 
   });
 
   // Estado dos Passos Dinâmicos (Lista)
   const [steps, setSteps] = useState([]);
+
+  // 🔥 ESTADO DE PLANOS (Para o Dropdown)
+  const [availablePlans, setAvailablePlans] = useState([]);
 
   // Estado auxiliar para adicionar novos botões
   const [newBtnData, setNewBtnData] = useState({ type: 'link', text: '', value: '' });
@@ -95,32 +96,25 @@ export function ChatFlow() {
   const carregarTudo = async () => {
     setLoading(true);
     try {
+        // 1. Carrega o Fluxo
         const flowData = await flowService.getFlow(selectedBot.id);
         
         if (flowData) {
-            // Helper para evitar null/undefined, mas PRESERVANDO dados antigos
             const safe = (val) => {
                 if (val === null || val === undefined) return '';
-                if (typeof val === 'object') return ''; // Proteção contra objetos vazios
+                if (typeof val === 'object') return ''; 
                 return String(val);
             };
 
-            // 🔥 LÓGICA DO PIX: Se vier vazio do banco, usa o padrão
             let pixMsg = safe(flowData.msg_pix);
             const hasCustomPix = pixMsg.length > 0;
-            
-            if (!hasCustomPix) {
-                pixMsg = DEFAULT_PIX_TEMPLATE;
-            }
+            if (!hasCustomPix) pixMsg = DEFAULT_PIX_TEMPLATE;
 
-            // Garante que buttons_config seja um array
             let loadedButtons = flowData.buttons_config;
-            if (!Array.isArray(loadedButtons)) {
-                loadedButtons = [];
-            }
+            if (!Array.isArray(loadedButtons)) loadedButtons = [];
 
             setFlow({
-                ...flowData, // Espalha propriedades existentes
+                ...flowData,
                 start_mode: flowData.start_mode || 'padrao',
                 miniapp_btn_text: flowData.miniapp_btn_text || 'ABRIR LOJA 🛍️',
                 msg_boas_vindas: safe(flowData.msg_boas_vindas),
@@ -133,12 +127,21 @@ export function ChatFlow() {
                 mostrar_planos_1: flowData.mostrar_planos_1 || false,
                 msg_pix: pixMsg, 
                 use_custom_pix: hasCustomPix,
-                buttons_config: loadedButtons // ✅ Carrega a lista de botões
+                buttons_config: loadedButtons 
             });
         }
         
+        // 2. Carrega Passos Extras
         const stepsData = await flowService.getSteps(selectedBot.id);
         setSteps(stepsData || []);
+
+        // 3. 🔥 CARREGA OS PLANOS DO BOT (Para o Dropdown)
+        try {
+            const plans = await flowService.getPlans(selectedBot.id);
+            setAvailablePlans(plans || []);
+        } catch (e) {
+            console.warn("Não foi possível carregar planos:", e);
+        }
         
     } catch (error) {
         console.error("Erro ao carregar fluxo:", error);
@@ -147,7 +150,6 @@ export function ChatFlow() {
     }
   };
 
-  // ✅ CORREÇÃO DO [object Object]: Extrai o valor corretamente
   const handleRichChange = (field, val) => {
       let cleanValue = val;
       if (val && typeof val === 'object' && val.target) {
@@ -161,15 +163,13 @@ export function ChatFlow() {
   // --- GERENCIADOR DE BOTÕES (FUNÇÕES) ---
   const handleAddButton = () => {
     if (!newBtnData.text.trim()) return Swal.fire('Erro', 'O botão precisa de um texto.', 'warning');
-    
-    // Se for link, precisa de URL. Se for plano, idealmente teria ID, mas vamos deixar passar se for genérico
-    if (newBtnData.type === 'link' && !newBtnData.value.trim()) return Swal.fire('Erro', 'Informe a URL do link.', 'warning');
+    if (!newBtnData.value) return Swal.fire('Erro', 'O valor (URL ou Plano) é obrigatório.', 'warning');
 
     const newBtn = {
-        id: Date.now(), // ID temporário para key do React
+        id: Date.now(),
         type: newBtnData.type,
         text: newBtnData.text,
-        value: newBtnData.value // Pode ser URL ou ID do Plano
+        value: newBtnData.value 
     };
 
     setFlow(prev => ({
@@ -195,6 +195,22 @@ export function ChatFlow() {
     setFlow(prev => ({ ...prev, buttons_config: newButtons }));
   };
 
+  // 🔥 SELECIONAR PLANO NO DROPDOWN
+  const handleSelectPlan = (e) => {
+      const planId = e.target.value;
+      if (!planId) return;
+
+      // Encontra o plano escolhido para pegar o nome
+      const selectedPlan = availablePlans.find(p => String(p.id) === String(planId));
+      
+      setNewBtnData({
+          ...newBtnData,
+          value: planId,
+          // Se o texto estiver vazio, preenche automaticamente com o nome do plano
+          text: newBtnData.text ? newBtnData.text : (selectedPlan ? `Adquirir ${selectedPlan.nome}` : '')
+      });
+  };
+
   const handleSaveFixed = async () => {
     if (flow.start_mode === 'miniapp' && !flow.miniapp_url) {
         return Swal.fire('Atenção', 'Cole o link do seu Mini App para salvar.', 'warning');
@@ -202,16 +218,13 @@ export function ChatFlow() {
     
     setLoading(true);
     try {
-      // 🔥 LÓGICA DO TOGGLE:
       const pixToSend = flow.use_custom_pix ? decodeHtml(flow.msg_pix) : "";
 
-      // 🔥 PREPARA O PAYLOAD
       const flowToSave = {
           ...flow,
           msg_boas_vindas: decodeHtml(flow.msg_boas_vindas),
           msg_2_texto: decodeHtml(flow.msg_2_texto),
           msg_pix: pixToSend,
-          // buttons_config já está no state flow, será enviado automaticamente
           steps: steps.map(s => ({
               ...s,
               msg_texto: decodeHtml(s.msg_texto)
@@ -303,6 +316,12 @@ export function ChatFlow() {
     }
   };
 
+  // Helper para mostrar nome do plano na lista visual
+  const getPlanName = (id) => {
+      const p = availablePlans.find(plan => String(plan.id) === String(id));
+      return p ? p.nome : `ID: ${id}`;
+  };
+
   if (!selectedBot) return <div className="chatflow-container">Selecione um bot...</div>;
 
   return (
@@ -348,7 +367,6 @@ export function ChatFlow() {
                         {/* 🔥 RENDERIZAÇÃO DINÂMICA DOS BOTÕES NO MOCKUP */}
                         {flow.start_mode === 'padrao' && (
                             <>
-                                {/* Se tiver configuração nova de botões, usa ela */}
                                 {flow.buttons_config && flow.buttons_config.length > 0 ? (
                                     flow.buttons_config.map((btn, i) => (
                                         <div key={i} className="btn-bubble" style={{
@@ -361,7 +379,6 @@ export function ChatFlow() {
                                         </div>
                                     ))
                                 ) : (
-                                    /* Fallback para o modo antigo simples */
                                     flow.btn_text_1 && <div className="btn-bubble">{flow.btn_text_1}</div>
                                 )}
                             </>
@@ -427,7 +444,6 @@ export function ChatFlow() {
                         <div className="step-title-row"><MessageSquare size={20} color="#d65ad1"/><h3>Mensagem de Boas-Vindas</h3></div>
                     </div>
                     <div className="form-grid">
-                        {/* 🔥 USO DA FUNÇÃO DE MUDANÇA SEGURA */}
                         <RichInput label="Texto da Mensagem" value={flow.msg_boas_vindas} onChange={val => handleRichChange('msg_boas_vindas', val)} />
                         
                         <Input label="Link da Mídia (Opcional)" value={flow.media_url} onChange={e => setFlow({...flow, media_url: e.target.value})} icon={<ImageIcon size={16}/>} />
@@ -450,7 +466,9 @@ export function ChatFlow() {
                                                             {btn.type === 'plan' ? <CreditCard size={12} style={{marginRight:5}}/> : <LinkIcon size={12} style={{marginRight:5}}/>}
                                                             {btn.text}
                                                         </span>
-                                                        <span className="btn-label-sub">{btn.type === 'plan' ? `Plano (ID: ${btn.value})` : btn.value}</span>
+                                                        <span className="btn-label-sub">
+                                                            {btn.type === 'plan' ? `Plano: ${getPlanName(btn.value)}` : btn.value}
+                                                        </span>
                                                     </div>
                                                     <div className="btn-controls">
                                                         <button className="mini-action-btn" onClick={() => handleMoveButton(index, 'up')} title="Mover para cima">
@@ -476,25 +494,43 @@ export function ChatFlow() {
                                             <select 
                                                 className="select-type" 
                                                 value={newBtnData.type} 
-                                                onChange={e => setNewBtnData({...newBtnData, type: e.target.value})}
+                                                onChange={e => setNewBtnData({...newBtnData, type: e.target.value, value: ''})}
                                             >
                                                 <option value="link">🔗 Link (URL)</option>
                                                 <option value="plan">💳 Plano (Checkout)</option>
                                             </select>
+                                            
                                             <Input 
-                                                placeholder="Texto do Botão (Ex: Assinar Agora)" 
+                                                placeholder="Texto do Botão" 
                                                 value={newBtnData.text} 
                                                 onChange={e => setNewBtnData({...newBtnData, text: e.target.value})} 
                                             />
                                         </div>
                                         <div className="add-controls-row">
                                             <div className="input-group">
-                                                <Input 
-                                                    placeholder={newBtnData.type === 'plan' ? "ID do Plano (Numérico)" : "https://..."} 
-                                                    value={newBtnData.value} 
-                                                    type={newBtnData.type === 'plan' ? "number" : "text"}
-                                                    onChange={e => setNewBtnData({...newBtnData, value: e.target.value})} 
-                                                />
+                                                {newBtnData.type === 'plan' ? (
+                                                    /* 🔥 DROPDOWN DE PLANOS AUTOMÁTICO */
+                                                    <select 
+                                                        className="select-type" // Reusando estilo do select
+                                                        value={newBtnData.value} 
+                                                        onChange={handleSelectPlan}
+                                                        style={{width: '100%', height: '42px', background: '#111', color: '#fff', border: '1px solid #333', borderRadius: '6px', padding: '0 10px'}}
+                                                    >
+                                                        <option value="">Selecione um plano...</option>
+                                                        {availablePlans.map(plan => (
+                                                            <option key={plan.id} value={plan.id}>
+                                                                {plan.nome} - R$ {plan.valor ? parseFloat(plan.valor).toFixed(2) : '0.00'}
+                                                            </option>
+                                                        ))}
+                                                    </select>
+                                                ) : (
+                                                    /* INPUT NORMAL PARA LINKS */
+                                                    <Input 
+                                                        placeholder="https://..." 
+                                                        value={newBtnData.value} 
+                                                        onChange={e => setNewBtnData({...newBtnData, value: e.target.value})} 
+                                                    />
+                                                )}
                                             </div>
                                             <button className="btn-add-action" onClick={handleAddButton}>
                                                 <Plus size={16} /> Adicionar
@@ -539,7 +575,6 @@ export function ChatFlow() {
                         <CardContent>
                             <div className="step-header"><div className="step-title-row"><ShoppingBag size={20} color="#10b981"/><h3>Mensagem de Oferta & Checkout</h3></div></div>
                             <div className="form-grid">
-                                {/* 🔥 AQUI ESTÁ A CORREÇÃO PRINCIPAL */}
                                 <RichInput label="Texto da Oferta" value={flow.msg_2_texto} onChange={val => handleRichChange('msg_2_texto', val)} />
                                 
                                 <Input label="Mídia da Oferta (Opcional)" value={flow.msg_2_media} onChange={e => setFlow({...flow, msg_2_media: e.target.value})} icon={<Video size={16}/>} />
@@ -553,7 +588,6 @@ export function ChatFlow() {
                         </CardContent>
                     </Card>
 
-                    {/* 🔥 CARD MENSAGEM DO PIX (COM TOGGLE E {oferta}) */}
                     <div className="connector-line"></div><div className="connector-arrow"><ArrowDown size={24} color="#444" /></div>
                     <Card className="step-card">
                         <div className="step-badge" style={{background: '#10b981', color: '#fff'}}>Mensagem do Pix</div>
@@ -561,7 +595,6 @@ export function ChatFlow() {
                             <div className="step-header">
                                 <div className="step-title-row"><Zap size={20} color="#10b981"/><h3>Personalizar Mensagem do PIX</h3></div>
                                 
-                                {/* TOGGLE DE ATIVAÇÃO */}
                                 <div className="toggle-wrapper">
                                     <label style={{marginRight: 10, fontSize: '0.9rem', color: '#ccc'}}>Personalizar?</label>
                                     <div 
@@ -605,7 +638,6 @@ export function ChatFlow() {
             <div className="modal-content">
                 <div className="modal-header-row"><h2>{editingStep ? 'Editar Mensagem' : 'Nova Mensagem'}</h2><button className="btn-close-modal" onClick={() => setShowModal(false)}>✕</button></div>
                 <div className="modal-body">
-                    {/* 🔥 CORREÇÃO MODAL TAMBÉM */}
                     <RichInput 
                         label="Texto" 
                         value={modalData.msg_texto} 

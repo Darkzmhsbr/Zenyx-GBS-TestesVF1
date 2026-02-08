@@ -127,13 +127,38 @@ export const botService = {
 // ============================================================
 // 💬 SERVIÇO DE FLUXO E MENSAGENS
 // ============================================================
+// 🔥 SERVIÇO DE FLUXO E PLANOS (ATUALIZADO)
 export const flowService = {
-  getFlow: async (botId) => (await api.get(`/api/admin/bots/${botId}/flow`)).data,
-  saveFlow: async (botId, flowData) => (await api.post(`/api/admin/bots/${botId}/flow`, flowData)).data,
-  getSteps: async (botId) => (await api.get(`/api/admin/bots/${botId}/flow/steps`)).data,
-  addStep: async (botId, stepData) => (await api.post(`/api/admin/bots/${botId}/flow/steps`, stepData)).data,
-  updateStep: async (botId, stepId, stepData) => (await api.put(`/api/admin/bots/${botId}/flow/steps/${stepId}`, stepData)).data,
-  deleteStep: async (botId, stepId) => (await api.delete(`/api/admin/bots/${botId}/flow/steps/${stepId}`)).data,
+  getFlow: async (botId) => {
+    const response = await api.get(`/api/admin/bots/${botId}/flow`);
+    return response.data;
+  },
+  saveFlow: async (botId, flowData) => {
+    const response = await api.put(`/api/admin/bots/${botId}/flow`, flowData);
+    return response.data;
+  },
+  getSteps: async (botId) => {
+    const response = await api.get(`/api/admin/bots/${botId}/flow/steps`);
+    return response.data;
+  },
+  addStep: async (botId, stepData) => {
+    const response = await api.post(`/api/admin/bots/${botId}/flow/steps`, stepData);
+    return response.data;
+  },
+  updateStep: async (botId, stepId, stepData) => {
+    const response = await api.put(`/api/admin/bots/${botId}/flow/steps/${stepId}`, stepData);
+    return response.data;
+  },
+  deleteStep: async (botId, stepId) => {
+    const response = await api.delete(`/api/admin/bots/${botId}/flow/steps/${stepId}`);
+    return response.data;
+  },
+  
+  // 🔥 [NOVO] BUSCAR PLANOS PARA O DROPDOWN
+  getPlans: async (botId) => {
+    const response = await api.get(`/api/admin/bots/${botId}/plans`);
+    return response.data;
+  }
 };
 
 // ============================================================
