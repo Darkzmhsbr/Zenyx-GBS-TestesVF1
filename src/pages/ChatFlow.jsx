@@ -237,7 +237,7 @@ export function ChatFlow() {
           ...newBtnData,
           value: planId,
           // 🔥 CORREÇÃO: Usa 'nome_exibicao' em vez de 'nome'
-          text: newBtnData.text ? newBtnData.text : (selectedPlan ? `💳 Adquirir ${selectedPlan.nome_exibicao}` : '')
+          text: newBtnData.text ? newBtnData.text : (selectedPlan ? ` ${selectedPlan.nome_exibicao}` : '')
       });
   };
 
