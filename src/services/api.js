@@ -212,9 +212,8 @@ export const orderBumpService = {
   save: async (botId, data) => (await api.post(`/api/admin/bots/${botId}/order-bump`, data)).data
 };
 
-
 // ============================================================
-// 📢 SERVIÇO DE REMARKETING (ATUALIZADO COM PROGRESSO)
+// 📢 SERVIÇO DE REMARKETING
 // ============================================================
 export const remarketingService = {
   send: async (botId, data, isTest = false, specificUserId = null) => {
@@ -254,8 +253,8 @@ export const remarketingService = {
         campaign_history_id: historyId
     })).data;
   },
-  
-  // 🔥 NOVO: Buscar progresso de campanha em tempo real
+
+// 🔥 NOVO: Buscar progresso de campanha em tempo real
   getProgress: async (campaignId) => {
     return (await api.get(`/api/admin/remarketing/progress/${campaignId}`)).data;
   }
