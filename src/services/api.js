@@ -129,11 +129,58 @@ export const botService = {
 // ============================================================
 export const flowService = {
   getFlow: async (botId) => (await api.get(`/api/admin/bots/${botId}/flow`)).data,
-  saveFlow: async (botId, flowData) => (await api.post(`/api/admin/bots/${botId}/flow`, flowData)).data,
+  
+  saveFlow: async (botId, flowData) => {
+    const payload = {
+      msg_boas_vindas: flowData.msg_boas_vindas,
+      media_url: flowData.media_url,
+      btn_text_1: flowData.btn_text_1,
+      autodestruir_1: flowData.autodestruir_1,
+      msg_2_texto: flowData.msg_2_texto,
+      msg_2_media: flowData.msg_2_media,
+      mostrar_planos_2: flowData.mostrar_planos_2,
+      mostrar_planos_1: flowData.mostrar_planos_1,
+      start_mode: flowData.start_mode,
+      miniapp_url: flowData.miniapp_url,
+      miniapp_btn_text: flowData.miniapp_btn_text,
+      msg_pix: flowData.msg_pix,
+      
+      // 🔥 NOVOS CAMPOS
+      button_mode: flowData.button_mode || 'next_step',
+      buttons_config: flowData.buttons_config || [],
+      buttons_config_2: flowData.buttons_config_2 || [],
+      
+      steps: flowData.steps || []
+    };
+    
+    const response = await api.post(`/api/admin/bots/${botId}/flow`, payload);
+    return response.data;
+  },
+  
+  // 🔥 ESSENCIAL: Salvar o Layout
+  saveLayout: async (botId, layoutData) => {
+    const response = await api.put(`/api/admin/bots/${botId}/flow/layout`, layoutData);
+    return response.data;
+  },
+
   getSteps: async (botId) => (await api.get(`/api/admin/bots/${botId}/flow/steps`)).data,
+  
   addStep: async (botId, stepData) => (await api.post(`/api/admin/bots/${botId}/flow/steps`, stepData)).data,
+  
+  createStep: async (botId, stepData) => {
+    const response = await api.post(`/api/admin/bots/${botId}/flow/steps`, stepData);
+    return response.data;
+  },
+
   updateStep: async (botId, stepId, stepData) => (await api.put(`/api/admin/bots/${botId}/flow/steps/${stepId}`, stepData)).data,
+  
   deleteStep: async (botId, stepId) => (await api.delete(`/api/admin/bots/${botId}/flow/steps/${stepId}`)).data,
+  
+  // 🔥 [NOVO] BUSCAR PLANOS PARA O DROPDOWN
+  getPlans: async (botId) => {
+    const response = await api.get(`/api/admin/bots/${botId}/plans`);
+    return response.data;
+  }
 };
 
 // ============================================================

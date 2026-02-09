@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import Swal from 'sweetalert2';
-import { Save, MessageSquare, ArrowDown, Zap, Image as ImageIcon, Video, Plus, Trash2, Edit, Clock, Layout, Globe, Smartphone, ShoppingBag } from 'lucide-react';
+import { Save, MessageSquare, ArrowDown, Zap, Image as ImageIcon, Video, Plus, Trash2, Edit, Clock, Layout, Globe, Smartphone, ShoppingBag, Link as LinkIcon, CreditCard, ArrowUp, ChevronDown, ChevronUp } from 'lucide-react';
 import { flowService } from '../services/api'; 
 import { useBot } from '../context/BotContext'; 
 import { Button } from '../components/Button';
@@ -14,12 +14,10 @@ const decodeHtml = (html) => {
     if (!html) return "";
     const str = String(html);
     
-    // Cria área temporária para o navegador decodificar as entidades (&lt; para <)
     const txt = document.createElement("textarea");
     txt.innerHTML = str;
     let decoded = txt.value;
 
-    // Remove tags de bloco e troca por quebra de linha
     decoded = decoded
         .replace(/<p[^>]*>/gi, "")
         .replace(/<\/p>/gi, "\n")
@@ -54,18 +52,42 @@ export function ChatFlow() {
     miniapp_btn_text: 'ABRIR LOJA 🛍️',
     msg_boas_vindas: '',
     media_url: '',
-    btn_text_1: '',
+    btn_text_1: '', 
     autodestruir_1: false,
     msg_2_texto: '',
     msg_2_media: '',
     mostrar_planos_2: true,
     mostrar_planos_1: false,
-    msg_pix: '',  // Conteúdo da mensagem
-    use_custom_pix: false // Estado do toggle visual (controle local)
+    msg_pix: '',  
+    use_custom_pix: false,
+    
+    // 🔥 NOVOS CAMPOS PARA BOTÕES PERSONALIZADOS
+    button_mode: 'next_step', // 'next_step' ou 'custom'
+    buttons_config: [],  // Botões mensagem 1
+    buttons_config_2: []  // Botões mensagem final
   });
 
   // Estado dos Passos Dinâmicos (Lista)
   const [steps, setSteps] = useState([]);
+
+  // 🔥 ESTADO DE PLANOS (Para o Dropdown)
+  const [availablePlans, setAvailablePlans] = useState([]);
+
+  // Estado auxiliar para adicionar novos botões (MENSAGEM 1)
+  const [newBtnData, setNewBtnData] = useState({ 
+    type: 'link', 
+    text: '', 
+    url: '',
+    plan_id: null
+  });
+  
+  // 🔥 Estado auxiliar para adicionar novos botões (MENSAGEM 2 - FINAL)
+  const [newBtnData2, setNewBtnData2] = useState({ 
+    type: 'link', 
+    text: '', 
+    url: '',
+    plan_id: null
+  });
   
   // Estado do Modal
   const [showModal, setShowModal] = useState(false);
@@ -89,26 +111,29 @@ export function ChatFlow() {
   const carregarTudo = async () => {
     setLoading(true);
     try {
+        // 1. Carrega o Fluxo
         const flowData = await flowService.getFlow(selectedBot.id);
         
         if (flowData) {
-            // Helper para evitar null/undefined, mas PRESERVANDO dados antigos
             const safe = (val) => {
                 if (val === null || val === undefined) return '';
-                if (typeof val === 'object') return ''; // Proteção contra objetos vazios
+                if (typeof val === 'object') return ''; 
                 return String(val);
             };
 
-            // 🔥 LÓGICA DO PIX: Se vier vazio do banco, usa o padrão
             let pixMsg = safe(flowData.msg_pix);
             const hasCustomPix = pixMsg.length > 0;
+            if (!hasCustomPix) pixMsg = DEFAULT_PIX_TEMPLATE;
+
+            // 🔥 PROTEÇÃO: Garante que os botões sejam sempre arrays
+            let loadedButtons = flowData.buttons_config;
+            if (!Array.isArray(loadedButtons)) loadedButtons = [];
             
-            if (!hasCustomPix) {
-                pixMsg = DEFAULT_PIX_TEMPLATE;
-            }
+            let loadedButtons2 = flowData.buttons_config_2;
+            if (!Array.isArray(loadedButtons2)) loadedButtons2 = [];
 
             setFlow({
-                ...flowData, // Espalha propriedades existentes para garantir que nada se perca
+                ...flowData,
                 start_mode: flowData.start_mode || 'padrao',
                 miniapp_btn_text: flowData.miniapp_btn_text || 'ABRIR LOJA 🛍️',
                 msg_boas_vindas: safe(flowData.msg_boas_vindas),
@@ -119,13 +144,35 @@ export function ChatFlow() {
                 msg_2_media: flowData.msg_2_media || '',
                 mostrar_planos_2: flowData.mostrar_planos_2 !== false,
                 mostrar_planos_1: flowData.mostrar_planos_1 || false,
-                msg_pix: pixMsg, // ✅ Carrega o padrão (com {oferta}) se estiver vazio
-                use_custom_pix: hasCustomPix // Define estado inicial do toggle
+                msg_pix: pixMsg, 
+                use_custom_pix: hasCustomPix,
+                
+                // 🔥 NOVOS CAMPOS
+                button_mode: flowData.button_mode || 'next_step',
+                buttons_config: loadedButtons, 
+                buttons_config_2: loadedButtons2 
             });
         }
         
+        // 2. Carrega Passos Extras
         const stepsData = await flowService.getSteps(selectedBot.id);
         setSteps(stepsData || []);
+
+        // 3. 🔥 CARREGA OS PLANOS DO BOT (Para o Dropdown)
+        try {
+            const plansResponse = await flowService.getPlans(selectedBot.id);
+
+            if (Array.isArray(plansResponse)) {
+                setAvailablePlans(plansResponse);
+            } else if (plansResponse && Array.isArray(plansResponse.plans)) {
+                setAvailablePlans(plansResponse.plans);
+            } else {
+                setAvailablePlans([]);
+            }
+        } catch (e) {
+            console.error("❌ Erro ao carregar planos:", e);
+            setAvailablePlans([]);
+        }
         
     } catch (error) {
         console.error("Erro ao carregar fluxo:", error);
@@ -134,39 +181,153 @@ export function ChatFlow() {
     }
   };
 
-  // ✅ CORREÇÃO DO [object Object]: Extrai o valor corretamente
   const handleRichChange = (field, val) => {
       let cleanValue = val;
-      // Se vier um evento (e.target.value), extrai. Se vier string, usa direto.
       if (val && typeof val === 'object' && val.target) {
           cleanValue = val.target.value;
       }
-      // Proteção final: se ainda for objeto, vira string vazia
       if (typeof cleanValue === 'object') cleanValue = '';
       
       setFlow(prev => ({ ...prev, [field]: cleanValue }));
   };
 
+  // --- GERENCIADOR DE BOTÕES MENSAGEM 1 (FUNÇÕES) ---
+  const handleAddButton = () => {
+    if (!newBtnData.text.trim()) return Swal.fire('Erro', 'O botão precisa de um texto.', 'warning');
+    
+    const newBtn = {
+        id: Date.now(),
+        type: newBtnData.type,
+        text: newBtnData.text
+    };
+
+    // Define o valor baseado no tipo
+    if (newBtnData.type === 'link') {
+        if (!newBtnData.url.trim()) return Swal.fire('Erro', 'URL é obrigatória para botão de link.', 'warning');
+        newBtn.url = newBtnData.url;
+    } else if (newBtnData.type === 'plan') {
+        if (!newBtnData.plan_id) return Swal.fire('Erro', 'Selecione um plano.', 'warning');
+        newBtn.plan_id = newBtnData.plan_id;
+    }
+
+    setFlow(prev => ({
+        ...prev,
+        buttons_config: [...(prev.buttons_config || []), newBtn]
+    }));
+    
+    setNewBtnData({ type: 'link', text: '', url: '', plan_id: null });
+    
+    Swal.fire({
+        icon: 'success',
+        title: 'Botão adicionado!',
+        text: 'Não esqueça de salvar as alterações.',
+        toast: true,
+        position: 'top-end',
+        showConfirmButton: false,
+        timer: 2000,
+        background: '#151515',
+        color: '#fff'
+    });
+  };
+
+  const handleRemoveButton = (index) => {
+    const newButtons = [...flow.buttons_config];
+    newButtons.splice(index, 1);
+    setFlow(prev => ({ ...prev, buttons_config: newButtons }));
+  };
+
+  const handleMoveButton = (index, direction) => {
+    const newButtons = [...flow.buttons_config];
+    if (direction === 'up' && index > 0) {
+        [newButtons[index], newButtons[index - 1]] = [newButtons[index - 1], newButtons[index]];
+    } else if (direction === 'down' && index < newButtons.length - 1) {
+        [newButtons[index], newButtons[index + 1]] = [newButtons[index + 1], newButtons[index]];
+    }
+    setFlow(prev => ({ ...prev, buttons_config: newButtons }));
+  };
+
+  // 🔥 FUNÇÕES PARA GERENCIAR BOTÕES DA MENSAGEM 2 (FINAL)
+  const handleAddButton2 = () => {
+    if (!newBtnData2.text.trim()) return Swal.fire('Erro', 'O botão precisa de um texto.', 'warning');
+    
+    const newBtn = {
+        id: Date.now(),
+        type: newBtnData2.type,
+        text: newBtnData2.text
+    };
+
+    if (newBtnData2.type === 'link') {
+        if (!newBtnData2.url.trim()) return Swal.fire('Erro', 'URL é obrigatória para botão de link.', 'warning');
+        newBtn.url = newBtnData2.url;
+    } else if (newBtnData2.type === 'plan') {
+        if (!newBtnData2.plan_id) return Swal.fire('Erro', 'Selecione um plano.', 'warning');
+        newBtn.plan_id = newBtnData2.plan_id;
+    }
+
+    setFlow(prev => ({
+        ...prev,
+        buttons_config_2: [...(prev.buttons_config_2 || []), newBtn]
+    }));
+    
+    setNewBtnData2({ type: 'link', text: '', url: '', plan_id: null });
+    
+    Swal.fire({
+        icon: 'success',
+        title: 'Botão adicionado!',
+        toast: true,
+        position: 'top-end',
+        showConfirmButton: false,
+        timer: 2000,
+        background: '#151515',
+        color: '#fff'
+    });
+  };
+
+  const handleRemoveButton2 = (index) => {
+    const newButtons = [...flow.buttons_config_2];
+    newButtons.splice(index, 1);
+    setFlow(prev => ({ ...prev, buttons_config_2: newButtons }));
+  };
+
+  const handleMoveButton2 = (index, direction) => {
+    const newButtons = [...flow.buttons_config_2];
+    if (direction === 'up' && index > 0) {
+        [newButtons[index], newButtons[index - 1]] = [newButtons[index - 1], newButtons[index]];
+    } else if (direction === 'down' && index < newButtons.length - 1) {
+        [newButtons[index], newButtons[index + 1]] = [newButtons[index + 1], newButtons[index]];
+    }
+    setFlow(prev => ({ ...prev, buttons_config_2: newButtons }));
+  };
+
+  // Helper para mostrar nome do plano na lista visual
+  const getPlanName = (id) => {
+      const p = availablePlans.find(plan => String(plan.id) === String(id));
+      return p ? p.nome_exibicao : `Plano ID: ${id}`;
+  };
+
   const handleSaveFixed = async () => {
+    if (!selectedBot) {
+        return Swal.fire('Erro', 'Nenhum bot selecionado.', 'error');
+    }
     if (flow.start_mode === 'miniapp' && !flow.miniapp_url) {
         return Swal.fire('Atenção', 'Cole o link do seu Mini App para salvar.', 'warning');
     }
     
     setLoading(true);
     try {
-      // 🔥 LÓGICA DO TOGGLE:
-      // Se use_custom_pix for FALSE, enviamos string vazia "".
-      // O backend reconhece "" e usa o padrão hardcoded (com preço tachado).
-      // Se for TRUE, enviamos o texto editado.
       const pixToSend = flow.use_custom_pix ? decodeHtml(flow.msg_pix) : "";
 
-      // 🔥 AQUI APLICAMOS A CORREÇÃO DE FORMATAÇÃO
-      // Limpamos o HTML e decodificamos as entidades ANTES de enviar pro banco
       const flowToSave = {
           ...flow,
           msg_boas_vindas: decodeHtml(flow.msg_boas_vindas),
-          msg_2_texto: decodeHtml(flow.msg_2_texto), // Limpa a oferta
-          msg_pix: pixToSend, // 🔥 SALVA O PIX (OU VAZIO SE DESATIVADO)
+          msg_2_texto: decodeHtml(flow.msg_2_texto),
+          msg_pix: pixToSend,
+          
+          // 🔥 NOVOS CAMPOS
+          button_mode: flow.button_mode,
+          buttons_config: flow.buttons_config || [], 
+          buttons_config_2: flow.buttons_config_2 || [], 
+          
           steps: steps.map(s => ({
               ...s,
               msg_texto: decodeHtml(s.msg_texto)
@@ -182,12 +343,11 @@ export function ChatFlow() {
         background: '#151515', color: '#fff'
       });
       
-      // Recarrega para garantir que os dados limpos voltem do banco
       carregarTudo();
 
     } catch (error) {
-      console.error("Erro ao salvar:", error);
-      Swal.fire('Erro', 'Falha ao salvar.', 'error');
+      console.error("❌ ERRO AO SALVAR:", error);
+      Swal.fire('Erro', 'Falha ao salvar. Verifique o console.', 'error');
     } finally {
       setLoading(false);
     }
@@ -214,177 +374,360 @@ export function ChatFlow() {
 
   const handleSaveStep = async () => {
     if (!modalData.msg_texto && !modalData.msg_media) {
-      return Swal.fire('Atenção', 'O passo precisa ter texto ou mídia!', 'warning');
+        return Swal.fire('Erro', 'Preencha o texto ou adicione uma mídia.', 'warning');
     }
-    try {
-        // Limpeza no modal também
-        const cleanedData = {
-            ...modalData,
-            msg_texto: decodeHtml(modalData.msg_texto)
-        };
 
+    const stepData = {
+        ...modalData,
+        msg_texto: decodeHtml(modalData.msg_texto)
+    };
+
+    try {
         if (editingStep) {
-            await flowService.updateStep(selectedBot.id, editingStep.id, cleanedData);
-            Swal.fire({ icon: 'success', title: 'Passo Atualizado!', timer: 1500, showConfirmButton: false, background: '#151515', color: '#fff' });
+            const updatedSteps = steps.map(s => s.id === editingStep.id ? { ...s, ...stepData } : s);
+            setSteps(updatedSteps);
         } else {
-            await flowService.addStep(selectedBot.id, { ...cleanedData, step_order: steps.length + 1 });
-            Swal.fire({ icon: 'success', title: 'Passo Adicionado!', timer: 1500, showConfirmButton: false, background: '#151515', color: '#fff' });
+            const newId = Date.now();
+            setSteps([...steps, { ...stepData, id: newId }]);
         }
         setShowModal(false);
-        setEditingStep(null);
-        carregarTudo(); 
     } catch (error) {
+        console.error("Erro ao salvar passo:", error);
         Swal.fire('Erro', 'Falha ao salvar passo.', 'error');
     }
   };
 
   const handleDeleteStep = async (stepId) => {
     const result = await Swal.fire({
-        title: 'Excluir Passo?',
-        text: "Isso removerá esta mensagem do fluxo.",
+        title: 'Tem certeza?',
+        text: 'Esta mensagem será removida do fluxo.',
         icon: 'warning',
         showCancelButton: true,
-        confirmButtonColor: '#d33',
-        cancelButtonColor: '#3085d6',
-        confirmButtonText: 'Sim, excluir',
-        background: '#151515', 
+        confirmButtonText: 'Sim, deletar',
+        cancelButtonText: 'Cancelar',
+        background: '#151515',
         color: '#fff'
     });
+
     if (result.isConfirmed) {
-        try {
-            await flowService.deleteStep(selectedBot.id, stepId);
-            carregarTudo();
-        } catch (error) {
-            Swal.fire('Erro', 'Falha ao excluir.', 'error');
-        }
+        setSteps(steps.filter(s => s.id !== stepId));
     }
   };
 
-  if (!selectedBot) return <div className="chatflow-container">Selecione um bot...</div>;
+  if (loading) return <div className="loading">Carregando...</div>;
 
   return (
     <div className="chatflow-container">
-      
       {/* HEADER */}
       <div className="chatflow-header">
         <div className="header-titles">
-          <h1>Editor de Fluxo</h1>
-          <p>Configure a sequência de mensagens do seu bot.</p>
+            <h1>💬 Chat Flow</h1>
+            <p>Configure o fluxo de conversação do seu bot</p>
         </div>
         <div className="header-actions">
-          <Button onClick={handleSaveFixed} disabled={loading} className="btn-save-main">
-            <Save size={20} style={{marginRight: '8px'}} /> 
-            SALVAR ALTERAÇÕES
-          </Button>
+            <Button variant="primary" onClick={handleSaveFixed} className="btn-save-main" disabled={loading}>
+                <Save size={18} /> <span className="btn-text">Salvar Tudo</span>
+            </Button>
         </div>
       </div>
 
+      {/* GRID LAYOUT */}
       <div className="flow-grid">
-         {/* COLUNA ESQUERDA: VISUALIZAÇÃO CELULAR */}
-         <div className="preview-column">
+        
+        {/* COLUNA PREVIEW (IPHONE MOCKUP) */}
+        <div className="preview-column">
             <div className="iphone-mockup">
                 <div className="notch"></div>
                 <div className="screen-content">
                     <div className="chat-header-mock">
                         <div className="bot-avatar-mock">🤖</div>
                         <div className="bot-info-mock">
-                            <strong>{selectedBot?.nome || "Seu Bot"}</strong>
-                            <span>bot</span>
+                            <strong>{selectedBot?.nome || 'Meu Bot'}</strong>
+                            <span>Online agora</span>
                         </div>
                     </div>
                     <div className="messages-area">
                         <div className="msg-bubble bot">
-                            {flow.media_url && (
-                                <div className="media-preview-mock">
-                                    {flow.media_url.includes('mp4') ? <Video size={20}/> : <ImageIcon size={20}/>} Mídia
-                                </div>
-                            )}
-                            <p dangerouslySetInnerHTML={{__html: (typeof flow.msg_boas_vindas === 'string' ? flow.msg_boas_vindas : '') || "Olá! Configure sua mensagem..."}}></p>
+                            <p>{flow.msg_boas_vindas || 'Olá! Bem-vindo(a)!'}</p>
                         </div>
-                        {flow.start_mode === 'padrao' && flow.btn_text_1 && (
-                            <div className="btn-bubble">{flow.btn_text_1}</div>
-                        )}
-                        {flow.start_mode === 'miniapp' && (
-                             <div className="btn-bubble store-btn">
-                                <Smartphone size={14} style={{marginRight:4}}/>
-                                {flow.miniapp_btn_text}
-                             </div>
-                        )}
-                        {steps.map((s, idx) => (
-                            <div key={idx} style={{opacity: 0.7, marginTop: 10}}>
-                                <div className="msg-bubble bot">
-                                    {s.msg_media && <div className="media-preview-mock"><ImageIcon size={14}/></div>}
-                                    <p dangerouslySetInnerHTML={{__html: s.msg_texto}}></p>
+                        
+                        {/* PREVIEW DOS BOTÕES DA MENSAGEM 1 */}
+                        {flow.button_mode === 'custom' && flow.buttons_config && flow.buttons_config.length > 0 ? (
+                            flow.buttons_config.map((btn, i) => (
+                                <div key={i} className="btn-bubble">
+                                    {btn.type === 'plan' && `💎 ${getPlanName(btn.plan_id)}`}
+                                    {btn.type === 'link' && `🔗 ${btn.text}`}
                                 </div>
-                                {s.btn_texto && <div className="btn-bubble">{s.btn_texto}</div>}
+                            ))
+                        ) : (
+                            <div className="btn-bubble">
+                                {flow.btn_text_1 || '📋 Ver Planos'}
                             </div>
-                        ))}
+                        )}
                     </div>
                 </div>
             </div>
-         </div>
+        </div>
 
-         {/* COLUNA DIREITA: CONFIGURAÇÃO */}
-         <div className="config-column">
-            <Card className="step-card start-mode-card">
-                <CardContent>
-                    <div className="card-header-row">
-                        <Layout size={24} color="#c333ff" />
-                        <h3>Modo de Início do Bot (/start)</h3>
+        {/* COLUNA DE CONFIGURAÇÃO */}
+        <div className="config-column">
+            
+            {/* SELETOR DE MODO (PADRÃO vs MINI APP) */}
+            <div className="mode-selector-grid">
+                <div 
+                    className={`mode-card ${flow.start_mode === 'padrao' ? 'selected-padrao' : ''}`}
+                    onClick={() => setFlow({...flow, start_mode: 'padrao'})}
+                >
+                    {flow.start_mode === 'padrao' && <span className="check-badge">✓</span>}
+                    <MessageSquare size={28} className="mode-icon" />
+                    <div className="mode-info">
+                        <h4>Modo Padrão</h4>
+                        <p>Fluxo de conversa tradicional</p>
                     </div>
-                    <div className="mode-selector-grid">
-                        <div className={`mode-card ${flow.start_mode === 'padrao' ? 'selected-padrao' : ''}`}
-                             onClick={() => setFlow({...flow, start_mode: 'padrao'})}>
-                            <div className="mode-icon"><MessageSquare size={28} /></div>
-                            <div className="mode-info"><h4>Fluxo Padrão</h4><p>Mensagem + Botão que libera conteúdo.</p></div>
-                            {flow.start_mode === 'padrao' && <div className="check-badge">ATIVO</div>}
-                        </div>
-                        <div className={`mode-card ${flow.start_mode === 'miniapp' ? 'selected-miniapp' : ''}`}
-                             onClick={() => setFlow({...flow, start_mode: 'miniapp'})}>
-                            <div className="mode-icon"><Smartphone size={28} /></div>
-                            <div className="mode-info"><h4>Mini App / Loja</h4><p>Botão Web App que abre a loja direta.</p></div>
-                            {flow.start_mode === 'miniapp' && <div className="check-badge">ATIVO</div>}
-                        </div>
+                </div>
+
+                <div 
+                    className={`mode-card ${flow.start_mode === 'miniapp' ? 'selected-miniapp' : ''}`}
+                    onClick={() => setFlow({...flow, start_mode: 'miniapp'})}
+                >
+                    {flow.start_mode === 'miniapp' && <span className="check-badge">✓</span>}
+                    <Smartphone size={28} className="mode-icon" />
+                    <div className="mode-info">
+                        <h4>Mini App</h4>
+                        <p>Integra sua loja externa</p>
                     </div>
-                    {flow.start_mode === 'miniapp' && (
-                        <div className="miniapp-config-box">
-                            <Input label="Link da Loja / Mini App" value={flow.miniapp_url} onChange={e => setFlow({...flow, miniapp_url: e.target.value})} icon={<Globe size={16} />} />
-                            <Input label="Texto do Botão" value={flow.miniapp_btn_text} onChange={e => setFlow({...flow, miniapp_btn_text: e.target.value})} />
-                        </div>
-                    )}
-                </CardContent>
-            </Card>
+                </div>
+            </div>
 
-            <div className="flow-connector"><ArrowDown size={24} /></div>
+            {/* CONFIG MINI APP */}
+            {flow.start_mode === 'miniapp' && (
+                <div className="miniapp-config-box fade-in-up">
+                    <p className="config-title">🌐 Configuração do Mini App</p>
+                    <div className="config-group">
+                        <Input 
+                            label="URL da sua loja" 
+                            value={flow.miniapp_url} 
+                            onChange={e => setFlow({...flow, miniapp_url: e.target.value})}
+                            placeholder="https://exemplo.com"
+                            icon={<Globe size={16}/>}
+                        />
+                        <Input 
+                            label="Texto do botão" 
+                            value={flow.miniapp_btn_text} 
+                            onChange={e => setFlow({...flow, miniapp_btn_text: e.target.value})}
+                            icon={<ShoppingBag size={16}/>}
+                        />
+                    </div>
+                </div>
+            )}
 
+            {/* PASSO 1 - MENSAGEM DE BOAS-VINDAS */}
             <Card className="step-card">
                 <div className="step-badge">Passo 1 (Início)</div>
                 <CardContent>
-                    <div className="step-header">
-                        <div className="step-title-row"><MessageSquare size={20} color="#d65ad1"/><h3>Mensagem de Boas-Vindas</h3></div>
+                    <div className="card-header-row">
+                        <MessageSquare size={20} color="#c333ff"/>
+                        <h3>Mensagem de Boas-Vindas</h3>
                     </div>
                     <div className="form-grid">
-                        {/* 🔥 USO DA FUNÇÃO DE MUDANÇA SEGURA */}
-                        <RichInput label="Texto da Mensagem" value={flow.msg_boas_vindas} onChange={val => handleRichChange('msg_boas_vindas', val)} />
-                        
-                        <Input label="Link da Mídia (Opcional)" value={flow.media_url} onChange={e => setFlow({...flow, media_url: e.target.value})} icon={<ImageIcon size={16}/>} />
+                        <RichInput 
+                            label="Texto da Mensagem" 
+                            value={flow.msg_boas_vindas} 
+                            onChange={val => handleRichChange('msg_boas_vindas', val)} 
+                        />
+                        <Input 
+                            label="Link da Mídia (Opcional)" 
+                            value={flow.media_url} 
+                            onChange={e => setFlow({...flow, media_url: e.target.value})} 
+                            icon={<Video size={16}/>} 
+                        />
+
+                        {/* 🔥 SELETOR DE MODO DE BOTÃO */}
                         {flow.start_mode === 'padrao' && (
                             <div className="buttons-config">
-                                <div className="toggle-wrapper full-width">
-                                    <label>Mostrar botões de Planos (Checkout) nesta mensagem?</label>
-                                    <div className={`custom-toggle ${flow.mostrar_planos_1 ? 'active-green' : ''}`} onClick={() => setFlow({...flow, mostrar_planos_1: !flow.mostrar_planos_1})}>
-                                        <div className="toggle-handle"></div><span className="toggle-label">{flow.mostrar_planos_1 ? 'SIM' : 'NÃO'}</span>
-                                    </div>
+                                <p className="config-title" style={{marginBottom: 15}}>⚙️ Configurar Botões de Ação</p>
+                                
+                                {/* OPÇÃO 1: Botão Próximo Passo */}
+                                <div className="toggle-wrapper full-width" style={{marginBottom: 20}}>
+                                    <label style={{cursor: 'pointer'}} onClick={() => setFlow({...flow, button_mode: 'next_step'})}>
+                                        <input 
+                                            type="radio" 
+                                            name="button_mode" 
+                                            checked={flow.button_mode === 'next_step'}
+                                            onChange={() => setFlow({...flow, button_mode: 'next_step'})}
+                                            style={{marginRight: 8}}
+                                        />
+                                        Botão "Próximo Passo"
+                                    </label>
                                 </div>
-                                {!flow.mostrar_planos_1 && (
-                                    <div className="row-inputs">
-                                            <Input label="Texto do Botão de Ação" value={flow.btn_text_1} onChange={e => setFlow({...flow, btn_text_1: e.target.value})} />
-                                            <div className="toggle-wrapper">
-                                                <label>Auto-destruir ao clicar?</label>
-                                                <div className={`custom-toggle ${flow.autodestruir_1 ? 'active' : ''}`} onClick={() => setFlow({...flow, autodestruir_1: !flow.autodestruir_1})}>
-                                                    <div className="toggle-handle"></div><span className="toggle-label">{flow.autodestruir_1 ? 'SIM' : 'NÃO'}</span>
+
+                                {/* Mostrar config do botão próximo passo */}
+                                {flow.button_mode === 'next_step' && (
+                                    <div className="fade-in-up" style={{marginLeft: 25, marginBottom: 20}}>
+                                        <div className="toggle-wrapper full-width">
+                                            <label>Mostrar botões de Planos nesta mensagem?</label>
+                                            <div className={`custom-toggle ${flow.mostrar_planos_1 ? 'active-green' : ''}`} onClick={() => setFlow({...flow, mostrar_planos_1: !flow.mostrar_planos_1})}>
+                                                <div className="toggle-handle"></div><span className="toggle-label">{flow.mostrar_planos_1 ? 'SIM' : 'NÃO'}</span>
+                                            </div>
+                                        </div>
+                                        {!flow.mostrar_planos_1 && (
+                                            <div className="row-inputs">
+                                                <Input label="Texto do Botão de Ação" value={flow.btn_text_1} onChange={e => setFlow({...flow, btn_text_1: e.target.value})} />
+                                                <div className="toggle-wrapper">
+                                                    <label>Auto-destruir ao clicar?</label>
+                                                    <div className={`custom-toggle ${flow.autodestruir_1 ? 'active' : ''}`} onClick={() => setFlow({...flow, autodestruir_1: !flow.autodestruir_1})}>
+                                                        <div className="toggle-handle"></div><span className="toggle-label">{flow.autodestruir_1 ? 'SIM' : 'NÃO'}</span>
+                                                    </div>
                                                 </div>
                                             </div>
+                                        )}
+                                    </div>
+                                )}
+
+                                {/* OPÇÃO 2: Botões Personalizados */}
+                                <div className="toggle-wrapper full-width" style={{marginBottom: 10}}>
+                                    <label style={{cursor: 'pointer'}} onClick={() => setFlow({...flow, button_mode: 'custom'})}>
+                                        <input 
+                                            type="radio" 
+                                            name="button_mode" 
+                                            checked={flow.button_mode === 'custom'}
+                                            onChange={() => setFlow({...flow, button_mode: 'custom'})}
+                                            style={{marginRight: 8}}
+                                        />
+                                        Botões Personalizados (Planos + Links)
+                                    </label>
+                                </div>
+
+                                {/* Config de botões personalizados */}
+                                {flow.button_mode === 'custom' && (
+                                    <div className="fade-in-up" style={{marginLeft: 25, padding: '15px', background: 'rgba(255,255,255,0.02)', borderRadius: '8px', border: '1px solid #333'}}>
+                                        
+                                        {/* FORMULÁRIO PARA ADICIONAR BOTÃO */}
+                                        <div style={{marginBottom: 20}}>
+                                            <p style={{fontSize: '0.9rem', color: '#aaa', marginBottom: 10}}>➕ Adicionar Novo Botão</p>
+                                            
+                                            {/* Tipo de botão */}
+                                            <div style={{marginBottom: 10}}>
+                                                <label style={{fontSize: '0.85rem', color: '#999', marginBottom: 5, display: 'block'}}>Tipo:</label>
+                                                <select 
+                                                    value={newBtnData.type} 
+                                                    onChange={e => setNewBtnData({...newBtnData, type: e.target.value})}
+                                                    style={{width: '100%', padding: '8px', background: '#0a0a0a', border: '1px solid #333', borderRadius: '6px', color: '#fff'}}
+                                                >
+                                                    <option value="link">🔗 Link (URL)</option>
+                                                    <option value="plan">💎 Plano (Checkout)</option>
+                                                </select>
+                                            </div>
+
+                                            {/* Campo de texto */}
+                                            <Input 
+                                                label="Texto do Botão" 
+                                                value={newBtnData.text} 
+                                                onChange={e => setNewBtnData({...newBtnData, text: e.target.value})}
+                                                placeholder="Ex: Canal Free"
+                                            />
+
+                                            {/* Campo específico por tipo */}
+                                            {newBtnData.type === 'link' && (
+                                                <Input 
+                                                    label="URL" 
+                                                    value={newBtnData.url} 
+                                                    onChange={e => setNewBtnData({...newBtnData, url: e.target.value})}
+                                                    placeholder="https://t.me/seucanal"
+                                                    icon={<LinkIcon size={16}/>}
+                                                />
+                                            )}
+
+                                            {newBtnData.type === 'plan' && (
+                                                <div>
+                                                    <label style={{fontSize: '0.85rem', color: '#999', marginBottom: 5, display: 'block'}}>Selecione o Plano:</label>
+                                                    <select 
+                                                        value={newBtnData.plan_id || ''} 
+                                                        onChange={e => setNewBtnData({...newBtnData, plan_id: e.target.value})}
+                                                        style={{width: '100%', padding: '8px', background: '#0a0a0a', border: '1px solid #333', borderRadius: '6px', color: '#fff'}}
+                                                    >
+                                                        <option value="">-- Escolha um plano --</option>
+                                                        {availablePlans.map(plan => (
+                                                            <option key={plan.id} value={plan.id}>
+                                                                {plan.nome_exibicao} - R${plan.preco_atual.toFixed(2)}
+                                                            </option>
+                                                        ))}
+                                                    </select>
+                                                </div>
+                                            )}
+
+                                            <button 
+                                                onClick={handleAddButton}
+                                                style={{
+                                                    marginTop: 10,
+                                                    background: '#c333ff',
+                                                    color: '#fff',
+                                                    border: 'none',
+                                                    padding: '8px 16px',
+                                                    borderRadius: '6px',
+                                                    cursor: 'pointer',
+                                                    fontSize: '0.9rem',
+                                                    fontWeight: 600
+                                                }}
+                                            >
+                                                + Adicionar
+                                            </button>
+                                        </div>
+
+                                        {/* LISTA DE BOTÕES ADICIONADOS */}
+                                        {flow.buttons_config && flow.buttons_config.length > 0 && (
+                                            <div>
+                                                <p style={{fontSize: '0.9rem', color: '#aaa', marginBottom: 10}}>📋 Botões Configurados</p>
+                                                {flow.buttons_config.map((btn, index) => (
+                                                    <div 
+                                                        key={btn.id} 
+                                                        style={{
+                                                            background: '#111',
+                                                            padding: '10px',
+                                                            borderRadius: '6px',
+                                                            marginBottom: '8px',
+                                                            border: '1px solid #333',
+                                                            display: 'flex',
+                                                            alignItems: 'center',
+                                                            justifyContent: 'space-between'
+                                                        }}
+                                                    >
+                                                        <div style={{flex: 1}}>
+                                                            <div style={{fontSize: '0.9rem', color: '#fff', marginBottom: 3}}>
+                                                                {btn.type === 'link' && `🔗 ${btn.text}`}
+                                                                {btn.type === 'plan' && `💎 ${getPlanName(btn.plan_id)}`}
+                                                            </div>
+                                                            <div style={{fontSize: '0.75rem', color: '#666'}}>
+                                                                {btn.type === 'link' && btn.url}
+                                                                {btn.type === 'plan' && `Plano ID: ${btn.plan_id}`}
+                                                            </div>
+                                                        </div>
+                                                        <div style={{display: 'flex', gap: '5px'}}>
+                                                            <button 
+                                                                onClick={() => handleMoveButton(index, 'up')}
+                                                                disabled={index === 0}
+                                                                style={{background: '#222', border: '1px solid #333', padding: '4px', borderRadius: '4px', cursor: 'pointer'}}
+                                                            >
+                                                                <ChevronUp size={16} color={index === 0 ? '#444' : '#fff'} />
+                                                            </button>
+                                                            <button 
+                                                                onClick={() => handleMoveButton(index, 'down')}
+                                                                disabled={index === flow.buttons_config.length - 1}
+                                                                style={{background: '#222', border: '1px solid #333', padding: '4px', borderRadius: '4px', cursor: 'pointer'}}
+                                                            >
+                                                                <ChevronDown size={16} color={index === flow.buttons_config.length - 1 ? '#444' : '#fff'} />
+                                                            </button>
+                                                            <button 
+                                                                onClick={() => handleRemoveButton(index)}
+                                                                style={{background: '#ef4444', border: 'none', padding: '4px', borderRadius: '4px', cursor: 'pointer'}}
+                                                            >
+                                                                <Trash2 size={16} color="#fff" />
+                                                            </button>
+                                                        </div>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        )}
                                     </div>
                                 )}
                             </div>
@@ -396,6 +739,8 @@ export function ChatFlow() {
             {flow.start_mode === 'padrao' && (
                 <>
                     <div className="connector-line"></div><div className="connector-arrow"><ArrowDown size={24} color="#444" /></div>
+                    
+                    {/* PASSOS EXTRAS */}
                     {steps.map((step, index) => (
                         <React.Fragment key={step.id}>
                             <Card className="step-card step-card-dynamic">
@@ -414,38 +759,162 @@ export function ChatFlow() {
                             <div className="connector-line"></div><div className="connector-arrow"><ArrowDown size={24} color="#444" /></div>
                         </React.Fragment>
                     ))}
+                    
                     <div className="add-step-wrapper">
                         <button className="btn-add-step" onClick={handleOpenCreateModal}><Plus size={20} /> Adicionar Nova Mensagem</button>
                     </div>
                     <div className="connector-line"></div><div className="connector-arrow"><ArrowDown size={24} color="#444" /></div>
+                    
+                    {/* PASSO FINAL - OFERTA */}
                     <Card className="step-card">
                         <div className="step-badge final">Passo Final (Oferta)</div>
                         <CardContent>
                             <div className="step-header"><div className="step-title-row"><ShoppingBag size={20} color="#10b981"/><h3>Mensagem de Oferta & Checkout</h3></div></div>
                             <div className="form-grid">
-                                {/* 🔥 AQUI ESTÁ A CORREÇÃO PRINCIPAL */}
                                 <RichInput label="Texto da Oferta" value={flow.msg_2_texto} onChange={val => handleRichChange('msg_2_texto', val)} />
-                                
                                 <Input label="Mídia da Oferta (Opcional)" value={flow.msg_2_media} onChange={e => setFlow({...flow, msg_2_media: e.target.value})} icon={<Video size={16}/>} />
+                                
                                 <div className="toggle-wrapper full-width">
                                     <label>Mostrar botões de Planos automaticamente?</label>
                                     <div className={`custom-toggle ${flow.mostrar_planos_2 ? 'active-green' : ''}`} onClick={() => setFlow({...flow, mostrar_planos_2: !flow.mostrar_planos_2})}>
                                         <div className="toggle-handle"></div><span className="toggle-label">{flow.mostrar_planos_2 ? 'SIM' : 'OCULTAR'}</span>
                                     </div>
                                 </div>
+
+                                {/* 🔥 BOTÕES PERSONALIZADOS MENSAGEM FINAL */}
+                                <div style={{marginTop: 15, padding: '15px', background: 'rgba(255,255,255,0.02)', borderRadius: '8px', border: '1px solid #333'}}>
+                                    <p style={{fontSize: '0.9rem', color: '#aaa', marginBottom: 10}}>⚙️ Botões Personalizados (Opcional)</p>
+                                    
+                                    <div style={{marginBottom: 15}}>
+                                        <div style={{marginBottom: 10}}>
+                                            <label style={{fontSize: '0.85rem', color: '#999', marginBottom: 5, display: 'block'}}>Tipo:</label>
+                                            <select 
+                                                value={newBtnData2.type} 
+                                                onChange={e => setNewBtnData2({...newBtnData2, type: e.target.value})}
+                                                style={{width: '100%', padding: '8px', background: '#0a0a0a', border: '1px solid #333', borderRadius: '6px', color: '#fff'}}
+                                            >
+                                                <option value="link">🔗 Link (URL)</option>
+                                                <option value="plan">💎 Plano (Checkout)</option>
+                                            </select>
+                                        </div>
+
+                                        <Input 
+                                            label="Texto do Botão" 
+                                            value={newBtnData2.text} 
+                                            onChange={e => setNewBtnData2({...newBtnData2, text: e.target.value})}
+                                        />
+
+                                        {newBtnData2.type === 'link' && (
+                                            <Input 
+                                                label="URL" 
+                                                value={newBtnData2.url} 
+                                                onChange={e => setNewBtnData2({...newBtnData2, url: e.target.value})}
+                                                icon={<LinkIcon size={16}/>}
+                                            />
+                                        )}
+
+                                        {newBtnData2.type === 'plan' && (
+                                            <div>
+                                                <label style={{fontSize: '0.85rem', color: '#999', marginBottom: 5, display: 'block'}}>Selecione o Plano:</label>
+                                                <select 
+                                                    value={newBtnData2.plan_id || ''} 
+                                                    onChange={e => setNewBtnData2({...newBtnData2, plan_id: e.target.value})}
+                                                    style={{width: '100%', padding: '8px', background: '#0a0a0a', border: '1px solid #333', borderRadius: '6px', color: '#fff'}}
+                                                >
+                                                    <option value="">-- Escolha um plano --</option>
+                                                    {availablePlans.map(plan => (
+                                                        <option key={plan.id} value={plan.id}>
+                                                            {plan.nome_exibicao} - R${plan.preco_atual.toFixed(2)}
+                                                        </option>
+                                                    ))}
+                                                </select>
+                                            </div>
+                                        )}
+
+                                        <button 
+                                            onClick={handleAddButton2}
+                                            style={{
+                                                marginTop: 10,
+                                                background: '#10b981',
+                                                color: '#fff',
+                                                border: 'none',
+                                                padding: '8px 16px',
+                                                borderRadius: '6px',
+                                                cursor: 'pointer',
+                                                fontSize: '0.9rem',
+                                                fontWeight: 600
+                                            }}
+                                        >
+                                            + Adicionar
+                                        </button>
+                                    </div>
+
+                                    {/* LISTA DE BOTÕES DA MENSAGEM FINAL */}
+                                    {flow.buttons_config_2 && flow.buttons_config_2.length > 0 && (
+                                        <div>
+                                            <p style={{fontSize: '0.9rem', color: '#aaa', marginBottom: 10}}>📋 Botões Configurados</p>
+                                            {flow.buttons_config_2.map((btn, index) => (
+                                                <div 
+                                                    key={btn.id} 
+                                                    style={{
+                                                        background: '#111',
+                                                        padding: '10px',
+                                                        borderRadius: '6px',
+                                                        marginBottom: '8px',
+                                                        border: '1px solid #333',
+                                                        display: 'flex',
+                                                        alignItems: 'center',
+                                                        justifyContent: 'space-between'
+                                                    }}
+                                                >
+                                                    <div style={{flex: 1}}>
+                                                        <div style={{fontSize: '0.9rem', color: '#fff', marginBottom: 3}}>
+                                                            {btn.type === 'link' && `🔗 ${btn.text}`}
+                                                            {btn.type === 'plan' && `💎 ${getPlanName(btn.plan_id)}`}
+                                                        </div>
+                                                        <div style={{fontSize: '0.75rem', color: '#666'}}>
+                                                            {btn.type === 'link' && btn.url}
+                                                            {btn.type === 'plan' && `Plano ID: ${btn.plan_id}`}
+                                                        </div>
+                                                    </div>
+                                                    <div style={{display: 'flex', gap: '5px'}}>
+                                                        <button 
+                                                            onClick={() => handleMoveButton2(index, 'up')}
+                                                            disabled={index === 0}
+                                                            style={{background: '#222', border: '1px solid #333', padding: '4px', borderRadius: '4px', cursor: 'pointer'}}
+                                                        >
+                                                            <ChevronUp size={16} color={index === 0 ? '#444' : '#fff'} />
+                                                        </button>
+                                                        <button 
+                                                            onClick={() => handleMoveButton2(index, 'down')}
+                                                            disabled={index === flow.buttons_config_2.length - 1}
+                                                            style={{background: '#222', border: '1px solid #333', padding: '4px', borderRadius: '4px', cursor: 'pointer'}}
+                                                        >
+                                                            <ChevronDown size={16} color={index === flow.buttons_config_2.length - 1 ? '#444' : '#fff'} />
+                                                        </button>
+                                                        <button 
+                                                            onClick={() => handleRemoveButton2(index)}
+                                                            style={{background: '#ef4444', border: 'none', padding: '4px', borderRadius: '4px', cursor: 'pointer'}}
+                                                        >
+                                                            <Trash2 size={16} color="#fff" />
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    )}
+                                </div>
                             </div>
                         </CardContent>
                     </Card>
 
-                    {/* 🔥 CARD MENSAGEM DO PIX (COM TOGGLE E {oferta}) */}
+                    {/* MENSAGEM DO PIX */}
                     <div className="connector-line"></div><div className="connector-arrow"><ArrowDown size={24} color="#444" /></div>
                     <Card className="step-card">
                         <div className="step-badge" style={{background: '#10b981', color: '#fff'}}>Mensagem do Pix</div>
                         <CardContent>
                             <div className="step-header">
                                 <div className="step-title-row"><Zap size={20} color="#10b981"/><h3>Personalizar Mensagem do PIX</h3></div>
-                                
-                                {/* TOGGLE DE ATIVAÇÃO */}
                                 <div className="toggle-wrapper">
                                     <label style={{marginRight: 10, fontSize: '0.9rem', color: '#ccc'}}>Personalizar?</label>
                                     <div 
@@ -484,12 +953,12 @@ export function ChatFlow() {
          </div>
       </div>
 
+      {/* MODAL PASSOS EXTRAS */}
       {showModal && (
         <div className="modal-overlay">
             <div className="modal-content">
                 <div className="modal-header-row"><h2>{editingStep ? 'Editar Mensagem' : 'Nova Mensagem'}</h2><button className="btn-close-modal" onClick={() => setShowModal(false)}>✕</button></div>
                 <div className="modal-body">
-                    {/* 🔥 CORREÇÃO MODAL TAMBÉM */}
                     <RichInput 
                         label="Texto" 
                         value={modalData.msg_texto} 
