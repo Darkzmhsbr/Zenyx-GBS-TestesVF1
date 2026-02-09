@@ -246,14 +246,27 @@ export function CanalFree() {
           </p>
         </div>
 
-        {/* Mensagem de Boas-Vindas (AGORA COM RICH INPUT) */}
+        {/* Mensagem de Boas-Vindas (COM RICH INPUT E DICAS) */}
         <div className="form-section">
           <label className="section-title">💬 Mensagem de Boas-Vindas</label>
+          
+          {/* Box de Dicas de Variáveis */}
+          <div className="status-alert info" style={{ padding: '0.8rem', marginBottom: '1rem', alignItems: 'center' }}>
+            <Info size={18} />
+            <div style={{ fontSize: '0.85rem' }}>
+              <strong>Variáveis disponíveis:</strong>
+              <p style={{ marginTop: '4px', opacity: 0.9 }}>
+                Use <code>{'{first_name}'}</code> para o primeiro nome, 
+                <code>{'{username}'}</code> para o usuário e 
+                <code>{'{id}'}</code> para o ID do Telegram.
+              </p>
+            </div>
+          </div>
           
           <RichInput
             value={config.message_text}
             onChange={handleRichChange}
-            placeholder="Ex: Olá! Em breve você será aceito no canal. Enquanto isso, que tal conhecer nosso VIP?"
+            placeholder="Ex: Olá {first_name}! Em breve você será aceito no canal. Enquanto isso, que tal conhecer nosso VIP?"
             rows={6}
           />
           
