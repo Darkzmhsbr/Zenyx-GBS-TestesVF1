@@ -193,21 +193,25 @@ export function ChatFlow() {
 
   // --- GERENCIADOR DE BOTÕES MENSAGEM 1 (FUNÇÕES) ---
   const handleAddButton = () => {
-    if (!newBtnData.text.trim()) return Swal.fire('Erro', 'O botão precisa de um texto.', 'warning');
+    // 🔥 CORREÇÃO: Valida texto apenas para Links
+    if (newBtnData.type === 'link' && !newBtnData.text.trim()) {
+        return Swal.fire('Erro', 'O botão de link precisa de um texto.', 'warning');
+    }
     
     const newBtn = {
         id: Date.now(),
-        type: newBtnData.type,
-        text: newBtnData.text
+        type: newBtnData.type
     };
 
     // Define o valor baseado no tipo
     if (newBtnData.type === 'link') {
         if (!newBtnData.url.trim()) return Swal.fire('Erro', 'URL é obrigatória para botão de link.', 'warning');
         newBtn.url = newBtnData.url;
+        newBtn.text = newBtnData.text; // ✅ Só adiciona texto para links
     } else if (newBtnData.type === 'plan') {
         if (!newBtnData.plan_id) return Swal.fire('Erro', 'Selecione um plano.', 'warning');
         newBtn.plan_id = newBtnData.plan_id;
+        // ✅ NÃO adiciona text, será buscado do plano no backend
     }
 
     setFlow(prev => ({
@@ -248,20 +252,24 @@ export function ChatFlow() {
 
   // 🔥 FUNÇÕES PARA GERENCIAR BOTÕES DA MENSAGEM 2 (FINAL)
   const handleAddButton2 = () => {
-    if (!newBtnData2.text.trim()) return Swal.fire('Erro', 'O botão precisa de um texto.', 'warning');
+    // 🔥 CORREÇÃO: Valida texto apenas para Links
+    if (newBtnData2.type === 'link' && !newBtnData2.text.trim()) {
+        return Swal.fire('Erro', 'O botão de link precisa de um texto.', 'warning');
+    }
     
     const newBtn = {
         id: Date.now(),
-        type: newBtnData2.type,
-        text: newBtnData2.text
+        type: newBtnData2.type
     };
 
     if (newBtnData2.type === 'link') {
         if (!newBtnData2.url.trim()) return Swal.fire('Erro', 'URL é obrigatória para botão de link.', 'warning');
         newBtn.url = newBtnData2.url;
+        newBtn.text = newBtnData2.text; // ✅ Só adiciona texto para links
     } else if (newBtnData2.type === 'plan') {
         if (!newBtnData2.plan_id) return Swal.fire('Erro', 'Selecione um plano.', 'warning');
         newBtn.plan_id = newBtnData2.plan_id;
+        // ✅ NÃO adiciona text, será buscado do plano no backend
     }
 
     setFlow(prev => ({
@@ -619,13 +627,15 @@ export function ChatFlow() {
                                                 </select>
                                             </div>
 
-                                            {/* Campo de texto */}
-                                            <Input 
-                                                label="Texto do Botão" 
-                                                value={newBtnData.text} 
-                                                onChange={e => setNewBtnData({...newBtnData, text: e.target.value})}
-                                                placeholder="Ex: Canal Free"
-                                            />
+                                            {/* 🔥 CORREÇÃO: Campo de texto APENAS para Links */}
+                                            {newBtnData.type === 'link' && (
+                                                <Input 
+                                                    label="Texto do Botão" 
+                                                    value={newBtnData.text} 
+                                                    onChange={e => setNewBtnData({...newBtnData, text: e.target.value})}
+                                                    placeholder="Ex: Canal Free"
+                                                />
+                                            )}
 
                                             {/* Campo específico por tipo */}
                                             {newBtnData.type === 'link' && (
@@ -798,11 +808,14 @@ export function ChatFlow() {
                                             </select>
                                         </div>
 
-                                        <Input 
-                                            label="Texto do Botão" 
-                                            value={newBtnData2.text} 
-                                            onChange={e => setNewBtnData2({...newBtnData2, text: e.target.value})}
-                                        />
+                                        {/* 🔥 CORREÇÃO: Campo de texto APENAS para Links */}
+                                        {newBtnData2.type === 'link' && (
+                                            <Input 
+                                                label="Texto do Botão" 
+                                                value={newBtnData2.text} 
+                                                onChange={e => setNewBtnData2({...newBtnData2, text: e.target.value})}
+                                            />
+                                        )}
 
                                         {newBtnData2.type === 'link' && (
                                             <Input 
