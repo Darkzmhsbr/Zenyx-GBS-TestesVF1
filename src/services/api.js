@@ -760,5 +760,42 @@ export const superAdminService = {
     }
   },
 };
+// ============================================================
+// 🆓 CANAL FREE SERVICE
+// ============================================================
+export const canalFreeService = {
+  // Buscar configuração do Canal Free
+  getConfig: async (botId) => {
+    try {
+      const response = await api.get(`/api/admin/canal-free/${botId}`);
+      return response.data;
+    } catch (error) {
+      console.error('Erro ao buscar config Canal Free:', error);
+      throw error;
+    }
+  },
+
+  // Salvar configuração do Canal Free
+  saveConfig: async (botId, config) => {
+    try {
+      const response = await api.post(`/api/admin/canal-free/${botId}`, config);
+      return response.data;
+    } catch (error) {
+      console.error('Erro ao salvar config Canal Free:', error);
+      throw error;
+    }
+  },
+
+  // Buscar canais disponíveis (onde o bot é admin)
+  getCanaisDisponiveis: async (botId) => {
+    try {
+      const response = await api.get(`/api/admin/canal-free/${botId}/canais-disponiveis`);
+      return response.data;
+    } catch (error) {
+      console.error('Erro ao buscar canais disponíveis:', error);
+      return { canais: [], instructions: [] };
+    }
+  }
+};
 
 export default api;
