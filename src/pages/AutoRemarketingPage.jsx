@@ -45,7 +45,9 @@ const DEFAULT_ALTERNATING = {
   auto_destruct_final: false,
   // ✅ NOVOS CAMPOS PARA DESTRUIÇÃO FINAL
   last_message_auto_destruct: false,
-  last_message_destruct_seconds: 60
+  last_message_destruct_seconds: 60,
+  // ✅ NOVO CAMPO PARA DURAÇÃO INDEPENDENTE
+  max_duration_minutes: 60
 };
 
 export function AutoRemarketing() {
@@ -635,16 +637,32 @@ export function AutoRemarketing() {
                                         onChange={(e) => setAlternatingConfig(prev => ({ ...prev, rotation_interval_seconds: parseInt(e.target.value) || 15 }))}
                                     />
                                 </div>
-                                <div style={{flex:1}}>
-                                    <label>🛑 Parar antes remarketing (segundos)</label>
-                                    <input 
-                                        type="number"
-                                        min="0"
-                                        className="input-field"
-                                        value={alternatingConfig.stop_before_remarketing_seconds || 60}
-                                        onChange={(e) => setAlternatingConfig(prev => ({ ...prev, stop_before_remarketing_seconds: parseInt(e.target.value) || 60 }))}
-                                    />
-                                </div>
+                                
+                                {disparoConfig.is_active ? (
+                                    <div style={{flex:1}}>
+                                        <label>🛑 Parar antes remarketing (segundos)</label>
+                                        <input 
+                                            type="number"
+                                            min="0"
+                                            className="input-field"
+                                            value={alternatingConfig.stop_before_remarketing_seconds || 60}
+                                            onChange={(e) => setAlternatingConfig(prev => ({ ...prev, stop_before_remarketing_seconds: parseInt(e.target.value) || 60 }))}
+                                        />
+                                    </div>
+                                ) : (
+                                    <div style={{flex:1}}>
+                                        <label>🕒 Duração Total (minutos)</label>
+                                        <input 
+                                            type="number"
+                                            min="1"
+                                            className="input-field"
+                                            placeholder="Ex: 60"
+                                            value={alternatingConfig.max_duration_minutes || 60}
+                                            onChange={(e) => setAlternatingConfig(prev => ({ ...prev, max_duration_minutes: parseInt(e.target.value) || 60 }))}
+                                        />
+                                        <small style={{display:'block', color:'#666', marginTop:'5px'}}>Tempo total de envio</small>
+                                    </div>
+                                )}
                             </div>
 
                             {/* ✅ NOVA SEÇÃO DE DESTRUIÇÃO FINAL */}
