@@ -1,10 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useBot } from '../context/BotContext';
 import { remarketingService, planService } from '../services/api';
-import { Send, Users, Image, MessageSquare, CheckCircle, AlertTriangle, History, Tag, Clock, RotateCcw, Edit, Play, Trash2, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Send, Users, Image, MessageSquare, CheckCircle, AlertTriangle, History, Tag, Clock, RotateCcw, Edit, Play, Trash2, ChevronLeft, ChevronRight, Minimize2, Maximize2, X } from 'lucide-react';
 import { Button } from '../components/Button';
 import { Card, CardContent } from '../components/Card';
-import { RichInput } from '../components/RichInput'; // 🔥 NOVO COMPONENTE
+import { RichInput } from '../components/RichInput';
 import Swal from 'sweetalert2';
 import './Remarketing.css';
 
@@ -20,6 +20,11 @@ export function Remarketing() {
   const [totalPages, setTotalPages] = useState(1);
   const [totalCount, setTotalCount] = useState(0);
   const [perPage] = useState(10);
+  
+  // 🔥 NOVO: Estados do Widget de Progresso
+  const [activeProgress, setActiveProgress] = useState(null);
+  const [progressData, setProgressData] = useState(null);
+  const progressIntervalRef = useRef(null);
   
   // Estado do Formulário
   const [formData, setFormData] = useState({
@@ -40,6 +45,85 @@ export function Remarketing() {
       carregarHistorico();
     }
   }, [selectedBot, currentPage]);
+
+  // 🔥 NOVO: Limpar polling quando componente desmonta
+  useEffect(() => {
+    return () => {
+      if (progressIntervalRef.current) {
+        clearInterval(progressIntervalRef.current);
+      }
+    };
+  }, []);
+
+  // 🔥 NOVO: Função para buscar progresso da campanha
+  const fetchProgress = async (campaignId) => {
+    try {
+      const data = await remarketingService.getProgress(campaignId);
+      setProgressData(data);
+      
+      if (data.is_complete) {
+        clearInterval(progressIntervalRef.current);
+        progressIntervalRef.current = null;
+        
+        setTimeout(() => {
+          Swal.fire({
+            title: 'Campanha Concluída!',
+            html: `
+              <div style="text-align: left; padding: 10px;">
+                <p><strong>✅ Enviados:</strong> ${data.sent_success}</p>
+                <p><strong>❌ Bloqueados:</strong> ${data.blocked_count}</p>
+                <p><strong>👥 Total:</strong> ${data.total_leads}</p>
+              </div>
+            `,
+            icon: 'success',
+            confirmButtonText: 'OK',
+            background: '#151515',
+            color: '#fff'
+          });
+          
+          setTimeout(() => {
+            setActiveProgress(null);
+            setProgressData(null);
+            carregarHistorico();
+          }, 3000);
+        }, 500);
+      }
+    } catch (error) {
+      console.error('Erro ao buscar progresso:', error);
+      if (progressIntervalRef.current) {
+        clearInterval(progressIntervalRef.current);
+        progressIntervalRef.current = null;
+      }
+    }
+  };
+
+  // 🔥 NOVO: Iniciar monitoramento de progresso
+  const startProgressMonitoring = (campaignId) => {
+    setActiveProgress({ campaignId, isMinimized: false });
+    fetchProgress(campaignId);
+    progressIntervalRef.current = setInterval(() => {
+      fetchProgress(campaignId);
+    }, 2000);
+  };
+
+  // 🔥 NOVO: Fechar widget
+  const closeProgressWidget = () => {
+    if (progressIntervalRef.current) {
+      clearInterval(progressIntervalRef.current);
+      progressIntervalRef.current = null;
+    }
+    setActiveProgress(null);
+    setProgressData(null);
+    carregarHistorico();
+  };
+
+  // 🔥 NOVO: Toggle minimizar/maximizar
+  const toggleMinimize = () => {
+    setActiveProgress(prev => ({
+      ...prev,
+      isMinimized: !prev.isMinimized
+    }));
+  };
 
   const carregarHistorico = async () => {
     if (!selectedBot) return;
@@ -131,7 +215,6 @@ export function Remarketing() {
     }
   };
 
-  // 🔥 [CORRIGIDO] Função de teste individual
   const handleTestarIndividual = async (item) => {
     const { value: telegramId } = await Swal.fire({
       title: 'Testar Envio Individual',
@@ -193,7 +276,6 @@ export function Remarketing() {
   };
 
   const handleEnviar = async () => {
-    // Validações
     if (!formData.mensagem.trim()) {
       Swal.fire({
         title: 'Atenção',
@@ -218,47 +300,35 @@ export function Remarketing() {
 
     setLoading(true);
     
-    Swal.fire({
-      title: 'Enviando...',
-      text: 'Aguarde enquanto a campanha é enviada.',
-      allowOutsideClick: false,
-      didOpen: () => {
-        Swal.showLoading();
-      }
-    });
-    
     try {
       const result = await remarketingService.send(selectedBot.id, formData, false, null);
       
-      Swal.fire({
-        title: 'Enviado com Sucesso!',
-        html: `
-          <div style="text-align: left; padding: 10px;">
-            <p><strong>✅ Enviados:</strong> ${result.sent_success || 0}</p>
-            <p><strong>❌ Bloqueados:</strong> ${result.blocked_count || 0}</p>
-            <p><strong>👥 Total:</strong> ${result.total_leads || 0}</p>
-          </div>
-        `,
-        icon: 'success',
-        confirmButtonText: 'OK',
-        background: '#151515',
-        color: '#fff'
-      });
-
-      // Reset form
-      setFormData({
-        target: 'todos',
-        mensagem: '',
-        media_url: '',
-        incluir_oferta: false,
-        plano_oferta_id: '',
-        price_mode: 'original',
-        custom_price: '',
-        expiration_mode: 'none',
-        expiration_value: ''
-      });
-      setStep(1);
-      carregarHistorico();
+      if (result.campaign_id) {
+        startProgressMonitoring(result.campaign_id);
+        
+        setFormData({
+          target: 'todos',
+          mensagem: '',
+          media_url: '',
+          incluir_oferta: false,
+          plano_oferta_id: '',
+          price_mode: 'original',
+          custom_price: '',
+          expiration_mode: 'none',
+          expiration_value: ''
+        });
+        setStep(1);
+      } else {
+        Swal.fire({
+          title: 'Campanha Iniciada!',
+          text: 'A campanha foi iniciada com sucesso.',
+          icon: 'success',
+          confirmButtonText: 'OK',
+          background: '#151515',
+          color: '#fff'
+        });
+        carregarHistorico();
+      }
     } catch (error) {
       console.error("Erro ao enviar campanha:", error);
       Swal.fire({
@@ -281,10 +351,87 @@ export function Remarketing() {
     { id: 'expirado', icon: '⏰', title: 'Expirados', desc: 'PIX venceu sem pagamento' }
   ];
 
+  // 🔥 NOVO: Renderizar Widget de Progresso
+  const renderProgressWidget = () => {
+    if (!activeProgress || !progressData) return null;
+
+    const { isMinimized } = activeProgress;
+    const { percentage, sent_success, blocked_count, total_leads, processed, status } = progressData;
+
+    const remaining = total_leads - processed;
+    const secondsRemaining = remaining * 0.04;
+    const minutesRemaining = Math.ceil(secondsRemaining / 60);
+
+    if (isMinimized) {
+      return (
+        <div className="progress-widget minimized">
+          <div className="progress-mini-content" onClick={toggleMinimize}>
+            <span>🚀 {processed}/{total_leads} ({percentage}%)</span>
+          </div>
+          <button className="btn-close-mini" onClick={closeProgressWidget}>
+            <X size={14} />
+          </button>
+        </div>
+      );
+    }
+
+    return (
+      <div className="progress-widget expanded">
+        <div className="progress-header">
+          <h3>🚀 Enviando Campanha</h3>
+          <div className="progress-controls">
+            <button onClick={toggleMinimize} title="Minimizar">
+              <Minimize2 size={16} />
+            </button>
+            <button onClick={closeProgressWidget} title="Fechar">
+              <X size={16} />
+            </button>
+          </div>
+        </div>
+        
+        <div className="progress-body">
+          <div className="progress-bar-container">
+            <div 
+              className="progress-bar-fill" 
+              style={{ width: `${percentage}%` }}
+            />
+          </div>
+          
+          <div className="progress-percentage">
+            {processed}/{total_leads} ({percentage}%)
+          </div>
+          
+          <div className="progress-metrics">
+            <div className="metric">
+              <span className="metric-label">✅ Enviados:</span>
+              <span className="metric-value">{sent_success}</span>
+            </div>
+            <div className="metric">
+              <span className="metric-label">❌ Bloqueados:</span>
+              <span className="metric-value">{blocked_count}</span>
+            </div>
+            {status === 'enviando' && remaining > 0 && (
+              <div className="metric">
+                <span className="metric-label">⏱️ Tempo restante:</span>
+                <span className="metric-value">~{minutesRemaining} min</span>
+              </div>
+            )}
+          </div>
+          
+          <div className="progress-status">
+            {status === 'enviando' && <span className="status-sending">⚡ Enviando...</span>}
+            {status === 'concluido' && <span className="status-complete">✅ Concluído!</span>}
+            {status === 'erro' && <span className="status-error">❌ Erro no envio</span>}
+          </div>
+        </div>
+      </div>
+    );
+  };
+
   // ============================================================
   // RENDER - HISTÓRICO
   // ============================================================
-  if (step === 0) { // Ou step === 4, ajuste conforme sua lógica de navegação
+  if (step === 0) {
     return (
       <div className="remarketing-container">
         <div className="wizard-container">
@@ -316,7 +463,6 @@ export function Remarketing() {
 
                 const targetLabel = targetOptions.find(t => t.id === item.target)?.title || item.target || 'Desconhecido';
                 
-                // 🔥 CORREÇÃO DA DATA (Lógica Blindada)
                 let dataFormatada = 'Data desconhecida';
                 if (item.data) {
                     try {
@@ -330,7 +476,6 @@ export function Remarketing() {
                     } catch (e) { console.error("Erro data:", item.data); }
                 }
 
-                // 🔥 CORREÇÃO DA MENSAGEM (Busca msg OU mensagem)
                 const msgPreview = config.msg || config.mensagem || "Sem texto";
 
                 return (
@@ -346,7 +491,6 @@ export function Remarketing() {
                         ✅ {item.sent_success || 0} enviados • 
                         ❌ {item.blocked_count || 0} bloqueados
                       </div>
-                      {/* Prévia da mensagem (Opcional, ajuda a identificar) */}
                       <div style={{ fontSize: '0.7rem', color: '#444', marginTop: '3px', fontStyle:'italic' }}>
                          "{msgPreview.substring(0, 40)}..."
                       </div>
@@ -406,6 +550,8 @@ export function Remarketing() {
             </div>
           )}
         </div>
+        
+        {renderProgressWidget()}
       </div>
     );
   }
@@ -461,7 +607,6 @@ export function Remarketing() {
             
             <div className="form-group">
               <label><MessageSquare size={16} style={{ verticalAlign: 'middle' }} /> Mensagem</label>
-              {/* 🔥 ATUALIZADO PARA RICH INPUT */}
               <RichInput
                 value={formData.mensagem}
                 onChange={(e) => setFormData({ ...formData, mensagem: e.target.value })}
@@ -604,7 +749,6 @@ export function Remarketing() {
               {formData.incluir_oferta && (
                 <p><strong>Oferta:</strong> {plans.find(p => p.id === parseInt(formData.plano_oferta_id))?.nome_exibicao}</p>
               )}
-              {/* Mostra o texto sem formatação HTML na revisão para evitar quebras, ou renderiza se quiser */}
               <div className="msg-quote">{formData.mensagem}</div>
             </div>
 
@@ -625,6 +769,8 @@ export function Remarketing() {
         )}
 
       </div>
+      
+      {renderProgressWidget()}
     </div>
   );
 }

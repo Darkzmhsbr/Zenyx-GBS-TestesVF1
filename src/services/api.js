@@ -212,8 +212,9 @@ export const orderBumpService = {
   save: async (botId, data) => (await api.post(`/api/admin/bots/${botId}/order-bump`, data)).data
 };
 
+
 // ============================================================
-// 📢 SERVIÇO DE REMARKETING
+// 📢 SERVIÇO DE REMARKETING (ATUALIZADO COM PROGRESSO)
 // ============================================================
 export const remarketingService = {
   send: async (botId, data, isTest = false, specificUserId = null) => {
@@ -252,6 +253,11 @@ export const remarketingService = {
         user_telegram_id: telegramId,
         campaign_history_id: historyId
     })).data;
+  },
+  
+  // 🔥 NOVO: Buscar progresso de campanha em tempo real
+  getProgress: async (campaignId) => {
+    return (await api.get(`/api/admin/remarketing/progress/${campaignId}`)).data;
   }
 };
 
