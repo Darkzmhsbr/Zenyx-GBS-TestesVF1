@@ -217,6 +217,16 @@ export const orderBumpService = {
 // ============================================================
 export const remarketingService = {
   send: async (botId, data, isTest = false, specificUserId = null) => {
+    // 🔥 CORREÇÃO: Normaliza custom_price (vírgula → ponto, 2 casas decimais)
+    let normalizedCustomPrice = null;
+    if (data.price_mode === 'custom' && data.custom_price !== '' && data.custom_price !== null && data.custom_price !== undefined) {
+      const cleaned = String(data.custom_price).replace(',', '.');
+      const parsed = parseFloat(cleaned);
+      if (!isNaN(parsed) && parsed > 0) {
+        normalizedCustomPrice = Math.round(parsed * 100) / 100; // Garante 2 casas decimais
+      }
+    }
+
     const payload = {
       bot_id: botId,
       target: data.target || 'todos',
@@ -225,7 +235,7 @@ export const remarketingService = {
       incluir_oferta: data.incluir_oferta,
       plano_oferta_id: data.plano_oferta_id,
       price_mode: data.price_mode || 'original',
-      custom_price: data.custom_price ? parseFloat(data.custom_price) : 0.0,
+      custom_price: normalizedCustomPrice, // 🔥 Valor já normalizado (ou null se original)
       expiration_mode: data.expiration_mode || 'none',
       expiration_value: data.expiration_value ? parseInt(data.expiration_value) : 0,
       is_test: isTest,

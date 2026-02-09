@@ -190,6 +190,17 @@ export function Remarketing() {
   const handleReusar = (item) => {
     try {
       const config = typeof item.config === 'string' ? JSON.parse(item.config) : item.config;
+      
+      // 🔥 CORREÇÃO: Normaliza custom_price ao reutilizar (9.9 → "9.90", vírgula → ponto)
+      let normalizedPrice = '';
+      if (config.custom_price !== null && config.custom_price !== undefined && config.custom_price !== '') {
+        const cleaned = String(config.custom_price).replace(',', '.');
+        const parsed = parseFloat(cleaned);
+        if (!isNaN(parsed) && parsed > 0) {
+          normalizedPrice = parsed.toFixed(2); // Garante "9.90" ao invés de "9.9"
+        }
+      }
+      
       setFormData({
         target: item.target || 'todos',
         mensagem: config.mensagem || '',
@@ -197,7 +208,7 @@ export function Remarketing() {
         incluir_oferta: config.incluir_oferta || false,
         plano_oferta_id: config.plano_oferta_id || '',
         price_mode: config.price_mode || 'original',
-        custom_price: config.custom_price || '',
+        custom_price: normalizedPrice,  // 🔥 Agora sempre formatado corretamente
         expiration_mode: config.expiration_mode || 'none',
         expiration_value: config.expiration_value || ''
       });
@@ -296,6 +307,22 @@ export function Remarketing() {
         color: '#fff'
       });
       return;
+    }
+
+    // 🔥 CORREÇÃO: Validar preço personalizado antes de enviar
+    if (formData.incluir_oferta && formData.price_mode === 'custom') {
+      const cleaned = String(formData.custom_price).replace(',', '.');
+      const parsed = parseFloat(cleaned);
+      if (!formData.custom_price || isNaN(parsed) || parsed <= 0) {
+        Swal.fire({
+          title: 'Atenção',
+          text: 'Informe um preço personalizado válido (maior que zero).',
+          icon: 'warning',
+          background: '#151515',
+          color: '#fff'
+        });
+        return;
+      }
     }
 
     setLoading(true);
@@ -677,11 +704,33 @@ export function Remarketing() {
                     {formData.price_mode === 'custom' && (
                       <input
                         className="input-field"
-                        type="number"
+                        type="text"
+                        inputMode="decimal"
                         step="0.01"
                         placeholder="Ex: 9.90"
                         value={formData.custom_price}
-                        onChange={(e) => setFormData({ ...formData, custom_price: e.target.value })}
+                        onChange={(e) => {
+                          // 🔥 CORREÇÃO: Aceita vírgula e ponto, permite apenas números decimais
+                          let val = e.target.value;
+                          // Permite apenas números, ponto e vírgula
+                          val = val.replace(/[^0-9.,]/g, '');
+                          // Substitui vírgula por ponto para normalizar
+                          val = val.replace(',', '.');
+                          // Evita múltiplos pontos
+                          const parts = val.split('.');
+                          if (parts.length > 2) {
+                            val = parts[0] + '.' + parts.slice(1).join('');
+                          }
+                          setFormData({ ...formData, custom_price: val });
+                        }}
+                        onBlur={(e) => {
+                          // 🔥 CORREÇÃO: Ao sair do campo, formata com 2 casas decimais
+                          const cleaned = String(e.target.value).replace(',', '.');
+                          const parsed = parseFloat(cleaned);
+                          if (!isNaN(parsed) && parsed > 0) {
+                            setFormData({ ...formData, custom_price: parsed.toFixed(2) });
+                          }
+                        }}
                         style={{ marginTop: '10px' }}
                       />
                     )}
