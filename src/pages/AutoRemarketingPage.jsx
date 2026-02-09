@@ -696,20 +696,42 @@ export function AutoRemarketing() {
                         </thead>
                         <tbody>
                             {stats.logs && stats.logs.length > 0 ? (
-                                stats.logs.map((log) => (
-                                    <tr key={log.id}>
-                                        <td>{new Date(log.sent_at).toLocaleString()}</td>
-                                        <td>{log.user_id || log.user_telegram_id}</td>
-                                        <td>
-                                            <span className={`status-badge ${log.status}`}>
-                                                {log.status}
-                                            </span>
-                                        </td>
-                                        <td>
-                                            {log.converted ? '✅ Sim' : '❌ Não'}
-                                        </td>
-                                    </tr>
-                                ))
+                                stats.logs.map((log) => {
+                                    // 🎨 TRADUTOR DE STATUS
+                                    let statusLabel = log.status;
+                                    let statusClass = log.status;
+
+                                    if (log.status === 'sent') statusLabel = 'Enviado 📤';
+                                    if (log.status === 'error') statusLabel = 'Falhou ❌';
+                                    if (log.status === 'pending') statusLabel = 'Agendado ⏳';
+                                    
+                                    // Se foi convertido, o status visual ganha destaque
+                                    if (log.converted) {
+                                        statusLabel = 'Recuperado 💰';
+                                        statusClass = 'success';
+                                    }
+
+                                    return (
+                                        <tr key={log.id}>
+                                            <td>{new Date(log.sent_at).toLocaleString()}</td>
+                                            <td>
+                                                {/* ✅ MOSTRA NOME + USERNAME */}
+                                                <div style={{display:'flex', flexDirection:'column'}}>
+                                                    <span style={{fontWeight:'600'}}>{log.user_name || log.user_id}</span>
+                                                    {log.user_username && <span style={{fontSize:'0.8em', color:'#888'}}>{log.user_username}</span>}
+                                                </div>
+                                            </td>
+                                            <td>
+                                                <span className={`status-badge ${statusClass}`}>
+                                                    {statusLabel}
+                                                </span>
+                                            </td>
+                                            <td>
+                                                {log.converted ? <span style={{color:'#4caf50', fontWeight:'bold'}}>✅ Sim</span> : <span style={{color:'#666'}}>Aguardando...</span>}
+                                            </td>
+                                        </tr>
+                                    );
+                                })
                             ) : (
                                 <tr>
                                     <td colSpan="4" style={{textAlign:'center', padding:'20px'}}>
