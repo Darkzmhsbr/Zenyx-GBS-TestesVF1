@@ -487,7 +487,7 @@ export function Remarketing() {
                 <input
                   type="checkbox"
                   checked={formData.incluir_oferta}
-                  onChange={(e) => setFormData({ ...formData, incluir_oferta: e.target.value })} // Correção: e.target.checked era esperado, mas mantive a lógica original se houver quirks
+                  onChange={(e) => setFormData({ ...formData, incluir_oferta: e.target.checked })}
                 />
                 <Tag size={20} />
                 Incluir Oferta Especial
