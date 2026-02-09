@@ -456,7 +456,28 @@ export function ChatFlow() {
                     </div>
                     <div className="messages-area">
                         <div className="msg-bubble bot">
-                            <p>{flow.msg_boas_vindas || 'Olá! Bem-vindo(a)!'}</p>
+                            {/* 🔥 ATUALIZAÇÃO: PREVIEW DE IMAGEM */}
+                            {flow.media_url && flow.media_url.match(/\.(jpg|jpeg|png|gif|webp)$/i) && (
+                                <img 
+                                    src={flow.media_url} 
+                                    alt="Preview" 
+                                    className="media-preview-mock" 
+                                    style={{maxWidth: '100%', borderRadius: '8px', marginBottom: '8px', display: 'block'}}
+                                />
+                            )}
+                            
+                            {/* 🔥 ATUALIZAÇÃO: PREVIEW DE VÍDEO */}
+                            {flow.media_url && flow.media_url.match(/\.(mp4|mov)$/i) && (
+                                <div 
+                                    className="media-preview-mock"
+                                    style={{width: '100%', height: '120px', background: '#000', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: '8px', marginBottom: '8px'}}
+                                >
+                                    📹 Vídeo
+                                </div>
+                            )}
+
+                            {/* 🔥 ATUALIZAÇÃO: HTML FORMATADO */}
+                            <div dangerouslySetInnerHTML={{__html: flow.msg_boas_vindas || 'Olá! Bem-vindo(a)!'}} />
                         </div>
                         
                         {/* PREVIEW DOS BOTÕES DA MENSAGEM 1 */}
