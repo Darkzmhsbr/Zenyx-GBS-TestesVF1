@@ -2,7 +2,27 @@ import React, { useState, useEffect } from 'react';
 import { useBot } from '../context/BotContext';
 import { canalFreeService } from '../services/api';
 import { RefreshCw, Save, AlertCircle, CheckCircle, Info, Unlock, Plus, Trash2, Image, Video } from 'lucide-react';
+import { RichInput } from '../components/RichInput'; // Importando componente de texto rico
 import './CanalFree.css';
+
+// --- FUNÇÃO DE LIMPEZA E DECODIFICAÇÃO (Igual ao ChatFlow) ---
+const decodeHtml = (html) => {
+  if (!html) return "";
+  const str = String(html);
+  
+  const txt = document.createElement("textarea");
+  txt.innerHTML = str;
+  let decoded = txt.value;
+
+  decoded = decoded
+      .replace(/<p[^>]*>/gi, "")
+      .replace(/<\/p>/gi, "\n")
+      .replace(/<div[^>]*>/gi, "")
+      .replace(/<\/div>/gi, "\n")
+      .replace(/<br\s*\/?>/gi, "\n");
+
+  return decoded.trim();
+};
 
 export function CanalFree() {
   const { selectedBot } = useBot();
@@ -36,7 +56,11 @@ export function CanalFree() {
     try {
       setLoading(true);
       const data = await canalFreeService.getConfig(selectedBot.id);
-      setConfig(data);
+      // Garante que message_text seja tratado como string para o RichInput
+      setConfig({
+        ...data,
+        message_text: data.message_text || ''
+      });
     } catch (error) {
       console.error('Erro ao carregar config:', error);
       setStatus({ type: 'error', message: 'Erro ao carregar configuração' });
@@ -59,7 +83,14 @@ export function CanalFree() {
 
     try {
       setSaving(true);
-      await canalFreeService.saveConfig(selectedBot.id, config);
+
+      // Prepara o objeto para salvar, limpando o HTML do texto
+      const configToSave = {
+        ...config,
+        message_text: decodeHtml(config.message_text)
+      };
+
+      await canalFreeService.saveConfig(selectedBot.id, configToSave);
       setStatus({ type: 'success', message: '✅ Configuração salva com sucesso!' });
       
       // Limpar status após 3s
@@ -92,6 +123,16 @@ export function CanalFree() {
       ...config,
       buttons: config.buttons.filter((_, i) => i !== index)
     });
+  };
+
+  // Handler específico para o RichInput
+  const handleRichChange = (val) => {
+    let cleanValue = val;
+    // O RichInput pode retornar um evento ou valor direto dependendo da implementação
+    if (val && typeof val === 'object' && val.target) {
+        cleanValue = val.target.value;
+    }
+    setConfig({ ...config, message_text: cleanValue });
   };
 
   if (loading) {
@@ -205,18 +246,19 @@ export function CanalFree() {
           </p>
         </div>
 
-        {/* Mensagem de Boas-Vindas */}
+        {/* Mensagem de Boas-Vindas (AGORA COM RICH INPUT) */}
         <div className="form-section">
           <label className="section-title">💬 Mensagem de Boas-Vindas</label>
-          <textarea
-            className="textarea-field"
-            rows="5"
-            placeholder="Ex: Olá! Em breve você será aceito no canal. Enquanto isso, que tal conhecer nosso VIP?"
+          
+          <RichInput
             value={config.message_text}
-            onChange={(e) => setConfig({ ...config, message_text: e.target.value })}
+            onChange={handleRichChange}
+            placeholder="Ex: Olá! Em breve você será aceito no canal. Enquanto isso, que tal conhecer nosso VIP?"
+            rows={6}
           />
+          
           <p className="helper-text">
-            Esta mensagem será enviada no privado quando o usuário solicitar entrada.
+            Esta mensagem será enviada no privado quando o usuário solicitar entrada. Use a barra de ferramentas para formatar (Negrito, Itálico, Links).
           </p>
         </div>
 
