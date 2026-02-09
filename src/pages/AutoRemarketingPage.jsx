@@ -168,11 +168,22 @@ export function AutoRemarketing() {
         alert('São necessárias pelo menos 2 mensagens.');
         return;
       }
+      
+      // ✅ VALIDAÇÃO: Se remarketing está INATIVO, é obrigatório ter max_duration_minutes
+      if (!disparoConfig.is_active) {
+        if (!alternatingConfig.max_duration_minutes || alternatingConfig.max_duration_minutes < 1) {
+          alert('⚠️ Quando o Disparo Automático está desativado, é obrigatório definir a "Duração Total" das mensagens alternantes (mínimo 1 minuto).');
+          return;
+        }
+      }
     }
     
     setSaving(true);
     
     try {
+      // ✅ LOG DE DEBUG NO FRONTEND
+      console.log('🔍 [FRONTEND-DEBUG] Salvando alternating config:', alternatingConfig);
+      
       await remarketingAutoService.saveAlternatingMessages(selectedBot.id, alternatingConfig);
       alert('✅ Mensagens alternantes salvas!');
     } catch (error) {
@@ -184,96 +195,41 @@ export function AutoRemarketing() {
   }
 
   // =========================================================
-  // PLANOS PROMOCIONAIS
+  // FUNÇÕES DE MANIPULAÇÃO DE MENSAGENS ALTERNANTES
   // =========================================================
   
-  function handleTogglePlano(planoId) {
-    setDisparoConfig(prev => {
-      const currentPromos = prev.promo_values || {};
-      const newPromo = { ...currentPromos };
-      
-      if (newPromo[planoId]) {
-        delete newPromo[planoId];
-      } else {
-        const plano = planos.find(p => p.id === planoId);
-        if (plano) {
-          const valorOriginal = Number(plano.preco_atual) || 0;
-          newPromo[planoId] = {
-            price: valorOriginal * 0.7,
-            button_text: ''
-          };
-        }
-      }
-      
-      return { ...prev, promo_values: newPromo };
-    });
-  }
-  
-  function handlePromoChange(planoId, field, value) {
-    setDisparoConfig(prev => {
-      const currentPromos = prev.promo_values || {};
-      const currentPlano = currentPromos[planoId] || {};
-      
-      return {
-        ...prev,
-        promo_values: {
-          ...currentPromos,
-          [planoId]: {
-            ...currentPlano,
-            [field]: field === 'price' ? parseFloat(value) || 0 : value
-          }
-        }
-      };
-    });
-  }
-  
-  // =========================================================
-  // MENSAGENS ALTERNANTES
-  // =========================================================
-  
-  function handleAddMessage() {
+  function addMessage() {
     if (!newMessage.trim()) return;
     
     setAlternatingConfig(prev => ({
       ...prev,
-      messages: [...(prev.messages || []), newMessage]
+      messages: [...prev.messages, newMessage.trim()]
     }));
     setNewMessage('');
   }
   
-  function handleRemoveMessage(index) {
+  function removeMessage(index) {
     setAlternatingConfig(prev => ({
       ...prev,
-      messages: (prev.messages || []).filter((_, i) => i !== index)
+      messages: prev.messages.filter((_, i) => i !== index)
     }));
   }
   
-  function handleEditMessage(index, value) {
-    setAlternatingConfig(prev => {
-      const updated = [...(prev.messages || [])];
-      updated[index] = value;
-      return { ...prev, messages: updated };
-    });
+  function editMessage(index, newContent) {
+    setAlternatingConfig(prev => ({
+      ...prev,
+      messages: prev.messages.map((msg, i) => i === index ? newContent : msg)
+    }));
   }
   
   // =========================================================
-  // RENDER
+  // COMPONENTE PRINCIPAL
   // =========================================================
-  
-  if (!selectedBot) {
-    return (
-      <div className="auto-remarketing-container">
-        <div className="alert alert-warning">
-          <span>{Icons.Alert}</span> Nenhum bot selecionado.
-        </div>
-      </div>
-    );
-  }
   
   if (loading) {
     return (
-      <div className="auto-remarketing-container">
-        <div className="loading-state">
+      <div className="remarketing-container">
+        <div style={{textAlign:'center', padding:'50px'}}>
           <div className="spinner"></div>
           <p>Carregando configurações...</p>
         </div>
@@ -281,61 +237,58 @@ export function AutoRemarketing() {
     );
   }
   
+  if (!selectedBot) {
+    return (
+      <div className="remarketing-container">
+        <div className="empty-state">
+          <div className="empty-icon">{Icons.Alert}</div>
+          <h2>Nenhum bot selecionado</h2>
+          <p>Por favor, selecione um bot para configurar o remarketing automático.</p>
+        </div>
+      </div>
+    );
+  }
+  
   return (
-    <div className="auto-remarketing-container">
+    <div className="remarketing-container">
+      <div className="page-header">
+        <div className="page-title">
+          <h1>{Icons.Fire} Auto-Remarketing</h1>
+          <p>Configure mensagens automáticas de reengajamento para recuperar vendas perdidas</p>
+        </div>
+      </div>
       
-      {/* HEADER */}
-      <div className="auto-remarketing-header">
-        <div className="header-titles">
-          <h1>{Icons.Rocket} Disparo Automático</h1>
-          <p>Configure mensagens de remarketing inteligentes</p>
+      <div className="remarketing-content">
+        {/* === TABS === */}
+        <div className="tabs">
+          <button 
+            className={activeTab === 'disparo' ? 'tab active' : 'tab'}
+            onClick={() => setActiveTab('disparo')}
+          >
+            {Icons.Rocket} Disparo Automático
+          </button>
+          <button 
+            className={activeTab === 'alternating' ? 'tab active' : 'tab'}
+            onClick={() => setActiveTab('alternating')}
+          >
+            {Icons.Message} Mensagens Alternantes
+          </button>
+          <button 
+            className={activeTab === 'analytics' ? 'tab active' : 'tab'}
+            onClick={() => setActiveTab('analytics')}
+          >
+            {Icons.Chart} Analytics
+          </button>
         </div>
-        <div className="header-actions">
-           <button className="btn-save-main" onClick={activeTab === 'disparo' ? handleSaveDisparo : handleSaveAlternating} disabled={saving}>
-             {saving ? 'Salvando...' : <>{Icons.Save} Salvar Alterações</>}
-           </button>
-        </div>
-      </div>
-
-      {/* TABS */}
-      <div className="tabs-nav">
-        <button 
-          className={`tab-btn ${activeTab === 'disparo' ? 'active' : ''}`}
-          onClick={() => setActiveTab('disparo')}
-        >
-          {Icons.Rocket} Mensagem de Disparo
-        </button>
-        <button 
-          className={`tab-btn ${activeTab === 'alternating' ? 'active' : ''}`}
-          onClick={() => setActiveTab('alternating')}
-        >
-          {Icons.Message} Mensagens Alternantes
-        </button>
-        <button 
-          className={`tab-btn ${activeTab === 'analytics' ? 'active' : ''}`}
-          onClick={() => setActiveTab('analytics')}
-        >
-          {Icons.Chart} Analytics
-        </button>
-      </div>
-
-      {/* CONTENT */}
-      <div className="content-area">
         
         {/* === ABA 1: DISPARO AUTOMÁTICO === */}
         {activeTab === 'disparo' && (
-          <div className="config-layout">
-            
-            {/* COLUNA ESQUERDA: CONFIGURAÇÃO */}
-            <div className="config-form">
-              
-              {/* Card 1: Ativação */}
-              <div className="config-card mb-4">
+          <div className="tab-content">
+            <div className="config-card">
+              <div className="card-header">
+                <h3>🎯 Configuração do Disparo</h3>
                 <div className="switch-wrapper">
-                  <div className="switch-label">
-                    <span>Ativar Disparo Automático</span>
-                    <small>Envia mensagem X minutos após gerar PIX</small>
-                  </div>
+                  <span className="switch-label">Ativar Disparo Automático</span>
                   <label className="toggle-switch">
                     <input 
                       type="checkbox" 
@@ -345,234 +298,155 @@ export function AutoRemarketing() {
                     <span className="slider round"></span>
                   </label>
                 </div>
-
-                {disparoConfig.is_active && (
-                   <div className="form-group mt-3">
-                     <label>{Icons.Clock} Tempo de espera (minutos)</label>
-                     <input 
-                       type="number" 
-                       className="input-field"
-                       value={disparoConfig.delay_minutes}
-                       onChange={e => setDisparoConfig({...disparoConfig, delay_minutes: parseInt(e.target.value)})}
-                     />
-                   </div>
-                )}
               </div>
-
-              {/* Card 2: Conteúdo da Mensagem */}
-              <div className="config-card mb-4">
-                <div className="card-header">
-                  <h3>{Icons.Message} Conteúdo da Mensagem</h3>
-                </div>
-                
-                <div className="form-group">
-                  <label>Mídia URL (Opcional - Foto ou Vídeo)</label>
-                  <input 
-                    type="text" 
-                    className="input-field" 
-                    placeholder="https://..."
-                    value={disparoConfig.media_url || ''}
-                    onChange={e => {
-                        const url = e.target.value;
-                        let type = null;
-                        if (url.match(/\.(jpeg|jpg|png|gif)$/i)) type = 'photo';
-                        if (url.match(/\.(mp4|mov|avi)$/i)) type = 'video';
-                        setDisparoConfig({...disparoConfig, media_url: url, media_type: type});
-                    }}
-                  />
-                </div>
-
-                <div className="form-group">
-                  <RichInput
-                    label="Legenda / Texto"
-                    value={disparoConfig.message_text}
-                    onChange={(e) => setDisparoConfig({...disparoConfig, message_text: e.target.value})}
-                    placeholder="Olá {first_name}, vi que gerou um PIX..."
-                    rows={6}
-                  />
-                  <small style={{color:'#666', display:'block', marginTop:'5px'}}>
-                    Use: <code>{'{first_name}'}</code>, <code>{'{plano_original}'}</code>, <code>{'{valor_original}'}</code>
-                  </small>
-                </div>
-              </div>
-
-              {/* Card 3: Auto-Destruição */}
-              <div className="config-card mb-4" style={{ borderLeft: '4px solid #c333ff', background: 'rgba(195, 51, 255, 0.03)' }}>
-                <div className="card-header">
-                  <h3>{Icons.Bomb} Auto-Destruição</h3>
-                </div>
-                
-                <div className="switch-wrapper">
-                    <div className="switch-label">
-                        <span>Ativar Auto-Destruição</span>
-                        <small>Apaga a mensagem após um tempo</small>
-                    </div>
-                    <label className="toggle-switch">
-                        <input 
-                            type="checkbox" 
-                            checked={disparoConfig.auto_destruct_enabled}
-                            onChange={e => setDisparoConfig({...disparoConfig, auto_destruct_enabled: e.target.checked})}
-                        />
-                        <span className="slider round"></span>
-                    </label>
-                </div>
-
-                <div className="hint-text" style={{ marginBottom: '20px' }}>
-                    <span>{Icons.Alert}</span>
-                    Quando ativado, a mensagem de disparo será automaticamente apagada após o tempo configurado
-                </div>
-
-                {disparoConfig.auto_destruct_enabled && (
-                    <>
-                        <div className="form-group mt-3">
-                            <label>⏱️ Destruir em (segundos)</label>
-                            <input 
-                                type="number" 
-                                className="input-field"
-                                value={disparoConfig.auto_destruct_seconds}
-                                onChange={e => setDisparoConfig({...disparoConfig, auto_destruct_seconds: parseInt(e.target.value) || 0})}
-                            />
-                        </div>
-
-                        <div className="switch-wrapper mt-3">
-                            <div className="switch-label">
-                                <span>👆 Destruir SÓ após clicar?</span>
-                                <small>Se ativo, conta o tempo só depois que o user clica no botão.</small>
-                            </div>
-                            <label className="toggle-switch">
-                                <input 
-                                    type="checkbox" 
-                                    checked={disparoConfig.auto_destruct_after_click}
-                                    onChange={e => setDisparoConfig({...disparoConfig, auto_destruct_after_click: e.target.checked})}
-                                />
-                                <span className="slider round"></span>
-                            </label>
-                        </div>
-                    </>
-                )}
-              </div>
-
-              {/* Card 4: Oferta Promocional */}
-              <div className="config-card mb-4">
-                <div className="card-header">
-                  <h3>{Icons.Money} Oferta Promocional (Botões)</h3>
-                </div>
-                
-                <div className="alert alert-info mb-3">
-                   Configure um preço menor para recuperar a venda. O botão já vai com o link de pagamento atualizado.
-                </div>
-
-                {planos.length === 0 ? (
-                    <div className="alert alert-warning">
-                      <span>{Icons.Alert}</span> Nenhum plano cadastrado.
-                    </div>
-                ) : (
-                    <div className="planos-grid">
-                        {planos.map(plano => {
-                           const promo = (disparoConfig.promo_values || {})[plano.id] || {};
-                           const isActive = !!(disparoConfig.promo_values || {})[plano.id];
-                           const valorOriginal = Number(plano.preco_atual) || 0;
-                           
-                           return (
-                             <div key={plano.id} className={`plano-card ${isActive ? 'active' : ''}`}>
-                                <div className="plano-card-header">
-                                    <div className="plano-info">
-                                        <strong>{plano.nome_exibicao}</strong>
-                                        <span className="original-price">De: R$ {valorOriginal.toFixed(2)}</span>
-                                    </div>
-                                    <div 
-                                        className={`custom-toggle small ${isActive ? 'active' : ''}`}
-                                        onClick={() => handleTogglePlano(plano.id)}
-                                    >
-                                        <div className="toggle-handle"></div>
-                                    </div>
-                                </div>
-                                
-                                {isActive && (
-                                    <div className="plano-card-body">
-                                       <div className="form-group">
-                                          <label>Novo Preço (R$)</label>
-                                          <input 
-                                            type="number" 
-                                            step="0.01"
-                                            className="input-field"
-                                            value={promo.price || ''}
-                                            onChange={e => handlePromoChange(plano.id, 'price', parseFloat(e.target.value))}
-                                          />
-                                       </div>
-                                       <div className="form-group">
-                                          <label>Texto do Botão</label>
-                                          <input 
-                                            type="text" 
-                                            className="input-field"
-                                            placeholder="Ver Oferta 🔥"
-                                            value={promo.button_text || ''}
-                                            onChange={e => handlePromoChange(plano.id, 'button_text', e.target.value)}
-                                          />
-                                       </div>
-                                    </div>
-                                )}
-                             </div>
-                           )
-                        })}
-                    </div>
-                )}
-              </div>
-
-            </div>
-
-            {/* COLUNA DIREITA: PREVIEW */}
-            <div className="preview-wrapper">
-              <div className="iphone-mockup">
-                <div className="screen-content">
-                  
-                  {/* Msg de Disparo */}
-                  <div className="msg-bubble">
-                     {disparoConfig.media_url && (
-                        <div className="media-preview" style={{backgroundImage: `url(${disparoConfig.media_url})`}}></div>
-                     )}
-                     <div className="msg-text" dangerouslySetInnerHTML={{ __html: disparoConfig.message_text || 'Configure a mensagem...' }}></div>
-                     <div className="msg-time">10:05</div>
-                     
-                     {/* Botão Fake */}
-                     <div className="inline-btn">
-                       Ver Oferta 🔥
-                     </div>
+              
+              {disparoConfig.is_active && (
+                <div className="card-body">
+                  {/* Timing */}
+                  <div className="form-group">
+                    <label>{Icons.Clock} Aguardar quanto tempo antes de enviar? (minutos)</label>
+                    <input 
+                      type="number" 
+                      className="input-field" 
+                      value={disparoConfig.delay_minutes}
+                      onChange={e => setDisparoConfig({...disparoConfig, delay_minutes: parseInt(e.target.value)||5})}
+                      min="1"
+                      max="1440"
+                    />
+                    <small className="field-hint">Ex: 5 minutos após o PIX ser gerado</small>
                   </div>
-
-                  {/* Mensagem Alternante (Exemplo) */}
-                  {alternatingConfig.is_active && alternatingConfig.messages.length > 0 && (
-                     <div className="msg-bubble" style={{opacity:0.7}}>
-                        <div className="msg-text">
-                           {typeof alternatingConfig.messages[0] === 'string' 
-                              ? alternatingConfig.messages[0] 
-                              : alternatingConfig.messages[0].content}
-                        </div>
-                        <div className="msg-time">10:02</div>
-                     </div>
+                  
+                  {/* Mensagem */}
+                  <div className="form-group">
+                    <label>{Icons.Message} Mensagem de Remarketing</label>
+                    <RichInput 
+                      value={disparoConfig.message_text}
+                      onChange={(text) => setDisparoConfig({...disparoConfig, message_text: text})}
+                      placeholder="Olá {nome}! Notamos que você ainda não finalizou seu pagamento..."
+                    />
+                    <small className="field-hint">Use {'{nome}'} para personalizar</small>
+                  </div>
+                  
+                  {/* Mídia */}
+                  <div className="form-group">
+                    <label>{Icons.Photo} Tipo de Mídia</label>
+                    <select 
+                      className="input-field"
+                      value={disparoConfig.media_type || ''}
+                      onChange={e => setDisparoConfig({...disparoConfig, media_type: e.target.value || null})}
+                    >
+                      <option value="">Nenhuma</option>
+                      <option value="photo">Foto</option>
+                      <option value="video">Vídeo</option>
+                    </select>
+                  </div>
+                  
+                  {disparoConfig.media_type && (
+                    <div className="form-group">
+                      <label>🔗 URL da Mídia</label>
+                      <input 
+                        type="url"
+                        className="input-field"
+                        placeholder="https://..."
+                        value={disparoConfig.media_url}
+                        onChange={e => setDisparoConfig({...disparoConfig, media_url: e.target.value})}
+                      />
+                    </div>
                   )}
 
-                </div>
-              </div>
-            </div>
+                  {/* ✅ NOVA SEÇÃO: AUTO-DESTRUIÇÃO */}
+                  <div className="config-card" style={{background:'#fff9e6', border:'1px solid #ffd966', marginTop:'20px'}}>
+                    <div className="switch-wrapper">
+                      <div className="switch-label">
+                        <span>{Icons.Bomb} Auto-Destruição da Mensagem</span>
+                        <small style={{color:'#666'}}>A mensagem será apagada após X segundos</small>
+                      </div>
+                      <label className="toggle-switch">
+                        <input 
+                          type="checkbox" 
+                          checked={disparoConfig.auto_destruct_enabled || false}
+                          onChange={e => setDisparoConfig({...disparoConfig, auto_destruct_enabled: e.target.checked})}
+                        />
+                        <span className="slider round"></span>
+                      </label>
+                    </div>
 
+                    {disparoConfig.auto_destruct_enabled && (
+                      <div style={{marginTop:'15px'}}>
+                        <div className="form-group">
+                          <label>⏳ Tempo para auto-destruição (segundos)</label>
+                          <input 
+                            type="number" 
+                            className="input-field" 
+                            value={disparoConfig.auto_destruct_seconds || 3}
+                            onChange={e => setDisparoConfig({...disparoConfig, auto_destruct_seconds: parseInt(e.target.value)||3})}
+                            min="1"
+                          />
+                          <small className="field-hint">Padrão: 3 segundos</small>
+                        </div>
+
+                        <div className="form-group">
+                          <label className="checkbox-label">
+                            <input 
+                              type="checkbox"
+                              checked={disparoConfig.auto_destruct_after_click || false}
+                              onChange={e => setDisparoConfig({...disparoConfig, auto_destruct_after_click: e.target.checked})}
+                            />
+                            <span>Destruir somente APÓS clicar no botão</span>
+                          </label>
+                          <small className="field-hint">Se marcado, a mensagem só será apagada se o usuário clicar</small>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                  
+                  {/* Valores Promocionais */}
+                  {planos.length > 0 && (
+                    <div className="form-group">
+                      <label>{Icons.Money} Valores Promocionais (Opcional)</label>
+                      <div className="promo-list">
+                        {planos.map(plano => (
+                          <div key={plano.id} className="promo-item">
+                            <span className="promo-plan-name">{plano.nome}</span>
+                            <input 
+                              type="number"
+                              className="input-field-inline"
+                              placeholder={`R$ ${plano.valor}`}
+                              value={disparoConfig.promo_values?.[plano.id] || ''}
+                              onChange={e => setDisparoConfig({
+                                ...disparoConfig, 
+                                promo_values: {...(disparoConfig.promo_values || {}), [plano.id]: e.target.value}
+                              })}
+                            />
+                          </div>
+                        ))}
+                      </div>
+                      <small className="field-hint">Deixe vazio para usar o valor original</small>
+                    </div>
+                  )}
+                  
+                  {/* Botão Salvar */}
+                  <button 
+                    className="btn btn-primary btn-block"
+                    onClick={handleSaveDisparo}
+                    disabled={saving}
+                  >
+                    {saving ? 'Salvando...' : `${Icons.Save} Salvar Configuração`}
+                  </button>
+                </div>
+              )}
+            </div>
           </div>
         )}
         
         {/* === ABA 2: MENSAGENS ALTERNANTES === */}
         {activeTab === 'alternating' && (
-          <div className="config-layout" style={{ gridTemplateColumns: '1fr' }}> {/* Alternating ocupa largura total */}
-            <div className="config-form">
-                <div className="config-card">
-                    <div className="card-header">
-                        <h3>🔄 Mensagens Alternantes (Anti-Bloqueio)</h3>
-                    </div>
-                    
+          <div className="tab-content">
+            <div className="config-card">
+                <div className="card-header">
+                    <h3>🔄 Mensagens Alternantes</h3>
                     <div className="switch-wrapper">
-                        <div className="switch-label">
-                        <span>Ativar Alternância</span>
-                        <small>Envia mensagens aleatórias enquanto o usuário não paga</small>
-                        </div>
+                        <span className="switch-label">Ativar Rotação</span>
                         <label className="toggle-switch">
                             <input 
                                 type="checkbox" 
@@ -582,120 +456,150 @@ export function AutoRemarketing() {
                             <span className="slider round"></span>
                         </label>
                     </div>
+                </div>
+                
+                {alternatingConfig.is_active && (
+                    <div className="card-body">
+                        {/* Lista de mensagens */}
+                        <div className="form-group">
+                            <label>{Icons.Message} Mensagens Cadastradas ({alternatingConfig.messages.length})</label>
+                            {alternatingConfig.messages.length === 0 ? (
+                                <div className="empty-list">
+                                    <p>Nenhuma mensagem cadastrada ainda.</p>
+                                </div>
+                            ) : (
+                                <div className="messages-list">
+                                    {alternatingConfig.messages.map((msg, idx) => (
+                                        <div key={idx} className="message-item">
+                                            <div className="message-number">{idx + 1}</div>
+                                            <div className="message-content">
+                                                <textarea 
+                                                    className="input-field"
+                                                    value={msg}
+                                                    onChange={(e) => editMessage(idx, e.target.value)}
+                                                    rows="2"
+                                                />
+                                            </div>
+                                            <button 
+                                                className="btn btn-icon-danger"
+                                                onClick={() => removeMessage(idx)}
+                                                title="Remover"
+                                            >
+                                                {Icons.Trash}
+                                            </button>
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
+                        </div>
+                        
+                        {/* Adicionar nova mensagem */}
+                        <div className="form-group">
+                            <label>{Icons.Plus} Nova Mensagem</label>
+                            <div className="input-group">
+                                <textarea 
+                                    className="input-field"
+                                    placeholder="Digite a mensagem alternante..."
+                                    value={newMessage}
+                                    onChange={e => setNewMessage(e.target.value)}
+                                    rows="3"
+                                    onKeyDown={(e) => {
+                                        if (e.key === 'Enter' && e.ctrlKey) {
+                                            addMessage();
+                                        }
+                                    }}
+                                />
+                            </div>
+                            <button 
+                                className="btn btn-secondary btn-block"
+                                onClick={addMessage}
+                                disabled={!newMessage.trim()}
+                            >
+                                {Icons.Plus} Adicionar Variação
+                            </button>
+                        </div>
 
-                    {alternatingConfig.is_active && (
-                        <div className="alternating-msgs mt-3">
-                            <div className="messages-list">
-                                {alternatingConfig.messages.map((msg, idx) => (
-                                    <div key={idx} className="message-item">
-                                        <div className="message-number">{idx + 1}</div>
-                                        <input 
-                                            type="text" 
-                                            className="input-field" 
-                                            value={typeof msg === 'string' ? msg : msg.content}
-                                            onChange={e => {
-                                                // Suporte para string simples ou objeto
-                                                if (typeof msg === 'string') {
-                                                    handleEditMessage(idx, e.target.value);
-                                                } else {
-                                                    const updatedMsg = { ...msg, content: e.target.value };
-                                                    const newMsgs = [...alternatingConfig.messages];
-                                                    newMsgs[idx] = updatedMsg;
-                                                    setAlternatingConfig(prev => ({ ...prev, messages: newMsgs }));
-                                                }
-                                            }}
-                                            placeholder={`Mensagem ${idx+1}`}
-                                        />
-                                        <button onClick={() => handleRemoveMessage(idx)} className="btn-remove">
-                                            {Icons.Trash}
-                                        </button>
-                                    </div>
-                                ))}
+                        <div className="form-group mt-3" style={{display:'flex', gap:'20px'}}>
+                            <div style={{flex:1}}>
+                                <label>⏱️ Intervalo entre mensagens (segundos)</label>
+                                <input 
+                                    type="number"
+                                    min="1"
+                                    className="input-field"
+                                    value={alternatingConfig.rotation_interval_seconds || 15}
+                                    onChange={(e) => setAlternatingConfig(prev => ({ ...prev, rotation_interval_seconds: parseInt(e.target.value) || 15 }))}
+                                />
                             </div>
                             
-                            <div className="add-message-box">
-                                <input 
-                                    type="text"
-                                    className="input-field"
-                                    placeholder="Nova frase..."
-                                    value={newMessage}
-                                    onChange={(e) => setNewMessage(e.target.value)}
-                                />
-                                <button onClick={handleAddMessage} className="btn-add w-100">
-                                    {Icons.Plus} Adicionar Variação
-                                </button>
-                            </div>
-
-                            <div className="form-group mt-3" style={{display:'flex', gap:'20px'}}>
+                            {disparoConfig.is_active ? (
                                 <div style={{flex:1}}>
-                                    <label>⏱️ Intervalo entre mensagens (segundos)</label>
+                                    <label>🛑 Parar antes remarketing (segundos)</label>
+                                    <input 
+                                        type="number"
+                                        min="0"
+                                        className="input-field"
+                                        value={alternatingConfig.stop_before_remarketing_seconds || 60}
+                                        onChange={(e) => setAlternatingConfig(prev => ({ ...prev, stop_before_remarketing_seconds: parseInt(e.target.value) || 60 }))}
+                                    />
+                                </div>
+                            ) : (
+                                <div style={{flex:1}}>
+                                    <label>🕒 Duração Total (minutos) *</label>
                                     <input 
                                         type="number"
                                         min="1"
                                         className="input-field"
-                                        value={alternatingConfig.rotation_interval_seconds || 15}
-                                        onChange={(e) => setAlternatingConfig(prev => ({ ...prev, rotation_interval_seconds: parseInt(e.target.value) || 15 }))}
+                                        placeholder="Ex: 60"
+                                        value={alternatingConfig.max_duration_minutes || 60}
+                                        onChange={(e) => setAlternatingConfig(prev => ({ ...prev, max_duration_minutes: parseInt(e.target.value) || 60 }))}
+                                    />
+                                    <small style={{display:'block', color:'#d32f2f', marginTop:'5px', fontWeight:'600'}}>
+                                        ⚠️ Campo obrigatório quando Disparo está desativado
+                                    </small>
+                                </div>
+                            )}
+                        </div>
+
+                        {/* ✅ NOVA SEÇÃO DE DESTRUIÇÃO FINAL */}
+                        <div className="config-card mt-3" style={{background:'#fff0f0', border:'1px solid #ffcccc'}}>
+                            <div className="switch-wrapper">
+                                <div className="switch-label">
+                                    <span style={{color:'#d32f2f'}}>🛑 Auto-Destruir Última Mensagem?</span>
+                                    <small style={{color:'#666'}}>Ao fim do ciclo: envia última msg, aguarda e apaga</small>
+                                </div>
+                                <label className="toggle-switch">
+                                    <input 
+                                        type="checkbox" 
+                                        checked={alternatingConfig.last_message_auto_destruct || false}
+                                        onChange={e => setAlternatingConfig({...alternatingConfig, last_message_auto_destruct: e.target.checked})}
+                                    />
+                                    <span className="slider round"></span>
+                                </label>
+                            </div>
+                            {alternatingConfig.last_message_auto_destruct && (
+                                <div className="form-group mt-2">
+                                    <label>⏳ Tempo para apagar a última (segundos)</label>
+                                    <input 
+                                        type="number" 
+                                        className="input-field" 
+                                        value={alternatingConfig.last_message_destruct_seconds || 60}
+                                        onChange={e => setAlternatingConfig({...alternatingConfig, last_message_destruct_seconds: parseInt(e.target.value)||60})} 
+                                        min="1"
                                     />
                                 </div>
-                                
-                                {disparoConfig.is_active ? (
-                                    <div style={{flex:1}}>
-                                        <label>🛑 Parar antes remarketing (segundos)</label>
-                                        <input 
-                                            type="number"
-                                            min="0"
-                                            className="input-field"
-                                            value={alternatingConfig.stop_before_remarketing_seconds || 60}
-                                            onChange={(e) => setAlternatingConfig(prev => ({ ...prev, stop_before_remarketing_seconds: parseInt(e.target.value) || 60 }))}
-                                        />
-                                    </div>
-                                ) : (
-                                    <div style={{flex:1}}>
-                                        <label>🕒 Duração Total (minutos)</label>
-                                        <input 
-                                            type="number"
-                                            min="1"
-                                            className="input-field"
-                                            placeholder="Ex: 60"
-                                            value={alternatingConfig.max_duration_minutes || 60}
-                                            onChange={(e) => setAlternatingConfig(prev => ({ ...prev, max_duration_minutes: parseInt(e.target.value) || 60 }))}
-                                        />
-                                        <small style={{display:'block', color:'#666', marginTop:'5px'}}>Tempo total de envio</small>
-                                    </div>
-                                )}
-                            </div>
-
-                            {/* ✅ NOVA SEÇÃO DE DESTRUIÇÃO FINAL */}
-                            <div className="config-card mt-3" style={{background:'#fff0f0', border:'1px solid #ffcccc'}}>
-                                <div className="switch-wrapper">
-                                    <div className="switch-label">
-                                        <span style={{color:'#d32f2f'}}>🛑 Encerrar e Destruir Última?</span>
-                                        <small style={{color:'#666'}}>Ao chegar na última msg: envia, espera e apaga.</small>
-                                    </div>
-                                    <label className="toggle-switch">
-                                        <input 
-                                            type="checkbox" 
-                                            checked={alternatingConfig.last_message_auto_destruct || false}
-                                            onChange={e => setAlternatingConfig({...alternatingConfig, last_message_auto_destruct: e.target.checked})}
-                                        />
-                                        <span className="slider round"></span>
-                                    </label>
-                                </div>
-                                {alternatingConfig.last_message_auto_destruct && (
-                                    <div className="form-group mt-2">
-                                        <label>⏳ Tempo para apagar a última (segundos)</label>
-                                        <input 
-                                            type="number" 
-                                            className="input-field" 
-                                            value={alternatingConfig.last_message_destruct_seconds || 60}
-                                            onChange={e => setAlternatingConfig({...alternatingConfig, last_message_destruct_seconds: parseInt(e.target.value)||60})} 
-                                        />
-                                    </div>
-                                )}
-                            </div>
+                            )}
                         </div>
-                    )}
-                </div>
+
+                        {/* Botão Salvar */}
+                        <button 
+                            className="btn btn-primary btn-block mt-3"
+                            onClick={handleSaveAlternating}
+                            disabled={saving}
+                        >
+                            {saving ? 'Salvando...' : `${Icons.Save} Salvar Mensagens`}
+                        </button>
+                    </div>
+                )}
             </div>
           </div>
         )}
