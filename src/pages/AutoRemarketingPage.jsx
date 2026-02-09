@@ -62,7 +62,9 @@ export function AutoRemarketing() {
     total_converted: 0,
     conversion_rate: 0,
     today_sent: 0,
-    recent_logs: []
+    total_revenue: 0,
+    recent_logs: [],
+    logs: [] // Fallback
   });
   
   // Carregar dados ao iniciar
@@ -89,7 +91,18 @@ export function AutoRemarketing() {
       setDisparoConfig(remarketing || DEFAULT_DISPARO);
       setAlternatingConfig(alternating || DEFAULT_ALTERNATING);
       setPlanos(Array.isArray(planosData) ? planosData : []); 
-      setStats(statistics || { total_sent: 0, total_converted: 0, conversion_rate: 0, today_sent: 0, recent_logs: [] });
+      
+      // Garante estrutura mínima para stats
+      const safeStats = statistics || {};
+      setStats({
+          total_sent: safeStats.total_sent || 0,
+          total_converted: safeStats.total_converted || 0,
+          conversion_rate: safeStats.conversion_rate || 0,
+          today_sent: safeStats.today_sent || 0,
+          total_revenue: safeStats.total_revenue || 0,
+          recent_logs: safeStats.recent_logs || [],
+          logs: safeStats.logs || safeStats.recent_logs || [] // Compatibilidade
+      });
       
     } catch (error) {
       console.error('❌ Erro ao carregar dados:', error);
@@ -159,7 +172,7 @@ export function AutoRemarketing() {
   }
 
   // =========================================================
-  // PLANOS PROMOCIONAIS (CORRIGIDO: preco_atual)
+  // PLANOS PROMOCIONAIS
   // =========================================================
   
   function handleTogglePlano(planoId) {
@@ -272,7 +285,7 @@ export function AutoRemarketing() {
         </div>
       </div>
 
-      {/* TABS (Classe Ajustada para o CSS Responsivo) */}
+      {/* TABS */}
       <div className="tabs-nav">
         <button 
           className={`tab-btn ${activeTab === 'disparo' ? 'active' : ''}`}
@@ -334,7 +347,7 @@ export function AutoRemarketing() {
                 )}
               </div>
 
-              {/* Card 2: Conteúdo da Mensagem (AGORA COM RICHINPUT 🔥) */}
+              {/* Card 2: Conteúdo da Mensagem */}
               <div className="config-card mb-4">
                 <div className="card-header">
                   <h3>{Icons.Message} Conteúdo da Mensagem</h3>
@@ -601,15 +614,27 @@ export function AutoRemarketing() {
                                 </button>
                             </div>
 
-                            <div className="form-group mt-3">
-                                <label>Parar X segundos antes do remarketing oficial</label>
-                                <input 
-                                    type="number"
-                                    min="0"
-                                    className="input-field"
-                                    value={alternatingConfig.stop_before_remarketing_seconds || 60}
-                                    onChange={(e) => setAlternatingConfig(prev => ({ ...prev, stop_before_remarketing_seconds: parseInt(e.target.value) || 60 }))}
-                                />
+                            <div className="form-group mt-3" style={{display:'flex', gap:'20px'}}>
+                                <div style={{flex:1}}>
+                                    <label>⏱️ Intervalo entre mensagens (segundos)</label>
+                                    <input 
+                                        type="number"
+                                        min="1"
+                                        className="input-field"
+                                        value={alternatingConfig.rotation_interval_seconds || 15}
+                                        onChange={(e) => setAlternatingConfig(prev => ({ ...prev, rotation_interval_seconds: parseInt(e.target.value) || 15 }))}
+                                    />
+                                </div>
+                                <div style={{flex:1}}>
+                                    <label>🛑 Parar antes remarketing (segundos)</label>
+                                    <input 
+                                        type="number"
+                                        min="0"
+                                        className="input-field"
+                                        value={alternatingConfig.stop_before_remarketing_seconds || 60}
+                                        onChange={(e) => setAlternatingConfig(prev => ({ ...prev, stop_before_remarketing_seconds: parseInt(e.target.value) || 60 }))}
+                                    />
+                                </div>
                             </div>
                         </div>
                     )}
@@ -647,12 +672,14 @@ export function AutoRemarketing() {
                 <div className="stat-icon">{Icons.Star}</div>
                 <div className="stat-info">
                   <div className="stat-label">Receita Recuperada</div>
-                  <div className="stat-value">R$ --</div>
+                  <div className="stat-value">
+                     {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(stats.total_revenue || 0)}
+                  </div>
                 </div>
               </div>
             </div>
             
-            {/* Tabela de logs (Classe Ajustada para Scroll Horizontal Responsivo) */}
+            {/* Tabela de logs */}
             <div className="config-card">
                 <div className="card-header">
                     <h3>📜 Histórico de Envios</h3>
@@ -672,7 +699,7 @@ export function AutoRemarketing() {
                                 stats.logs.map((log) => (
                                     <tr key={log.id}>
                                         <td>{new Date(log.sent_at).toLocaleString()}</td>
-                                        <td>{log.user_id}</td>
+                                        <td>{log.user_id || log.user_telegram_id}</td>
                                         <td>
                                             <span className={`status-badge ${log.status}`}>
                                                 {log.status}
