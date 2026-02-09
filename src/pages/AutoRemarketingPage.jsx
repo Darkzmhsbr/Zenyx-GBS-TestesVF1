@@ -20,7 +20,8 @@ const Icons = {
   Fire: '🔥',
   Money: '💰',
   Star: '⭐',
-  Bomb: '💣'
+  Bomb: '💣',
+  Stop: '🛑'
 };
 
 // Objetos padrão para evitar erros de inicialização
@@ -41,7 +42,10 @@ const DEFAULT_ALTERNATING = {
   messages: [],
   rotation_interval_seconds: 15,
   stop_before_remarketing_seconds: 60,
-  auto_destruct_final: false
+  auto_destruct_final: false,
+  // ✅ NOVOS CAMPOS PARA DESTRUIÇÃO FINAL
+  last_message_auto_destruct: false,
+  last_message_destruct_seconds: 60
 };
 
 export function AutoRemarketing() {
@@ -89,7 +93,13 @@ export function AutoRemarketing() {
       
       // Validação de dados vindos da API
       setDisparoConfig(remarketing || DEFAULT_DISPARO);
-      setAlternatingConfig(alternating || DEFAULT_ALTERNATING);
+      
+      // Merge com defaults para garantir que os novos campos existam
+      setAlternatingConfig({
+          ...DEFAULT_ALTERNATING,
+          ...(alternating || {})
+      });
+
       setPlanos(Array.isArray(planosData) ? planosData : []); 
       
       // Garante estrutura mínima para stats
@@ -635,6 +645,35 @@ export function AutoRemarketing() {
                                         onChange={(e) => setAlternatingConfig(prev => ({ ...prev, stop_before_remarketing_seconds: parseInt(e.target.value) || 60 }))}
                                     />
                                 </div>
+                            </div>
+
+                            {/* ✅ NOVA SEÇÃO DE DESTRUIÇÃO FINAL */}
+                            <div className="config-card mt-3" style={{background:'#fff0f0', border:'1px solid #ffcccc'}}>
+                                <div className="switch-wrapper">
+                                    <div className="switch-label">
+                                        <span style={{color:'#d32f2f'}}>🛑 Encerrar e Destruir Última?</span>
+                                        <small style={{color:'#666'}}>Ao chegar na última msg: envia, espera e apaga.</small>
+                                    </div>
+                                    <label className="toggle-switch">
+                                        <input 
+                                            type="checkbox" 
+                                            checked={alternatingConfig.last_message_auto_destruct || false}
+                                            onChange={e => setAlternatingConfig({...alternatingConfig, last_message_auto_destruct: e.target.checked})}
+                                        />
+                                        <span className="slider round"></span>
+                                    </label>
+                                </div>
+                                {alternatingConfig.last_message_auto_destruct && (
+                                    <div className="form-group mt-2">
+                                        <label>⏳ Tempo para apagar a última (segundos)</label>
+                                        <input 
+                                            type="number" 
+                                            className="input-field" 
+                                            value={alternatingConfig.last_message_destruct_seconds || 60}
+                                            onChange={e => setAlternatingConfig({...alternatingConfig, last_message_destruct_seconds: parseInt(e.target.value)||60})} 
+                                        />
+                                    </div>
+                                )}
                             </div>
                         </div>
                     )}
