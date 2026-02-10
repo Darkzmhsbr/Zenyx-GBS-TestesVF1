@@ -5,6 +5,7 @@ import { useAuth } from '../context/AuthContext';
 // 👇 Importa componentes de estrutura
 import { Sidebar } from './Sidebar';
 import { Header } from './Header';
+import { ProgressWidget } from '../components/ProgressWidget';
 
 export function MainLayout() {
   const { user } = useAuth();
@@ -42,6 +43,9 @@ export function MainLayout() {
         {/* Outlet é onde as páginas (Dashboard, Bots, etc) serão renderizadas */}
         <Outlet />
       </main>
+
+      {/* 🚀 Widget de Progresso GLOBAL - persiste entre navegações de página */}
+      <ProgressWidget />
     </div>
   );
 }

@@ -1,7 +1,8 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useBot } from '../context/BotContext';
+import { useProgress } from '../context/ProgressContext';
 import { remarketingService, planService } from '../services/api';
-import { Send, Users, Image, MessageSquare, CheckCircle, AlertTriangle, History, Tag, Clock, RotateCcw, Edit, Play, Trash2, ChevronLeft, ChevronRight, Minimize2, Maximize2, X } from 'lucide-react';
+import { Send, Users, Image, MessageSquare, CheckCircle, AlertTriangle, History, Tag, Clock, RotateCcw, Edit, Play, Trash2, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Button } from '../components/Button';
 import { Card, CardContent } from '../components/Card';
 import { RichInput } from '../components/RichInput';
@@ -21,10 +22,8 @@ export function Remarketing() {
   const [totalCount, setTotalCount] = useState(0);
   const [perPage] = useState(10);
   
-  // 🔥 NOVO: Estados do Widget de Progresso
-  const [activeProgress, setActiveProgress] = useState(null);
-  const [progressData, setProgressData] = useState(null);
-  const progressIntervalRef = useRef(null);
+  // 🔥 PROGRESSO GLOBAL (via ProgressContext - persiste entre páginas)
+  const { startProgressMonitoring, progressData, activeProgress, closeProgressWidget } = useProgress();
   
   // Estado do Formulário
   const [formData, setFormData] = useState({
@@ -46,84 +45,32 @@ export function Remarketing() {
     }
   }, [selectedBot, currentPage]);
 
-  // 🔥 NOVO: Limpar polling quando componente desmonta
+  // (Polling de progresso agora é gerenciado pelo ProgressContext global)
+
+  // 🔥 Detecta quando campanha concluiu (via contexto global) para mostrar resultado
   useEffect(() => {
-    return () => {
-      if (progressIntervalRef.current) {
-        clearInterval(progressIntervalRef.current);
-      }
-    };
-  }, []);
+    if (progressData && progressData.is_complete) {
+      Swal.fire({
+        title: 'Campanha Concluída!',
+        html: `
+          <div style="text-align: left; padding: 10px;">
+            <p><strong>✅ Enviados:</strong> ${progressData.sent_success}</p>
+            <p><strong>❌ Bloqueados:</strong> ${progressData.blocked_count}</p>
+            <p><strong>👥 Total:</strong> ${progressData.total_leads}</p>
+          </div>
+        `,
+        icon: 'success',
+        confirmButtonText: 'OK',
+        background: '#151515',
+        color: '#fff'
+      });
 
-  // 🔥 NOVO: Função para buscar progresso da campanha
-  const fetchProgress = async (campaignId) => {
-    try {
-      const data = await remarketingService.getProgress(campaignId);
-      setProgressData(data);
-      
-      if (data.is_complete) {
-        clearInterval(progressIntervalRef.current);
-        progressIntervalRef.current = null;
-        
-        setTimeout(() => {
-          Swal.fire({
-            title: 'Campanha Concluída!',
-            html: `
-              <div style="text-align: left; padding: 10px;">
-                <p><strong>✅ Enviados:</strong> ${data.sent_success}</p>
-                <p><strong>❌ Bloqueados:</strong> ${data.blocked_count}</p>
-                <p><strong>👥 Total:</strong> ${data.total_leads}</p>
-              </div>
-            `,
-            icon: 'success',
-            confirmButtonText: 'OK',
-            background: '#151515',
-            color: '#fff'
-          });
-          
-          setTimeout(() => {
-            setActiveProgress(null);
-            setProgressData(null);
-            carregarHistorico();
-          }, 3000);
-        }, 500);
-      }
-    } catch (error) {
-      console.error('Erro ao buscar progresso:', error);
-      if (progressIntervalRef.current) {
-        clearInterval(progressIntervalRef.current);
-        progressIntervalRef.current = null;
-      }
+      setTimeout(() => {
+        closeProgressWidget();
+        carregarHistorico();
+      }, 1500);
     }
-  };
-
-  // 🔥 NOVO: Iniciar monitoramento de progresso
-  const startProgressMonitoring = (campaignId) => {
-    setActiveProgress({ campaignId, isMinimized: false });
-    fetchProgress(campaignId);
-    progressIntervalRef.current = setInterval(() => {
-      fetchProgress(campaignId);
-    }, 2000);
-  };
-
-  // 🔥 NOVO: Fechar widget
-  const closeProgressWidget = () => {
-    if (progressIntervalRef.current) {
-      clearInterval(progressIntervalRef.current);
-      progressIntervalRef.current = null;
-    }
-    setActiveProgress(null);
-    setProgressData(null);
-    carregarHistorico();
-  };
-
-  // 🔥 NOVO: Toggle minimizar/maximizar
-  const toggleMinimize = () => {
-    setActiveProgress(prev => ({
-      ...prev,
-      isMinimized: !prev.isMinimized
-    }));
-  };
+  }, [progressData?.is_complete]);
 
   const carregarHistorico = async () => {
     if (!selectedBot) return;
@@ -378,82 +325,7 @@ export function Remarketing() {
     { id: 'expirado', icon: '⏰', title: 'Expirados', desc: 'PIX venceu sem pagamento' }
   ];
 
-  // 🔥 NOVO: Renderizar Widget de Progresso
-  const renderProgressWidget = () => {
-    if (!activeProgress || !progressData) return null;
-
-    const { isMinimized } = activeProgress;
-    const { percentage, sent_success, blocked_count, total_leads, processed, status } = progressData;
-
-    const remaining = total_leads - processed;
-    const secondsRemaining = remaining * 0.04;
-    const minutesRemaining = Math.ceil(secondsRemaining / 60);
-
-    if (isMinimized) {
-      return (
-        <div className="progress-widget minimized">
-          <div className="progress-mini-content" onClick={toggleMinimize}>
-            <span>🚀 {processed}/{total_leads} ({percentage}%)</span>
-          </div>
-          <button className="btn-close-mini" onClick={closeProgressWidget}>
-            <X size={14} />
-          </button>
-        </div>
-      );
-    }
-
-    return (
-      <div className="progress-widget expanded">
-        <div className="progress-header">
-          <h3>🚀 Enviando Campanha</h3>
-          <div className="progress-controls">
-            <button onClick={toggleMinimize} title="Minimizar">
-              <Minimize2 size={16} />
-            </button>
-            <button onClick={closeProgressWidget} title="Fechar">
-              <X size={16} />
-            </button>
-          </div>
-        </div>
-        
-        <div className="progress-body">
-          <div className="progress-bar-container">
-            <div 
-              className="progress-bar-fill" 
-              style={{ width: `${percentage}%` }}
-            />
-          </div>
-          
-          <div className="progress-percentage">
-            {processed}/{total_leads} ({percentage}%)
-          </div>
-          
-          <div className="progress-metrics">
-            <div className="metric">
-              <span className="metric-label">✅ Enviados:</span>
-              <span className="metric-value">{sent_success}</span>
-            </div>
-            <div className="metric">
-              <span className="metric-label">❌ Bloqueados:</span>
-              <span className="metric-value">{blocked_count}</span>
-            </div>
-            {status === 'enviando' && remaining > 0 && (
-              <div className="metric">
-                <span className="metric-label">⏱️ Tempo restante:</span>
-                <span className="metric-value">~{minutesRemaining} min</span>
-              </div>
-            )}
-          </div>
-          
-          <div className="progress-status">
-            {status === 'enviando' && <span className="status-sending">⚡ Enviando...</span>}
-            {status === 'concluido' && <span className="status-complete">✅ Concluído!</span>}
-            {status === 'erro' && <span className="status-error">❌ Erro no envio</span>}
-          </div>
-        </div>
-      </div>
-    );
-  };
+  // (Widget de progresso agora é renderizado globalmente no MainLayout via ProgressWidget)
 
   // ============================================================
   // RENDER - HISTÓRICO
@@ -577,8 +449,6 @@ export function Remarketing() {
             </div>
           )}
         </div>
-        
-        {renderProgressWidget()}
       </div>
     );
   }
@@ -818,8 +688,6 @@ export function Remarketing() {
         )}
 
       </div>
-      
-      {renderProgressWidget()}
     </div>
   );
 }

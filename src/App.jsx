@@ -2,6 +2,7 @@ import React, { useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { BotProvider } from './context/BotContext';
 import { AuthProvider } from './context/AuthContext';
+import { ProgressProvider } from './context/ProgressContext';
 import { MainLayout } from './layout/MainLayout';
 
 // Autenticação e Landing
@@ -110,6 +111,7 @@ function App() {
   return (
     <AuthProvider>
       <BotProvider>
+        <ProgressProvider>
         <Router>
           <Routes>
             {/* Rota Pública: Landing Page */}
@@ -178,6 +180,7 @@ function App() {
 
           </Routes>
         </Router>
+        </ProgressProvider>
       </BotProvider>
     </AuthProvider>
   );
