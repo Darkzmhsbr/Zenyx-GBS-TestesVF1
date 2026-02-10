@@ -49,6 +49,7 @@ export function Tracking() {
   // Forms
   const [newFolder, setNewFolder] = useState({ nome: '', plataforma: 'instagram' });
   const [newLink, setNewLink] = useState({ nome: '', origem: 'stories', bot_id: '', codigo: '' });
+  const [customOrigem, setCustomOrigem] = useState('');
 
   // Load Inicial
   useEffect(() => {
@@ -177,9 +178,15 @@ export function Tracking() {
 
   const handleCreateLink = async () => {
     if (!newLink.nome || !newLink.bot_id) return Swal.fire('Atenção', 'Preencha Nome e Bot', 'warning');
+    
+    // Resolve a origem final
+    const origemFinal = newLink.origem === 'custom' ? customOrigem.trim() : newLink.origem;
+    if (!origemFinal) return Swal.fire('Atenção', 'Defina o nome da origem personalizada', 'warning');
+    
     try {
       await trackingService.createLink({
         ...newLink,
+        origem: origemFinal,
         folder_id: selectedFolder.id
       });
       setShowLinkModal(false);
@@ -189,6 +196,7 @@ export function Tracking() {
       
       // Reseta form
       setNewLink({ nome: '', origem: 'stories', bot_id: '', codigo: '' });
+      setCustomOrigem('');
       
       Swal.fire({
         title: 'Sucesso',
@@ -647,19 +655,45 @@ export function Tracking() {
                     </div>
 
                     <div className="form-group" style={{marginBottom:15}}>
-                        <Select 
-                            label="Origem Específica (Tag)"
-                            options={[
-                                {label: 'Stories', value: 'stories'},
-                                {label: 'Feed / Post', value: 'feed'},
-                                {label: 'Reels / Shorts', value: 'reels'},
-                                {label: 'Bio / Perfil', value: 'bio'},
-                                {label: 'Anúncio Pago (Ads)', value: 'ads'},
-                                {label: 'Grupo / Canal', value: 'grupo'}
-                            ]}
-                            value={newLink.origem}
-                            onChange={e => setNewLink({...newLink, origem: e.target.value})}
-                        />
+                        <label className="input-label">Origem Específica (Tag)</label>
+                        <div className="origem-grid">
+                            {[
+                                { value: 'stories', label: 'Stories', icon: '📱' },
+                                { value: 'feed', label: 'Feed / Post', icon: '📰' },
+                                { value: 'reels', label: 'Reels / Shorts', icon: '🎬' },
+                                { value: 'bio', label: 'Bio / Perfil', icon: '👤' },
+                                { value: 'ads', label: 'Anúncio (Ads)', icon: '💰' },
+                                { value: 'grupo', label: 'Grupo / Canal', icon: '👥' },
+                                { value: 'remarketing', label: 'Remarketing', icon: '📢' },
+                                { value: 'disparo_auto', label: 'Disparo Auto', icon: '🚀' },
+                                { value: 'email', label: 'E-mail', icon: '📧' },
+                                { value: 'custom', label: 'Personalizado', icon: '✏️' }
+                            ].map(opt => (
+                                <button
+                                    key={opt.value}
+                                    type="button"
+                                    className={`origem-chip ${newLink.origem === opt.value ? 'selected' : ''}`}
+                                    onClick={() => {
+                                        setNewLink({...newLink, origem: opt.value});
+                                        if (opt.value !== 'custom') setCustomOrigem('');
+                                    }}
+                                >
+                                    <span className="origem-chip-icon">{opt.icon}</span>
+                                    <span>{opt.label}</span>
+                                </button>
+                            ))}
+                        </div>
+                        
+                        {newLink.origem === 'custom' && (
+                            <div style={{marginTop: 10}}>
+                                <Input
+                                    label="Nome da Origem Personalizada"
+                                    placeholder="Ex: YouTube Shorts, TikTok Ads, Parceiro X..."
+                                    value={customOrigem}
+                                    onChange={e => setCustomOrigem(e.target.value)}
+                                />
+                            </div>
+                        )}
                     </div>
 
                     <div className="form-group">
@@ -673,7 +707,7 @@ export function Tracking() {
                     </div>
 
                     <div className="modal-actions">
-                        <Button variant="ghost" onClick={() => setShowLinkModal(false)}>Cancelar</Button>
+                        <Button variant="ghost" onClick={() => { setShowLinkModal(false); setCustomOrigem(''); }}>Cancelar</Button>
                         <Button onClick={handleCreateLink}>Gerar Link</Button>
                     </div>
                 </div>

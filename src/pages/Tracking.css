@@ -306,3 +306,46 @@
         text-align: left;
     }
 }
+
+/* =========================================================
+   🏷️ ORIGEM CHIPS - SELEÇÃO VISUAL DE ORIGENS
+   ========================================================= */
+
+.origem-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+    gap: 8px;
+}
+
+.origem-chip {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 12px;
+    background: rgba(255,255,255,0.03);
+    border: 1px solid var(--card-border);
+    border-radius: 8px;
+    color: #aaa;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-size: 0.82rem;
+    white-space: nowrap;
+}
+
+.origem-chip:hover {
+    border-color: rgba(195, 51, 255, 0.4);
+    background: rgba(195, 51, 255, 0.05);
+    color: #fff;
+}
+
+.origem-chip.selected {
+    border-color: #c333ff;
+    background: rgba(195, 51, 255, 0.15);
+    color: #fff;
+    box-shadow: 0 0 8px rgba(195, 51, 255, 0.2);
+}
+
+.origem-chip-icon {
+    font-size: 1rem;
+    line-height: 1;
+}
