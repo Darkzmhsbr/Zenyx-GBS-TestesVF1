@@ -2,11 +2,13 @@ import React, { useState, useEffect } from 'react';
 import { 
   FolderPlus, Link as LinkIcon, Trash2, ArrowLeft, Copy, 
   BarChart2, PieChart, DollarSign, MousePointer, Users,
-  Facebook, Instagram, Youtube, MessageCircle, Globe, Share2, Send
+  Facebook, Instagram, Youtube, MessageCircle, Globe, Share2, Send,
+  TrendingUp, ChevronDown, ChevronUp, Percent, ShoppingBag, Rocket, ArrowDownCircle
 } from 'lucide-react';
 import { 
   PieChart as RePieChart, Pie, Cell, Tooltip, ResponsiveContainer,
-  BarChart, Bar, XAxis, YAxis, CartesianGrid, Legend
+  BarChart, Bar, XAxis, YAxis, CartesianGrid, Legend,
+  LineChart, Line
 } from 'recharts';
 import { trackingService, botService } from '../services/api';
 import { Button } from '../components/Button';
@@ -33,6 +35,12 @@ export function Tracking() {
   // Dados Gráficos Reais
   const [pieData, setPieData] = useState([]);
   const [barData, setBarData] = useState([]);
+  
+  // 📊 NOVOS: Dados avançados
+  const [chartData, setChartData] = useState([]);
+  const [rankingData, setRankingData] = useState([]);
+  const [expandedLinkId, setExpandedLinkId] = useState(null);
+  const [linkMetrics, setLinkMetrics] = useState({});
   
   // Modais
   const [showFolderModal, setShowFolderModal] = useState(false);
@@ -62,7 +70,31 @@ export function Tracking() {
     try {
       const data = await trackingService.listFolders();
       setFolders(data);
-      processCharts(data); // 🔥 Processa dados reais vindos do backend
+      processCharts(data);
+      
+      // 📊 Carrega dados avançados em paralelo
+      try {
+        const [chartRes, rankRes] = await Promise.all([
+          trackingService.getChart(7),
+          trackingService.getRanking(10)
+        ]);
+        
+        // Transforma chartData para formato Recharts
+        if (chartRes && chartRes.labels && chartRes.datasets) {
+          const formatted = chartRes.labels.map((label, i) => {
+            const point = { dia: label };
+            chartRes.datasets.forEach(ds => {
+              point[ds.codigo] = ds.data[i] || 0;
+            });
+            return point;
+          });
+          setChartData(formatted);
+        }
+        
+        if (rankRes) setRankingData(rankRes);
+      } catch (e) {
+        console.error("Erro dados avançados:", e);
+      }
     } catch (error) {
       console.error("Erro ao carregar pastas", error);
     } finally {
@@ -217,6 +249,22 @@ export function Tracking() {
   };
 
   // --- UTILITÁRIOS ---
+  const toggleLinkExpand = async (linkId) => {
+    if (expandedLinkId === linkId) {
+      setExpandedLinkId(null);
+      return;
+    }
+    setExpandedLinkId(linkId);
+    if (!linkMetrics[linkId]) {
+      try {
+        const metrics = await trackingService.getLinkMetrics(linkId);
+        setLinkMetrics(prev => ({ ...prev, [linkId]: metrics }));
+      } catch (e) {
+        console.error("Erro métricas:", e);
+      }
+    }
+  };
+
   const copyLink = (linkData) => {
     const bot = bots.find(b => b.value === linkData.bot_id);
     const username = bot ? bot.username : 'SeuBot';
@@ -268,32 +316,35 @@ export function Tracking() {
             <>
                 {/* --- ÁREA DE GRÁFICOS (DASHBOARD) --- */}
                 <div className="charts-grid">
+                    {/* 📈 GRÁFICO DE DESEMPENHO TEMPORAL (7 DIAS) */}
                     <Card>
                         <CardContent>
-                            <h3 className="chart-title">Origem do Tráfego (Cliques)</h3>
-                            <div style={{ width: '100%', height: 250 }}>
-                                <ResponsiveContainer>
-                                    <RePieChart>
-                                        <Pie
-                                            data={pieData}
-                                            cx="50%" cy="50%"
-                                            innerRadius={60}
-                                            outerRadius={80}
-                                            paddingAngle={5}
-                                            dataKey="value"
-                                        >
-                                            {pieData.map((entry, index) => (
-                                                <Cell key={`cell-${index}`} fill={entry.color || COLORS[index % COLORS.length]} />
+                            <h3 className="chart-title"><TrendingUp size={16} style={{verticalAlign:'middle', marginRight:6}}/> Desempenho dos códigos (7 dias)</h3>
+                            {chartData.length > 0 ? (
+                                <div style={{ width: '100%', height: 250 }}>
+                                    <ResponsiveContainer>
+                                        <LineChart data={chartData}>
+                                            <CartesianGrid strokeDasharray="3 3" stroke="#333" />
+                                            <XAxis dataKey="dia" stroke="#888" fontSize={12} />
+                                            <YAxis stroke="#888" allowDecimals={false} />
+                                            <Tooltip contentStyle={{backgroundColor: '#111', border: '1px solid #333'}} />
+                                            <Legend />
+                                            {chartData.length > 0 && Object.keys(chartData[0]).filter(k => k !== 'dia').map((key, i) => (
+                                                <Line key={key} type="monotone" dataKey={key} stroke={COLORS[i % COLORS.length]} strokeWidth={2} dot={{ r: 4 }} />
                                             ))}
-                                        </Pie>
-                                        <Tooltip contentStyle={{backgroundColor: '#111', border: '1px solid #333'}} />
-                                        <Legend />
-                                    </RePieChart>
-                                </ResponsiveContainer>
-                            </div>
+                                        </LineChart>
+                                    </ResponsiveContainer>
+                                </div>
+                            ) : (
+                                <div style={{height: 250, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#666', flexDirection: 'column'}}>
+                                    <TrendingUp size={48} style={{opacity:0.2, marginBottom: 10}}/>
+                                    <p>Sem dados de vendas nos últimos 7 dias</p>
+                                </div>
+                            )}
                         </CardContent>
                     </Card>
 
+                    {/* 📊 CONVERSÃO POR CAMPANHA (CLIQUES x VENDAS) */}
                     <Card>
                         <CardContent>
                             <h3 className="chart-title">Conversão por Campanha (Cliques x Vendas)</h3>
@@ -320,6 +371,49 @@ export function Tracking() {
                         </CardContent>
                     </Card>
                 </div>
+
+                {/* 🏆 RANKING TOP CÓDIGOS POR FATURAMENTO */}
+                {rankingData.length > 0 && (
+                    <div style={{marginBottom: 30}}>
+                        <h3 style={{marginBottom: 15}}><DollarSign size={18} style={{verticalAlign:'middle', marginRight:6}}/> Códigos com maior valor arrecadado</h3>
+                        <div className="charts-grid">
+                            <Card>
+                                <CardContent>
+                                    <div style={{ width: '100%', height: 280 }}>
+                                        <ResponsiveContainer>
+                                            <BarChart data={rankingData.slice(0, 5)} layout="vertical">
+                                                <CartesianGrid strokeDasharray="3 3" stroke="#333" />
+                                                <XAxis type="number" stroke="#888" tickFormatter={v => `R$${v}`} />
+                                                <YAxis type="category" dataKey="codigo" stroke="#888" width={100} fontSize={12} />
+                                                <Tooltip contentStyle={{backgroundColor: '#111', border: '1px solid #333'}} formatter={v => `R$ ${v.toFixed(2)}`} />
+                                                <Bar dataKey="faturamento_total" name="Faturamento" fill="#fbbf24" radius={[0, 4, 4, 0]} />
+                                            </BarChart>
+                                        </ResponsiveContainer>
+                                    </div>
+                                </CardContent>
+                            </Card>
+
+                            <Card>
+                                <CardContent>
+                                    <h3 className="chart-title">Origem do Tráfego (Cliques)</h3>
+                                    <div style={{ width: '100%', height: 250 }}>
+                                        <ResponsiveContainer>
+                                            <RePieChart>
+                                                <Pie data={pieData} cx="50%" cy="50%" innerRadius={60} outerRadius={80} paddingAngle={5} dataKey="value">
+                                                    {pieData.map((entry, index) => (
+                                                        <Cell key={`cell-${index}`} fill={entry.color || COLORS[index % COLORS.length]} />
+                                                    ))}
+                                                </Pie>
+                                                <Tooltip contentStyle={{backgroundColor: '#111', border: '1px solid #333'}} />
+                                                <Legend />
+                                            </RePieChart>
+                                        </ResponsiveContainer>
+                                    </div>
+                                </CardContent>
+                            </Card>
+                        </div>
+                    </div>
+                )}
 
                 <h3 style={{marginTop: '30px', marginBottom: '15px'}}>Suas Pastas</h3>
                 
@@ -362,43 +456,119 @@ export function Tracking() {
 
                 <div className="links-list">
                     {currentLinks.map(link => (
-                        <div key={link.id} className="link-item">
-                            <div className="link-main-info">
-                                <div className="link-icon-wrapper">
-                                    <LinkIcon size={20} color="#c333ff" />
+                        <div key={link.id} className={`link-item-wrapper ${expandedLinkId === link.id ? 'expanded' : ''}`}>
+                            <div className="link-item" onClick={() => toggleLinkExpand(link.id)} style={{cursor:'pointer'}}>
+                                <div className="link-main-info">
+                                    <div className="link-icon-wrapper">
+                                        <LinkIcon size={20} color="#c333ff" />
+                                    </div>
+                                    <div>
+                                        <div className="link-name">{link.nome}</div>
+                                        <div className="link-code">Código: <code>{link.codigo}</code> • Origem: {link.origem}</div>
+                                    </div>
                                 </div>
-                                <div>
-                                    <div className="link-name">{link.nome}</div>
-                                    <div className="link-code">Código: <code>{link.codigo}</code> • Origem: {link.origem}</div>
+
+                                <div className="link-stats">
+                                    <div className="stat-box">
+                                        <MousePointer size={14} />
+                                        <span>{link.clicks} <small>Cliques</small></span>
+                                    </div>
+                                    <div className="stat-box highlight">
+                                        <Users size={14} />
+                                        <span>{link.leads} <small>Leads</small></span>
+                                    </div>
+                                    <div className="stat-box success">
+                                        <DollarSign size={14} />
+                                        <span>{link.vendas} <small>Vendas</small></span>
+                                    </div>
+                                    <div className="stat-box money">
+                                        <span>R$ {link.faturamento?.toFixed(2)}</span>
+                                    </div>
+                                </div>
+
+                                <div className="link-actions">
+                                    <button className="action-btn" onClick={(e) => { e.stopPropagation(); toggleLinkExpand(link.id); }} title="Detalhes">
+                                        {expandedLinkId === link.id ? <ChevronUp size={18}/> : <ChevronDown size={18}/>}
+                                    </button>
+                                    <button className="action-btn copy" onClick={(e) => { e.stopPropagation(); copyLink(link); }} title="Copiar Link">
+                                        <Copy size={18} />
+                                    </button>
+                                    <button className="action-btn delete" onClick={(e) => { e.stopPropagation(); handleDeleteLink(link.id); }} title="Excluir">
+                                        <Trash2 size={18} />
+                                    </button>
                                 </div>
                             </div>
 
-                            <div className="link-stats">
-                                <div className="stat-box">
-                                    <MousePointer size={14} />
-                                    <span>{link.clicks} <small>Cliques</small></span>
+                            {/* 📊 PAINEL EXPANDIDO COM BREAKDOWN */}
+                            {expandedLinkId === link.id && (
+                                <div className="link-expanded-panel">
+                                    {linkMetrics[link.id] ? (
+                                        <>
+                                            <div className="metrics-summary">
+                                                <div className="metric-card">
+                                                    <small>Faturamento Total</small>
+                                                    <strong style={{color:'#fbbf24'}}>R$ {linkMetrics[link.id].faturamento_total?.toFixed(2)}</strong>
+                                                </div>
+                                                <div className="metric-card">
+                                                    <small>Total Vendas</small>
+                                                    <strong style={{color:'#10b981'}}>{linkMetrics[link.id].vendas_total}</strong>
+                                                </div>
+                                                <div className="metric-card">
+                                                    <small>Leads</small>
+                                                    <strong style={{color:'#3b82f6'}}>{linkMetrics[link.id].leads}</strong>
+                                                </div>
+                                                <div className="metric-card">
+                                                    <small>Conversão</small>
+                                                    <strong style={{color:'#c333ff'}}>{linkMetrics[link.id].conversao}%</strong>
+                                                </div>
+                                            </div>
+                                            <div className="breakdown-bars">
+                                                <div className="breakdown-item">
+                                                    <div className="breakdown-label">
+                                                        <ShoppingBag size={14} color="#3b82f6"/>
+                                                        <span>Normais</span>
+                                                    </div>
+                                                    <div className="breakdown-values">
+                                                        <span>R$ {linkMetrics[link.id].breakdown.normais.faturamento.toFixed(2)}</span>
+                                                        <small>{linkMetrics[link.id].breakdown.normais.vendas} vendas</small>
+                                                    </div>
+                                                    <div className="breakdown-bar-track">
+                                                        <div className="breakdown-bar-fill normal" style={{width: `${linkMetrics[link.id].faturamento_total > 0 ? (linkMetrics[link.id].breakdown.normais.faturamento / linkMetrics[link.id].faturamento_total * 100) : 0}%`}}/>
+                                                    </div>
+                                                </div>
+                                                <div className="breakdown-item">
+                                                    <div className="breakdown-label">
+                                                        <Rocket size={14} color="#10b981"/>
+                                                        <span>Upsell</span>
+                                                    </div>
+                                                    <div className="breakdown-values">
+                                                        <span>R$ {linkMetrics[link.id].breakdown.upsell.faturamento.toFixed(2)}</span>
+                                                        <small>{linkMetrics[link.id].breakdown.upsell.vendas} vendas</small>
+                                                    </div>
+                                                    <div className="breakdown-bar-track">
+                                                        <div className="breakdown-bar-fill upsell" style={{width: `${linkMetrics[link.id].faturamento_total > 0 ? (linkMetrics[link.id].breakdown.upsell.faturamento / linkMetrics[link.id].faturamento_total * 100) : 0}%`}}/>
+                                                    </div>
+                                                </div>
+                                                <div className="breakdown-item">
+                                                    <div className="breakdown-label">
+                                                        <ArrowDownCircle size={14} color="#ef4444"/>
+                                                        <span>Downsell</span>
+                                                    </div>
+                                                    <div className="breakdown-values">
+                                                        <span>R$ {linkMetrics[link.id].breakdown.downsell.faturamento.toFixed(2)}</span>
+                                                        <small>{linkMetrics[link.id].breakdown.downsell.vendas} vendas</small>
+                                                    </div>
+                                                    <div className="breakdown-bar-track">
+                                                        <div className="breakdown-bar-fill downsell" style={{width: `${linkMetrics[link.id].faturamento_total > 0 ? (linkMetrics[link.id].breakdown.downsell.faturamento / linkMetrics[link.id].faturamento_total * 100) : 0}%`}}/>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </>
+                                    ) : (
+                                        <p style={{color:'#666', textAlign:'center', padding:'20px'}}>Carregando métricas...</p>
+                                    )}
                                 </div>
-                                <div className="stat-box highlight">
-                                    <Users size={14} />
-                                    <span>{link.leads} <small>Leads</small></span>
-                                </div>
-                                <div className="stat-box success">
-                                    <DollarSign size={14} />
-                                    <span>{link.vendas} <small>Vendas</small></span>
-                                </div>
-                                <div className="stat-box money">
-                                    <span>R$ {link.faturamento?.toFixed(2)}</span>
-                                </div>
-                            </div>
-
-                            <div className="link-actions">
-                                <button className="action-btn copy" onClick={() => copyLink(link)} title="Copiar Link">
-                                    <Copy size={18} />
-                                </button>
-                                <button className="action-btn delete" onClick={() => handleDeleteLink(link.id)} title="Excluir">
-                                    <Trash2 size={18} />
-                                </button>
-                            </div>
+                            )}
                         </div>
                     ))}
 

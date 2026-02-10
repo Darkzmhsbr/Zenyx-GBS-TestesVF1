@@ -165,3 +165,144 @@
 }
 .action-btn.copy:hover { color: #3b82f6; border-color: #3b82f6; }
 .action-btn.delete:hover { color: #ef4444; border-color: #ef4444; }
+/* =========================================================
+   📊 NOVAS CLASSES - PAINEL EXPANDIDO + BREAKDOWN
+   ========================================================= */
+
+/* Wrapper do link (permite expansão) */
+.link-item-wrapper {
+    margin-bottom: 15px;
+    border-radius: 10px;
+    border: 1px solid var(--card-border);
+    background: var(--card);
+    overflow: hidden;
+    transition: border-color 0.2s;
+}
+
+.link-item-wrapper:hover {
+    border-color: rgba(195, 51, 255, 0.3);
+}
+
+.link-item-wrapper.expanded {
+    border-color: rgba(195, 51, 255, 0.5);
+}
+
+.link-item-wrapper .link-item {
+    border: none;
+    margin-bottom: 0;
+    border-radius: 0;
+    background: transparent;
+}
+
+/* Painel expandido */
+.link-expanded-panel {
+    padding: 20px;
+    border-top: 1px solid var(--card-border);
+    background: rgba(0, 0, 0, 0.2);
+    animation: slideDown 0.25s ease;
+}
+
+@keyframes slideDown {
+    from { opacity: 0; max-height: 0; }
+    to { opacity: 1; max-height: 500px; }
+}
+
+/* Métricas resumo */
+.metrics-summary {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px;
+    margin-bottom: 20px;
+}
+
+.metric-card {
+    background: rgba(255,255,255,0.03);
+    border: 1px solid rgba(255,255,255,0.06);
+    border-radius: 8px;
+    padding: 12px;
+    text-align: center;
+}
+
+.metric-card small {
+    display: block;
+    color: #666;
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    margin-bottom: 4px;
+}
+
+.metric-card strong {
+    font-size: 1.2rem;
+}
+
+/* Breakdown bars */
+.breakdown-bars {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.breakdown-item {
+    display: grid;
+    grid-template-columns: 120px 1fr 1fr;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 12px;
+    background: rgba(255,255,255,0.02);
+    border-radius: 8px;
+    border: 1px solid rgba(255,255,255,0.04);
+}
+
+.breakdown-label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.85rem;
+    color: #ccc;
+}
+
+.breakdown-values {
+    text-align: right;
+    font-size: 0.9rem;
+    color: #fff;
+}
+
+.breakdown-values small {
+    display: block;
+    font-size: 0.7rem;
+    color: #666;
+}
+
+.breakdown-bar-track {
+    height: 8px;
+    background: rgba(255,255,255,0.05);
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+.breakdown-bar-fill {
+    height: 100%;
+    border-radius: 4px;
+    transition: width 0.5s ease;
+    min-width: 2px;
+}
+
+.breakdown-bar-fill.normal { background: linear-gradient(90deg, #3b82f6, #60a5fa); }
+.breakdown-bar-fill.upsell { background: linear-gradient(90deg, #10b981, #34d399); }
+.breakdown-bar-fill.downsell { background: linear-gradient(90deg, #ef4444, #f87171); }
+
+/* Responsivo */
+@media (max-width: 768px) {
+    .metrics-summary {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    
+    .breakdown-item {
+        grid-template-columns: 1fr;
+        gap: 6px;
+    }
+    
+    .breakdown-values {
+        text-align: left;
+    }
+}

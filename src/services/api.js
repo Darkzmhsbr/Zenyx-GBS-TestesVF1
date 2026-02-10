@@ -529,6 +529,37 @@ export const trackingService = {
       console.error("Erro ao deletar link de tracking:", error);
       throw error;
     }
+  },
+
+  // 📊 NOVAS ROTAS DE MÉTRICAS AVANÇADAS
+  getLinkMetrics: async (linkId) => {
+    try {
+      const response = await api.get(`/api/admin/tracking/link/${linkId}/metrics`);
+      return response.data;
+    } catch (error) {
+      console.error("Erro ao buscar métricas do link:", error);
+      throw error;
+    }
+  },
+
+  getChart: async (days = 7) => {
+    try {
+      const response = await api.get(`/api/admin/tracking/chart?days=${days}`);
+      return response.data;
+    } catch (error) {
+      console.error("Erro ao buscar dados do gráfico:", error);
+      throw error;
+    }
+  },
+
+  getRanking: async (limit = 10) => {
+    try {
+      const response = await api.get(`/api/admin/tracking/ranking?limit=${limit}`);
+      return response.data;
+    } catch (error) {
+      console.error("Erro ao buscar ranking:", error);
+      throw error;
+    }
   }
 };
 
