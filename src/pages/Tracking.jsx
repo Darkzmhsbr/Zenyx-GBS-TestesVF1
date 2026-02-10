@@ -3,7 +3,7 @@ import {
   FolderPlus, Link as LinkIcon, Trash2, ArrowLeft, Copy, 
   BarChart2, PieChart, DollarSign, MousePointer, Users,
   Facebook, Instagram, Youtube, MessageCircle, Globe, Share2, Send,
-  TrendingUp, ChevronDown, ChevronUp, Percent, ShoppingBag, Rocket, ArrowDownCircle, Megaphone, Zap
+  TrendingUp, ChevronDown, ChevronUp, Percent, ShoppingBag, Rocket, ArrowDownCircle, Megaphone, Zap, Gift
 } from 'lucide-react';
 import { 
   PieChart as RePieChart, Pie, Cell, Tooltip, ResponsiveContainer,
@@ -597,6 +597,21 @@ export function Tracking() {
                                                     </div>
                                                     <div className="breakdown-bar-track">
                                                         <div className="breakdown-bar-fill disparo_auto" style={{width: `${linkMetrics[link.id].faturamento_total > 0 ? (linkMetrics[link.id].breakdown.disparo_auto.faturamento / linkMetrics[link.id].faturamento_total * 100) : 0}%`}}/>
+                                                    </div>
+                                                </div>
+                                                )}
+                                                {linkMetrics[link.id].breakdown.order_bump && (
+                                                <div className="breakdown-item">
+                                                    <div className="breakdown-label">
+                                                        <Gift size={14} color="#ec4899"/>
+                                                        <span>Order Bump</span>
+                                                    </div>
+                                                    <div className="breakdown-values">
+                                                        <span>R$ {linkMetrics[link.id].breakdown.order_bump.faturamento.toFixed(2)}</span>
+                                                        <small>{linkMetrics[link.id].breakdown.order_bump.vendas} vendas</small>
+                                                    </div>
+                                                    <div className="breakdown-bar-track">
+                                                        <div className="breakdown-bar-fill order_bump" style={{width: `${linkMetrics[link.id].faturamento_total > 0 ? (linkMetrics[link.id].breakdown.order_bump.faturamento / linkMetrics[link.id].faturamento_total * 100) : 0}%`}}/>
                                                     </div>
                                                 </div>
                                                 )}

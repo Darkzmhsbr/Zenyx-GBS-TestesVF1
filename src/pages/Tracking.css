@@ -292,6 +292,7 @@
 .breakdown-bar-fill.downsell { background: linear-gradient(90deg, #ef4444, #f87171); }
 .breakdown-bar-fill.remarketing { background: linear-gradient(90deg, #f59e0b, #fbbf24); }
 .breakdown-bar-fill.disparo_auto { background: linear-gradient(90deg, #8b5cf6, #a78bfa); }
+.breakdown-bar-fill.order_bump { background: linear-gradient(90deg, #ec4899, #f472b6); }
 
 /* Responsivo */
 @media (max-width: 768px) {
