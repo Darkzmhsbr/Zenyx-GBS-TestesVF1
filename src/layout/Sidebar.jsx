@@ -23,7 +23,9 @@ import {
   User, 
   Target,
   Crown, // 👑 Ícone do Super Admin
-  Send // 🚀 Ícone do Disparo Automático
+  Send, // 🚀 Ícone do Disparo Automático
+  Rocket, // 🚀 Ícone do Upsell
+  ArrowDownCircle // 📉 Ícone do Downsell
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import './Sidebar.css';
@@ -204,6 +206,12 @@ export function Sidebar({ isOpen, onClose }) {
                 </Link>
                 <Link to="/ofertas/order-bump" className={`nav-item ${isActive('/ofertas/order-bump')}`} onClick={onClose}>
                   <ShoppingBag size={18} /> <span>Order Bump</span>
+                </Link>
+                <Link to="/ofertas/upsell" className={`nav-item ${isActive('/ofertas/upsell')}`} onClick={onClose}>
+                  <Rocket size={18} /> <span>Upsell</span>
+                </Link>
+                <Link to="/ofertas/downsell" className={`nav-item ${isActive('/ofertas/downsell')}`} onClick={onClose}>
+                  <ArrowDownCircle size={18} /> <span>Downsell</span>
                 </Link>
               </div>
             )}

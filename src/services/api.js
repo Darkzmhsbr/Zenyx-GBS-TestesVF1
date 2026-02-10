@@ -213,6 +213,22 @@ export const orderBumpService = {
 };
 
 // ============================================================
+// 🚀 SERVIÇO DE UPSELL
+// ============================================================
+export const upsellService = {
+  get: async (botId) => (await api.get(`/api/admin/bots/${botId}/upsell`)).data,
+  save: async (botId, data) => (await api.post(`/api/admin/bots/${botId}/upsell`, data)).data
+};
+
+// ============================================================
+// 📉 SERVIÇO DE DOWNSELL
+// ============================================================
+export const downsellService = {
+  get: async (botId) => (await api.get(`/api/admin/bots/${botId}/downsell`)).data,
+  save: async (botId, data) => (await api.post(`/api/admin/bots/${botId}/downsell`, data)).data
+};
+
+// ============================================================
 // 📢 SERVIÇO DE REMARKETING
 // ============================================================
 export const remarketingService = {

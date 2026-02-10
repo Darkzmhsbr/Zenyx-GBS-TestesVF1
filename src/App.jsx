@@ -28,6 +28,7 @@ import { ChatFlow } from './pages/ChatFlow';
 import { Remarketing } from './pages/Remarketing';
 import { AdminManager } from './pages/AdminManager';
 import { OrderBump } from './pages/OrderBump';
+import { UpsellDownsell } from './pages/UpsellDownsell';
 import { Profile } from './pages/Profile';
 import { Tracking } from './pages/Tracking';
 import { AuditLogs } from './pages/AuditLogs';
@@ -149,6 +150,8 @@ function App() {
               <Route path="/integracoes" element={<Integrations />} />
               
               <Route path="/ofertas/order-bump" element={<OrderBump />} />
+              <Route path="/ofertas/upsell" element={<UpsellDownsell type="upsell" />} />
+              <Route path="/ofertas/downsell" element={<UpsellDownsell type="downsell" />} />
               <Route path="/rastreamento" element={<Tracking />} />
               <Route path="/perfil" element={<Profile />} />
               
