@@ -3,7 +3,7 @@ import {
   FolderPlus, Link as LinkIcon, Trash2, ArrowLeft, Copy, 
   BarChart2, PieChart, DollarSign, MousePointer, Users,
   Facebook, Instagram, Youtube, MessageCircle, Globe, Share2, Send,
-  TrendingUp, ChevronDown, ChevronUp, Percent, ShoppingBag, Rocket, ArrowDownCircle
+  TrendingUp, ChevronDown, ChevronUp, Percent, ShoppingBag, Rocket, ArrowDownCircle, Megaphone, Zap
 } from 'lucide-react';
 import { 
   PieChart as RePieChart, Pie, Cell, Tooltip, ResponsiveContainer,
@@ -570,6 +570,36 @@ export function Tracking() {
                                                         <div className="breakdown-bar-fill downsell" style={{width: `${linkMetrics[link.id].faturamento_total > 0 ? (linkMetrics[link.id].breakdown.downsell.faturamento / linkMetrics[link.id].faturamento_total * 100) : 0}%`}}/>
                                                     </div>
                                                 </div>
+                                                {linkMetrics[link.id].breakdown.remarketing && (
+                                                <div className="breakdown-item">
+                                                    <div className="breakdown-label">
+                                                        <Megaphone size={14} color="#f59e0b"/>
+                                                        <span>Remarketing</span>
+                                                    </div>
+                                                    <div className="breakdown-values">
+                                                        <span>R$ {linkMetrics[link.id].breakdown.remarketing.faturamento.toFixed(2)}</span>
+                                                        <small>{linkMetrics[link.id].breakdown.remarketing.vendas} vendas</small>
+                                                    </div>
+                                                    <div className="breakdown-bar-track">
+                                                        <div className="breakdown-bar-fill remarketing" style={{width: `${linkMetrics[link.id].faturamento_total > 0 ? (linkMetrics[link.id].breakdown.remarketing.faturamento / linkMetrics[link.id].faturamento_total * 100) : 0}%`}}/>
+                                                    </div>
+                                                </div>
+                                                )}
+                                                {linkMetrics[link.id].breakdown.disparo_auto && (
+                                                <div className="breakdown-item">
+                                                    <div className="breakdown-label">
+                                                        <Zap size={14} color="#8b5cf6"/>
+                                                        <span>Disparo Auto</span>
+                                                    </div>
+                                                    <div className="breakdown-values">
+                                                        <span>R$ {linkMetrics[link.id].breakdown.disparo_auto.faturamento.toFixed(2)}</span>
+                                                        <small>{linkMetrics[link.id].breakdown.disparo_auto.vendas} vendas</small>
+                                                    </div>
+                                                    <div className="breakdown-bar-track">
+                                                        <div className="breakdown-bar-fill disparo_auto" style={{width: `${linkMetrics[link.id].faturamento_total > 0 ? (linkMetrics[link.id].breakdown.disparo_auto.faturamento / linkMetrics[link.id].faturamento_total * 100) : 0}%`}}/>
+                                                    </div>
+                                                </div>
+                                                )}
                                             </div>
                                         </>
                                     ) : (
