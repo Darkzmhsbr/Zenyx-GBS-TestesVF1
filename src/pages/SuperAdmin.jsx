@@ -248,7 +248,7 @@ export function SuperAdmin() {
 
           <button 
             className="action-card"
-            onClick={() => navigate('/')}
+            onClick={() => navigate('/dashboard')}
           >
             <div className="action-icon">📊</div>
             <div className="action-content">
