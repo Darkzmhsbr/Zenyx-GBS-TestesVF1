@@ -226,6 +226,28 @@ export function SuperAdmin() {
 
           <button 
             className="action-card"
+            onClick={() => navigate('/superadmin/bots')}
+          >
+            <div className="action-icon">🤖</div>
+            <div className="action-content">
+              <h3>Bots do Sistema</h3>
+              <p>Visão global de todos os robôs da plataforma</p>
+            </div>
+          </button>
+
+          <button 
+            className="action-card"
+            onClick={() => navigate('/config')}
+          >
+            <div className="action-icon">⚙️</div>
+            <div className="action-content">
+              <h3>Config. Globais</h3>
+              <p>Taxas, Webhooks e integrações do sistema</p>
+            </div>
+          </button>
+
+          <button 
+            className="action-card"
             onClick={() => navigate('/')}
           >
             <div className="action-icon">📊</div>

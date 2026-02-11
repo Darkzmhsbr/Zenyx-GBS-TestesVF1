@@ -1,0 +1,201 @@
+.superadmin-bots-container {
+  padding: 30px;
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+.sabots-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 25px;
+}
+
+.sabots-header-left {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+
+.sabots-header-left h1 {
+  margin: 0;
+  font-size: 1.5rem;
+  color: var(--foreground, #fff);
+}
+
+.sabots-header-left p {
+  margin: 0;
+  color: var(--muted-foreground, #888);
+  font-size: 0.85rem;
+}
+
+.btn-back-sa {
+  background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(255,255,255,0.1);
+  color: var(--foreground, #fff);
+  padding: 8px 16px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-back-sa:hover { background: rgba(255,255,255,0.1); }
+
+.btn-refresh-sa {
+  background: linear-gradient(135deg, #c333ff, #a020f0);
+  color: #fff;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 600;
+  transition: all 0.2s;
+}
+
+.btn-refresh-sa:hover { opacity: 0.9; transform: translateY(-1px); }
+
+.sabots-filters {
+  margin-bottom: 20px;
+}
+
+.sabots-search {
+  display: flex;
+  gap: 10px;
+}
+
+.sabots-search input {
+  flex: 1;
+  padding: 12px 16px;
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 8px;
+  background: rgba(255,255,255,0.05);
+  color: var(--foreground, #fff);
+  font-size: 0.9rem;
+}
+
+.sabots-search input::placeholder { color: var(--muted-foreground, #666); }
+
+.sabots-search button {
+  background: linear-gradient(135deg, #c333ff, #a020f0);
+  color: #fff;
+  border: none;
+  padding: 12px 24px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.sabots-table-container {
+  background: var(--card, rgba(255,255,255,0.03));
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.sabots-loading, .sabots-empty {
+  padding: 60px;
+  text-align: center;
+  color: var(--muted-foreground, #888);
+}
+
+.sabots-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.sabots-table thead {
+  background: rgba(195, 51, 255, 0.08);
+}
+
+.sabots-table th {
+  padding: 14px 16px;
+  text-align: left;
+  color: var(--muted-foreground, #aaa);
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  font-weight: 600;
+}
+
+.sabots-table td {
+  padding: 14px 16px;
+  border-top: 1px solid rgba(255,255,255,0.05);
+  color: var(--foreground, #fff);
+  font-size: 0.9rem;
+}
+
+.sabots-table tbody tr:hover {
+  background: rgba(195, 51, 255, 0.04);
+}
+
+.col-id { color: var(--muted-foreground, #888); font-size: 0.85rem; }
+
+.bot-name { font-weight: 600; }
+.bot-username { color: var(--muted-foreground, #888); font-size: 0.8rem; }
+
+.owner-name { font-weight: 500; }
+.owner-email { color: var(--muted-foreground, #888); font-size: 0.8rem; }
+
+.col-revenue strong { color: #10b981; }
+
+.status-badge-sa {
+  padding: 4px 10px;
+  border-radius: 20px;
+  font-size: 0.8rem;
+  font-weight: 500;
+}
+
+.status-badge-sa.active {
+  background: rgba(16, 185, 129, 0.15);
+  color: #10b981;
+}
+
+.status-badge-sa.inactive {
+  background: rgba(239, 68, 68, 0.15);
+  color: #ef4444;
+}
+
+.col-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.btn-action-sa {
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  border: 1px solid rgba(255,255,255,0.1);
+  background: rgba(255,255,255,0.05);
+  cursor: pointer;
+  font-size: 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+}
+
+.btn-action-sa.impersonate:hover { background: rgba(139, 92, 246, 0.2); border-color: #8b5cf6; }
+.btn-action-sa.delete:hover { background: rgba(239, 68, 68, 0.2); border-color: #ef4444; }
+
+.sabots-pagination {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 20px;
+  padding: 20px;
+  color: var(--foreground, #fff);
+}
+
+.sabots-pagination button {
+  background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(255,255,255,0.1);
+  color: var(--foreground, #fff);
+  padding: 8px 20px;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.sabots-pagination button:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}

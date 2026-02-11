@@ -816,6 +816,54 @@ export const superAdminService = {
         throw error;
     }
   },
+
+  // 🕵️ Login Impersonado (Entrar na conta do cliente)
+  impersonateUser: async (userId) => {
+    try {
+      const response = await api.post(`/api/superadmin/impersonate/${userId}`);
+      return response.data;
+    } catch (error) {
+      console.error("Erro ao realizar login impersonado:", error);
+      throw error;
+    }
+  },
+
+  // 📢 Enviar Broadcast (Notificação em massa)
+  sendBroadcast: async (broadcastData) => {
+    try {
+      const response = await api.post('/api/admin/broadcast', broadcastData);
+      return response.data;
+    } catch (error) {
+      console.error("Erro ao enviar broadcast:", error);
+      throw error;
+    }
+  },
+
+  // 🤖 Listar Todos os Bots do Sistema
+  getAllBots: async (page = 1, limit = 50, search = '', status = '') => {
+    try {
+      const params = new URLSearchParams({ page, per_page: limit });
+      if (search) params.append('search', search);
+      if (status) params.append('status', status);
+      
+      const response = await api.get(`/api/superadmin/bots?${params.toString()}`);
+      return response.data;
+    } catch (error) {
+      console.error("Erro ao listar bots do sistema:", error);
+      throw error;
+    }
+  },
+
+  // 🗑️ Deletar Bot Forçado
+  deleteBotForce: async (botId) => {
+    try {
+      const response = await api.delete(`/api/superadmin/bots/${botId}`);
+      return response.data;
+    } catch (error) {
+      console.error("Erro ao deletar bot forçado:", error);
+      throw error;
+    }
+  },
 };
 // ============================================================
 // 🆓 CANAL FREE SERVICE

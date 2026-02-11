@@ -96,12 +96,29 @@ export function AuditLogs() {
       'login_success': { color: '#10b981', icon: '✅', label: 'Login' },
       'login_failed': { color: '#ef4444', icon: '❌', label: 'Login Falhou' },
       'user_registered': { color: '#3b82f6', icon: '👤', label: 'Registro' },
+      'impersonate_user': { color: '#8b5cf6', icon: '🕵️', label: 'Impersonação' },
       
       // Bots
       'bot_created': { color: '#8b5cf6', icon: '🤖', label: 'Bot Criado' },
       'bot_updated': { color: '#f59e0b', icon: '✏️', label: 'Bot Editado' },
       'bot_deleted': { color: '#ef4444', icon: '🗑️', label: 'Bot Deletado' },
+      'bot_deleted_force': { color: '#dc2626', icon: '💀', label: 'Bot Forçado' },
       'bot_token_change_failed': { color: '#ef4444', icon: '⚠️', label: 'Erro Token' },
+      
+      // Vendas & Planos
+      'sale_approved': { color: '#10b981', icon: '💰', label: 'Venda Aprovada' },
+      'plan_created': { color: '#06b6d4', icon: '📦', label: 'Plano Criado' },
+      'plan_deleted': { color: '#f97316', icon: '📦', label: 'Plano Deletado' },
+      
+      // Remarketing
+      'remarketing_campaign_created': { color: '#ec4899', icon: '📣', label: 'Campanha Criada' },
+      
+      // Admin
+      'user_promoted_superadmin': { color: '#eab308', icon: '👑', label: 'Promovido' },
+      'user_demoted_superadmin': { color: '#ef4444', icon: '👑', label: 'Rebaixado' },
+      'user_activated': { color: '#10b981', icon: '✅', label: 'User Ativado' },
+      'user_deactivated': { color: '#ef4444', icon: '🚫', label: 'User Bloqueado' },
+      'user_deleted': { color: '#dc2626', icon: '🗑️', label: 'User Deletado' },
       
       // Padrão
       'default': { color: '#6b7280', icon: '📋', label: action }
@@ -152,6 +169,14 @@ export function AuditLogs() {
               <option value="bot_created">Bot criado</option>
               <option value="bot_updated">Bot atualizado</option>
               <option value="bot_deleted">Bot deletado</option>
+              <option value="bot_deleted_force">Bot deletado (forçado)</option>
+              <option value="sale_approved">Venda aprovada</option>
+              <option value="plan_created">Plano criado</option>
+              <option value="plan_deleted">Plano deletado</option>
+              <option value="remarketing_campaign_created">Campanha remarketing</option>
+              <option value="impersonate_user">Impersonação</option>
+              <option value="user_promoted_superadmin">Promovido a admin</option>
+              <option value="user_deactivated">Usuário bloqueado</option>
             </select>
           </div>
 
