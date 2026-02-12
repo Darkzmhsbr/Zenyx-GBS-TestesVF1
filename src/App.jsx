@@ -44,6 +44,9 @@ import { AutoRemarketing } from './pages/AutoRemarketingPage';
 // 🆕 NOVA PÁGINA: Canal Free
 import { CanalFree } from './pages/CanalFree';
 
+// 🆕 NOVA PÁGINA: Grupos e Canais
+import { GruposCanais } from './pages/GruposCanais';
+
 // Mini App (Loja)
 import { MiniAppHome } from './pages/miniapp/MiniAppHome';
 import { MiniAppCategory } from './pages/miniapp/MiniAppCategory';
@@ -174,7 +177,7 @@ function App() {
               {/* Funções Extras */}
               <Route path="/funcoes" element={<PlaceholderPage title="Funções Extras" />} />
               <Route path="/funcoes/admins" element={<AdminManager />} />
-              <Route path="/funcoes/grupos" element={<PlaceholderPage title="Grupos e Canais" />} />
+              <Route path="/funcoes/grupos" element={<GruposCanais />} />
               <Route path="/funcoes/free" element={<CanalFree />} />
               
               {/* 🆕 NOVA ROTA: DISPARO AUTOMÁTICO */}

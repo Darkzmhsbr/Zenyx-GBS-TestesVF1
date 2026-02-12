@@ -903,4 +903,64 @@ export const canalFreeService = {
   }
 };
 
+// ============================================================
+// 📦 GRUPOS E CANAIS (ESTEIRA DE PRODUTOS)
+// ============================================================
+export const groupService = {
+  // Listar todos os grupos/canais do bot
+  list: async (botId) => {
+    try {
+      const response = await api.get(`/api/admin/bots/${botId}/groups`);
+      return response.data;
+    } catch (error) {
+      console.error('Erro ao listar grupos:', error);
+      return { groups: [], total: 0 };
+    }
+  },
+
+  // Buscar detalhes de um grupo específico
+  get: async (botId, groupId) => {
+    try {
+      const response = await api.get(`/api/admin/bots/${botId}/groups/${groupId}`);
+      return response.data;
+    } catch (error) {
+      console.error('Erro ao buscar grupo:', error);
+      throw error;
+    }
+  },
+
+  // Criar novo grupo/canal
+  create: async (botId, data) => {
+    try {
+      const response = await api.post(`/api/admin/bots/${botId}/groups`, data);
+      return response.data;
+    } catch (error) {
+      console.error('Erro ao criar grupo:', error);
+      throw error;
+    }
+  },
+
+  // Atualizar grupo/canal existente
+  update: async (botId, groupId, data) => {
+    try {
+      const response = await api.put(`/api/admin/bots/${botId}/groups/${groupId}`, data);
+      return response.data;
+    } catch (error) {
+      console.error('Erro ao atualizar grupo:', error);
+      throw error;
+    }
+  },
+
+  // Deletar grupo/canal
+  delete: async (botId, groupId) => {
+    try {
+      const response = await api.delete(`/api/admin/bots/${botId}/groups/${groupId}`);
+      return response.data;
+    } catch (error) {
+      console.error('Erro ao deletar grupo:', error);
+      throw error;
+    }
+  }
+};
+
 export default api;
