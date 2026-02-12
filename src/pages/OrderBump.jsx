@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useBot } from '../context/BotContext';
-import { orderBumpService } from '../services/api';
-import { ShoppingBag, Save, AlertCircle, Image as ImageIcon, Link as LinkIcon, DollarSign, MessageSquare, Trash2 } from 'lucide-react';
+import { orderBumpService, groupService } from '../services/api';
+import { ShoppingBag, Save, AlertCircle, Image as ImageIcon, Link as LinkIcon, DollarSign, MessageSquare, Trash2, Layers } from 'lucide-react';
 import { Button } from '../components/Button';
 import { Card, CardContent } from '../components/Card';
 import { Input } from '../components/Input';
@@ -14,13 +14,17 @@ export function OrderBump() {
   const { selectedBot } = useBot();
   const [loading, setLoading] = useState(false);
   
+  // ✅ FASE 2: Lista de grupos do catálogo
+  const [groups, setGroups] = useState([]);
+  
   // Estado do formulário
   const [formData, setFormData] = useState({
     ativo: false,
     nome_produto: '',
     preco: '',
     link_acesso: '',
-    autodestruir: false, // 🔥 NOVO ESTADO
+    group_id: null, // ✅ FASE 2: Grupo do catálogo
+    autodestruir: false,
     msg_texto: '',
     msg_media: '',
     btn_aceitar: '✅ SIM, ADICIONAR',
@@ -37,14 +41,22 @@ export function OrderBump() {
   const carregarConfig = async () => {
     setLoading(true);
     try {
-      const data = await orderBumpService.get(selectedBot.id);
+      const [data, groupsRes] = await Promise.all([
+        orderBumpService.get(selectedBot.id),
+        groupService.list(selectedBot.id)
+      ]);
+      
+      // ✅ FASE 2: Carrega lista de grupos
+      setGroups(groupsRes.groups || []);
+      
       if (data) {
         setFormData({
           ativo: data.ativo ?? false,
           nome_produto: data.nome_produto || '',
           preco: data.preco || '',
           link_acesso: data.link_acesso || '',
-          autodestruir: data.autodestruir ?? false, // 🔥 CARREGA
+          group_id: data.group_id || null, // ✅ FASE 2
+          autodestruir: data.autodestruir ?? false,
           msg_texto: data.msg_texto || '',
           msg_media: data.msg_media || '',
           btn_aceitar: data.btn_aceitar || '✅ SIM, ADICIONAR',
@@ -155,6 +167,43 @@ export function OrderBump() {
                   required
                 />
                 <p className="helper-text">Este é o link que será entregue junto com o produto principal se o cliente aceitar.</p>
+
+                {/* ✅ FASE 2: SELEÇÃO DE GRUPO DO CATÁLOGO */}
+                {groups.length > 0 && (
+                  <div className="form-group" style={{marginTop: '15px', paddingTop: '15px', borderTop: '1px solid #333'}}>
+                    <div style={{display:'flex', alignItems:'center', gap:'8px', marginBottom:'8px'}}>
+                      <Layers size={18} color="#c333ff" />
+                      <label style={{marginBottom:0, fontWeight:'600', color:'#ccc', fontSize:'13px'}}>
+                        Grupo do Catálogo (Convite Automático)
+                      </label>
+                    </div>
+                    <select
+                      value={formData.group_id || ''}
+                      onChange={e => setFormData({...formData, group_id: e.target.value ? parseInt(e.target.value) : null})}
+                      style={{
+                        width: '100%',
+                        background: 'rgba(255,255,255,0.05)',
+                        border: '1px solid rgba(255,255,255,0.12)',
+                        borderRadius: '8px',
+                        padding: '10px 12px',
+                        color: '#fff',
+                        fontSize: '14px',
+                        outline: 'none',
+                        cursor: 'pointer'
+                      }}
+                    >
+                      <option value="" style={{background:'#1a1a2e'}}>Nenhum (usar link manual acima)</option>
+                      {groups.filter(g => g.is_active).map(g => (
+                        <option key={g.id} value={g.id} style={{background:'#1a1a2e'}}>
+                          {g.title} ({g.group_id})
+                        </option>
+                      ))}
+                    </select>
+                    <p className="helper-text" style={{marginTop:'6px'}}>
+                      Se selecionado, o bot gera um convite automático para este grupo ao invés de apenas enviar o link.
+                    </p>
+                  </div>
+                )}
 
               </CardContent>
             </Card>
