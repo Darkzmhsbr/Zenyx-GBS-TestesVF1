@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { useBotContext } from '../context/BotContext';
+import { useBot } from '../context/BotContext';
 import { groupService, planService } from '../services/api';
 import { 
   Layers, 
@@ -24,7 +24,7 @@ import {
 // =========================================================
 export function GruposCanais() {
   const { user } = useAuth();
-  const { selectedBot } = useBotContext();
+  const { selectedBot } = useBot();
   const botId = selectedBot?.id;
 
   // Estados principais
