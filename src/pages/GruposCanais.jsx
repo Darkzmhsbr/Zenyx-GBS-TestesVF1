@@ -181,7 +181,7 @@ export function GruposCanais() {
   // =========================================================
   if (!botId) {
     return (
-      <div style={styles.container}>
+      <div className="gc-container">
         <div style={styles.emptyState}>
           <AlertCircle size={48} style={{ color: '#c333ff', marginBottom: '16px' }} />
           <h2 style={styles.emptyTitle}>Nenhum bot selecionado</h2>
@@ -195,7 +195,7 @@ export function GruposCanais() {
   // 🎨 RENDER PRINCIPAL
   // =========================================================
   return (
-    <div style={styles.container}>
+    <div className="gc-container">
 
       {/* TOAST */}
       {toast && (
@@ -213,7 +213,7 @@ export function GruposCanais() {
       {/* HEADER */}
       <div style={styles.header}>
         <div>
-          <h1 style={styles.title}>
+          <h1 className="gc-title">
             <Layers size={28} style={{ color: '#c333ff' }} />
             Grupos e Canais
           </h1>
@@ -225,9 +225,9 @@ export function GruposCanais() {
       </div>
 
       {/* HERO / CTA */}
-      <div style={styles.heroCard}>
+      <div className="gc-hero-card">
         <div style={styles.heroContent}>
-          <h2 style={styles.heroTitle}>Tenha grupos e canais agora mesmo</h2>
+          <h2 className="gc-hero-title">Tenha grupos e canais agora mesmo</h2>
           <p style={styles.heroText}>
             Adicione canais para expandir sua comunidade e gerenciar grupos de forma mais eficiente.
             Cada grupo pode ser vinculado a planos específicos do seu bot.
@@ -237,7 +237,7 @@ export function GruposCanais() {
             Criar novo grupo
           </button>
         </div>
-        <div style={styles.heroIcon}>
+        <div className="gc-hero-icon">
           <Package size={80} style={{ color: 'rgba(195, 51, 255, 0.3)' }} />
         </div>
       </div>
@@ -261,7 +261,7 @@ export function GruposCanais() {
             <p style={{ color: '#666', fontSize: '13px' }}>Clique em "Criar novo grupo" para começar.</p>
           </div>
         ) : (
-          <div style={styles.tableWrapper}>
+          <div className="gc-table-wrapper">
             <table style={styles.table}>
               <thead>
                 <tr>
@@ -346,7 +346,7 @@ export function GruposCanais() {
       {/* MODAL DE CRIAÇÃO/EDIÇÃO */}
       {showModal && (
         <div style={styles.overlay} onClick={closeModal}>
-          <div style={styles.modal} onClick={e => e.stopPropagation()}>
+          <div style={styles.modal} className="gc-modal" onClick={e => e.stopPropagation()}>
             <div style={styles.modalHeader}>
               <h3 style={styles.modalTitle}>
                 {editingGroup ? 'Editar Grupo' : 'Criar Grupo'}
@@ -543,7 +543,7 @@ export function GruposCanais() {
         </div>
       )}
 
-      {/* CSS ANIMATIONS */}
+      {/* CSS ANIMATIONS + RESPONSIVE */}
       <style>{`
         @keyframes spin {
           from { transform: rotate(0deg); }
@@ -556,6 +556,124 @@ export function GruposCanais() {
         @keyframes slideUp {
           from { opacity: 0; transform: translateY(20px); }
           to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* CONTAINER RESPONSIVO */
+        .gc-container {
+          padding: 30px;
+          margin-top: 70px;
+          margin-left: 260px;
+          min-height: 100vh;
+          font-family: 'Segoe UI', sans-serif;
+        }
+
+        /* TITLE RESPONSIVO */
+        .gc-title {
+          display: flex;
+          align-items: center;
+          gap: 12px;
+          font-size: 26px;
+          font-weight: 700;
+          color: #c333ff;
+          margin: 0 0 8px;
+        }
+
+        /* HERO CARD RESPONSIVO */
+        .gc-hero-card {
+          background: linear-gradient(135deg, rgba(195, 51, 255, 0.08), rgba(123, 31, 162, 0.12));
+          border: 1px solid rgba(195, 51, 255, 0.2);
+          border-radius: 16px;
+          padding: 40px;
+          margin-bottom: 30px;
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          animation: slideUp 0.4s ease;
+        }
+
+        .gc-hero-title {
+          font-size: 28px;
+          font-weight: 700;
+          color: #fff;
+          margin: 0 0 12px;
+          line-height: 1.2;
+        }
+
+        .gc-hero-icon {
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          margin-left: 40px;
+        }
+
+        /* TABLE WRAPPER RESPONSIVO */
+        .gc-table-wrapper {
+          overflow-x: auto;
+          -webkit-overflow-scrolling: touch;
+        }
+
+        /* MODAL RESPONSIVO */
+        .gc-modal {
+          width: 100%;
+          max-width: 540px;
+        }
+
+        /* ===================== MOBILE ===================== */
+        @media (max-width: 768px) {
+          .gc-container {
+            margin-left: 0 !important;
+            margin-top: 70px;
+            padding: 16px;
+          }
+
+          .gc-title {
+            font-size: 20px;
+            gap: 8px;
+          }
+
+          .gc-hero-card {
+            flex-direction: column;
+            padding: 20px;
+            text-align: center;
+          }
+
+          .gc-hero-title {
+            font-size: 20px;
+          }
+
+          .gc-hero-icon {
+            display: none;
+          }
+
+          .gc-table-wrapper {
+            margin: 0 -16px;
+            padding: 0 16px;
+            overflow-x: auto;
+          }
+
+          .gc-table-wrapper table {
+            min-width: 600px;
+          }
+
+          .gc-modal {
+            max-width: 95vw !important;
+            max-height: 90vh !important;
+            margin: 10px;
+          }
+        }
+
+        @media (max-width: 480px) {
+          .gc-container {
+            padding: 12px;
+          }
+
+          .gc-hero-card {
+            padding: 16px;
+          }
+
+          .gc-hero-title {
+            font-size: 18px;
+          }
         }
       `}</style>
     </div>
@@ -990,6 +1108,7 @@ const styles = {
     position: 'fixed',
     top: '80px',
     right: '24px',
+    left: 'auto',
     display: 'flex',
     alignItems: 'center',
     gap: '10px',
@@ -1001,6 +1120,7 @@ const styles = {
     zIndex: 2000,
     animation: 'fadeIn 0.3s ease',
     boxShadow: '0 4px 20px rgba(0, 0, 0, 0.3)',
+    maxWidth: 'calc(100vw - 48px)',
   },
 };
 
