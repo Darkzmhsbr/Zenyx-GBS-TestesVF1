@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom'; 
 import { 
   Save, ArrowLeft, MessageSquare, Key, Headphones, 
-  Smartphone, Layout, PlayCircle, Type, Plus, Trash2, Edit, Image as ImageIcon, Link, User, Palette, Shield, Radio, Wifi, CheckCircle, XCircle, AlertTriangle
+  Smartphone, Layout, PlayCircle, Type, Plus, Trash2, Edit, Image as ImageIcon, Link, User, Palette, Shield, Radio, Wifi, CheckCircle, XCircle, AlertTriangle, Bell
 } from 'lucide-react'; 
 import { Button } from '../components/Button';
 import { Card, CardContent } from '../components/Card';
@@ -24,6 +24,7 @@ export function BotConfig() {
     id_canal_vip: '', 
     admin_principal_id: '',
     suporte_username: '', 
+    id_canal_notificacao: '',  // ✅ Canal de Notificações
     status: 'desconectado'
   });
 
@@ -73,6 +74,7 @@ export function BotConfig() {
           id_canal_vip: currentBot.id_canal_vip || '',
           admin_principal_id: currentBot.admin_principal_id || '',
           suporte_username: currentBot.suporte_username || '', 
+          id_canal_notificacao: currentBot.id_canal_notificacao || '',  // ✅ Canal de Notificações
           status: currentBot.status || 'desconectado'
         });
 
@@ -334,6 +336,21 @@ export function BotConfig() {
                       <small style={{color:'#ff1616'}}>O bot precisa ser ADMIN do canal para funcionar.</small>
                     </div>
 
+                    {/* ✅ NOVO: CANAL DE NOTIFICAÇÕES */}
+                    <div className="form-group">
+                      <label><Bell size={16} style={{verticalAlign:'middle', marginRight:'5px', color:'#f59e0b'}}/> Canal de Notificações</label>
+                      <input 
+                        className="input-field" 
+                        value={config.id_canal_notificacao} 
+                        onChange={(e) => setConfig({...config, id_canal_notificacao: e.target.value})} 
+                        placeholder="-100... (opcional)"
+                      />
+                      <small style={{color:'#888'}}>
+                        ID do canal onde o bot enviará avisos de vendas, alterações de status e notificações.
+                        O bot precisa ser <b style={{color:'#f59e0b'}}>ADMIN</b> deste canal.
+                      </small>
+                    </div>
+
                     {/* 🔥 SEÇÃO NOVA: CENTRAL DE CONEXÕES */}
                     <div style={{marginTop: 30, borderTop: '1px solid rgba(255,255,255,0.1)', paddingTop: 20}}>
                         <div className="card-header-line"><Wifi size={20} color="#3b82f6" /><h3>Central de Conexões</h3></div>
@@ -404,6 +421,37 @@ export function BotConfig() {
                             {plansWithChannel.length === 0 && (
                                 <div style={{fontSize:'0.8rem', color:'#ffffff', fontStyle:'italic', padding: 5}}>
                                     Nenhum plano com canal extra configurado.
+                                </div>
+                            )}
+
+                            {/* ✅ CANAL DE NOTIFICAÇÕES */}
+                            {config.id_canal_notificacao && (
+                                <div className="channel-test-item" style={{background:'rgba(245,158,11,0.05)', border:'1px solid rgba(245,158,11,0.2)', padding: 12, borderRadius: 8, display:'flex', alignItems:'center', justifyContent:'space-between'}}>
+                                    <div>
+                                        <div style={{fontWeight:'bold', fontSize:'0.9rem', color:'#f59e0b'}}>
+                                            <Bell size={14} style={{verticalAlign:'middle', marginRight:4}}/> Canal de Notificações
+                                        </div>
+                                        <div style={{fontSize:'0.8rem', color:'#888'}}>{config.id_canal_notificacao}</div>
+                                        
+                                        {testResults['notif'] && (
+                                            <div style={{marginTop: 5, fontSize: '0.85rem', display:'flex', alignItems:'center', gap:5, 
+                                                color: testResults['notif'].status === 'success' ? '#10b981' : '#ef4444'}}>
+                                                {testResults['notif'].status === 'success' ? <CheckCircle size={14}/> : <XCircle size={14}/>}
+                                                {testResults['notif'].chatTitle ? 
+                                                    <span>Conectado: <b>{testResults['notif'].chatTitle}</b></span> : 
+                                                    <span>{testResults['notif'].msg}</span>
+                                                }
+                                            </div>
+                                        )}
+                                    </div>
+                                    <Button 
+                                        size="sm" 
+                                        onClick={() => handleTestChannel(config.id_canal_notificacao, 'notif')}
+                                        disabled={testResults['notif']?.loading}
+                                        style={{background: '#333', border: '1px solid rgba(245,158,11,0.3)'}}
+                                    >
+                                        {testResults['notif']?.loading ? '...' : 'Testar'}
+                                    </Button>
                                 </div>
                             )}
 
