@@ -12,14 +12,9 @@ import '../styles/LandingPage.css';
 
 export function LandingPage() {
   useEffect(() => {
-    // Scroll to top quando a página carregar
     window.scrollTo(0, 0);
-
-    // Remove o padding do body se houver (vindo de outras páginas)
     document.body.style.margin = '0';
     document.body.style.padding = '0';
-
-    // Adiciona classe ao body para facilitar estilos globais
     document.body.classList.add('landing-body');
 
     return () => {

@@ -71,7 +71,7 @@ export function CTASection() {
         <div style={{
           position: 'absolute',
           inset: 0,
-          background: 'linear-gradient(135deg, rgba(168, 85, 247, 0.3) 0%, rgba(147, 51, 234, 0.2) 50%, rgba(56, 189, 248, 0.3) 100%)',
+          background: 'linear-gradient(135deg, rgba(16, 185, 129, 0.15) 0%, rgba(5, 150, 105, 0.1) 50%, rgba(6, 182, 212, 0.15) 100%)',
           backgroundSize: '200% 200%',
           animation: 'gradient-shift 8s ease infinite'
         }} />
@@ -83,7 +83,7 @@ export function CTASection() {
           right: 0,
           width: '16rem',
           height: '16rem',
-          background: 'rgba(168, 85, 247, 0.2)',
+          background: 'rgba(16, 185, 129, 0.12)',
           borderRadius: '50%',
           filter: 'blur(100px)'
         }} />
@@ -93,7 +93,7 @@ export function CTASection() {
           left: 0,
           width: '12rem',
           height: '12rem',
-          background: 'rgba(56, 189, 248, 0.2)',
+          background: 'rgba(6, 182, 212, 0.12)',
           borderRadius: '50%',
           filter: 'blur(80px)'
         }} />
@@ -103,7 +103,7 @@ export function CTASection() {
           <h2 className={`cta-title ${isVisible ? 'animate-fade-in-up' : 'opacity-0'}`}>
             Pronto para{' '}
             <span style={{
-              background: 'linear-gradient(90deg, var(--primary) 0%, #9333ea 50%, #38bdf8 100%)',
+              background: 'linear-gradient(90deg, #10b981 0%, #059669 50%, #06b6d4 100%)',
               WebkitBackgroundClip: 'text',
               WebkitTextFillColor: 'transparent',
               backgroundClip: 'text'
@@ -127,13 +127,13 @@ export function CTASection() {
                     width: '40px',
                     height: '40px',
                     borderRadius: '8px',
-                    background: 'rgba(168, 85, 247, 0.2)',
+                    background: 'rgba(16, 185, 129, 0.15)',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
                     marginBottom: '0.5rem'
                   }}>
-                    <Icon size={20} style={{ color: 'var(--primary)' }} />
+                    <Icon size={20} style={{ color: '#10b981' }} />
                   </div>
                   <p className="cta-stat-value">{stat.value}</p>
                   <p className="cta-stat-label">{stat.label}</p>
@@ -150,15 +150,15 @@ export function CTASection() {
                 alignItems: 'center',
                 gap: '0.5rem',
                 padding: '1.75rem 2.5rem',
-                background: 'linear-gradient(90deg, var(--primary) 0%, #7c3aed 100%)',
+                background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
                 color: 'white',
                 border: 'none',
                 borderRadius: '12px',
                 fontSize: '1.125rem',
                 fontWeight: 700,
                 cursor: 'pointer',
-                boxShadow: '0 0 20px rgba(168, 85, 247, 0.4)',
-                animation: 'glow-pulse 2s ease-in-out infinite',
+                boxShadow: '0 0 25px rgba(16, 185, 129, 0.35), 0 4px 20px rgba(0,0,0,0.3)',
+                animation: 'glow-pulse 3s ease-in-out infinite',
                 transition: 'transform 0.3s ease'
               }}
               onMouseEnter={(e) => e.currentTarget.style.transform = 'scale(1.05)'}

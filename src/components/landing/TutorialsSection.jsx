@@ -70,7 +70,7 @@ export function TutorialsSection() {
       <div className={`section-header ${isVisible ? 'animate-fade-in-up' : 'opacity-0'}`}>
         <span style={{
           display: 'inline-block',
-          color: 'var(--primary)',
+          color: '#10b981',
           fontWeight: 600,
           fontSize: '0.875rem',
           letterSpacing: '0.1em',
@@ -82,7 +82,7 @@ export function TutorialsSection() {
         <h2 className="section-title">
           Tutoriais{' '}
           <span style={{
-            background: 'linear-gradient(90deg, var(--primary) 0%, #38bdf8 100%)',
+            background: 'linear-gradient(90deg, #10b981 0%, #06b6d4 100%)',
             WebkitBackgroundClip: 'text',
             WebkitTextFillColor: 'transparent',
             backgroundClip: 'text'

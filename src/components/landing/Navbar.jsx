@@ -6,7 +6,6 @@ export function Navbar() {
   const [scrolled, setScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   
-  // Hooks de navegação do React Router
   const location = useLocation();
   const navigate = useNavigate();
 
@@ -19,22 +18,16 @@ export function Navbar() {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  // Função inteligente de navegação
   const handleNavigation = (sectionId) => {
     setMobileMenuOpen(false);
 
-    // Se estiver na Home ('/'), apenas rola até a seção
     if (location.pathname === '/') {
       const element = document.getElementById(sectionId);
       if (element) {
         element.scrollIntoView({ behavior: 'smooth', block: 'start' });
       }
     } else {
-      // Se estiver em outra página (ex: /termos), navega para a Home
-      // O setTimeout garante que a navegação ocorra antes de tentar rolar (opcional)
       navigate('/');
-      
-      // Pequeno hack: espera a página carregar para rolar (se necessário)
       setTimeout(() => {
         const element = document.getElementById(sectionId);
         if (element) {
@@ -54,7 +47,6 @@ export function Navbar() {
   return (
     <nav className={`landing-navbar ${scrolled ? 'scrolled' : ''}`}>
       <div className="navbar-container">
-        {/* Logo agora usa o componente Link para garantir o retorno à Home */}
         <Link 
           to="/" 
           onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })} 
@@ -66,17 +58,17 @@ export function Navbar() {
               width: '40px',
               height: '40px',
               borderRadius: '12px',
-              background: 'linear-gradient(135deg, var(--primary) 0%, #7c3aed 100%)',
+              background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              animation: 'glow-pulse 2s ease-in-out infinite'
+              animation: 'glow-pulse 3s ease-in-out infinite'
             }}>
               <Zap size={20} color="white" />
             </div>
           </div>
           <span style={{ fontSize: '1.25rem', fontWeight: 700, color: 'var(--foreground)' }}>
-            Zenyx<span className="neon-text" style={{ color: 'var(--primary)' }}>GBOT</span>
+            Zenyx<span className="neon-text" style={{ color: '#10b981' }}>GBOT</span>
           </span>
         </Link>
 
@@ -84,7 +76,6 @@ export function Navbar() {
         <ul className="navbar-menu">
           {navLinks.map((link) => (
             <li key={link.name}>
-              {/* Usamos onClick com nossa função inteligente em vez de href */}
               <a onClick={() => handleNavigation(link.href)}>
                 {link.name}
               </a>

@@ -84,7 +84,7 @@ export function FeaturesGrid() {
           left: 0,
           width: '24rem',
           height: '24rem',
-          background: 'rgba(168, 85, 247, 0.1)',
+          background: 'rgba(16, 185, 129, 0.06)',
           borderRadius: '50%',
           filter: 'blur(150px)'
         }} />
@@ -94,7 +94,7 @@ export function FeaturesGrid() {
           right: 0,
           width: '20rem',
           height: '20rem',
-          background: 'rgba(56, 189, 248, 0.1)',
+          background: 'rgba(6, 182, 212, 0.06)',
           borderRadius: '50%',
           filter: 'blur(120px)'
         }} />
@@ -104,7 +104,7 @@ export function FeaturesGrid() {
         <div className={`section-header ${isVisible ? 'animate-fade-in-up' : 'opacity-0'}`}>
           <span style={{
             display: 'inline-block',
-            color: 'var(--primary)',
+            color: '#10b981',
             fontWeight: 600,
             fontSize: '0.875rem',
             letterSpacing: '0.1em',
@@ -116,7 +116,7 @@ export function FeaturesGrid() {
           <h2 className="section-title">
             Tudo que você precisa para{' '}
             <span style={{
-              background: 'linear-gradient(90deg, var(--primary) 0%, #38bdf8 100%)',
+              background: 'linear-gradient(90deg, #10b981 0%, #06b6d4 100%)',
               WebkitBackgroundClip: 'text',
               WebkitTextFillColor: 'transparent',
               backgroundClip: 'text'
@@ -146,13 +146,13 @@ export function FeaturesGrid() {
                     width: '56px',
                     height: '56px',
                     borderRadius: '12px',
-                    background: 'linear-gradient(135deg, rgba(168, 85, 247, 0.2) 0%, rgba(147, 51, 234, 0.2) 100%)',
+                    background: 'linear-gradient(135deg, rgba(16, 185, 129, 0.15) 0%, rgba(6, 182, 212, 0.15) 100%)',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
                     transition: 'transform 0.3s ease'
                   }}>
-                    <Icon size={28} style={{ color: 'var(--primary)' }} />
+                    <Icon size={28} style={{ color: '#10b981' }} />
                   </div>
                 </div>
                 <h3 className="feature-title">{feature.title}</h3>

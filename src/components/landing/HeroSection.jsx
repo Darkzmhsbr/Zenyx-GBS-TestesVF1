@@ -11,7 +11,7 @@ function Particle({ delay, left, top }) {
         width: '4px',
         height: '4px',
         borderRadius: '50%',
-        background: 'rgba(168, 85, 247, 0.4)',
+        background: 'rgba(16, 185, 129, 0.35)',
         left,
         top,
         animation: `particle-float 4s ease-in-out infinite`,
@@ -55,10 +55,10 @@ export function HeroSection() {
           left: '25%',
           width: '24rem',
           height: '24rem',
-          background: 'rgba(168, 85, 247, 0.2)',
+          background: 'rgba(16, 185, 129, 0.12)',
           borderRadius: '50%',
-          filter: 'blur(120px)',
-          animation: 'float 3s ease-in-out infinite'
+          filter: 'blur(130px)',
+          animation: 'float 4s ease-in-out infinite'
         }} />
         
         <div style={{
@@ -67,11 +67,11 @@ export function HeroSection() {
           right: '25%',
           width: '20rem',
           height: '20rem',
-          background: 'rgba(56, 189, 248, 0.2)',
+          background: 'rgba(6, 182, 212, 0.1)',
           borderRadius: '50%',
-          filter: 'blur(100px)',
-          animation: 'float 3s ease-in-out infinite',
-          animationDelay: '1s'
+          filter: 'blur(110px)',
+          animation: 'float 4s ease-in-out infinite',
+          animationDelay: '1.5s'
         }} />
         
         <div style={{
@@ -81,9 +81,9 @@ export function HeroSection() {
           transform: 'translate(-50%, -50%)',
           width: '37.5rem',
           height: '37.5rem',
-          background: 'rgba(147, 51, 234, 0.1)',
+          background: 'rgba(5, 150, 105, 0.06)',
           borderRadius: '50%',
-          filter: 'blur(150px)'
+          filter: 'blur(160px)'
         }} />
         
         {/* Partículas */}
@@ -95,10 +95,10 @@ export function HeroSection() {
         <div style={{
           position: 'absolute',
           inset: 0,
-          opacity: 0.02,
-          backgroundImage: `linear-gradient(rgba(168, 85, 247, 0.5) 1px, transparent 1px),
-                           linear-gradient(90deg, rgba(168, 85, 247, 0.5) 1px, transparent 1px)`,
-          backgroundSize: '50px 50px'
+          opacity: 0.025,
+          backgroundImage: `linear-gradient(rgba(16, 185, 129, 0.5) 1px, transparent 1px),
+                           linear-gradient(90deg, rgba(16, 185, 129, 0.5) 1px, transparent 1px)`,
+          backgroundSize: '60px 60px'
         }} />
       </div>
 
@@ -117,20 +117,20 @@ export function HeroSection() {
           display: 'inline-flex',
           alignItems: 'center',
           gap: '0.5rem',
-          background: 'rgba(15, 15, 25, 0.55)',
-          backdropFilter: 'blur(18px)',
-          WebkitBackdropFilter: 'blur(18px)',
-          border: '1px solid rgba(255, 255, 255, 0.08)',
+          background: 'rgba(8, 15, 12, 0.6)',
+          backdropFilter: 'blur(20px)',
+          WebkitBackdropFilter: 'blur(20px)',
+          border: '1px solid rgba(16, 185, 129, 0.15)',
           borderRadius: '50px',
           padding: '0.5rem 1rem',
           marginBottom: '2rem',
           transition: 'all 0.7s'
         }}>
-          <Sparkles size={16} style={{ color: 'var(--primary)' }} />
+          <Sparkles size={16} style={{ color: '#10b981' }} />
           <span style={{
             fontSize: '0.875rem',
             fontWeight: 600,
-            color: 'var(--primary)'
+            color: '#34d399'
           }}>
             MENOR TAXA DO MERCADO (R$ 0,60)
           </span>
@@ -150,7 +150,7 @@ export function HeroSection() {
             <span style={{
               position: 'relative',
               zIndex: 10,
-              background: 'linear-gradient(90deg, var(--primary) 0%, #9333ea 50%, #38bdf8 100%)',
+              background: 'linear-gradient(90deg, #10b981 0%, #06b6d4 60%, #22d3ee 100%)',
               WebkitBackgroundClip: 'text',
               WebkitTextFillColor: 'transparent',
               backgroundClip: 'text'
@@ -160,8 +160,8 @@ export function HeroSection() {
             <span style={{
               position: 'absolute',
               inset: '-0.25rem',
-              background: 'linear-gradient(90deg, rgba(168, 85, 247, 0.2) 0%, rgba(147, 51, 234, 0.2) 50%, rgba(56, 189, 248, 0.2) 100%)',
-              filter: 'blur(16px)',
+              background: 'linear-gradient(90deg, rgba(16, 185, 129, 0.15) 0%, rgba(6, 182, 212, 0.15) 100%)',
+              filter: 'blur(18px)',
               borderRadius: '8px',
               zIndex: 0
             }} />
@@ -198,15 +198,15 @@ export function HeroSection() {
               alignItems: 'center',
               gap: '0.5rem',
               padding: '1.5rem 2rem',
-              background: 'linear-gradient(90deg, var(--primary) 0%, #7c3aed 100%)',
+              background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
               color: 'white',
               border: 'none',
               borderRadius: '12px',
               fontSize: '1.125rem',
               fontWeight: 700,
               cursor: 'pointer',
-              boxShadow: '0 0 20px rgba(168, 85, 247, 0.4)',
-              animation: 'glow-pulse 2s ease-in-out infinite',
+              boxShadow: '0 0 25px rgba(16, 185, 129, 0.35), 0 4px 20px rgba(0,0,0,0.3)',
+              animation: 'glow-pulse 3s ease-in-out infinite',
               transition: 'transform 0.3s ease'
             }}
             onMouseEnter={(e) => e.currentTarget.style.transform = 'scale(1.05)'}
@@ -222,9 +222,9 @@ export function HeroSection() {
             alignItems: 'center',
             gap: '0.5rem',
             padding: '1.5rem 2rem',
-            background: 'rgba(255, 255, 255, 0.05)',
+            background: 'rgba(16, 185, 129, 0.06)',
             color: 'var(--foreground)',
-            border: '1px solid rgba(255, 255, 255, 0.1)',
+            border: '1px solid rgba(16, 185, 129, 0.15)',
             borderRadius: '12px',
             fontSize: '1.125rem',
             fontWeight: 600,
@@ -232,15 +232,15 @@ export function HeroSection() {
             transition: 'all 0.3s ease'
           }}
           onMouseEnter={(e) => {
-            e.currentTarget.style.background = 'rgba(255, 255, 255, 0.1)';
-            e.currentTarget.style.borderColor = 'rgba(168, 85, 247, 0.3)';
+            e.currentTarget.style.background = 'rgba(16, 185, 129, 0.12)';
+            e.currentTarget.style.borderColor = 'rgba(16, 185, 129, 0.3)';
           }}
           onMouseLeave={(e) => {
-            e.currentTarget.style.background = 'rgba(255, 255, 255, 0.05)';
-            e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.1)';
+            e.currentTarget.style.background = 'rgba(16, 185, 129, 0.06)';
+            e.currentTarget.style.borderColor = 'rgba(16, 185, 129, 0.15)';
           }}
           >
-            <PlayCircle size={20} style={{ color: 'var(--primary)' }} />
+            <PlayCircle size={20} style={{ color: '#10b981' }} />
             Ver Demo
           </button>
         </div>
@@ -271,7 +271,7 @@ export function HeroSection() {
               width: '8px',
               height: '8px',
               borderRadius: '50%',
-              background: 'var(--primary)',
+              background: '#10b981',
               animation: 'pulse 2s infinite'
             }} />
             <span style={{ fontSize: '0.875rem' }}>R$ 50.000+ em Vendas</span>
@@ -281,7 +281,7 @@ export function HeroSection() {
               width: '8px',
               height: '8px',
               borderRadius: '50%',
-              background: '#38bdf8',
+              background: '#06b6d4',
               animation: 'pulse 2s infinite'
             }} />
             <span style={{ fontSize: '0.875rem' }}>1.200+ Usuários</span>
@@ -311,7 +311,7 @@ export function HeroSection() {
             width: '4px',
             height: '8px',
             borderRadius: '2px',
-            background: 'var(--primary)',
+            background: '#10b981',
             animation: 'pulse 2s infinite'
           }} />
         </div>

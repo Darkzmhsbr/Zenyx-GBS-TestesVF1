@@ -24,7 +24,7 @@ export function Footer() {
             </ul>
           </div>
 
-          {/* Coluna 2: Legal (NOVO) */}
+          {/* Coluna 2: Legal */}
           <div className="footer-column">
             <h4>Legal</h4>
             <ul className="footer-links">
@@ -38,7 +38,6 @@ export function Footer() {
           <div className="footer-column">
             <h4>Suporte</h4>
             <ul className="footer-links">
-              {/* Você pode substituir o '#' pelo seu link de contato real depois */}
               <li><a href="#">Contato</a></li>
               <li><Link to="/register">Criar Conta</Link></li>
               <li><Link to="/login">Acessar Plataforma</Link></li>

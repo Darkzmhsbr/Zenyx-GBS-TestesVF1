@@ -59,7 +59,7 @@ export function MoreFeatures() {
       <div className={`section-header ${isVisible ? 'animate-fade-in-up' : 'opacity-0'}`}>
         <span style={{
           display: 'inline-block',
-          color: '#38bdf8',
+          color: '#06b6d4',
           fontWeight: 600,
           fontSize: '0.875rem',
           letterSpacing: '0.1em',
@@ -71,7 +71,7 @@ export function MoreFeatures() {
         <h2 className="section-title">
           Recursos que fazem a{' '}
           <span style={{
-            background: 'linear-gradient(90deg, #38bdf8 0%, var(--primary) 100%)',
+            background: 'linear-gradient(90deg, #06b6d4 0%, #10b981 100%)',
             WebkitBackgroundClip: 'text',
             WebkitTextFillColor: 'transparent',
             backgroundClip: 'text'
