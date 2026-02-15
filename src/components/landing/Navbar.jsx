@@ -34,13 +34,23 @@ export function Navbar() {
 
   return (
     <nav className={`landing-navbar ${scrolled ? 'scrolled' : ''}`}>
-      <div className="navbar-container">
+      {/* Container com flexão absoluta para jogar um para cada lado */}
+      <div 
+        className="navbar-container" 
+        style={{ 
+          width: '100%', 
+          display: 'flex', 
+          justifyContent: 'space-between', 
+          alignItems: 'center' 
+        }}
+      >
         
-        {/* LOGO ZENYX VIPS */}
+        {/* LOGO ZENYX VIPS (Blindada para não quebrar a linha) */}
         <Link
           to="/"
           onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
           className="navbar-logo"
+          style={{ flexShrink: 0, whiteSpace: 'nowrap' }}
         >
           <div className="navbar-logo-icon">
             <Zap size={20} strokeWidth={2.5} />
@@ -48,23 +58,26 @@ export function Navbar() {
           Zenyx<span className="grad-text">VIPs</span>
         </Link>
 
-        {/* DESKTOP MENU - CORRIGIDO PARA UL/LI E CLASSE NAVBAR-MENU */}
+        {/* DESKTOP MENU - Some automaticamente no Mobile via CSS */}
         <ul className="navbar-menu">
-          {/* As âncoras mantêm os IDs originais para a lógica do React funcionar */}
           <li><a onClick={() => handleNavigation('features')}>Ecossistema</a></li>
           <li><a onClick={() => handleNavigation('funcionalidades')}>A Jornada</a></li>
           <li><a onClick={() => handleNavigation('tutoriais')}>Tutoriais</a></li>
           <li><a onClick={() => handleNavigation('faq')}>FAQ</a></li>
         </ul>
 
-        {/* ÁREA DIREITA: CTA & MENU MOBILE TOGGLE */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+        {/* ÁREA DIREITA: CTA & MENU MOBILE TOGGLE (Blindada contra esmagamento) */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', flexShrink: 0 }}>
           
-          {/* Oculto no mobile apenas via CSS nativo, mas se houver espaço, ele brilha! */}
+          {/* Botão de Acesso - Mantido com nowrap para não empurrar a logo */}
           <Link 
             to="/login" 
             className="hero-btn-primary btn-glow" 
-            style={{ padding: '0.6rem 1.5rem', fontSize: '0.9rem' }}
+            style={{ 
+              padding: '0.6rem 1.5rem', 
+              fontSize: '0.9rem',
+              whiteSpace: 'nowrap' 
+            }}
           >
             Acessar Painel
           </Link>
@@ -74,8 +87,9 @@ export function Navbar() {
             className="navbar-mobile-toggle"
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
             aria-label="Toggle menu"
+            style={{ flexShrink: 0 }}
           >
-            {mobileMenuOpen ? <X size={26} /> : <Menu size={26} />}
+            {mobileMenuOpen ? <X size={28} /> : <Menu size={28} />}
           </button>
         </div>
 

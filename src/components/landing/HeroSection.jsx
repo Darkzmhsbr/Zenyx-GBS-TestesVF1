@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { Link } from 'react-router-dom';
-import { ArrowRight, PlayCircle } from 'lucide-react';
+import { ArrowRight } from 'lucide-react';
 
 // Dados simulados para as notificações do Celular 3D (Zenyx VIPs)
 const notificationsData = [
@@ -54,13 +54,13 @@ export function HeroSection() {
     };
   }, []);
 
-  // Lógica do Efeito 3D Holográfico no Hover
-  const handleMouseMove = (e) => {
+  // Lógica Unificada do Efeito 3D Holográfico (Para Mouse e Touch/Mobile)
+  const update3DEffect = (clientX, clientY) => {
     if (!visualRef.current || !phoneRef.current || !glareRef.current) return;
     
     const rect = visualRef.current.getBoundingClientRect();
-    const x = e.clientX - rect.left;
-    const y = e.clientY - rect.top;
+    const x = clientX - rect.left;
+    const y = clientY - rect.top;
     const centerX = rect.width / 2;
     const centerY = rect.height / 2;
 
@@ -69,6 +69,17 @@ export function HeroSection() {
 
     phoneRef.current.style.transform = `rotateX(${rotateX}deg) rotateY(${rotateY}deg)`;
     glareRef.current.style.background = `linear-gradient(${135 + (rotateX * 2)}deg, rgba(255,255,255,0.2) 0%, transparent 50%)`;
+  };
+
+  const handleMouseMove = (e) => {
+    update3DEffect(e.clientX, e.clientY);
+  };
+
+  // Suporte a toque na tela para girar o celular no mobile
+  const handleTouchMove = (e) => {
+    if (e.touches && e.touches.length > 0) {
+      update3DEffect(e.touches[0].clientX, e.touches[0].clientY);
+    }
   };
 
   const handleMouseLeave = () => {
@@ -108,7 +119,7 @@ export function HeroSection() {
             Processe pagamentos, adicione membros automaticamente e escale seu grupo VIP com a infraestrutura mais robusta e segura do mercado.
           </p>
           
-          {/* CTAs */}
+          {/* CTA Principal (Isolado e sem o "Ver Demo") */}
           <div className={`${isVisible ? 'animate-fade-in-up delay-300' : 'opacity-0'}`} style={{
             display: 'flex',
             flexWrap: 'wrap',
@@ -116,23 +127,11 @@ export function HeroSection() {
             marginTop: '0.25rem'
           }}>
             <Link to="/register" style={{ textDecoration: 'none' }}>
-              {/* Botão Roxo Luxuoso */}
               <button className="hero-btn-primary btn-glow" style={{ padding: '1.1rem 2.2rem', fontSize: '1.05rem', display: 'flex', gap: '8px' }}>
                 Criar Automação Grátis
                 <ArrowRight size={20} />
               </button>
             </Link>
-            
-            {/* Botão Secundário */}
-            <button className="hero-btn-secondary" style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: '8px',
-              cursor: 'pointer'
-            }}>
-              <PlayCircle size={20} style={{ color: 'var(--neon-blue)' }} />
-              Ver Demo
-            </button>
           </div>
 
           {/* Indicadores de Confiança */}
@@ -188,6 +187,8 @@ export function HeroSection() {
           ref={visualRef}
           onMouseMove={handleMouseMove}
           onMouseLeave={handleMouseLeave}
+          onTouchMove={handleTouchMove} /* Evento Adicionado para o Celular */
+          onTouchEnd={handleMouseLeave}  /* Reseta ao soltar o dedo */
         >
           <div className="phone-wrapper" ref={phoneRef}>
             <div className="phone-glare" ref={glareRef}></div>
@@ -209,7 +210,7 @@ export function HeroSection() {
                         background: `${notif.color}20`, 
                         color: notif.color, 
                         border: `1px solid ${notif.color}40`,
-                        flexShrink: 0 /* Impede o ícone de espremer */
+                        flexShrink: 0 
                       }}>
                         {notif.icon}
                       </div>

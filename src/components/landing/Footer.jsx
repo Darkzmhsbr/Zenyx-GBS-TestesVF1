@@ -11,12 +11,13 @@ export function Footer() {
     <footer className="landing-footer">
       <div className="footer-container">
         
-        {/* Usamos a classe footer-grid que já está configurada no CSS para ser responsiva */}
-        <div className="footer-grid" style={{ gridTemplateColumns: '1.5fr 1fr 1fr 1fr' }}>
+        {/* O CSS AGORA ASSUME O CONTROLE TOTAL! 
+            (Removido o style inline que forçava 4 colunas no mobile) */}
+        <div className="footer-grid">
           
           {/* Coluna 1: Marca + Produto */}
           <div className="footer-column">
-            {/* Nova Identidade Visual Injetada no Rodapé */}
+            {/* Identidade Visual do Rodapé */}
             <Link to="/" style={{ 
               display: 'flex', 
               alignItems: 'center', 
@@ -92,10 +93,10 @@ export function Footer() {
 
         </div>
 
-        {/* Bottom Bar: Copyright e Badges preservados */}
+        {/* Bottom Bar: Copyright e Badges */}
         <div className="footer-bottom">
           <p className="footer-copyright">© 2026 Zenyx VIPs. Todos os direitos reservados.</p>
-          <div className="footer-badges">
+          <div className="footer-badges" style={{ display: 'flex', gap: '15px', flexWrap: 'wrap' }}>
             <span className="footer-badge">🔒 Seguro</span>
             <span className="footer-badge">⚡ Suporte 24/7</span>
             <span className="footer-badge">🚀 Alta Performance</span>
