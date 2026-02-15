@@ -9,20 +9,25 @@ import { FAQSection } from '../components/landing/FAQSection';
 import { CTASection } from '../components/landing/CTASection';
 import { Footer } from '../components/landing/Footer';
 
-// O nosso novo motor visual Neon Cyber-Architect
+// O motor visual definitivo Cosmos Purple
 import '../styles/LandingPage.css';
+
+// ============================================================
+// NOVO COMPONENTE: Vitrine (Criaremos nos próximos arquivos)
+// ============================================================
+import { VitrineSection } from '../components/landing/VitrineSection'; 
 
 export function LandingPage() {
   useEffect(() => {
-    // Garante que a página sempre inicie no topo e sem margens
+    // Garante que a página sempre inicie no topo e sem margens ao carregar
     window.scrollTo(0, 0);
     document.body.style.margin = '0';
     document.body.style.padding = '0';
     
-    // Adiciona a classe global que ativa o background espacial do CSS
+    // Adiciona a classe global que ativa o background base do CSS
     document.body.classList.add('landing-body');
     
-    // Limpeza ao desmontar o componente
+    // Limpeza de segurança ao desmontar o componente para evitar vazamento de estilos
     return () => {
       document.body.classList.remove('landing-body');
     };
@@ -30,33 +35,57 @@ export function LandingPage() {
 
   return (
     <div className="landing-page">
-      {/* Navegação Frosted Cyber */}
+      
+      {/* ============================================================
+          BACKGROUND CÓSMICO (INJETADO GLOBALMENTE)
+          Estes elementos criam a atmosfera roxa, as estrelas e a malha
+          para o site inteiro, mantendo a performance impecável.
+          ============================================================ */}
+      <div className="bg-cosmos"></div>
+      
+      <div className="bg-orbs">
+        <div className="orb orb-1"></div>
+        <div className="orb orb-2"></div>
+      </div>
+      
+      <div className="stars"></div>
+      
+      <div className="bg-grid"></div>
+
+      {/* ============================================================
+          SEÇÕES DA PLATAFORMA (NOVA ORDEM ARQUITETURAL)
+          ============================================================ */}
+          
+      {/* 1. Navegação Frosted Cyber Blindada */}
       <Navbar />
       
-      {/* Topo com o Smartphone 3D Holográfico */}
+      {/* 2. Topo Perfeito: Texto à Esquerda + Monitor 3D à Direita */}
       <HeroSection />
-      
-      {/* O Ecossistema e a Infraestrutura Sólida (Grid Perfeito) */}
-      <FeaturesGrid />
-      
-      {/* Como o Feed Ao Vivo foi para o Celular, usaremos este componente para 
-          renderizar a seção "A Vantagem Desleal (Taxas)" e "Hall da Fama" */}
-      <ActivityFeed />
-      
-      {/* A Jornada (Circuito Pulsante) e Recursos Avançados */}
+
+      {/* 3. A Jornada: O Retorno do Circuito Pulsante da Linha do Tempo */}
       <MoreFeatures />
       
-      {/* Command Center (HUD Interface) */}
+      {/* 4. Engenharia de Conversão (Novo Bento Grid Premium) */}
+      <FeaturesGrid />
+      
+      {/* 5. A GRANDE NOVIDADE: A Seção da Vitrine Mini-App */}
+      <VitrineSection />
+      
+      {/* 6. Renderiza "A Vantagem Desleal" e o "Hall da Fama Original 3D" */}
+      <ActivityFeed />
+      
+      {/* 7. Command Center: Acordeão Sleek Magenta */}
       <TutorialsSection />
       
-      {/* FAQ com efeito Reveal Glow */}
+      {/* 8. FAQ com efeito Reveal Glow (Para matar objeções finais) */}
       <FAQSection />
       
-      {/* Chamada Final com Estatísticas */}
+      {/* 9. Chamada Final de Ação (CTA Banner) */}
       <CTASection />
       
-      {/* Rodapé Limpo */}
+      {/* 10. Rodapé Limpo e 100% Responsivo */}
       <Footer />
+      
     </div>
   );
 }

@@ -2,51 +2,95 @@ import React, { useEffect, useState, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowRight } from 'lucide-react';
 
-// Dados simulados para as notificações do Celular 3D (Zenyx VIPs)
-const notificationsData = [
-  { name: "Bruno N.", plan: "ACESSO MENSAL", val: "+ R$ 17,90", icon: "💳", color: "var(--neon-green)" },
-  { name: "Fernanda R.", plan: "VITALÍCIO VIP", val: "+ R$ 97,00", icon: "💎", color: "var(--neon-blue)" },
-  { name: "Carlos M.", plan: "RENOVAÇÃO", val: "+ R$ 29,90", icon: "🚀", color: "var(--neon-purple)" },
-  { name: "Diego T.", plan: "CANCELADO", val: "- R$ 14,90", icon: "⚠️", color: "var(--neon-red)" }
+// ============================================================
+// 📊 DADOS DO MONITOR DE VENDAS AO VIVO (FAKE SALES)
+// Simulador de prova social em tempo real com a estética Cosmos Purple
+// ============================================================
+const fakeSales = [
+  { 
+    name: "Bruno Nunes", 
+    plan: "ACESSO VITALÍCIO VIP", 
+    val: "+ R$ 197,00", 
+    time: "Agora mesmo", 
+    icon: "💳", 
+    bg: "rgba(163, 230, 53, 0.1)", 
+    col: "var(--neon-green)" 
+  },
+  { 
+    name: "Amanda Silva", 
+    plan: "RENOVAÇÃO MENSAL", 
+    val: "+ R$ 29,90", 
+    time: "Há 2 min", 
+    icon: "🔄", 
+    bg: "rgba(56, 189, 248, 0.1)", 
+    col: "var(--neon-blue)" 
+  },
+  { 
+    name: "Diego Torres", 
+    plan: "CANCELAMENTO", 
+    val: "- R$ 49,90", 
+    time: "Há 15 min", 
+    icon: "⚠️", 
+    bg: "rgba(251, 113, 133, 0.1)", 
+    col: "var(--neon-red)" 
+  },
+  { 
+    name: "Carlos Marques", 
+    plan: "ACESSO MENSAL", 
+    val: "+ R$ 19,90", 
+    time: "Há 22 min", 
+    icon: "🚀", 
+    bg: "rgba(217, 70, 239, 0.1)", 
+    col: "var(--neon-magenta)" 
+  }
 ];
 
 export function HeroSection() {
+  // ============================================================
+  // ⚙️ ESTADOS E REFERÊNCIAS
+  // ============================================================
   const [isVisible, setIsVisible] = useState(false);
-  const [activeNotifs, setActiveNotifs] = useState([]);
+  const [activeSales, setActiveSales] = useState([]);
   
-  // Refs para o efeito 3D do Celular
+  // Refs para manipular a matemática do Efeito 3D Holográfico
   const visualRef = useRef(null);
-  const phoneRef = useRef(null);
+  const monitorRef = useRef(null);
   const glareRef = useRef(null);
   
-  // Ref para controlar o ciclo das notificações
-  const notifCounter = useRef(0);
+  // Ref para controlar o índice infinito das vendas simuladas
+  const saleCounter = useRef(0);
 
-  // Efeito de entrada inicial
+  // ============================================================
+  // 👁️ OBSERVER: GATILHO DE ANIMAÇÃO DE ENTRADA (FADE-IN)
+  // ============================================================
   useEffect(() => {
     setIsVisible(true);
   }, []);
 
-  // Lógica das notificações pulando na tela do celular
+  // ============================================================
+  // 🔄 MOTOR DE INJEÇÃO CONTÍNUA (MONITOR AO VIVO)
+  // ============================================================
   useEffect(() => {
-    const spawnNotification = () => {
-      const data = notificationsData[notifCounter.current % notificationsData.length];
+    const spawnSale = () => {
+      const data = fakeSales[saleCounter.current % fakeSales.length];
       
-      // Cria um novo item com ID único para animação perfeita no React
-      const newNotif = { ...data, id: notifCounter.current };
-      notifCounter.current += 1;
+      // Cria um item único para o React não se perder na renderização da lista
+      const newSale = { ...data, id: saleCounter.current };
+      saleCounter.current += 1;
 
-      setActiveNotifs((prev) => {
-        const newArray = [newNotif, ...prev];
-        // Mantém apenas as 3 últimas notificações na tela para não estourar
+      setActiveSales((prev) => {
+        // Insere a nova venda no topo
+        const newArray = [newSale, ...prev];
+        // Mantém estritamente apenas as 3 últimas vendas visíveis
         if (newArray.length > 3) newArray.pop();
         return newArray;
       });
     };
 
-    // Inicia rápido e depois a cada 3 segundos
-    const initialTimeout = setTimeout(spawnNotification, 500);
-    const interval = setInterval(spawnNotification, 3000);
+    // Primeira venda entra rápido
+    const initialTimeout = setTimeout(spawnSale, 500);
+    // Próximas entram a cada 3.5 segundos
+    const interval = setInterval(spawnSale, 3500);
 
     return () => {
       clearTimeout(initialTimeout);
@@ -54,182 +98,186 @@ export function HeroSection() {
     };
   }, []);
 
-  // Lógica Unificada do Efeito 3D Holográfico (Para Mouse e Touch/Mobile)
+  // ============================================================
+  // 📐 MATEMÁTICA DO TILT 3D E DO GLARE (BRILHO FÍSICO)
+  // Reage tanto ao mouse no desktop quanto ao toque no celular
+  // ============================================================
   const update3DEffect = (clientX, clientY) => {
-    if (!visualRef.current || !phoneRef.current || !glareRef.current) return;
+    if (!visualRef.current || !monitorRef.current || !glareRef.current) return;
     
+    // Obtém as coordenadas da área invisível que captura o evento
     const rect = visualRef.current.getBoundingClientRect();
     const x = clientX - rect.left;
     const y = clientY - rect.top;
     const centerX = rect.width / 2;
     const centerY = rect.height / 2;
 
+    // Calcula os eixos de rotação limitando a torção máxima a 15 graus
     const rotateX = ((y - centerY) / centerY) * -15; 
     const rotateY = ((x - centerX) / centerX) * 15;
 
-    phoneRef.current.style.transform = `rotateX(${rotateX}deg) rotateY(${rotateY}deg)`;
-    glareRef.current.style.background = `linear-gradient(${135 + (rotateX * 2)}deg, rgba(255,255,255,0.2) 0%, transparent 50%)`;
+    // Aplica o Transform 3D no Monitor
+    monitorRef.current.style.transform = `rotateX(${rotateX}deg) rotateY(${rotateY}deg)`;
+    
+    // Aplica o gradiente radial simulando o reflexo da luz (Glare)
+    glareRef.current.style.opacity = '1';
+    glareRef.current.style.background = `radial-gradient(circle at ${x}px ${y}px, rgba(255,255,255,0.12), transparent 60%)`;
   };
 
+  // Eventos de Mouse
   const handleMouseMove = (e) => {
     update3DEffect(e.clientX, e.clientY);
   };
 
-  // Suporte a toque na tela para girar o celular no mobile
+  // Eventos de Toque (Mobile Touch)
   const handleTouchMove = (e) => {
     if (e.touches && e.touches.length > 0) {
       update3DEffect(e.touches[0].clientX, e.touches[0].clientY);
     }
   };
 
+  // Reseta o 3D para a posição inicial atraente quando tira o mouse/dedo
   const handleMouseLeave = () => {
-    if (!phoneRef.current || !glareRef.current) return;
-    phoneRef.current.style.transform = "rotateY(-15deg) rotateX(10deg)";
-    glareRef.current.style.background = "linear-gradient(135deg, rgba(255,255,255,0.15) 0%, transparent 40%)";
+    if (!monitorRef.current || !glareRef.current) return;
+    monitorRef.current.style.transform = "rotateY(-10deg) rotateX(5deg)";
+    glareRef.current.style.opacity = '0';
   };
 
-  // Setup inicial do 3D
+  // Inicia o componente já levemente torcido para induzir a interação 3D
   useEffect(() => {
-    if (phoneRef.current) {
-      phoneRef.current.style.transform = "rotateY(-15deg) rotateX(10deg)";
+    if (monitorRef.current) {
+      monitorRef.current.style.transform = "rotateY(-10deg) rotateX(5deg)";
     }
   }, []);
 
   return (
-    <section className="hero section-container" style={{ position: 'relative' }}>
+    <section className="hero section container" style={{ position: 'relative' }}>
+      
+      {/* ============================================================
+          GRID PRINCIPAL: STACKED NO MOBILE, LADO A LADO NO DESKTOP
+          ============================================================ */}
       <div className="hero-grid">
         
         {/* ============================================================
-            LADO ESQUERDO: CONTEÚDO E TEXTOS
+            LADO ESQUERDO: TEXTOS E CTA (HERO TEXT)
             ============================================================ */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '1.75rem' }}>
+        <div className={`hero-text ${isVisible ? 'active' : ''}`}>
           
-          {/* Badge */}
-          <div className={`hero-badge ${isVisible ? 'animate-fade-in-up' : 'opacity-0'}`}>
-            <span className="dot"></span> A menor taxa do mercado (R$ 0,60)
+          {/* Pílula de Destaque */}
+          <div className={`pill reveal ${isVisible ? 'active' : ''}`}>
+            <span className="spark"></span> MENOR TAXA DO MERCADO (R$ 0,60)
           </div>
           
-          {/* Título Principal */}
-          <h1 className={`${isVisible ? 'animate-fade-in-up delay-100' : 'opacity-0'}`}>
-            A Automação de Elite<br/>para <span className="grad-text">Telegram</span>
+          {/* Título Monumental */}
+          <h1 className={`reveal ${isVisible ? 'active delay-100' : ''}`}>
+            O Futuro das Vendas no <span className="text-gradient">Telegram</span> Chegou
           </h1>
           
-          {/* Subtítulo */}
-          <p className={`${isVisible ? 'animate-fade-in-up delay-200' : 'opacity-0'}`}>
-            Processe pagamentos, adicione membros automaticamente e escale seu grupo VIP com a infraestrutura mais robusta e segura do mercado.
+          {/* Subtítulo Base */}
+          <p className={`reveal ${isVisible ? 'active delay-200' : ''}`}>
+            Automatize suas vendas, gerencie seus clientes e escale seu negócio 
+            com a plataforma mais completa e indestrutível de bots para Telegram.
           </p>
           
-          {/* CTA Principal (Isolado e sem o "Ver Demo") */}
-          <div className={`${isVisible ? 'animate-fade-in-up delay-300' : 'opacity-0'}`} style={{
-            display: 'flex',
-            flexWrap: 'wrap',
-            gap: '1rem',
-            marginTop: '0.25rem'
-          }}>
-            <Link to="/register" style={{ textDecoration: 'none' }}>
-              <button className="hero-btn-primary btn-glow" style={{ padding: '1.1rem 2.2rem', fontSize: '1.05rem', display: 'flex', gap: '8px' }}>
-                Criar Automação Grátis
+          {/* Ações (CTA Principal Isolado para Conversão Máxima) */}
+          <div className={`hero-ctas reveal ${isVisible ? 'active delay-300' : ''}`}>
+            <Link to="/register" style={{ textDecoration: 'none', width: '100%' }}>
+              <button className="btn-glow hero-btn" style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                Criar Conta Grátis
                 <ArrowRight size={20} />
               </button>
             </Link>
           </div>
 
-          {/* Indicadores de Confiança */}
-          <div className={`${isVisible ? 'animate-fade-in-up delay-400' : 'opacity-0'}`} style={{
-            display: 'flex',
-            flexWrap: 'wrap',
-            gap: '1.75rem',
-            paddingTop: '2rem',
-            borderTop: '1px solid var(--glass-border)',
-            marginTop: '1rem'
-          }}>
-            {[
-              { label: '500+ Bots Ativos', color: 'var(--neon-green)' },
-              { label: 'R$ 50.000+ em Vendas', color: 'var(--neon-blue)' },
-              { label: '1.200+ Usuários', color: 'var(--neon-purple)' },
-            ].map((item, i) => (
-              <div key={i} style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '0.5rem',
-                fontSize: '0.85rem',
-                color: 'var(--text-muted)'
-              }}>
-                <div style={{
-                  width: '8px',
-                  height: '8px',
-                  borderRadius: '50%',
-                  background: item.color,
-                  boxShadow: `0 0 10px ${item.color}`,
-                  position: 'relative'
-                }}>
-                  <div style={{
-                    position: 'absolute',
-                    inset: '-3px',
-                    borderRadius: '50%',
-                    border: `1px solid ${item.color}`,
-                    opacity: 0.4,
-                    animation: 'pulseRing 2.5s infinite'
-                  }} />
-                </div>
-                <span>{item.label}</span>
-              </div>
-            ))}
+          {/* Badges de Prova Social e Confiança */}
+          <div className={`trust-badges reveal ${isVisible ? 'active delay-400' : ''}`}>
+            <div className="t-badge">
+              <div className="dot" style={{ background: 'var(--neon-green)', boxShadow: '0 0 10px var(--neon-green)' }}></div> 
+              500+ Bots Ativos
+            </div>
+            <div className="t-badge">
+              <div className="dot" style={{ background: 'var(--neon-magenta)', boxShadow: '0 0 10px var(--neon-magenta)' }}></div> 
+              R$ 50.000+ em Vendas
+            </div>
+            <div className="t-badge">
+              <div className="dot" style={{ background: 'var(--neon-blue)', boxShadow: '0 0 10px var(--neon-blue)' }}></div> 
+              1.200+ Usuários
+            </div>
           </div>
-
+          
         </div>
 
         {/* ============================================================
-            LADO DIREITO: SMARTPHONE 3D HOLOGRÁFICO
+            LADO DIREITO: O MONITOR DE VENDAS 3D AO VIVO
+            O Scaler resolve o problema de esmagamento no celular
             ============================================================ */}
         <div 
-          className={`hero-visual ${isVisible ? 'animate-scale-in delay-300' : 'opacity-0'}`}
+          className={`hero-visual reveal ${isVisible ? 'active delay-300' : ''}`}
           ref={visualRef}
           onMouseMove={handleMouseMove}
           onMouseLeave={handleMouseLeave}
-          onTouchMove={handleTouchMove} /* Evento Adicionado para o Celular */
-          onTouchEnd={handleMouseLeave}  /* Reseta ao soltar o dedo */
+          onTouchMove={handleTouchMove}
+          onTouchEnd={handleMouseLeave}
         >
-          <div className="phone-wrapper" ref={phoneRef}>
-            <div className="phone-glare" ref={glareRef}></div>
-            <div className="phone-frame">
-              <div className="phone-notch"></div>
+          {/* Isolamento de escala para responsividade sem quebrar os eixos 3D */}
+          <div className="monitor-scaler">
+            
+            {/* O Invólucro que gira matematicamente (Tilt Engine) */}
+            <div className="monitor-wrapper" id="liveCard" ref={monitorRef}>
               
-              {/* Tela do Celular com Dark Mode Premium */}
-              <div className="phone-screen">
-                {/* Marca D'água */}
-                <div className="phone-watermark">⚡</div>
+              {/* Camada Física do Brilho Holográfico que segue o mouse */}
+              <div className="monitor-glare" id="glare" ref={glareRef}></div>
+              
+              {/* O Vidro Principal (Placa Glassmorphism Premium) */}
+              <div className="monitor-glass">
                 
-                {/* Loop das Notificações Push */}
-                {activeNotifs.map((notif) => (
-                  <div key={notif.id} className="push-notif">
-                    
-                    {/* Alinhamento forçado e blindado contra quebra de texto */}
-                    <div className="pn-left" style={{ display: 'flex', alignItems: 'center', gap: '12px', minWidth: 0, flex: 1 }}>
-                      <div className="pn-icon" style={{ 
-                        background: `${notif.color}20`, 
-                        color: notif.color, 
-                        border: `1px solid ${notif.color}40`,
-                        flexShrink: 0 
-                      }}>
-                        {notif.icon}
-                      </div>
-                      <div className="pn-text-area" style={{ display: 'flex', flexDirection: 'column', minWidth: 0 }}>
-                        <div className="pn-app" style={{ whiteSpace: 'nowrap' }}>Zenyx VIPs</div>
-                        <div className="pn-msg" style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                          {notif.name} pagou
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="pn-val" style={{ color: notif.color, flexShrink: 0, whiteSpace: 'nowrap', paddingLeft: '8px' }}>
-                      {notif.val}
-                    </div>
-
+                {/* Header do Monitor: Título e Status Online Piscante */}
+                <div className="monitor-header">
+                  <h3>Monitor de Vendas Ao Vivo</h3>
+                  <div className="online-badge">
+                    <span className="dot"></span> ONLINE
                   </div>
-                ))}
+                </div>
+                
+                {/* O Corpo onde as Transações Falsas (Fake Sales) pulam na tela */}
+                <div className="monitor-body" id="monitorList">
+                  
+                  {activeSales.map((sale) => {
+                    // Preço negativo fica em vermelho, positivo herda a cor do ícone
+                    const valColor = sale.val.includes('-') ? 'var(--neon-red)' : sale.col;
 
+                    return (
+                      <div key={sale.id} className="transaction-item">
+                        
+                        {/* Lado Esquerdo da Transação (Ícone, Nome e Plano) */}
+                        <div className="t-left">
+                          <div 
+                            className="t-icon" 
+                            style={{ background: sale.bg, color: sale.col }}
+                          >
+                            {sale.icon}
+                          </div>
+                          <div>
+                            <div className="t-name">{sale.name}</div>
+                            <div className="t-plan">{sale.plan}</div>
+                          </div>
+                        </div>
+                        
+                        {/* Lado Direito da Transação (Valor em Moeda e Tempo) */}
+                        <div className="t-right">
+                          <div className="t-val" style={{ color: valColor }}>
+                            {sale.val}
+                          </div>
+                          <div className="t-time">{sale.time}</div>
+                        </div>
+                        
+                      </div>
+                    );
+                  })}
+
+                </div>
               </div>
+
             </div>
           </div>
         </div>
@@ -237,23 +285,26 @@ export function HeroSection() {
       </div>
 
       {/* ============================================================
-          SCROLL INDICATOR
+          SCROLL INDICATOR (OPCIONAL: MANTIDO E REVISADO)
           ============================================================ */}
-      <div className={`${isVisible ? 'animate-fade-in-up delay-500' : 'opacity-0'}`} style={{
-        position: 'absolute',
-        bottom: '2rem',
-        left: '50%',
-        transform: 'translateX(-50%)',
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        gap: '0.5rem',
-        animation: 'bounceDown 2.5s infinite ease-in-out'
-      }}>
+      <div 
+        className={`reveal ${isVisible ? 'active delay-500' : ''}`} 
+        style={{
+          position: 'absolute',
+          bottom: '2rem',
+          left: '50%',
+          transform: 'translateX(-50%)',
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          gap: '0.5rem',
+          animation: 'bounceDown 2.5s infinite ease-in-out'
+        }}
+      >
         <div style={{
           width: '2px',
           height: '40px',
-          background: 'linear-gradient(to bottom, var(--neon-purple), transparent)',
+          background: 'linear-gradient(to bottom, var(--neon-magenta), transparent)',
           borderRadius: '2px'
         }} />
         <span style={{
@@ -266,7 +317,7 @@ export function HeroSection() {
           Scroll
         </span>
       </div>
-      
+
     </section>
   );
 }

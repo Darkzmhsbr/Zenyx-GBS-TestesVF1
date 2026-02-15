@@ -2,7 +2,9 @@ import React, { useState, useEffect, useRef } from 'react';
 import { publicService } from '../../services/api';
 
 // ============================================================
-// FILTRO AGRESSIVO DE NOMES DE PLANOS (+18 / ADULTO) - MANTIDO INTACTO
+// 🛡️ FILTRO AGRESSIVO DE NOMES DE PLANOS (+18 / ADULTO) 
+// Mantido 100% intacto e inalterado para segurança da plataforma.
+// Garante que nomes de planos inadequados não quebrem as políticas.
 // ============================================================
 function isAggressivePlanName(planName) {
   if (!planName) return false;
@@ -73,7 +75,8 @@ function isAggressivePlanName(planName) {
 }
 
 // ============================================================
-// DADOS DAS PREMIAÇÕES (GAMIFICAÇÃO)
+// 🏆 DADOS DAS PREMIAÇÕES DO HALL DA FAMA (COSMOS PURPLE)
+// Cores exatas mapeadas do index11.html
 // ============================================================
 const awardsData = [
   { id: '10k', label: '10K', color: '#94a3b8' },
@@ -84,19 +87,22 @@ const awardsData = [
   { id: '1M', label: '1 MILHÃO', color: '#ffffff' }
 ];
 
+// ============================================================
+// COMPONENTE PRINCIPAL (ACTIVITY FEED / TAXAS E HALL DA FAMA)
+// ============================================================
 export function ActivityFeed() {
-  // Mantemos os states originais para buscar dados reais
+  // Mantemos os states originais do Feed de Vendas no background para uso futuro da plataforma
   const [activities, setActivities] = useState([]);
   const [displayedActivities, setDisplayedActivities] = useState([]);
   const [loading, setLoading] = useState(true);
   const [isVisible, setIsVisible] = useState(false);
   const sectionRef = useRef(null);
 
-  // States exclusivos da nova versão (Placas 3D)
-  const [activeAward, setActiveAward] = useState(awardsData[0]);
+  // States exclusivos da Carta 3D Giratória
+  const [activeAward, setActiveAward] = useState(awardsData[1]); // Inicia no 50K
   const [isFlipped, setIsFlipped] = useState(false);
 
-  // Intersection Observer
+  // Intersection Observer para disparar animações
   useEffect(() => {
     const observer = new IntersectionObserver(
       ([entry]) => {
@@ -113,39 +119,12 @@ export function ActivityFeed() {
     return () => observer.disconnect();
   }, []);
 
-  // Buscar atividades originais do backend
+  // Fetch das atividades de vendas via API (Mantido para integridade arquitetural)
   useEffect(() => {
     fetchActivities();
     const interval = setInterval(fetchActivities, 30000);
     return () => clearInterval(interval);
   }, []);
-
-  // Lógica rotativa original preservada
-  useEffect(() => {
-    if (activities.length > 0) {
-      const safe = activities.filter(a => !isAggressivePlanName(a.plan));
-      const source = safe.length > 0
-        ? safe
-        : activities.map(a => ({
-            ...a,
-            plan: isAggressivePlanName(a.plan) ? '🥇 Plano VIP 🥇' : a.plan
-          }));
-      
-      setDisplayedActivities(source.slice(0, 5));
-      
-      let currentIndex = 0;
-      const rotateInterval = setInterval(() => {
-        currentIndex = (currentIndex + 1) % source.length;
-        const newDisplay = [];
-        for (let i = 0; i < Math.min(5, source.length); i++) {
-          newDisplay.push(source[(currentIndex + i) % source.length]);
-        }
-        setDisplayedActivities(newDisplay);
-      }, 3000);
-      
-      return () => clearInterval(rotateInterval);
-    }
-  }, [activities]);
 
   const fetchActivities = async () => {
     try {
@@ -164,83 +143,85 @@ export function ActivityFeed() {
     }
   };
 
-  // Handler do Efeito 3D Flip da Placa de Premiação
+  // Handler que aciona a rotação 3D da carta e atualiza as cores Neon
   const handleAwardClick = (award) => {
-    if (award.id === activeAward.id) return;
+    if (award.id === activeAward.id) return; // Se já tá no mesmo, ignora
     setActiveAward(award);
-    setIsFlipped(!isFlipped);
+    setIsFlipped(!isFlipped); // Inverte a carta para o efeito 3D (flip)
   };
 
   return (
     <div ref={sectionRef}>
       
       {/* ============================================================
-          SECTION: TAXAS (TICKET HOLOGRÁFICO VS CONCORRÊNCIA)
+          SECTION 1: TAXAS (A VANTAGEM DESLEAL - HOLOGRAM TICKET)
           ============================================================ */}
       <section id="pricing" className="section container">
-        <div className="section-header" style={{ border: 'none' }}>
-          <h2 className={`section-title ${isVisible ? 'animate-fade-in-up' : 'opacity-0'}`} style={{ border: 'none' }}>
-            A Vantagem <span className="grad-text">Desleal</span>
+        <div className="section-header">
+          <h2 className={`section-title ${isVisible ? 'animate-fade-in-up' : 'opacity-0'}`}>
+            A Vantagem <span className="text-gradient">Desleal</span>
           </h2>
-          <p className={`section-desc ${isVisible ? 'animate-fade-in-up delay-100' : 'opacity-0'}`} style={{ border: 'none' }}>
-            Nós não somos seus sócios. O dinheiro do seu suor deve ficar no seu bolso.
+          <p className={`section-desc ${isVisible ? 'animate-fade-in-up delay-100' : 'opacity-0'}`}>
+            Nós não somos seus sócios. Fique com a margem de lucro que você suou para conquistar.
           </p>
         </div>
 
         <div className={`vs-container ${isVisible ? 'animate-fade-in-up delay-200' : 'opacity-0'}`}>
-          {/* O Passado (Concorrência) */}
+          
+          {/* Lado Esquerdo: Concorrência */}
           <div className="vs-side">
-            <h4>Plataformas Comuns</h4>
-            {/* BLINDAGEM INLINE DE LIST STYLE (Remove as bolinhas) */}
-            <ul className="vs-list" style={{ listStyle: 'none', padding: 0, margin: 0 }}>
-              <li style={{ listStyle: 'none', display: 'flex', gap: '8px', alignItems: 'center' }}><span style={{ color: 'var(--neon-red)', fontWeight: 800 }}>✕</span> Cobram até R$ 1,49 fixo</li>
-              <li style={{ listStyle: 'none', display: 'flex', gap: '8px', alignItems: 'center' }}><span style={{ color: 'var(--neon-red)', fontWeight: 800 }}>✕</span> Comem de 5% a 10% da venda</li>
-              <li style={{ listStyle: 'none', display: 'flex', gap: '8px', alignItems: 'center' }}><span style={{ color: 'var(--neon-red)', fontWeight: 800 }}>✕</span> Taxas variáveis ocultas</li>
-              <li style={{ listStyle: 'none', display: 'flex', gap: '8px', alignItems: 'center' }}><span style={{ color: 'var(--neon-red)', fontWeight: 800 }}>✕</span> Cobram mensalidade cara</li>
+            <h4 style={{ color: 'var(--neon-red)', fontFamily: 'var(--font-display)', marginBottom: '1.5rem', textTransform: 'uppercase', letterSpacing: '1px' }}>
+              Concorrência
+            </h4>
+            <ul className="vs-list">
+              <li><span style={{ color: 'var(--neon-red)', fontWeight: 800 }}>✕</span> Cobram até R$ 1,49 fixo</li>
+              <li><span style={{ color: 'var(--neon-red)', fontWeight: 800 }}>✕</span> Comem 10% da sua venda</li>
+              <li><span style={{ color: 'var(--neon-red)', fontWeight: 800 }}>✕</span> Mensalidades abusivas</li>
             </ul>
           </div>
 
-          {/* O Presente (Zenyx Ticket) */}
+          {/* O Centro: Ticket Zenyx VIPs */}
           <div className="vs-center">
             <div className="ticket-badge">NA ZENYX VIPS VOCÊ PAGA</div>
             <div className="ticket-price">R$ 0,60</div>
-            <div className="ticket-sub">TAXA FIXA POR VENDA</div>
-            {/* BLINDAGEM INLINE DE LIST STYLE (Remove as bolinhas) */}
-            <ul className="vs-list" style={{ listStyle: 'none', padding: 0, margin: '0 auto', textAlign: 'left', opacity: 0.9, width: 'max-content' }}>
-              <li style={{ listStyle: 'none', display: 'flex', gap: '8px', alignItems: 'center' }}><span style={{ color: 'var(--neon-green)', fontWeight: 800 }}>✓</span> Zero porcentagem na venda</li>
-              <li style={{ listStyle: 'none', display: 'flex', gap: '8px', alignItems: 'center' }}><span style={{ color: 'var(--neon-green)', fontWeight: 800 }}>✓</span> Mensalidade Zero</li>
-              <li style={{ listStyle: 'none', display: 'flex', gap: '8px', alignItems: 'center' }}><span style={{ color: 'var(--neon-green)', fontWeight: 800 }}>✓</span> Margem intacta</li>
+            <div className="ticket-sub">TAXA FIXA POR VENDA APROVADA</div>
+            <ul className="vs-list" style={{ opacity: 0.9 }}>
+              <li><span style={{ color: 'var(--neon-green)', fontWeight: 800 }}>✓</span> Zero porcentagem na venda</li>
+              <li><span style={{ color: 'var(--neon-green)', fontWeight: 800 }}>✓</span> Mensalidade Zero</li>
+              <li><span style={{ color: 'var(--neon-green)', fontWeight: 800 }}>✓</span> Margem 100% intacta</li>
             </ul>
           </div>
 
-          {/* O Futuro (Sua Escala) */}
-          <div className="vs-side" style={{ filter: 'none', opacity: 1, borderColor: 'rgba(16, 185, 129, 0.3)', background: 'rgba(16, 185, 129, 0.02)' }}>
-            <h4 style={{ color: 'var(--neon-green)' }}>Seu Crescimento</h4>
-            {/* BLINDAGEM INLINE DE LIST STYLE (Remove as bolinhas) */}
-            <ul className="vs-list" style={{ listStyle: 'none', padding: 0, margin: 0 }}>
-              <li style={{ listStyle: 'none', display: 'flex', gap: '8px', alignItems: 'center' }}>Vendeu 10 Reais? Paga R$ 0,60</li>
-              <li style={{ listStyle: 'none', display: 'flex', gap: '8px', alignItems: 'center' }}>Vendeu 10 Mil? Paga R$ 0,60</li>
-              <li style={{ listStyle: 'none', display: 'flex', gap: '8px', alignItems: 'center' }}>Previsibilidade absoluta</li>
-              <li style={{ listStyle: 'none', display: 'flex', gap: '8px', alignItems: 'center' }}>Escala sem medo das taxas</li>
+          {/* Lado Direito: A Escala */}
+          <div className="vs-side" style={{ opacity: 1, borderColor: 'rgba(16,185,129,0.3)', background: 'rgba(16,185,129,0.02)' }}>
+            <h4 style={{ color: 'var(--neon-green)', fontFamily: 'var(--font-display)', marginBottom: '1.5rem', textTransform: 'uppercase', letterSpacing: '1px' }}>
+              Seu Crescimento
+            </h4>
+            <ul className="vs-list">
+              <li><span style={{ color: 'var(--neon-green)', fontWeight: 800 }}>✓</span> Vendeu R$ 10? Paga R$ 0,60</li>
+              <li><span style={{ color: 'var(--neon-green)', fontWeight: 800 }}>✓</span> Vendeu R$ 1 Mil? Paga R$ 0,60</li>
+              <li><span style={{ color: 'var(--neon-green)', fontWeight: 800 }}>✓</span> Escala livre de amarras</li>
             </ul>
           </div>
         </div>
       </section>
 
       {/* ============================================================
-          SECTION: HALL DA FAMA (CARTAS COLECIONÁVEIS 3D)
+          SECTION 2: HALL DA FAMA (CARTA 3D GIRATÓRIA ORIGINAL)
           ============================================================ */}
-      <section id="awards" className="section container">
-        <div className="section-header" style={{ border: 'none' }}>
-          <h2 className={`section-title ${isVisible ? 'animate-fade-in-up delay-300' : 'opacity-0'}`} style={{ border: 'none' }}>
-            Hall da <span className="grad-text">Fama</span>
+      <section id="hall" className="section container">
+        <div className="section-header">
+          <h2 className={`section-title ${isVisible ? 'animate-fade-in-up delay-300' : 'opacity-0'}`}>
+            Hall da <span className="text-gradient">Fama</span>
           </h2>
-          <p className={`section-desc ${isVisible ? 'animate-fade-in-up delay-400' : 'opacity-0'}`} style={{ border: 'none' }}>
+          <p className={`section-desc ${isVisible ? 'animate-fade-in-up delay-400' : 'opacity-0'}`}>
             Acompanhe sua evolução e celebre cada marco alcançado. Um símbolo real das suas conquistas digitais.
           </p>
         </div>
 
         <div className={`awards-area ${isVisible ? 'animate-fade-in-up delay-500' : 'opacity-0'}`}>
+          
+          {/* Abas Superiores de Seleção de Marco */}
           <div className="awards-tabs">
             {awardsData.map((award) => (
               <button 
@@ -249,7 +230,12 @@ export function ActivityFeed() {
                 className={`award-tab ${activeAward.id === award.id ? 'active' : ''}`}
                 style={
                   activeAward.id === award.id 
-                    ? { borderColor: award.color, color: award.id === '1M' ? '#000' : award.color } 
+                    ? { 
+                        borderColor: award.color, 
+                        color: 'var(--text-main)',
+                        background: 'rgba(255,255,255,0.05)',
+                        boxShadow: `0 0 20px ${award.color}40`
+                      } 
                     : {}
                 }
               >
@@ -258,59 +244,93 @@ export function ActivityFeed() {
             ))}
           </div>
 
-          {/* O Palco da Carta 3D */}
-          <div className={`award-stage ${isFlipped ? 'flip' : ''}`}>
+          {/* O Palco da Carta 3D - Flips ao clicar na aba */}
+          <div 
+            className={`award-stage ${isFlipped ? 'flip' : ''}`} 
+            onClick={() => setIsFlipped(!isFlipped)}
+          >
             <div className="award-card-container">
               
-              {/* Face Frontal */}
+              {/* FACE FRONTAL DA CARTA */}
               <div 
                 className="award-card" 
                 style={{ 
                   borderColor: activeAward.color, 
                   boxShadow: `0 30px 60px rgba(0,0,0,0.9), 0 0 50px ${activeAward.color}40`,
-                  background: activeAward.id === '1M' ? 'linear-gradient(135deg, #111, #333)' : 'linear-gradient(135deg, #1a1a24, #050507)'
+                  background: activeAward.id === '1M' ? 'linear-gradient(135deg, #111, #333)' : 'linear-gradient(135deg, var(--bg-panel), var(--bg-base))'
                 }}
               >
                 <div 
                   className="award-inner" 
                   style={{ 
                     color: activeAward.color, 
-                    borderColor: `${activeAward.color}40`,
-                    textShadow: activeAward.id === '1M' ? '0 0 20px #fff' : 'none'
+                    borderColor: `${activeAward.color}40`
                   }}
                 >
-                  <div className="a-logo" style={{ filter: `drop-shadow(0 0 15px ${activeAward.color})` }}>⚡</div>
-                  <div className="a-value">{activeAward.label}</div>
-                  <div className="a-label">{activeAward.id === '1M' ? 'Clube do Milhão' : 'Faturamento'}</div>
+                  <div 
+                    className="a-logo" 
+                    style={{ 
+                      boxShadow: `inset 0 0 15px ${activeAward.color}30`,
+                      background: `${activeAward.color}10`,
+                      color: activeAward.id === '1M' ? '#000' : '#fff'
+                    }}
+                  >
+                    ⚡
+                  </div>
+                  <div 
+                    className="a-value" 
+                    style={{ 
+                      textShadow: `0 0 20px ${activeAward.color}50`
+                    }}
+                  >
+                    {activeAward.label}
+                  </div>
+                  <div className="a-label">Faturamento</div>
                 </div>
               </div>
 
-              {/* Verso (Usado para o efeito 3D sem quebrar) */}
+              {/* VERSO DA CARTA (Necessário para a ilusão 3D contínua) */}
               <div 
-                className="award-card" 
+                className="award-card back" 
                 style={{ 
-                  transform: 'rotateY(180deg)',
+                  transform: 'rotateY(180deg)', // Mantém o verso posicionado atrás
                   borderColor: activeAward.color, 
                   boxShadow: `0 30px 60px rgba(0,0,0,0.9), 0 0 50px ${activeAward.color}40`,
-                  background: activeAward.id === '1M' ? 'linear-gradient(135deg, #111, #333)' : 'linear-gradient(135deg, #1a1a24, #050507)'
+                  background: activeAward.id === '1M' ? 'linear-gradient(135deg, #111, #333)' : 'linear-gradient(135deg, var(--bg-panel), var(--bg-base))'
                 }}
               >
                 <div 
                   className="award-inner" 
                   style={{ 
                     color: activeAward.color, 
-                    borderColor: `${activeAward.color}40`,
-                    textShadow: activeAward.id === '1M' ? '0 0 20px #fff' : 'none'
+                    borderColor: `${activeAward.color}40`
                   }}
                 >
-                  <div className="a-logo" style={{ filter: `drop-shadow(0 0 15px ${activeAward.color})` }}>⚡</div>
-                  <div className="a-value">{activeAward.label}</div>
-                  <div className="a-label">{activeAward.id === '1M' ? 'Clube do Milhão' : 'Faturamento'}</div>
+                  <div 
+                    className="a-logo" 
+                    style={{ 
+                      boxShadow: `inset 0 0 15px ${activeAward.color}30`,
+                      background: `${activeAward.color}10`,
+                      color: activeAward.id === '1M' ? '#000' : '#fff'
+                    }}
+                  >
+                    ⚡
+                  </div>
+                  <div 
+                    className="a-value" 
+                    style={{ 
+                      textShadow: `0 0 20px ${activeAward.color}50`
+                    }}
+                  >
+                    {activeAward.label}
+                  </div>
+                  <div className="a-label">Faturamento</div>
                 </div>
               </div>
 
             </div>
           </div>
+          
         </div>
       </section>
 

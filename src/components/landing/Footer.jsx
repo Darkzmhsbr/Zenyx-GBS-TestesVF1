@@ -2,104 +2,162 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 
 export function Footer() {
+  // ============================================================
+  // 🧭 NAVEGAÇÃO SUAVE ÂNCORA (SMOOTH SCROLL)
+  // Garante que os links do rodapé deslizem até a seção 
+  // sem recarregar a página bruscamente.
+  // ============================================================
   const scrollToSection = (sectionId) => {
     const el = document.getElementById(sectionId);
-    if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    if (el) {
+      el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
   };
 
   return (
-    <footer className="landing-footer">
-      <div className="footer-container">
+    // Utilizamos a classe .footer do nosso novo ecossistema Cosmos Purple
+    <footer className="footer">
+      <div className="container">
         
-        {/* O CSS AGORA ASSUME O CONTROLE TOTAL! 
-            (Removido o style inline que forçava 4 colunas no mobile) */}
+        {/* ============================================================
+            🚀 GRID PRINCIPAL DO RODAPÉ (4 COLUNAS RESPONSIVAS)
+            O CSS auto-fit garante que as colunas se empilhem 
+            perfeitamente no celular.
+            ============================================================ */}
         <div className="footer-grid">
           
-          {/* Coluna 1: Marca + Produto */}
-          <div className="footer-column">
-            {/* Identidade Visual do Rodapé */}
-            <Link to="/" style={{ 
-              display: 'flex', 
-              alignItems: 'center', 
-              gap: '10px', 
-              textDecoration: 'none', 
-              marginBottom: '2rem' 
-            }}>
-              <div className="logo-icon" style={{
-                width: '35px',
-                height: '35px',
-                borderRadius: '10px',
-                background: 'rgba(168, 85, 247, 0.1)',
-                border: '1px solid var(--neon-purple)',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                boxShadow: 'inset 0 0 15px rgba(168, 85, 247, 0.3)',
-                color: 'var(--neon-purple)',
-                fontSize: '1.2rem',
-                fontWeight: 'bold'
-              }}>⚡</div>
-              <span style={{ 
-                fontFamily: 'var(--font-display)', 
-                fontSize: '1.6rem', 
-                fontWeight: 800, 
-                color: 'var(--text-main)',
-                letterSpacing: '-0.5px'
-              }}>
-                Zenyx<span className="grad-text">VIPs</span>
-              </span>
+          {/* ----------------------------------------------------
+              COLUNA 1: MARCA & IDENTIDADE VISUAL
+              ---------------------------------------------------- */}
+          <div className="f-col">
+            <Link 
+              to="/" 
+              className="logo" 
+              style={{ marginBottom: '1.2rem', display: 'flex' }}
+              onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+            >
+              <div 
+                className="logo-icon" 
+                style={{ 
+                  width: '30px', 
+                  height: '30px', 
+                  fontSize: '1rem',
+                  marginRight: '10px'
+                }}
+              >
+                ⚡
+              </div>
+              Zenyx<span style={{ color: 'var(--neon-magenta)' }}>VIPs</span>
             </Link>
+            
+            <p style={{ 
+              fontSize: '0.95rem', 
+              color: 'var(--text-muted)', 
+              lineHeight: '1.6',
+              maxWidth: '280px'
+            }}>
+              A infraestrutura definitiva para escalar vendas no Telegram de forma autônoma, rápida e implacavelmente segura.
+            </p>
+          </div>
 
+          {/* ----------------------------------------------------
+              COLUNA 2: MAPA DO PRODUTO (LINKS INTERNOS)
+              ---------------------------------------------------- */}
+          <div className="f-col">
             <h4>Produto</h4>
-            <ul className="footer-links">
-              <li><a onClick={() => scrollToSection('features')}>Recursos</a></li>
-              <li><a onClick={() => scrollToSection('funcionalidades')}>Funcionalidades</a></li>
-              <li><a onClick={() => scrollToSection('tutoriais')}>Tutoriais</a></li>
-              <li><a onClick={() => scrollToSection('faq')}>FAQ</a></li>
+            <ul>
+              <li>
+                <a onClick={() => scrollToSection('recursos')}>Ecossistema</a>
+              </li>
+              <li>
+                <a onClick={() => scrollToSection('vitrine')}>Vitrine Mini-App</a>
+              </li>
+              <li>
+                <a onClick={() => scrollToSection('precos')}>A Vantagem Desleal</a>
+              </li>
+              <li>
+                <a onClick={() => scrollToSection('hall')}>Hall da Fama</a>
+              </li>
+              <li>
+                <a onClick={() => scrollToSection('tutoriais')}>Central de Comando</a>
+              </li>
+              <li>
+                <a onClick={() => scrollToSection('faq')}>FAQ Transparente</a>
+              </li>
             </ul>
           </div>
 
-          {/* Coluna 2: Legal */}
-          <div className="footer-column">
+          {/* ----------------------------------------------------
+              COLUNA 3: LEGAL & JURÍDICO (LINKS DE ROTA)
+              ---------------------------------------------------- */}
+          <div className="f-col">
             <h4>Legal</h4>
-            <ul className="footer-links">
-              <li><Link to="/termos">Termos de Uso</Link></li>
-              <li><Link to="/privacidade">Política de Privacidade</Link></li>
-              <li><Link to="/reembolso">Política de Reembolso</Link></li>
+            <ul>
+              <li>
+                <Link to="/termos">Termos de Uso</Link>
+              </li>
+              <li>
+                <Link to="/privacidade">Política de Privacidade</Link>
+              </li>
+              <li>
+                <Link to="/reembolso">Política de Reembolso</Link>
+              </li>
+              <li>
+                <a href="#">Contratos e Licenças</a>
+              </li>
             </ul>
           </div>
 
-          {/* Coluna 3: Suporte */}
-          <div className="footer-column">
+          {/* ----------------------------------------------------
+              COLUNA 4: SUPORTE & COMUNIDADE
+              ---------------------------------------------------- */}
+          <div className="f-col">
             <h4>Suporte</h4>
-            <ul className="footer-links">
-              <li><a href="#">Contato</a></li>
-              <li><Link to="/register">Criar Conta</Link></li>
-              <li><Link to="/login">Acessar Plataforma</Link></li>
-              <li><a href="#">Documentação</a></li>
-            </ul>
-          </div>
-
-          {/* Coluna 4: Redes Sociais */}
-          <div className="footer-column">
-            <h4>Redes Sociais</h4>
-            <ul className="footer-links">
-              <li><a href="#" target="_blank" rel="noopener noreferrer">Instagram</a></li>
-              <li><a href="https://t.me/zenyxvips" target="_blank" rel="noopener noreferrer">Telegram</a></li>
-              <li><a href="#" target="_blank" rel="noopener noreferrer">Twitter/X</a></li>
-              <li><a href="#" target="_blank" rel="noopener noreferrer">YouTube</a></li>
+            <ul>
+              <li>
+                <a href="https://t.me/suportezenyx" target="_blank" rel="noopener noreferrer">
+                  Suporte via Telegram
+                </a>
+              </li>
+              <li>
+                <a href="https://instagram.com/zenyxvips" target="_blank" rel="noopener noreferrer">
+                  Instagram Oficial
+                </a>
+              </li>
+              <li>
+                <a href="mailto:contato@zenyxvips.com">E-mail Comercial</a>
+              </li>
+              <li style={{ marginTop: '0.5rem' }}>
+                <Link 
+                  to="/login" 
+                  style={{ color: 'var(--neon-blue)', fontWeight: 'bold' }}
+                >
+                  ➔ Acessar Painel
+                </Link>
+              </li>
             </ul>
           </div>
 
         </div>
 
-        {/* Bottom Bar: Copyright e Badges */}
+        {/* ============================================================
+            🔒 BARRA INFERIOR (COPYRIGHT & BADGES DE CONFIANÇA)
+            ============================================================ */}
         <div className="footer-bottom">
-          <p className="footer-copyright">© 2026 Zenyx VIPs. Todos os direitos reservados.</p>
-          <div className="footer-badges" style={{ display: 'flex', gap: '15px', flexWrap: 'wrap' }}>
-            <span className="footer-badge">🔒 Seguro</span>
-            <span className="footer-badge">⚡ Suporte 24/7</span>
-            <span className="footer-badge">🚀 Alta Performance</span>
+          <p style={{ margin: 0, color: 'var(--text-muted)' }}>
+            © {new Date().getFullYear()} Zenyx VIPs. Todos os direitos reservados.
+          </p>
+          
+          <div style={{ display: 'flex', gap: '20px', flexWrap: 'wrap' }}>
+            <span style={{ color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <span style={{ color: 'var(--neon-gold)' }}>🔒</span> Criptografia SSL
+            </span>
+            <span style={{ color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <span style={{ color: 'var(--neon-blue)' }}>⚡</span> Alta Performance
+            </span>
+            <span style={{ color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <span style={{ color: 'var(--neon-green)' }}>🟢</span> Servidores Online
+            </span>
           </div>
         </div>
 

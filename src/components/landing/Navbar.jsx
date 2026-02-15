@@ -3,27 +3,40 @@ import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { Menu, X, Zap } from 'lucide-react';
 
 export function Navbar() {
+  // ============================================================
+  // ⚙️ ESTADOS E HOOKS DE ROTEAMENTO
+  // ============================================================
   const [scrolled, setScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
 
-  // Efeito de Glassmorphism ao rolar a página
+  // ============================================================
+  // 👁️ OBSERVER: GLASSMORPHISM ON SCROLL
+  // Aciona a classe 'scrolled' que injeta o desfoque de vidro
+  // ============================================================
   useEffect(() => {
     const handleScroll = () => {
       setScrolled(window.scrollY > 20);
     };
+    
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  // Navegação suave ancorada
+  // ============================================================
+  // 🧭 NAVEGAÇÃO SUAVE ANCORADA (CROSS-ROUTE)
+  // Resolve o problema de clicar no link estando em outra página (ex: /login)
+  // ============================================================
   const handleNavigation = (sectionId) => {
-    setMobileMenuOpen(false);
+    setMobileMenuOpen(false); // Fecha o menu mobile automaticamente
+    
     if (location.pathname === '/') {
+      // Já está na Home: Apenas rola até a âncora
       const el = document.getElementById(sectionId);
       if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
     } else {
+      // Está em outra página: Redireciona pra Home e depois rola
       navigate('/');
       setTimeout(() => {
         const el = document.getElementById(sectionId);
@@ -33,10 +46,13 @@ export function Navbar() {
   };
 
   return (
-    <nav className={`landing-navbar ${scrolled ? 'scrolled' : ''}`}>
-      {/* Container com flexão absoluta para jogar um para cada lado */}
+    <nav className={`navbar ${scrolled ? 'scrolled' : ''}`}>
+      
+      {/* ============================================================
+          CONTAINER BLINDADO (FLEX-BETWEEN & NO-SHRINK)
+          ============================================================ */}
       <div 
-        className="navbar-container" 
+        className="nav-inner container" 
         style={{ 
           width: '100%', 
           display: 'flex', 
@@ -45,34 +61,40 @@ export function Navbar() {
         }}
       >
         
-        {/* LOGO ZENYX VIPS (Blindada para não quebrar a linha) */}
+        {/* ==========================================
+            LOGO ZENYX VIPS (COSMOS PURPLE)
+            ========================================== */}
         <Link
           to="/"
           onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
-          className="navbar-logo"
+          className="logo"
           style={{ flexShrink: 0, whiteSpace: 'nowrap' }}
         >
-          <div className="navbar-logo-icon">
+          <div className="logo-icon">
             <Zap size={20} strokeWidth={2.5} />
           </div>
-          Zenyx<span className="grad-text">VIPs</span>
+          Zenyx<span style={{ color: 'var(--neon-magenta)' }}>VIPs</span>
         </Link>
 
-        {/* DESKTOP MENU - Some automaticamente no Mobile via CSS */}
-        <ul className="navbar-menu">
-          <li><a onClick={() => handleNavigation('features')}>Ecossistema</a></li>
-          <li><a onClick={() => handleNavigation('funcionalidades')}>A Jornada</a></li>
+        {/* ==========================================
+            MENU DESKTOP (SOME NO MOBILE VIA CSS)
+            ========================================== */}
+        <ul className="nav-links">
+          <li><a onClick={() => handleNavigation('recursos')}>Ecossistema</a></li>
+          <li><a onClick={() => handleNavigation('vitrine')}>Vitrine Mini-App</a></li>
+          <li><a onClick={() => handleNavigation('precos')}>A Vantagem Desleal</a></li>
           <li><a onClick={() => handleNavigation('tutoriais')}>Tutoriais</a></li>
-          <li><a onClick={() => handleNavigation('faq')}>FAQ</a></li>
         </ul>
 
-        {/* ÁREA DIREITA: CTA & MENU MOBILE TOGGLE (Blindada contra esmagamento) */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', flexShrink: 0 }}>
+        {/* ==========================================
+            ÁREA DIREITA: CTA (DESKTOP) E TOGGLE MOBILE
+            ========================================== */}
+        <div className="nav-actions">
           
-          {/* Botão de Acesso - Mantido com nowrap para não empurrar a logo */}
+          {/* Botão Acessar Painel - Oculto no Mobile pela classe 'desktop-only' */}
           <Link 
             to="/login" 
-            className="hero-btn-primary btn-glow" 
+            className="btn-glow desktop-only" 
             style={{ 
               padding: '0.6rem 1.5rem', 
               fontSize: '0.9rem',
@@ -82,29 +104,33 @@ export function Navbar() {
             Acessar Painel
           </Link>
 
-          {/* MOBILE TOGGLE (HAMBURGER) */}
+          {/* Botão Menu Hamburguer - Exclusivo Mobile */}
           <button
             className="navbar-mobile-toggle"
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
             aria-label="Toggle menu"
-            style={{ flexShrink: 0 }}
           >
-            {mobileMenuOpen ? <X size={28} /> : <Menu size={28} />}
+            {mobileMenuOpen ? <X size={32} /> : <Menu size={32} />}
           </button>
         </div>
 
       </div>
 
-      {/* MOBILE MENU DROPDOWN */}
+      {/* ============================================================
+          MENU MOBILE (DROPDOWN GLASSMORPHISM)
+          ============================================================ */}
       <div className={`navbar-menu-mobile ${mobileMenuOpen ? 'active' : ''}`}>
-        <a onClick={() => handleNavigation('features')}>Ecossistema</a>
-        <a onClick={() => handleNavigation('funcionalidades')}>A Jornada</a>
+        <a onClick={() => handleNavigation('recursos')}>Ecossistema</a>
+        <a onClick={() => handleNavigation('vitrine')}>Vitrine Mini-App</a>
+        <a onClick={() => handleNavigation('precos')}>A Vantagem Desleal</a>
+        <a onClick={() => handleNavigation('hall')}>Hall da Fama</a>
         <a onClick={() => handleNavigation('tutoriais')}>Tutoriais</a>
         <a onClick={() => handleNavigation('faq')}>FAQ</a>
         
+        {/* O Botão de Login desce pro menu no Mobile */}
         <Link
           to="/login"
-          className="hero-btn-primary btn-glow"
+          className="btn-glow"
           style={{ 
             textAlign: 'center', 
             marginTop: '1rem', 
@@ -112,10 +138,12 @@ export function Navbar() {
             justifyContent: 'center',
             padding: '1rem'
           }}
+          onClick={() => setMobileMenuOpen(false)}
         >
-          Acessar Painel
+          Acessar Painel ➔
         </Link>
       </div>
+      
     </nav>
   );
 }

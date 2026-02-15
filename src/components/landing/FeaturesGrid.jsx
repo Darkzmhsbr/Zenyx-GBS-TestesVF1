@@ -1,20 +1,97 @@
 import React, { useState, useEffect, useRef } from 'react';
 
-const features = [
-  { icon: '🎨', title: 'Personalização Total', description: 'Customize seu bot com sua marca, cores e mensagens personalizadas para cada público-alvo.' },
-  { icon: '🎧', title: 'Suporte Integrado', description: 'Sistema de tickets e atendimento direto pelo Telegram em tempo real com seu cliente.' },
-  { icon: '📊', title: 'Dashboard Completo', description: 'Visualize métricas, vendas e performance em tempo real com gráficos detalhados.' },
-  { icon: '🔔', title: 'Notificações Instantâneas', description: 'Receba alertas de vendas, pagamentos e ações importantes no seu dispositivo.' },
-  { icon: '🤖', title: 'Automação Inteligente', description: 'Fluxos automatizados para entrega, cobrança e remarketing avançado de forma automática.' },
-  { icon: '📍', title: 'Rastreamento Avançado', description: 'Acompanhe cada cliente no funil de vendas com detalhes completos de conversão.' },
-  { icon: '💳', title: 'Múltiplos Gateways', description: 'Integração com Pushin Pay, Mercado Pago e mais gateways de pagamento disponíveis.' },
-  { icon: '🛡️', title: 'Segurança Máxima', description: 'Criptografia de ponta a ponta e proteção total dos seus dados sensíveis e dos clientes.' },
+// ============================================================
+// 🗂️ BASE DE DADOS: ENGENHARIA DE CONVERSÃO
+// Matriz de funcionalidades mapeada para o novo "Bento Grid".
+// A alternância entre 'b-large' (ocupa 2 colunas) e 'normal' 
+// cria o layout assimétrico e moderno do Cosmos Purple.
+// ============================================================
+const featuresData = [
+  {
+    id: 'feat-1',
+    icon: '⚡',
+    title: 'Aprovação em Milissegundos',
+    description: 'A latência não existe. O cliente efetua o PIX e nosso sistema aciona os servidores do Telegram instantaneamente para liberar o acesso ao grupo. Sem esperas, sem suporte lotado.',
+    size: 'b-large',
+    delay: '0.1s',
+    bgGradient: 'none'
+  },
+  {
+    id: 'feat-2',
+    icon: '📊',
+    title: 'Upsell & Bump',
+    description: 'Aumente seu Ticket Médio oferecendo produtos adicionais na página de checkout de forma perfeitamente integrada.',
+    size: 'normal',
+    delay: '0.2s',
+    bgGradient: 'none'
+  },
+  {
+    id: 'feat-3',
+    icon: '🔗',
+    title: 'Smart Tracking',
+    description: 'Crie links únicos para Instagram, Facebook e TikTok. Saiba exatamente qual rede social te dá mais retorno financeiro.',
+    size: 'normal',
+    delay: '0.3s',
+    bgGradient: 'none'
+  },
+  {
+    id: 'feat-4',
+    icon: '🤖',
+    title: 'Remarketing Implacável',
+    description: 'Se o lead gerou o PIX e não pagou, a Zenyx cobra ele automaticamente no privado do Telegram 30 minutos depois. É dinheiro que estava perdido voltando pra sua conta.',
+    size: 'b-large',
+    delay: '0.4s',
+    bgGradient: 'linear-gradient(135deg, rgba(217, 70, 239, 0.08), transparent)'
+  },
+  {
+    id: 'feat-5',
+    icon: '🎨',
+    title: 'Personalização Extrema',
+    description: 'Deixe o bot com a sua cara. Adicione suas cores, logotipos, banners e defina o tom de voz perfeito para se comunicar com o seu público-alvo.',
+    size: 'b-large',
+    delay: '0.5s',
+    bgGradient: 'none'
+  },
+  {
+    id: 'feat-6',
+    icon: '💳',
+    title: 'Gateways Nativos',
+    description: 'Conecte sua conta da Pushin Pay ou Mercado Pago em segundos e comece a transacionar sem depender de intermediários.',
+    size: 'normal',
+    delay: '0.6s',
+    bgGradient: 'none'
+  },
+  {
+    id: 'feat-7',
+    icon: '🛡️',
+    title: 'Criptografia Militar',
+    description: 'Seus dados financeiros e as informações dos seus leads são protegidos com criptografia de ponta a ponta em nossos servidores.',
+    size: 'normal',
+    delay: '0.7s',
+    bgGradient: 'none'
+  },
+  {
+    id: 'feat-8',
+    icon: '🎧',
+    title: 'Suporte Inbox',
+    description: 'Responda dúvidas e recupere objeções de vendas conversando diretamente com os leads através de um painel de tickets embutido no Telegram.',
+    size: 'b-large',
+    delay: '0.8s',
+    bgGradient: 'linear-gradient(135deg, rgba(56, 189, 248, 0.08), transparent)'
+  }
 ];
 
 export function FeaturesGrid() {
+  // ============================================================
+  // ⚙️ ESTADOS E REFERÊNCIAS
+  // ============================================================
   const [isVisible, setIsVisible] = useState(false);
   const sectionRef = useRef(null);
 
+  // ============================================================
+  // 👁️ OBSERVER PARA ANIMAÇÃO DE REVEAL (SCROLL)
+  // Só aciona as animações de entrada quando a seção entra na tela
+  // ============================================================
   useEffect(() => {
     const observer = new IntersectionObserver(
       ([entry]) => {
@@ -33,57 +110,69 @@ export function FeaturesGrid() {
   }, []);
 
   return (
-    <section id="features" ref={sectionRef} className="section-container" style={{ paddingTop: '8rem', paddingBottom: '8rem' }}>
+    <section 
+      id="recursos" 
+      ref={sectionRef} 
+      className="section container"
+    >
       
-      {/* Section Header */}
+      {/* ============================================================
+          CABEÇALHO DA SEÇÃO
+          ============================================================ */}
       <div className="section-header">
         
-        {/* Novo Badge Neon Elite */}
-        <div 
-          className={`${isVisible ? 'animate-fade-in-up' : 'opacity-0'}`} 
-          style={{ 
-            color: 'var(--neon-purple)', 
-            fontFamily: 'var(--font-code)', 
-            fontSize: '0.85rem', 
-            marginBottom: '1rem', 
-            border: '1px solid var(--neon-purple)', 
-            padding: '4px 14px', 
-            borderRadius: '100px', 
-            display: 'inline-block',
-            boxShadow: 'inset 0 0 10px rgba(168, 85, 247, 0.15)'
-          }}
-        >
-          Infraestrutura Sólida
+        {/* Nova Pílula Neon Cosmos */}
+        <div className={`pill ${isVisible ? 'animate-fade-in-up' : 'opacity-0'}`}>
+          <span className="spark"></span> INFRAESTRUTURA SÓLIDA
         </div>
         
         <h2 className={`section-title ${isVisible ? 'animate-fade-in-up delay-100' : 'opacity-0'}`}>
-          Tudo que você precisa para{' '}
-          <span className="grad-text">vender mais</span>
+          Engenharia de <span className="text-gradient">Conversão</span>
         </h2>
         
         <p className={`section-desc ${isVisible ? 'animate-fade-in-up delay-200' : 'opacity-0'}`}>
-          Uma plataforma completa com todas as ferramentas necessárias para automatizar 
-          e escalar suas vendas no Telegram de forma autônoma.
+          Esqueça os padrões antigos. Criamos ferramentas e sistemas arquitetados exclusivamente 
+          para injetar lucro no seu bolso de forma autônoma.
         </p>
       </div>
 
-      {/* Grid Simétrico Perfeito */}
-      <div className="features-grid">
-        {features.map((feature, index) => (
-          <div
-            key={feature.title}
-            className={`feature-card ${isVisible ? 'animate-fade-in-up' : 'opacity-0'}`}
-            style={{ animationDelay: `${(index + 1) * 0.06}s` }}
-          >
-            {/* O ícone foi ajustado para herdar a escala hover animada do nosso novo CSS */}
-            <div className="feature-icon">
-              {feature.icon}
+      {/* ============================================================
+          BENTO GRID (O NOVO PADRÃO DE DESIGN)
+          Classes controladas pelo nosso novo LandingPage.css
+          ============================================================ */}
+      <div className="bento-grid">
+        {featuresData.map((feature) => {
+          // Determina a classe de tamanho (Se for b-large, ocupa duas colunas)
+          const sizeClass = feature.size === 'b-large' ? 'b-large' : '';
+          
+          return (
+            <div
+              key={feature.id}
+              className={`bento-item ${sizeClass} ${isVisible ? 'animate-fade-in-up' : 'opacity-0'}`}
+              style={{ 
+                animationDelay: feature.delay,
+                // Aplica um leve gradiente especial em cards de destaque
+                background: feature.bgGradient !== 'none' ? feature.bgGradient : ''
+              }}
+            >
+              {/* O Ícone Premium com borda e sombra Glow */}
+              <div className="b-icon">
+                {feature.icon}
+              </div>
+              
+              <h3 className="b-title">
+                {feature.title}
+              </h3>
+              
+              <p style={{ color: 'var(--text-muted)', fontSize: '0.95rem', lineHeight: 1.6 }}>
+                {feature.description}
+              </p>
+              
             </div>
-            <h3 className="feature-title">{feature.title}</h3>
-            <p className="feature-description">{feature.description}</p>
-          </div>
-        ))}
+          );
+        })}
       </div>
+      
     </section>
   );
 }
