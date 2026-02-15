@@ -187,7 +187,7 @@
   justify-content: space-between;
   align-items: center;
   width: 100%;
-  gap: 1.5rem; /* Força o afastamento no mobile */
+  gap: 1.5rem;
 }
 
 .navbar-logo {
@@ -199,7 +199,7 @@
   display: flex;
   align-items: center;
   gap: 10px;
-  white-space: nowrap; /* Impede a logo de quebrar no mobile */
+  white-space: nowrap;
 }
 
 .navbar-logo-icon {
@@ -259,7 +259,6 @@
   box-shadow: 0 0 30px rgba(56, 189, 248, 0.6) !important;
 }
 
-/* Mobile Toggle */
 .navbar-mobile-toggle {
   display: none;
   background: none;
@@ -269,7 +268,7 @@
   cursor: pointer;
   padding: 0.5rem;
   z-index: 1001;
-  flex-shrink: 0; /* Impede o botão de esmagar */
+  flex-shrink: 0;
 }
 
 .navbar-menu-mobile {
@@ -292,6 +291,11 @@
   animation: slideInDown 0.3s ease forwards;
 }
 
+@keyframes slideInDown {
+  from { opacity: 0; transform: translateY(-10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
 .navbar-menu-mobile a {
   color: var(--text-muted);
   text-decoration: none;
@@ -300,9 +304,7 @@
   border-bottom: 1px solid rgba(255,255,255,0.05);
 }
 
-.navbar-menu-mobile a:hover {
-  color: var(--text-main);
-}
+.navbar-menu-mobile a:hover { color: var(--text-main); }
 
 /* ============================================================
    HERO SECTION & SMARTPHONE 3D
@@ -365,7 +367,6 @@
   box-shadow: 0 0 30px rgba(56, 189, 248, 0.6);
 }
 
-/* Celular 3D Holográfico */
 .hero-visual {
   perspective: 1500px;
   display: flex;
@@ -485,8 +486,15 @@
   z-index: 10;
 }
 
+.pn-left { display: flex; align-items: center; gap: 12px; min-width: 0; flex: 1; }
+.pn-icon { width: 34px; height: 34px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 1rem; flex-shrink: 0; }
+.pn-text-area { display: flex; flex-direction: column; min-width: 0; }
+.pn-app { font-family: var(--font-display); font-size: 0.75rem; color: rgba(255,255,255,0.6); margin-bottom: 2px; white-space: nowrap; }
+.pn-msg { font-weight: 600; font-size: 0.85rem; color: #fff; line-height: 1.1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.pn-val { font-family: var(--font-code); font-weight: 700; font-size: 0.95rem; flex-shrink: 0; white-space: nowrap; padding-left: 8px; }
+
 /* ============================================================
-   GRID SIMÉTRICO (RECURSOS)
+   GRID SIMÉTRICO (RECURSOS / INFRAESTRUTURA SÓLIDA)
    ============================================================ */
 .features-grid, .grid-symmetrical {
   display: grid;
@@ -508,33 +516,122 @@
 }
 
 .feature-card::before, .card-sym::before {
-  content: ''; position: absolute; inset: 0; border-radius: 20px; padding: 2px;
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 20px;
+  padding: 2px;
   background: linear-gradient(135deg, var(--neon-blue), transparent 40%, transparent 60%, var(--neon-purple));
   -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
   mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-  -webkit-mask-composite: xor; mask-composite: exclude; opacity: 0; transition: opacity 0.4s ease; pointer-events: none;
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  opacity: 0;
+  transition: opacity 0.4s ease;
+  pointer-events: none;
 }
 
-.feature-card:hover, .card-sym:hover { transform: translateY(-8px); background: var(--glass-hover); box-shadow: 0 20px 40px rgba(0,0,0,0.5); }
+.feature-card:hover, .card-sym:hover {
+  transform: translateY(-8px);
+  background: var(--glass-hover);
+  box-shadow: 0 20px 40px rgba(0,0,0,0.5);
+}
+
 .feature-card:hover::before, .card-sym:hover::before { opacity: 1; }
 
-.feature-icon, .c-icon-sym { font-size: 2.2rem; margin-bottom: 1.5rem; display: inline-block; transition: 0.3s; }
-.feature-card:hover .feature-icon, .card-sym:hover .c-icon-sym { transform: scale(1.1); filter: drop-shadow(0 0 10px rgba(255,255,255,0.5)); }
+.feature-icon, .c-icon-sym {
+  font-size: 2.2rem;
+  margin-bottom: 1.5rem;
+  display: inline-block;
+  transition: 0.3s;
+}
 
-.feature-title, .card-sym h3 { font-family: var(--font-display); font-size: 1.3rem; color: var(--text-main); margin-bottom: 0.8rem; }
-.feature-description, .card-sym p { font-size: 0.95rem; color: var(--text-muted); line-height: 1.6; flex-grow: 1; }
+.feature-card:hover .feature-icon, .card-sym:hover .c-icon-sym {
+  transform: scale(1.1);
+  filter: drop-shadow(0 0 10px rgba(255,255,255,0.5));
+}
+
+.feature-title, .card-sym h3 {
+  font-family: var(--font-display);
+  font-size: 1.3rem;
+  color: var(--text-main);
+  margin-bottom: 0.8rem;
+}
+
+.feature-description, .card-sym p {
+  font-size: 0.95rem;
+  color: var(--text-muted);
+  line-height: 1.6;
+  flex-grow: 1;
+}
 
 /* ============================================================
    CIRCUITO PULSANTE (LINHA DO TEMPO)
    ============================================================ */
-.circuit-wrapper { position: relative; max-width: 900px; margin: 0 auto; padding: 2rem 0; }
-.circuit-line { position: absolute; top: 0; bottom: 0; left: 50%; width: 4px; background: rgba(255,255,255,0.05); transform: translateX(-50%); border-radius: 4px; }
-.circuit-glow { position: absolute; top: 0; left: 50%; width: 4px; height: 100px; background: linear-gradient(to bottom, transparent, var(--neon-blue), var(--neon-purple)); transform: translateX(-50%); border-radius: 4px; animation: circuitRun 6s infinite linear; box-shadow: 0 0 20px var(--neon-blue); }
-.circuit-step { display: flex; justify-content: space-between; align-items: center; margin-bottom: 4rem; position: relative; }
+.circuit-wrapper {
+  position: relative;
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 2rem 0;
+}
+
+.circuit-line {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 50%;
+  width: 4px;
+  background: rgba(255,255,255,0.05);
+  transform: translateX(-50%);
+  border-radius: 4px;
+}
+
+.circuit-glow {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  width: 4px;
+  height: 100px;
+  background: linear-gradient(to bottom, transparent, var(--neon-blue), var(--neon-purple));
+  transform: translateX(-50%);
+  border-radius: 4px;
+  animation: circuitRun 6s infinite linear;
+  box-shadow: 0 0 20px var(--neon-blue);
+}
+
+.circuit-step {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 4rem;
+  position: relative;
+}
+
 .circuit-step:nth-child(even) { flex-direction: row-reverse; }
 
-.c-content { width: 42%; background: var(--glass-bg); border: 1px solid var(--glass-border); padding: 2.5rem; border-radius: 20px; transition: 0.4s; position: relative; }
-.c-content::before { content: ''; position: absolute; top: 50%; width: 12px; height: 30px; background: var(--neon-purple); transform: translateY(-50%); border-radius: 4px; opacity: 0.5; transition: 0.4s; }
+.c-content {
+  width: 42%;
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  padding: 2.5rem;
+  border-radius: 20px;
+  transition: 0.4s;
+  position: relative;
+}
+
+.c-content::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  width: 12px;
+  height: 30px;
+  background: var(--neon-purple);
+  transform: translateY(-50%);
+  border-radius: 4px;
+  opacity: 0.5;
+  transition: 0.4s;
+}
+
 .circuit-step:nth-child(odd) .c-content::before { right: -6px; }
 .circuit-step:nth-child(even) .c-content::before { left: -6px; background: var(--neon-blue); }
 
@@ -542,27 +639,224 @@
 .c-content:hover::before { opacity: 1; box-shadow: 0 0 20px var(--neon-purple); }
 .circuit-step:nth-child(even) .c-content:hover::before { box-shadow: 0 0 20px var(--neon-blue); }
 
-.t-node { position: absolute; left: 50%; transform: translateX(-50%); width: 48px; height: 48px; background: #000; border-radius: 50%; display: flex; align-items: center; justify-content: center; z-index: 10; color: #fff; font-size: 1.4rem; }
+.t-node {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 48px;
+  height: 48px;
+  background: #000;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10;
+  color: #fff;
+  font-size: 1.4rem;
+}
 
 /* ============================================================
    TAXAS (TICKET HOLOGRÁFICO VS CONCORRÊNCIA)
    ============================================================ */
-.vs-list { list-style: none !important; padding: 0 !important; margin: 0 !important; display: flex; flex-direction: column; gap: 1rem; font-size: 0.9rem; }
-.vs-list li { margin-left: 0 !important; padding-left: 0 !important; }
-.vs-container { display: flex; align-items: center; justify-content: center; gap: 2rem; margin-top: 4rem; position: relative; margin-bottom: 6rem; }
-.vs-side { width: 300px; background: rgba(255,255,255,0.02); border: 1px dashed rgba(255,255,255,0.05); border-radius: 16px; padding: 2rem; text-align: center; opacity: 0.6; transition: 0.3s; filter: grayscale(1); }
+.vs-list {
+  list-style: none !important;
+  list-style-type: none !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  font-size: 0.9rem;
+}
+
+.vs-list li { margin-left: 0 !important; padding-left: 0 !important; list-style: none !important; }
+
+.vs-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 2rem;
+  margin-top: 4rem;
+  position: relative;
+  margin-bottom: 6rem;
+}
+
+.vs-side {
+  width: 300px;
+  background: rgba(255,255,255,0.02);
+  border: 1px dashed rgba(255,255,255,0.05);
+  border-radius: 16px;
+  padding: 2rem;
+  text-align: center;
+  opacity: 0.6;
+  transition: 0.3s;
+  filter: grayscale(1);
+}
+
 .vs-side:hover { opacity: 1; filter: grayscale(0); }
 .vs-side h4 { font-family: var(--font-display); color: var(--neon-red); margin-bottom: 1.5rem; text-transform: uppercase; letter-spacing: 1px; }
-.vs-center { width: 360px; background: linear-gradient(135deg, rgba(16, 185, 129, 0.1), rgba(0,0,0,0.8)); border: 2px solid var(--neon-green); border-radius: 24px; padding: 3rem 2rem; position: relative; z-index: 10; box-shadow: 0 30px 60px rgba(0,0,0,0.8), 0 0 50px rgba(16, 185, 129, 0.2); text-align: center; transform: scale(1.1); }
-.vs-center::before, .vs-center::after { content: ''; position: absolute; top: 50%; width: 30px; height: 30px; background: var(--bg-mid); border-radius: 50%; transform: translateY(-50%); border: 2px solid var(--neon-green); }
+
+.vs-center {
+  width: 360px;
+  background: linear-gradient(135deg, rgba(16, 185, 129, 0.1), rgba(0,0,0,0.8));
+  border: 2px solid var(--neon-green);
+  border-radius: 24px;
+  padding: 3rem 2rem;
+  position: relative;
+  z-index: 10;
+  box-shadow: 0 30px 60px rgba(0,0,0,0.8), 0 0 50px rgba(16, 185, 129, 0.2);
+  text-align: center;
+  transform: scale(1.1);
+}
+
+.vs-center::before, .vs-center::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  width: 30px;
+  height: 30px;
+  background: var(--bg-mid);
+  border-radius: 50%;
+  transform: translateY(-50%);
+  border: 2px solid var(--neon-green);
+}
+
 .vs-center::before { left: -16px; border-left: none; border-top: none; border-bottom: none; }
 .vs-center::after { right: -16px; border-right: none; border-top: none; border-bottom: none; }
+
 .ticket-badge { background: var(--neon-green); color: #000; font-family: var(--font-code); font-weight: 700; font-size: 0.75rem; padding: 5px 15px; border-radius: 100px; display: inline-block; margin-bottom: 1.5rem; }
 .ticket-price { font-family: var(--font-display); font-size: 4rem; font-weight: 800; color: var(--text-main); line-height: 1; text-shadow: 0 0 30px rgba(16, 185, 129, 0.5); margin-bottom: 0.5rem; }
 .ticket-sub { color: var(--neon-green); font-family: var(--font-code); font-size: 0.85rem; letter-spacing: 1px; margin-bottom: 2rem; }
 
 /* ============================================================
-   TUTORIAIS (COMMAND CENTER HUD) - COMO NO INDEX5
+   O CÓDIGO PERDIDO E RECUPERADO: PLACAS DE PREMIAÇÃO (CARTAS 3D)
+   ============================================================ */
+.awards-area {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3rem;
+}
+
+.awards-tabs {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.award-tab {
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  padding: 0.8rem 1.5rem;
+  border-radius: 100px;
+  color: var(--text-muted);
+  font-family: var(--font-code);
+  font-weight: 700;
+  cursor: pointer;
+  transition: 0.3s;
+  font-size: 0.9rem;
+}
+
+.award-tab.active {
+  background: var(--text-main);
+  color: var(--bg-top);
+  box-shadow: 0 0 20px rgba(255,255,255,0.4);
+}
+
+.award-stage {
+  perspective: 1000px;
+  width: 300px;
+  height: 420px;
+  position: relative;
+  margin-top: 1rem;
+}
+
+.award-card-container {
+  width: 100%;
+  height: 100%;
+  position: relative;
+  transition: transform 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  transform-style: preserve-3d;
+}
+
+.award-stage.flip .award-card-container {
+  transform: rotateY(360deg);
+}
+
+.award-card {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  border-radius: 20px;
+  backface-visibility: hidden;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #1a1a24, #050507);
+  border: 2px solid #333;
+  box-shadow: 0 30px 60px rgba(0,0,0,0.9);
+}
+
+.award-inner {
+  width: 85%;
+  height: 88%;
+  border: 1px dashed rgba(255,255,255,0.2);
+  border-radius: 12px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+}
+
+.a-logo {
+  width: 60px;
+  height: 60px;
+  border-radius: 14px;
+  background: rgba(255,255,255,0.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.8rem;
+  margin-bottom: 2rem;
+  color: #fff;
+}
+
+.a-value {
+  font-family: var(--font-display);
+  font-size: 3.5rem;
+  font-weight: 800;
+  line-height: 1;
+  margin-bottom: 10px;
+  color: #fff;
+}
+
+.a-label {
+  font-family: var(--font-code);
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  color: #aaa;
+}
+
+.award-stage::after {
+  content: '';
+  position: absolute;
+  bottom: -30px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 200px;
+  height: 15px;
+  background: rgba(255,255,255,0.2);
+  filter: blur(20px);
+  border-radius: 50%;
+  transition: 0.5s;
+}
+
+/* ============================================================
+   TUTORIAIS (COMMAND CENTER HUD)
    ============================================================ */
 .hud-container {
   display: grid; grid-template-columns: 300px 1fr; gap: 2rem;
@@ -605,7 +899,6 @@
 
 .landing-footer { padding: 4rem 0 2rem; margin-top: 4rem; border-top: 1px solid var(--glass-border); background: rgba(0,0,0,0.5); position: relative; z-index: 10; }
 
-/* A BASE DA CORREÇÃO DO RODAPÉ (Auto-Fit) */
 .footer-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 3rem 2rem; margin-bottom: 4rem; max-width: var(--max-w); margin-inline: auto; padding: 0 2rem; }
 .f-col h4, .footer-column h4 { color: var(--text-main); font-family: var(--font-display); margin-bottom: 1.5rem; font-size: 1.1rem; }
 .f-col ul, .footer-links { list-style: none; display: flex; flex-direction: column; gap: 1rem; }
@@ -633,20 +926,16 @@
 
 /* ============================================================
    RESPONSIVIDADE (MOBILE & TABLET)
-   A MÁGICA DA CORREÇÃO ACONTECE AQUI!
    ============================================================ */
 @media (max-width: 992px) {
-  /* Força ocultar o menu no mobile e mostra o Hamburguer */
   .navbar-menu { display: none !important; }
   .navbar-mobile-toggle { display: flex; align-items: center; justify-content: center; }
 
-  /* Hero Section Mobile */
   .hero-grid { grid-template-columns: 1fr; text-align: center; gap: 2rem; }
   .hero p { margin: 0 auto 3rem; }
   .hero-visual { height: 550px; }
   .phone-wrapper { transform: scale(0.85) !important; transform-origin: top center; }
   
-  /* Circuito Pulsante (MoreFeatures) */
   .about-container { grid-template-columns: 1fr; gap: 2rem; }
   .circuit-wrapper::before { left: 20px; }
   .circuit-line, .circuit-glow { left: 20px; }
@@ -655,11 +944,9 @@
   .c-content { width: calc(100% - 50px); margin-left: auto; padding: 1.5rem; }
   .c-content::before { display: none; }
   
-  /* Taxas VS Concorrência */
   .vs-container { flex-direction: column; gap: 2rem; margin-bottom: 2rem; }
   .vs-center { transform: none; width: 100%; max-width: 360px; }
   
-  /* HUD Command Center (Tutorials) - SCROLL HORIZONTAL NATIVO */
   .hud-container { grid-template-columns: 1fr; padding: 0; background: transparent; border: none; box-shadow: none; }
   .hud-sidebar { flex-direction: row; overflow-x: auto; white-space: nowrap; border-right: none; border-bottom: 1px solid var(--glass-border); padding-bottom: 1rem; scrollbar-width: none; -ms-overflow-style: none; }
   .hud-sidebar::-webkit-scrollbar { display: none; }
@@ -673,9 +960,7 @@
   .section-title { font-size: 2.2rem; }
   .grid-symmetrical, .features-grid, .faq-list { grid-template-columns: 1fr; }
   
-  /* A CORREÇÃO FINAL DO RODAPÉ (Footer) NO CELULAR */
   .footer-grid { grid-template-columns: 1fr; text-align: left; gap: 2.5rem; }
-  
   .footer-bottom { flex-direction: column; text-align: left; gap: 1.5rem; }
   .stats-flex, .cta-stats { gap: 2rem; flex-direction: column; }
 }
