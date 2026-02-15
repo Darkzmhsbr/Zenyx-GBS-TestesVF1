@@ -32,7 +32,7 @@ export function HeroSection() {
     const spawnNotification = () => {
       const data = notificationsData[notifCounter.current % notificationsData.length];
       
-      // Cria um novo item com ID único para animação perfeita
+      // Cria um novo item com ID único para animação perfeita no React
       const newNotif = { ...data, id: notifCounter.current };
       notifCounter.current += 1;
 
@@ -77,6 +77,7 @@ export function HeroSection() {
     glareRef.current.style.background = "linear-gradient(135deg, rgba(255,255,255,0.15) 0%, transparent 40%)";
   };
 
+  // Setup inicial do 3D
   useEffect(() => {
     if (phoneRef.current) {
       phoneRef.current.style.transform = "rotateY(-15deg) rotateX(10deg)";
@@ -107,7 +108,7 @@ export function HeroSection() {
             Processe pagamentos, adicione membros automaticamente e escale seu grupo VIP com a infraestrutura mais robusta e segura do mercado.
           </p>
           
-          {/* CTAs (Mantidos do Original) */}
+          {/* CTAs */}
           <div className={`${isVisible ? 'animate-fade-in-up delay-300' : 'opacity-0'}`} style={{
             display: 'flex',
             flexWrap: 'wrap',
@@ -115,34 +116,26 @@ export function HeroSection() {
             marginTop: '0.25rem'
           }}>
             <Link to="/register" style={{ textDecoration: 'none' }}>
-              <button className="btn-glow" style={{ padding: '1rem 2.2rem', fontSize: '1.05rem', display: 'flex', gap: '8px' }}>
+              {/* Botão Roxo Luxuoso */}
+              <button className="hero-btn-primary btn-glow" style={{ padding: '1.1rem 2.2rem', fontSize: '1.05rem', display: 'flex', gap: '8px' }}>
                 Criar Automação Grátis
                 <ArrowRight size={20} />
               </button>
             </Link>
             
+            {/* Botão Secundário */}
             <button className="hero-btn-secondary" style={{
-              background: 'rgba(255,255,255,0.03)',
-              border: '1px solid var(--glass-border)',
-              color: 'var(--text-main)',
-              padding: '1rem 2.2rem',
-              borderRadius: '12px',
               display: 'flex',
               alignItems: 'center',
               gap: '8px',
-              fontSize: '1.05rem',
-              fontWeight: '600',
-              cursor: 'pointer',
-              transition: '0.3s'
-            }}
-            onMouseOver={(e) => { e.currentTarget.style.background = 'rgba(255,255,255,0.08)' }}
-            onMouseOut={(e) => { e.currentTarget.style.background = 'rgba(255,255,255,0.03)' }}>
+              cursor: 'pointer'
+            }}>
               <PlayCircle size={20} style={{ color: 'var(--neon-blue)' }} />
               Ver Demo
             </button>
           </div>
 
-          {/* Indicadores de Confiança (Recuperados do Original) */}
+          {/* Indicadores de Confiança */}
           <div className={`${isVisible ? 'animate-fade-in-up delay-400' : 'opacity-0'}`} style={{
             display: 'flex',
             flexWrap: 'wrap',
@@ -209,22 +202,29 @@ export function HeroSection() {
                 {/* Loop das Notificações Push */}
                 {activeNotifs.map((notif) => (
                   <div key={notif.id} className="push-notif">
-                    <div className="pn-left">
+                    
+                    {/* Alinhamento forçado e blindado contra quebra de texto */}
+                    <div className="pn-left" style={{ display: 'flex', alignItems: 'center', gap: '12px', minWidth: 0, flex: 1 }}>
                       <div className="pn-icon" style={{ 
                         background: `${notif.color}20`, 
                         color: notif.color, 
-                        border: `1px solid ${notif.color}40` 
+                        border: `1px solid ${notif.color}40`,
+                        flexShrink: 0 /* Impede o ícone de espremer */
                       }}>
                         {notif.icon}
                       </div>
-                      <div>
-                        <div className="pn-app">Zenyx VIPs</div>
-                        <div className="pn-msg">{notif.name} pagou</div>
+                      <div className="pn-text-area" style={{ display: 'flex', flexDirection: 'column', minWidth: 0 }}>
+                        <div className="pn-app" style={{ whiteSpace: 'nowrap' }}>Zenyx VIPs</div>
+                        <div className="pn-msg" style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                          {notif.name} pagou
+                        </div>
                       </div>
                     </div>
-                    <div className="pn-val" style={{ color: notif.color }}>
+
+                    <div className="pn-val" style={{ color: notif.color, flexShrink: 0, whiteSpace: 'nowrap', paddingLeft: '8px' }}>
                       {notif.val}
                     </div>
+
                   </div>
                 ))}
 
@@ -236,7 +236,7 @@ export function HeroSection() {
       </div>
 
       {/* ============================================================
-          SCROLL INDICATOR (Recuperado do Original)
+          SCROLL INDICATOR
           ============================================================ */}
       <div className={`${isVisible ? 'animate-fade-in-up delay-500' : 'opacity-0'}`} style={{
         position: 'absolute',
@@ -266,13 +266,6 @@ export function HeroSection() {
         </span>
       </div>
       
-      {/* Keyframe Local para o Scroll Indicator se não existir globalmente */}
-      <style>{`
-        @keyframes bounceDown {
-          0%, 100% { transform: translateX(-50%) translateY(0); }
-          50% { transform: translateX(-50%) translateY(10px); }
-        }
-      `}</style>
     </section>
   );
 }

@@ -129,6 +129,19 @@
   margin-inline: auto;
 }
 
+/* BLINDAGEM CONTRA O TEMA GLOBAL (Remove traços vermelhos e pseudos) */
+.section-title, .section-header, .section-desc, .section-subtitle {
+  border-left: none !important;
+  border-right: none !important;
+  border-top: none !important;
+  border-bottom: none !important;
+}
+.section-title::before, .section-header::before, .section-label::before,
+.section-title::after, .section-header::after, .section-label::after {
+  display: none !important;
+  content: none !important;
+}
+
 .section-title {
   font-family: var(--font-display);
   font-size: clamp(2.2rem, 4vw, 3.5rem);
@@ -608,6 +621,17 @@
   text-shadow: 0 0 10px #fff;
 }
 
+.nl-text h4 {
+  font-family: var(--font-display);
+  color: var(--text-main);
+  font-size: 1.1rem;
+  margin-bottom: 4px;
+}
+
+.nl-text p {
+  font-size: 0.9rem;
+}
+
 /* ============================================================
    CIRCUITO PULSANTE (LINHA DO TEMPO) - Adaptação MoreFeatures
    ============================================================ */
@@ -715,6 +739,24 @@
 /* ============================================================
    TAXAS (TICKET HOLOGRÁFICO VS CONCORRÊNCIA)
    ============================================================ */
+/* BLINDAGEM CONTRA BULLETS GLOBAIS NO TICKET */
+.vs-list {
+  list-style: none !important;
+  list-style-type: none !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  font-size: 0.9rem;
+}
+
+.vs-list li {
+  margin-left: 0 !important;
+  padding-left: 0 !important;
+  list-style: none !important;
+}
+
 .vs-container {
   display: flex;
   align-items: center;
@@ -722,6 +764,7 @@
   gap: 2rem;
   margin-top: 4rem;
   position: relative;
+  margin-bottom: 6rem; /* Empurra a seção abaixo para não colar no ticket central */
 }
 
 .vs-side {

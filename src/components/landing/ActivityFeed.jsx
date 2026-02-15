@@ -85,7 +85,7 @@ const awardsData = [
 ];
 
 export function ActivityFeed() {
-  // Mantemos os states originais para buscar dados reais (que poderão ser usados via context no futuro)
+  // Mantemos os states originais para buscar dados reais
   const [activities, setActivities] = useState([]);
   const [displayedActivities, setDisplayedActivities] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -120,7 +120,7 @@ export function ActivityFeed() {
     return () => clearInterval(interval);
   }, []);
 
-  // Lógica rotativa original preservada (mas não renderizada visualmente aqui)
+  // Lógica rotativa original preservada
   useEffect(() => {
     if (activities.length > 0) {
       const safe = activities.filter(a => !isAggressivePlanName(a.plan));
@@ -178,11 +178,11 @@ export function ActivityFeed() {
           SECTION: TAXAS (TICKET HOLOGRÁFICO VS CONCORRÊNCIA)
           ============================================================ */}
       <section id="pricing" className="section container">
-        <div className="section-header">
-          <h2 className={`section-title ${isVisible ? 'animate-fade-in-up' : 'opacity-0'}`}>
+        <div className="section-header" style={{ border: 'none' }}>
+          <h2 className={`section-title ${isVisible ? 'animate-fade-in-up' : 'opacity-0'}`} style={{ border: 'none' }}>
             A Vantagem <span className="grad-text">Desleal</span>
           </h2>
-          <p className={`section-desc ${isVisible ? 'animate-fade-in-up delay-100' : 'opacity-0'}`}>
+          <p className={`section-desc ${isVisible ? 'animate-fade-in-up delay-100' : 'opacity-0'}`} style={{ border: 'none' }}>
             Nós não somos seus sócios. O dinheiro do seu suor deve ficar no seu bolso.
           </p>
         </div>
@@ -191,11 +191,12 @@ export function ActivityFeed() {
           {/* O Passado (Concorrência) */}
           <div className="vs-side">
             <h4>Plataformas Comuns</h4>
-            <ul className="vs-list">
-              <li><span style={{ color: 'var(--neon-red)', fontWeight: 800 }}>✕</span> Cobram até R$ 1,49 fixo</li>
-              <li><span style={{ color: 'var(--neon-red)', fontWeight: 800 }}>✕</span> Comem de 5% a 10% da venda</li>
-              <li><span style={{ color: 'var(--neon-red)', fontWeight: 800 }}>✕</span> Taxas variáveis ocultas</li>
-              <li><span style={{ color: 'var(--neon-red)', fontWeight: 800 }}>✕</span> Cobram mensalidade cara</li>
+            {/* BLINDAGEM INLINE DE LIST STYLE (Remove as bolinhas) */}
+            <ul className="vs-list" style={{ listStyle: 'none', padding: 0, margin: 0 }}>
+              <li style={{ listStyle: 'none', display: 'flex', gap: '8px', alignItems: 'center' }}><span style={{ color: 'var(--neon-red)', fontWeight: 800 }}>✕</span> Cobram até R$ 1,49 fixo</li>
+              <li style={{ listStyle: 'none', display: 'flex', gap: '8px', alignItems: 'center' }}><span style={{ color: 'var(--neon-red)', fontWeight: 800 }}>✕</span> Comem de 5% a 10% da venda</li>
+              <li style={{ listStyle: 'none', display: 'flex', gap: '8px', alignItems: 'center' }}><span style={{ color: 'var(--neon-red)', fontWeight: 800 }}>✕</span> Taxas variáveis ocultas</li>
+              <li style={{ listStyle: 'none', display: 'flex', gap: '8px', alignItems: 'center' }}><span style={{ color: 'var(--neon-red)', fontWeight: 800 }}>✕</span> Cobram mensalidade cara</li>
             </ul>
           </div>
 
@@ -204,21 +205,23 @@ export function ActivityFeed() {
             <div className="ticket-badge">NA ZENYX VIPS VOCÊ PAGA</div>
             <div className="ticket-price">R$ 0,60</div>
             <div className="ticket-sub">TAXA FIXA POR VENDA</div>
-            <ul className="vs-list" style={{ textAlign: 'left', opacity: 0.9, width: 'max-content', margin: '0 auto' }}>
-              <li><span style={{ color: 'var(--neon-green)', fontWeight: 800 }}>✓</span> Zero porcentagem na venda</li>
-              <li><span style={{ color: 'var(--neon-green)', fontWeight: 800 }}>✓</span> Mensalidade Zero</li>
-              <li><span style={{ color: 'var(--neon-green)', fontWeight: 800 }}>✓</span> Margem intacta</li>
+            {/* BLINDAGEM INLINE DE LIST STYLE (Remove as bolinhas) */}
+            <ul className="vs-list" style={{ listStyle: 'none', padding: 0, margin: '0 auto', textAlign: 'left', opacity: 0.9, width: 'max-content' }}>
+              <li style={{ listStyle: 'none', display: 'flex', gap: '8px', alignItems: 'center' }}><span style={{ color: 'var(--neon-green)', fontWeight: 800 }}>✓</span> Zero porcentagem na venda</li>
+              <li style={{ listStyle: 'none', display: 'flex', gap: '8px', alignItems: 'center' }}><span style={{ color: 'var(--neon-green)', fontWeight: 800 }}>✓</span> Mensalidade Zero</li>
+              <li style={{ listStyle: 'none', display: 'flex', gap: '8px', alignItems: 'center' }}><span style={{ color: 'var(--neon-green)', fontWeight: 800 }}>✓</span> Margem intacta</li>
             </ul>
           </div>
 
           {/* O Futuro (Sua Escala) */}
           <div className="vs-side" style={{ filter: 'none', opacity: 1, borderColor: 'rgba(16, 185, 129, 0.3)', background: 'rgba(16, 185, 129, 0.02)' }}>
             <h4 style={{ color: 'var(--neon-green)' }}>Seu Crescimento</h4>
-            <ul className="vs-list">
-              <li>Vendeu 10 Reais? Paga R$ 0,60</li>
-              <li>Vendeu 10 Mil? Paga R$ 0,60</li>
-              <li>Previsibilidade absoluta</li>
-              <li>Escala sem medo das taxas</li>
+            {/* BLINDAGEM INLINE DE LIST STYLE (Remove as bolinhas) */}
+            <ul className="vs-list" style={{ listStyle: 'none', padding: 0, margin: 0 }}>
+              <li style={{ listStyle: 'none', display: 'flex', gap: '8px', alignItems: 'center' }}>Vendeu 10 Reais? Paga R$ 0,60</li>
+              <li style={{ listStyle: 'none', display: 'flex', gap: '8px', alignItems: 'center' }}>Vendeu 10 Mil? Paga R$ 0,60</li>
+              <li style={{ listStyle: 'none', display: 'flex', gap: '8px', alignItems: 'center' }}>Previsibilidade absoluta</li>
+              <li style={{ listStyle: 'none', display: 'flex', gap: '8px', alignItems: 'center' }}>Escala sem medo das taxas</li>
             </ul>
           </div>
         </div>
@@ -228,11 +231,11 @@ export function ActivityFeed() {
           SECTION: HALL DA FAMA (CARTAS COLECIONÁVEIS 3D)
           ============================================================ */}
       <section id="awards" className="section container">
-        <div className="section-header">
-          <h2 className={`section-title ${isVisible ? 'animate-fade-in-up delay-300' : 'opacity-0'}`}>
+        <div className="section-header" style={{ border: 'none' }}>
+          <h2 className={`section-title ${isVisible ? 'animate-fade-in-up delay-300' : 'opacity-0'}`} style={{ border: 'none' }}>
             Hall da <span className="grad-text">Fama</span>
           </h2>
-          <p className={`section-desc ${isVisible ? 'animate-fade-in-up delay-400' : 'opacity-0'}`}>
+          <p className={`section-desc ${isVisible ? 'animate-fade-in-up delay-400' : 'opacity-0'}`} style={{ border: 'none' }}>
             Acompanhe sua evolução e celebre cada marco alcançado. Um símbolo real das suas conquistas digitais.
           </p>
         </div>

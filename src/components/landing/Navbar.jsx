@@ -33,29 +33,29 @@ export function Navbar() {
   };
 
   return (
-    <nav className={`navbar ${scrolled ? 'scrolled' : ''}`}>
-      <div className="container nav-content">
+    <nav className={`landing-navbar ${scrolled ? 'scrolled' : ''}`}>
+      <div className="navbar-container">
         
         {/* LOGO ZENYX VIPS */}
         <Link
           to="/"
           onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
-          className="logo"
+          className="navbar-logo"
         >
-          <div className="logo-icon">
+          <div className="navbar-logo-icon">
             <Zap size={20} strokeWidth={2.5} />
           </div>
           Zenyx<span className="grad-text">VIPs</span>
         </Link>
 
-        {/* DESKTOP MENU */}
-        <div className="nav-links">
+        {/* DESKTOP MENU - CORRIGIDO PARA UL/LI E CLASSE NAVBAR-MENU */}
+        <ul className="navbar-menu">
           {/* As âncoras mantêm os IDs originais para a lógica do React funcionar */}
-          <a onClick={() => handleNavigation('features')}>Ecossistema</a>
-          <a onClick={() => handleNavigation('funcionalidades')}>A Jornada</a>
-          <a onClick={() => handleNavigation('tutoriais')}>Tutoriais</a>
-          <a onClick={() => handleNavigation('faq')}>FAQ</a>
-        </div>
+          <li><a onClick={() => handleNavigation('features')}>Ecossistema</a></li>
+          <li><a onClick={() => handleNavigation('funcionalidades')}>A Jornada</a></li>
+          <li><a onClick={() => handleNavigation('tutoriais')}>Tutoriais</a></li>
+          <li><a onClick={() => handleNavigation('faq')}>FAQ</a></li>
+        </ul>
 
         {/* ÁREA DIREITA: CTA & MENU MOBILE TOGGLE */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
@@ -63,7 +63,7 @@ export function Navbar() {
           {/* Oculto no mobile apenas via CSS nativo, mas se houver espaço, ele brilha! */}
           <Link 
             to="/login" 
-            className="btn-glow" 
+            className="hero-btn-primary btn-glow" 
             style={{ padding: '0.6rem 1.5rem', fontSize: '0.9rem' }}
           >
             Acessar Painel
@@ -90,7 +90,7 @@ export function Navbar() {
         
         <Link
           to="/login"
-          className="btn-glow"
+          className="hero-btn-primary btn-glow"
           style={{ 
             textAlign: 'center', 
             marginTop: '1rem', 
