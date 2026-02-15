@@ -64,20 +64,17 @@ export function MoreFeatures() {
       </div>
 
       {/* ============================================================
-          CIRCUITO PULSANTE (A MÁGICA ACONTECE AQUI)
+          CIRCUITO PULSANTE (ESTILOS MOVIDOS PARA O CSS)
           ============================================================ */}
       <div className="circuit-wrapper">
-        {/* As linhas brilhantes do centro */}
         <div className="circuit-line"></div>
         <div className="circuit-glow"></div>
 
         {moreFeatures.map((feature, index) => {
-          // Mantive a sua lógica alternada de animação de entrada (Direita / Esquerda)
           const animationClass = isVisible 
             ? (index % 2 === 0 ? 'animate-slide-in-left' : 'animate-slide-in-right') 
             : 'opacity-0';
           
-          // Alternar cores neon para dar um aspecto Sci-Fi
           const neonColor = index % 2 === 0 ? 'var(--neon-purple)' : 'var(--neon-blue)';
 
           return (
@@ -86,24 +83,11 @@ export function MoreFeatures() {
               className={`circuit-step ${animationClass}`}
               style={{ animationDelay: `${index * 0.15}s` }}
             >
-              {/* O NODO CENTRAL (Com o ícone do recurso) */}
+              {/* O NODO CENTRAL - Limpo de position absolute inline para não quebrar o Mobile */}
               <div 
                 className="t-node" 
                 style={{
-                  position: 'absolute', 
-                  left: '50%', 
-                  transform: 'translateX(-50%)', 
-                  width: '48px', 
-                  height: '48px', 
-                  background: '#000', 
                   border: `2px solid ${neonColor}`, 
-                  borderRadius: '50%', 
-                  display: 'flex', 
-                  alignItems: 'center', 
-                  justifyContent: 'center', 
-                  zIndex: 10, 
-                  color: '#fff',
-                  fontSize: '1.4rem',
                   boxShadow: `0 0 15px ${neonColor}60`
                 }}
               >
@@ -112,7 +96,6 @@ export function MoreFeatures() {
 
               {/* O CARD DE CONTEÚDO */}
               <div className="c-content">
-                {/* Numeração Cyberpunk */}
                 <div 
                   className="c-num" 
                   style={{ 

@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { ChevronDown } from 'lucide-react'; // Importação mantida conforme original
+import { ChevronDown } from 'lucide-react'; 
 
-// Array 100% preservado com todas as informações originais, apenas atualizado para "Zenyx VIPs"
+// Array 100% preservado com todas as informações originais
 const tutorials = [
   { icon: '🤖', title: 'Como Criar Bot no Telegram e Adicionar na Zenyx VIPs', content: 'Abra o Telegram e procure por @BotFather. Envie o comando /newbot e siga as instruções. Após criar, copie o token fornecido e cole na área de "Novo Bot" no painel Zenyx VIPs.' },
   { icon: '🆔', title: 'Como Obter ID de um Canal ou Grupo do Telegram', content: 'Adicione o bot @userinfobot ao seu grupo ou canal. Ele enviará automaticamente o ID. Você também pode usar @RawDataBot para obter informações detalhadas.' },
@@ -13,12 +13,10 @@ const tutorials = [
 ];
 
 export function TutorialsSection() {
-  // Alteramos o estado inicial para 0, assim o painel do primeiro tutorial já vem aberto e bonito!
   const [openIndex, setOpenIndex] = useState(0); 
   const [isVisible, setIsVisible] = useState(false);
   const sectionRef = useRef(null);
 
-  // Intersection Observer original preservado
   useEffect(() => {
     const observer = new IntersectionObserver(
       ([entry]) => { if (entry.isIntersecting) setIsVisible(true); },
@@ -31,11 +29,7 @@ export function TutorialsSection() {
   return (
     <section id="tutoriais" ref={sectionRef} className="section-container" style={{ paddingTop: '8rem', paddingBottom: '8rem' }}>
       
-      {/* ============================================================
-          CABEÇALHO DA SEÇÃO
-          ============================================================ */}
       <div className="section-header">
-        
         {/* Badge Elite */}
         <div 
           className={`${isVisible ? 'animate-fade-in-up' : 'opacity-0'}`} 
@@ -63,30 +57,19 @@ export function TutorialsSection() {
         </p>
       </div>
 
-      {/* ============================================================
-          O NOVO SISTEMA HUD (HEADS UP DISPLAY) 
-          Substitui o antigo Acordeão sem perder 1 linha de texto
-          ============================================================ */}
+      {/* O NOVO SISTEMA HUD (HEADS UP DISPLAY) CORRIGIDO */}
       <div className={`hud-container ${isVisible ? 'animate-fade-in-up delay-300' : 'opacity-0'}`}>
         
-        {/* MENU LATERAL DOS TUTORIAIS */}
+        {/* MENU LATERAL DOS TUTORIAIS - Estilos inline removidos para respeitar o CSS global */}
         <div className="hud-sidebar">
           {tutorials.map((tutorial, index) => (
             <button
               key={index}
               className={`hud-tab ${openIndex === index ? 'active' : ''}`}
               onClick={() => setOpenIndex(index)}
-              style={{ display: 'flex', alignItems: 'center', gap: '10px' }}
             >
-              <span style={{ fontSize: '1.2rem' }}>{tutorial.icon}</span> 
-              <span style={{ 
-                whiteSpace: 'nowrap', 
-                overflow: 'hidden', 
-                textOverflow: 'ellipsis', 
-                maxWidth: '200px' // Garante que títulos longos não quebrem o layout lateral
-              }}>
-                {tutorial.title}
-              </span>
+              <span className="hud-tab-icon">{tutorial.icon}</span> 
+              <span className="hud-tab-text">{tutorial.title}</span>
             </button>
           ))}
         </div>
@@ -98,15 +81,12 @@ export function TutorialsSection() {
               key={index} 
               className={`hud-panel ${openIndex === index ? 'active' : ''}`}
             >
-              {/* Título com Ícone */}
               <h4 style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
                 {tutorial.icon} {tutorial.title}
               </h4>
               
-              {/* Conteúdo Textual Original */}
               <p>{tutorial.content}</p>
 
-              {/* Detalhe de Luxo: Injeta um bloco de código estético apenas no primeiro tutorial, como fizemos no protótipo */}
               {index === 0 && (
                 <div className="hud-code" style={{ marginTop: '1.5rem' }}>
                   {'>'} TOKEN: 123456789:AAH_XYZ...
