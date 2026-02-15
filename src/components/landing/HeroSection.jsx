@@ -1,243 +1,182 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { Link } from 'react-router-dom';
-import { ArrowRight, PlayCircle, Sparkles } from 'lucide-react';
+import { ArrowRight, PlayCircle } from 'lucide-react';
 
-// Componente de Partícula Flutuante
-function Particle({ delay, left, top }) {
-  return (
-    <div
-      style={{
-        position: 'absolute',
-        width: '3px',
-        height: '3px',
-        borderRadius: '50%',
-        background: 'rgba(16, 185, 129, 0.3)',
-        left,
-        top,
-        animation: `particle-float 5s ease-in-out infinite`,
-        animationDelay: `${delay}s`,
-      }}
-    />
-  );
-}
+// Dados simulados para as notificações do Celular 3D (Zenyx VIPs)
+const notificationsData = [
+  { name: "Bruno N.", plan: "ACESSO MENSAL", val: "+ R$ 17,90", icon: "💳", color: "var(--neon-green)" },
+  { name: "Fernanda R.", plan: "VITALÍCIO VIP", val: "+ R$ 97,00", icon: "💎", color: "var(--neon-blue)" },
+  { name: "Carlos M.", plan: "RENOVAÇÃO", val: "+ R$ 29,90", icon: "🚀", color: "var(--neon-purple)" },
+  { name: "Diego T.", plan: "CANCELADO", val: "- R$ 14,90", icon: "⚠️", color: "var(--neon-red)" }
+];
 
 export function HeroSection() {
   const [isVisible, setIsVisible] = useState(false);
+  const [activeNotifs, setActiveNotifs] = useState([]);
+  
+  // Refs para o efeito 3D do Celular
+  const visualRef = useRef(null);
+  const phoneRef = useRef(null);
+  const glareRef = useRef(null);
+  
+  // Ref para controlar o ciclo das notificações
+  const notifCounter = useRef(0);
 
+  // Efeito de entrada inicial
   useEffect(() => {
     setIsVisible(true);
   }, []);
 
-  // Gerar 20 partículas aleatórias
-  const particles = Array.from({ length: 20 }, (_, i) => ({
-    delay: i * 0.3,
-    left: `${Math.random() * 100}%`,
-    top: `${Math.random() * 100}%`,
-  }));
+  // Lógica das notificações pulando na tela do celular
+  useEffect(() => {
+    const spawnNotification = () => {
+      const data = notificationsData[notifCounter.current % notificationsData.length];
+      
+      // Cria um novo item com ID único para animação perfeita
+      const newNotif = { ...data, id: notifCounter.current };
+      notifCounter.current += 1;
+
+      setActiveNotifs((prev) => {
+        const newArray = [newNotif, ...prev];
+        // Mantém apenas as 3 últimas notificações na tela para não estourar
+        if (newArray.length > 3) newArray.pop();
+        return newArray;
+      });
+    };
+
+    // Inicia rápido e depois a cada 3 segundos
+    const initialTimeout = setTimeout(spawnNotification, 500);
+    const interval = setInterval(spawnNotification, 3000);
+
+    return () => {
+      clearTimeout(initialTimeout);
+      clearInterval(interval);
+    };
+  }, []);
+
+  // Lógica do Efeito 3D Holográfico no Hover
+  const handleMouseMove = (e) => {
+    if (!visualRef.current || !phoneRef.current || !glareRef.current) return;
+    
+    const rect = visualRef.current.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+    const centerX = rect.width / 2;
+    const centerY = rect.height / 2;
+
+    const rotateX = ((y - centerY) / centerY) * -15; 
+    const rotateY = ((x - centerX) / centerX) * 15;
+
+    phoneRef.current.style.transform = `rotateX(${rotateX}deg) rotateY(${rotateY}deg)`;
+    glareRef.current.style.background = `linear-gradient(${135 + (rotateX * 2)}deg, rgba(255,255,255,0.2) 0%, transparent 50%)`;
+  };
+
+  const handleMouseLeave = () => {
+    if (!phoneRef.current || !glareRef.current) return;
+    phoneRef.current.style.transform = "rotateY(-15deg) rotateX(10deg)";
+    glareRef.current.style.background = "linear-gradient(135deg, rgba(255,255,255,0.15) 0%, transparent 40%)";
+  };
+
+  useEffect(() => {
+    if (phoneRef.current) {
+      phoneRef.current.style.transform = "rotateY(-15deg) rotateX(10deg)";
+    }
+  }, []);
 
   return (
-    <section style={{
-      position: 'relative',
-      minHeight: '100vh',
-      display: 'flex',
-      alignItems: 'center',
-      overflow: 'hidden',
-      padding: '6rem 0 4rem'
-    }}>
-      
-      {/* 🌌 BACKGROUND ANIMADO */}
-      <div style={{ position: 'absolute', inset: 0, overflow: 'hidden' }}>
-        {/* Orbs de gradiente flutuantes */}
-        <div style={{
-          position: 'absolute',
-          top: '8%',
-          right: '12%',
-          width: '550px',
-          height: '550px',
-          background: 'rgba(16, 185, 129, 0.1)',
-          borderRadius: '50%',
-          filter: 'blur(120px)',
-          animation: 'floatSlow 12s ease-in-out infinite'
-        }} />
+    <section className="hero section-container" style={{ position: 'relative' }}>
+      <div className="hero-grid">
         
-        <div style={{
-          position: 'absolute',
-          bottom: '15%',
-          left: '8%',
-          width: '450px',
-          height: '450px',
-          background: 'rgba(6, 182, 212, 0.07)',
-          borderRadius: '50%',
-          filter: 'blur(100px)',
-          animation: 'floatSlow 12s ease-in-out infinite',
-          animationDelay: '4s'
-        }} />
-        
-        <div style={{
-          position: 'absolute',
-          top: '45%',
-          left: '40%',
-          width: '600px',
-          height: '600px',
-          background: 'rgba(5, 150, 105, 0.05)',
-          borderRadius: '50%',
-          filter: 'blur(150px)',
-          animation: 'floatSlow 14s ease-in-out infinite',
-          animationDelay: '2s'
-        }} />
-        
-        {/* Partículas */}
-        {particles.map((p, i) => (
-          <Particle key={i} {...p} />
-        ))}
-
-        {/* Grid pattern */}
-        <div style={{
-          position: 'absolute',
-          inset: 0,
-          opacity: 0.018,
-          backgroundImage: `linear-gradient(rgba(16, 185, 129, 0.6) 1px, transparent 1px),
-                           linear-gradient(90deg, rgba(16, 185, 129, 0.6) 1px, transparent 1px)`,
-          backgroundSize: '70px 70px',
-          maskImage: 'radial-gradient(ellipse 70% 60% at 50% 50%, black 30%, transparent 70%)',
-          WebkitMaskImage: 'radial-gradient(ellipse 70% 60% at 50% 50%, black 30%, transparent 70%)'
-        }} />
-      </div>
-
-      {/* 📦 CONTEÚDO PRINCIPAL — Split Layout */}
-      <div style={{
-        position: 'relative',
-        zIndex: 10,
-        maxWidth: '1280px',
-        margin: '0 auto',
-        padding: '0 2rem',
-        display: 'grid',
-        gridTemplateColumns: '1.15fr 0.85fr',
-        gap: '5rem',
-        alignItems: 'center'
-      }}>
-        
-        {/* LEFT — Content */}
+        {/* ============================================================
+            LADO ESQUERDO: CONTEÚDO E TEXTOS
+            ============================================================ */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '1.75rem' }}>
+          
           {/* Badge */}
-          <div className={`${isVisible ? 'animate-fade-in-up' : 'opacity-0'}`} style={{
-            display: 'inline-flex',
-            alignItems: 'center',
-            gap: '0.5rem',
-            background: 'rgba(16, 185, 129, 0.06)',
-            border: '1px solid rgba(16, 185, 129, 0.12)',
-            borderRadius: '100px',
-            padding: '0.4rem 1.1rem',
-            width: 'fit-content'
-          }}>
-            <div style={{
-              width: '7px',
-              height: '7px',
-              borderRadius: '50%',
-              background: 'var(--emerald-400)',
-              position: 'relative'
-            }}>
-              <div style={{
-                position: 'absolute',
-                inset: '-3px',
-                borderRadius: '50%',
-                border: '1px solid var(--emerald-400)',
-                animation: 'pulseRing 2s infinite'
-              }} />
-            </div>
-            <span style={{
-              fontFamily: 'var(--font-mono)',
-              fontSize: '0.72rem',
-              fontWeight: 600,
-              color: 'var(--emerald-400)',
-              letterSpacing: '0.06em',
-              textTransform: 'uppercase'
-            }}>
-              MENOR TAXA DO MERCADO (R$ 0,60)
-            </span>
+          <div className={`hero-badge ${isVisible ? 'animate-fade-in-up' : 'opacity-0'}`}>
+            <span className="dot"></span> A menor taxa do mercado (R$ 0,60)
           </div>
-
+          
           {/* Título Principal */}
-          <h1 className={`${isVisible ? 'animate-fade-in-up delay-100' : 'opacity-0'}`} style={{
-            fontFamily: 'var(--font-display)',
-            fontSize: 'clamp(2.5rem, 6vw, 4.2rem)',
-            fontWeight: 700,
-            color: 'var(--text-100)',
-            lineHeight: 1.06,
-            letterSpacing: '-0.035em'
-          }}>
-            O Futuro das Vendas no{' '}
-            <span className="grad-text neon-text">
-              Telegram
-            </span>{' '}
-            Chegou
+          <h1 className={`${isVisible ? 'animate-fade-in-up delay-100' : 'opacity-0'}`}>
+            A Automação de Elite<br/>para <span className="grad-text">Telegram</span>
           </h1>
-
+          
           {/* Subtítulo */}
-          <p className={`${isVisible ? 'animate-fade-in-up delay-200' : 'opacity-0'}`} style={{
-            fontSize: '1.15rem',
-            color: 'var(--text-400)',
-            maxWidth: '540px',
-            lineHeight: 1.75
-          }}>
-            Automatize suas vendas, gerencie seus clientes e escale seu negócio com a plataforma
-            mais completa de bots para Telegram. Simples, rápido e poderoso.
+          <p className={`${isVisible ? 'animate-fade-in-up delay-200' : 'opacity-0'}`}>
+            Processe pagamentos, adicione membros automaticamente e escale seu grupo VIP com a infraestrutura mais robusta e segura do mercado.
           </p>
-
-          {/* CTAs */}
+          
+          {/* CTAs (Mantidos do Original) */}
           <div className={`${isVisible ? 'animate-fade-in-up delay-300' : 'opacity-0'}`} style={{
             display: 'flex',
             flexWrap: 'wrap',
-            gap: '0.85rem',
+            gap: '1rem',
             marginTop: '0.25rem'
           }}>
             <Link to="/register" style={{ textDecoration: 'none' }}>
-              <button className="hero-btn-primary btn-glow">
-                Criar Conta Grátis
+              <button className="btn-glow" style={{ padding: '1rem 2.2rem', fontSize: '1.05rem', display: 'flex', gap: '8px' }}>
+                Criar Automação Grátis
                 <ArrowRight size={20} />
               </button>
             </Link>
             
-            <button className="hero-btn-secondary">
-              <PlayCircle size={20} style={{ color: 'var(--emerald-500)' }} />
+            <button className="hero-btn-secondary" style={{
+              background: 'rgba(255,255,255,0.03)',
+              border: '1px solid var(--glass-border)',
+              color: 'var(--text-main)',
+              padding: '1rem 2.2rem',
+              borderRadius: '12px',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '8px',
+              fontSize: '1.05rem',
+              fontWeight: '600',
+              cursor: 'pointer',
+              transition: '0.3s'
+            }}
+            onMouseOver={(e) => { e.currentTarget.style.background = 'rgba(255,255,255,0.08)' }}
+            onMouseOut={(e) => { e.currentTarget.style.background = 'rgba(255,255,255,0.03)' }}>
+              <PlayCircle size={20} style={{ color: 'var(--neon-blue)' }} />
               Ver Demo
             </button>
           </div>
 
-          {/* Trust Indicators */}
+          {/* Indicadores de Confiança (Recuperados do Original) */}
           <div className={`${isVisible ? 'animate-fade-in-up delay-400' : 'opacity-0'}`} style={{
             display: 'flex',
             flexWrap: 'wrap',
             gap: '1.75rem',
-            paddingTop: '1.75rem',
-            borderTop: '1px solid var(--border-subtle)',
-            marginTop: '0.5rem'
+            paddingTop: '2rem',
+            borderTop: '1px solid var(--glass-border)',
+            marginTop: '1rem'
           }}>
             {[
-              { label: '500+ Bots Ativos', color: '#22c55e' },
-              { label: 'R$ 50.000+ em Vendas', color: '#10b981' },
-              { label: '1.200+ Usuários', color: '#06b6d4' },
+              { label: '500+ Bots Ativos', color: 'var(--neon-green)' },
+              { label: 'R$ 50.000+ em Vendas', color: 'var(--neon-blue)' },
+              { label: '1.200+ Usuários', color: 'var(--neon-purple)' },
             ].map((item, i) => (
               <div key={i} style={{
                 display: 'flex',
                 alignItems: 'center',
-                gap: '0.45rem',
-                fontSize: '0.82rem',
-                color: 'var(--text-500)'
+                gap: '0.5rem',
+                fontSize: '0.85rem',
+                color: 'var(--text-muted)'
               }}>
                 <div style={{
-                  width: '7px',
-                  height: '7px',
+                  width: '8px',
+                  height: '8px',
                   borderRadius: '50%',
                   background: item.color,
-                  boxShadow: `0 0 8px ${item.color}80`,
+                  boxShadow: `0 0 10px ${item.color}`,
                   position: 'relative'
                 }}>
                   <div style={{
                     position: 'absolute',
                     inset: '-3px',
                     borderRadius: '50%',
-                    border: `1px solid ${item.color}40`,
+                    border: `1px solid ${item.color}`,
+                    opacity: 0.4,
                     animation: 'pulseRing 2.5s infinite'
                   }} />
                 </div>
@@ -245,165 +184,95 @@ export function HeroSection() {
               </div>
             ))}
           </div>
+
         </div>
 
-        {/* RIGHT — Preview Card */}
-        <div className={`${isVisible ? 'animate-scale-in delay-300' : 'opacity-0'}`} style={{
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center'
-        }}>
-          <div className="holo-border" style={{
-            width: '100%',
-            maxWidth: '430px',
-            background: 'var(--glass-bg)',
-            backdropFilter: 'blur(30px)',
-            WebkitBackdropFilter: 'blur(30px)',
-            border: '1px solid var(--border-default)',
-            borderRadius: 'var(--r-xl)',
-            padding: '1.5rem',
-            boxShadow: 'var(--shadow-lg)'
-          }}>
-            {/* Header */}
-            <div style={{
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'space-between',
-              paddingBottom: '1rem',
-              marginBottom: '1rem',
-              borderBottom: '1px solid var(--border-subtle)'
-            }}>
-              <span style={{
-                fontFamily: 'var(--font-display)',
-                fontWeight: 700,
-                fontSize: '0.95rem',
-                color: 'var(--text-100)'
-              }}>
-                Vendas em Tempo Real
-              </span>
-              <div style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '0.4rem',
-                fontSize: '0.78rem',
-                color: 'var(--text-500)'
-              }}>
-                <span style={{
-                  width: '7px',
-                  height: '7px',
-                  borderRadius: '50%',
-                  background: '#22c55e',
-                  display: 'inline-block',
-                  position: 'relative'
-                }}>
-                  <span style={{
-                    position: 'absolute',
-                    inset: '-3px',
-                    borderRadius: '50%',
-                    border: '1px solid rgba(34,197,94,0.4)',
-                    animation: 'pulseRing 2s infinite'
-                  }} />
-                </span>
-                <span>Ao vivo</span>
-              </div>
-            </div>
+        {/* ============================================================
+            LADO DIREITO: SMARTPHONE 3D HOLOGRÁFICO
+            ============================================================ */}
+        <div 
+          className={`hero-visual ${isVisible ? 'animate-scale-in delay-300' : 'opacity-0'}`}
+          ref={visualRef}
+          onMouseMove={handleMouseMove}
+          onMouseLeave={handleMouseLeave}
+        >
+          <div className="phone-wrapper" ref={phoneRef}>
+            <div className="phone-glare" ref={glareRef}></div>
+            <div className="phone-frame">
+              <div className="phone-notch"></div>
+              
+              {/* Tela do Celular com Dark Mode Premium */}
+              <div className="phone-screen">
+                {/* Marca D'água */}
+                <div className="phone-watermark">⚡</div>
+                
+                {/* Loop das Notificações Push */}
+                {activeNotifs.map((notif) => (
+                  <div key={notif.id} className="push-notif">
+                    <div className="pn-left">
+                      <div className="pn-icon" style={{ 
+                        background: `${notif.color}20`, 
+                        color: notif.color, 
+                        border: `1px solid ${notif.color}40` 
+                      }}>
+                        {notif.icon}
+                      </div>
+                      <div>
+                        <div className="pn-app">Zenyx VIPs</div>
+                        <div className="pn-msg">{notif.name} pagou</div>
+                      </div>
+                    </div>
+                    <div className="pn-val" style={{ color: notif.color }}>
+                      {notif.val}
+                    </div>
+                  </div>
+                ))}
 
-            {/* Feed Items */}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
-              {[
-                { name: 'Bruno N.', plan: '🥇 ACESSO MENSAL 🥇', price: 'R$ 17.90', added: true },
-                { name: 'Fernanda R.', plan: '🥇 VITALICIO+BONUS 🥇', price: 'R$ 21.00', added: true },
-                { name: 'Diego T.', plan: '🥇 ACESSO SEMANAL 🥇', price: 'R$ 29.00', added: true },
-                { name: 'Amanda B.', plan: '🥇 ACESSO SEMANAL 🥇', price: 'R$ 14.90', added: false },
-              ].map((item, i) => (
-                <div key={i} className="glass-hover" style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '0.8rem',
-                  padding: '0.7rem 0.75rem',
-                  borderRadius: 'var(--r-sm)',
-                  border: '1px solid transparent',
-                  animation: `fadeInUp 0.5s ease-out ${i * 0.1}s both`
-                }}>
-                  <div style={{
-                    width: '38px',
-                    height: '38px',
-                    borderRadius: '50%',
-                    background: item.added ? 'rgba(34,197,94,0.1)' : 'rgba(239,68,68,0.1)',
-                    color: item.added ? '#22c55e' : '#ef4444',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    flexShrink: 0,
-                    fontSize: '0.85rem',
-                    fontWeight: 700
-                  }}>
-                    {item.added ? '↑' : '↓'}
-                  </div>
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{
-                      fontSize: '0.88rem',
-                      fontWeight: 600,
-                      color: 'var(--text-100)',
-                      overflow: 'hidden',
-                      textOverflow: 'ellipsis',
-                      whiteSpace: 'nowrap'
-                    }}>{item.name}</div>
-                    <div style={{ fontSize: '0.76rem', color: 'var(--text-500)' }}>{item.plan}</div>
-                  </div>
-                  <div style={{ textAlign: 'right', flexShrink: 0 }}>
-                    <span style={{
-                      fontFamily: 'var(--font-mono)',
-                      fontSize: '0.6rem',
-                      fontWeight: 700,
-                      padding: '0.15rem 0.45rem',
-                      borderRadius: '100px',
-                      background: item.added ? 'rgba(34,197,94,0.1)' : 'rgba(239,68,68,0.1)',
-                      color: item.added ? '#22c55e' : '#ef4444',
-                      display: 'inline-block',
-                      marginBottom: '0.2rem',
-                      letterSpacing: '0.04em'
-                    }}>
-                      {item.added ? 'ADICIONADO' : 'REMOVIDO'}
-                    </span>
-                    <div style={{
-                      fontFamily: 'var(--font-display)',
-                      fontSize: '0.9rem',
-                      fontWeight: 700,
-                      color: 'var(--text-100)'
-                    }}>{item.price}</div>
-                  </div>
-                </div>
-              ))}
+              </div>
             </div>
           </div>
         </div>
+
       </div>
 
-      {/* Scroll Indicator */}
-      <div style={{
+      {/* ============================================================
+          SCROLL INDICATOR (Recuperado do Original)
+          ============================================================ */}
+      <div className={`${isVisible ? 'animate-fade-in-up delay-500' : 'opacity-0'}`} style={{
         position: 'absolute',
-        bottom: '2.5rem',
+        bottom: '2rem',
         left: '50%',
-        animation: 'bounceDown 2.5s infinite',
+        transform: 'translateX(-50%)',
         display: 'flex',
         flexDirection: 'column',
         alignItems: 'center',
-        gap: '0.4rem'
+        gap: '0.5rem',
+        animation: 'bounceDown 2.5s infinite ease-in-out'
       }}>
         <div style={{
-          width: '1px',
-          height: '36px',
-          background: 'linear-gradient(to bottom, var(--emerald-500), transparent)'
+          width: '2px',
+          height: '40px',
+          background: 'linear-gradient(to bottom, var(--neon-purple), transparent)',
+          borderRadius: '2px'
         }} />
         <span style={{
-          fontFamily: 'var(--font-mono)',
-          fontSize: '0.6rem',
-          color: 'var(--text-600)',
+          fontFamily: 'var(--font-code)',
+          fontSize: '0.65rem',
+          color: 'var(--text-muted)',
           textTransform: 'uppercase',
-          letterSpacing: '0.15em'
-        }}>scroll</span>
+          letterSpacing: '0.2em'
+        }}>
+          Scroll
+        </span>
       </div>
+      
+      {/* Keyframe Local para o Scroll Indicator se não existir globalmente */}
+      <style>{`
+        @keyframes bounceDown {
+          0%, 100% { transform: translateX(-50%) translateY(0); }
+          50% { transform: translateX(-50%) translateY(10px); }
+        }
+      `}</style>
     </section>
   );
 }

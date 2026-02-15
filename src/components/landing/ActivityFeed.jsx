@@ -1,14 +1,12 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { UserPlus, UserMinus, TrendingUp } from 'lucide-react';
 import { publicService } from '../../services/api';
 
 // ============================================================
-// FILTRO AGRESSIVO DE NOMES DE PLANOS (+18 / ADULTO)
+// FILTRO AGRESSIVO DE NOMES DE PLANOS (+18 / ADULTO) - MANTIDO INTACTO
 // ============================================================
 function isAggressivePlanName(planName) {
   if (!planName) return false;
   
-  // Normalizar Unicode (mathematical bold, italic, sans-serif, monospace)
   let normalized = planName
     .replace(/[\u{1F300}-\u{1F9FF}]/gu, '')
     .replace(/[\u{2600}-\u{27BF}]/gu, '')
@@ -70,20 +68,35 @@ function isAggressivePlanName(planName) {
     /\bsigilo/i,
   ];
   
-  // Detecta emoji 🔞 diretamente
   if (/\u{1F51E}/u.test(planName)) return true;
-  
   return patterns.some(p => p.test(clean));
 }
 
+// ============================================================
+// DADOS DAS PREMIAÇÕES (GAMIFICAÇÃO)
+// ============================================================
+const awardsData = [
+  { id: '10k', label: '10K', color: '#94a3b8' },
+  { id: '50k', label: '50K', color: 'var(--neon-blue)' },
+  { id: '100k', label: '100K', color: 'var(--neon-purple)' },
+  { id: '250k', label: '250K', color: 'var(--neon-green)' },
+  { id: '500k', label: '500K', color: 'var(--neon-gold)' },
+  { id: '1M', label: '1 MILHÃO', color: '#ffffff' }
+];
+
 export function ActivityFeed() {
+  // Mantemos os states originais para buscar dados reais (que poderão ser usados via context no futuro)
   const [activities, setActivities] = useState([]);
   const [displayedActivities, setDisplayedActivities] = useState([]);
   const [loading, setLoading] = useState(true);
   const [isVisible, setIsVisible] = useState(false);
   const sectionRef = useRef(null);
 
-  // Intersection Observer para animações
+  // States exclusivos da nova versão (Placas 3D)
+  const [activeAward, setActiveAward] = useState(awardsData[0]);
+  const [isFlipped, setIsFlipped] = useState(false);
+
+  // Intersection Observer
   useEffect(() => {
     const observer = new IntersectionObserver(
       ([entry]) => {
@@ -97,21 +110,19 @@ export function ActivityFeed() {
     if (sectionRef.current) {
       observer.observe(sectionRef.current);
     }
-
     return () => observer.disconnect();
   }, []);
 
-  // Buscar atividades do backend
+  // Buscar atividades originais do backend
   useEffect(() => {
     fetchActivities();
     const interval = setInterval(fetchActivities, 30000);
     return () => clearInterval(interval);
   }, []);
 
-  // Animação rotativa local com filtro agressivo
+  // Lógica rotativa original preservada (mas não renderizada visualmente aqui)
   useEffect(() => {
     if (activities.length > 0) {
-      // Filtrar planos adultos
       const safe = activities.filter(a => !isAggressivePlanName(a.plan));
       const source = safe.length > 0
         ? safe
@@ -125,12 +136,10 @@ export function ActivityFeed() {
       let currentIndex = 0;
       const rotateInterval = setInterval(() => {
         currentIndex = (currentIndex + 1) % source.length;
-        
         const newDisplay = [];
         for (let i = 0; i < Math.min(5, source.length); i++) {
           newDisplay.push(source[(currentIndex + i) % source.length]);
         }
-        
         setDisplayedActivities(newDisplay);
       }, 3000);
       
@@ -147,159 +156,161 @@ export function ActivityFeed() {
       setLoading(false);
     } catch (error) {
       console.error('Erro ao buscar atividades:', error);
-      // Dados mock em caso de erro
       setActivities([
         { name: "João P.", plan: "Premium", action: "ADICIONADO", price: 97.00 },
-        { name: "Maria S.", plan: "Básico", action: "ADICIONADO", price: 47.00 },
-        { name: "Pedro C.", plan: "Pro", action: "ADICIONADO", price: 197.00 },
-        { name: "Ana O.", plan: "Premium", action: "REMOVIDO", price: 97.00 },
-        { name: "Lucas M.", plan: "Básico", action: "ADICIONADO", price: 47.00 },
+        { name: "Maria S.", plan: "Básico", action: "ADICIONADO", price: 47.00 }
       ]);
       setLoading(false);
     }
   };
 
+  // Handler do Efeito 3D Flip da Placa de Premiação
+  const handleAwardClick = (award) => {
+    if (award.id === activeAward.id) return;
+    setActiveAward(award);
+    setIsFlipped(!isFlipped);
+  };
+
   return (
-    <section ref={sectionRef} id="automacao" className="activity-section">
-      <div className="activity-content">
-        
-        {/* LEFT CONTENT */}
-        <div className={`${isVisible ? 'animate-slide-in-left' : 'opacity-0'}`}>
-          <div className="section-label" style={{ color: 'var(--cyan-400)', justifyContent: 'flex-start' }}>
-            Tempo Real
-          </div>
-          
-          <h2 className="section-title" style={{ textAlign: 'left' }}>
-            Acompanhe{' '}
-            <span className="grad-text">cada venda</span>{' '}
-            em tempo real
+    <div ref={sectionRef}>
+      
+      {/* ============================================================
+          SECTION: TAXAS (TICKET HOLOGRÁFICO VS CONCORRÊNCIA)
+          ============================================================ */}
+      <section id="pricing" className="section container">
+        <div className="section-header">
+          <h2 className={`section-title ${isVisible ? 'animate-fade-in-up' : 'opacity-0'}`}>
+            A Vantagem <span className="grad-text">Desleal</span>
           </h2>
-          
-          <p style={{
-            color: 'var(--text-400)',
-            fontSize: '1.05rem',
-            marginBottom: '0',
-            lineHeight: 1.7,
-            maxWidth: '580px'
-          }}>
-            Visualize todas as atividades do seu bot em tempo real. Novos clientes,
-            renovações, cancelamentos e mais - tudo em um único painel.
+          <p className={`section-desc ${isVisible ? 'animate-fade-in-up delay-100' : 'opacity-0'}`}>
+            Nós não somos seus sócios. O dinheiro do seu suor deve ficar no seu bolso.
           </p>
-
-          {/* Stats Cards */}
-          <div className="activity-highlights">
-            <div className="highlight-item">
-              <div className="highlight-icon" style={{ background: 'rgba(34, 197, 94, 0.08)' }}>
-                <TrendingUp size={22} style={{ color: '#22c55e' }} />
-              </div>
-              <div>
-                <p className="highlight-title">+23%</p>
-                <p className="highlight-description">Crescimento mensal</p>
-              </div>
-            </div>
-
-            <div className="highlight-item">
-              <div className="highlight-icon" style={{ background: 'rgba(6, 182, 212, 0.08)' }}>
-                <UserPlus size={22} style={{ color: 'var(--cyan-500)' }} />
-              </div>
-              <div>
-                <p className="highlight-title">1.2k+</p>
-                <p className="highlight-description">Usuários ativos</p>
-              </div>
-            </div>
-          </div>
         </div>
 
-        {/* RIGHT - Activity Feed */}
-        <div className={`${isVisible ? 'animate-slide-in-right delay-200' : 'opacity-0'}`}>
-          <div className="activity-feed-container">
-            <div className="activity-feed-header">
-              <span className="activity-feed-title">Atividade Recente</span>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-                <span style={{
-                  width: '7px',
-                  height: '7px',
-                  borderRadius: '50%',
-                  background: '#22c55e',
-                  display: 'inline-block',
-                  position: 'relative'
-                }}>
-                  <span style={{
-                    position: 'absolute',
-                    inset: '-3px',
-                    borderRadius: '50%',
-                    border: '1px solid rgba(34,197,94,0.4)',
-                    animation: 'pulseRing 2s infinite'
-                  }} />
-                </span>
-                <span style={{ fontSize: '0.78rem', color: 'var(--text-500)' }}>Ao vivo</span>
-              </div>
-            </div>
+        <div className={`vs-container ${isVisible ? 'animate-fade-in-up delay-200' : 'opacity-0'}`}>
+          {/* O Passado (Concorrência) */}
+          <div className="vs-side">
+            <h4>Plataformas Comuns</h4>
+            <ul className="vs-list">
+              <li><span style={{ color: 'var(--neon-red)', fontWeight: 800 }}>✕</span> Cobram até R$ 1,49 fixo</li>
+              <li><span style={{ color: 'var(--neon-red)', fontWeight: 800 }}>✕</span> Comem de 5% a 10% da venda</li>
+              <li><span style={{ color: 'var(--neon-red)', fontWeight: 800 }}>✕</span> Taxas variáveis ocultas</li>
+              <li><span style={{ color: 'var(--neon-red)', fontWeight: 800 }}>✕</span> Cobram mensalidade cara</li>
+            </ul>
+          </div>
 
-            <div className="activity-feed-items">
-              {loading ? (
-                <div style={{ textAlign: 'center', padding: '3rem', color: 'var(--text-500)' }}>
-                  Carregando atividades...
+          {/* O Presente (Zenyx Ticket) */}
+          <div className="vs-center">
+            <div className="ticket-badge">NA ZENYX VIPS VOCÊ PAGA</div>
+            <div className="ticket-price">R$ 0,60</div>
+            <div className="ticket-sub">TAXA FIXA POR VENDA</div>
+            <ul className="vs-list" style={{ textAlign: 'left', opacity: 0.9, width: 'max-content', margin: '0 auto' }}>
+              <li><span style={{ color: 'var(--neon-green)', fontWeight: 800 }}>✓</span> Zero porcentagem na venda</li>
+              <li><span style={{ color: 'var(--neon-green)', fontWeight: 800 }}>✓</span> Mensalidade Zero</li>
+              <li><span style={{ color: 'var(--neon-green)', fontWeight: 800 }}>✓</span> Margem intacta</li>
+            </ul>
+          </div>
+
+          {/* O Futuro (Sua Escala) */}
+          <div className="vs-side" style={{ filter: 'none', opacity: 1, borderColor: 'rgba(16, 185, 129, 0.3)', background: 'rgba(16, 185, 129, 0.02)' }}>
+            <h4 style={{ color: 'var(--neon-green)' }}>Seu Crescimento</h4>
+            <ul className="vs-list">
+              <li>Vendeu 10 Reais? Paga R$ 0,60</li>
+              <li>Vendeu 10 Mil? Paga R$ 0,60</li>
+              <li>Previsibilidade absoluta</li>
+              <li>Escala sem medo das taxas</li>
+            </ul>
+          </div>
+        </div>
+      </section>
+
+      {/* ============================================================
+          SECTION: HALL DA FAMA (CARTAS COLECIONÁVEIS 3D)
+          ============================================================ */}
+      <section id="awards" className="section container">
+        <div className="section-header">
+          <h2 className={`section-title ${isVisible ? 'animate-fade-in-up delay-300' : 'opacity-0'}`}>
+            Hall da <span className="grad-text">Fama</span>
+          </h2>
+          <p className={`section-desc ${isVisible ? 'animate-fade-in-up delay-400' : 'opacity-0'}`}>
+            Acompanhe sua evolução e celebre cada marco alcançado. Um símbolo real das suas conquistas digitais.
+          </p>
+        </div>
+
+        <div className={`awards-area ${isVisible ? 'animate-fade-in-up delay-500' : 'opacity-0'}`}>
+          <div className="awards-tabs">
+            {awardsData.map((award) => (
+              <button 
+                key={award.id}
+                onClick={() => handleAwardClick(award)}
+                className={`award-tab ${activeAward.id === award.id ? 'active' : ''}`}
+                style={
+                  activeAward.id === award.id 
+                    ? { borderColor: award.color, color: award.id === '1M' ? '#000' : award.color } 
+                    : {}
+                }
+              >
+                {award.label}
+              </button>
+            ))}
+          </div>
+
+          {/* O Palco da Carta 3D */}
+          <div className={`award-stage ${isFlipped ? 'flip' : ''}`}>
+            <div className="award-card-container">
+              
+              {/* Face Frontal */}
+              <div 
+                className="award-card" 
+                style={{ 
+                  borderColor: activeAward.color, 
+                  boxShadow: `0 30px 60px rgba(0,0,0,0.9), 0 0 50px ${activeAward.color}40`,
+                  background: activeAward.id === '1M' ? 'linear-gradient(135deg, #111, #333)' : 'linear-gradient(135deg, #1a1a24, #050507)'
+                }}
+              >
+                <div 
+                  className="award-inner" 
+                  style={{ 
+                    color: activeAward.color, 
+                    borderColor: `${activeAward.color}40`,
+                    textShadow: activeAward.id === '1M' ? '0 0 20px #fff' : 'none'
+                  }}
+                >
+                  <div className="a-logo" style={{ filter: `drop-shadow(0 0 15px ${activeAward.color})` }}>⚡</div>
+                  <div className="a-value">{activeAward.label}</div>
+                  <div className="a-label">{activeAward.id === '1M' ? 'Clube do Milhão' : 'Faturamento'}</div>
                 </div>
-              ) : (
-                displayedActivities.map((activity, index) => {
-                  const isAdded = activity.action === "ADICIONADO";
-                  
-                  return (
-                    <div
-                      key={`${activity.name}-${index}`}
-                      className="activity-item"
-                      style={{
-                        animation: `fadeInUp 0.5s ease-out ${index * 0.08}s both`
-                      }}
-                    >
-                      <div className={`activity-icon ${isAdded ? 'added' : 'removed'}`}>
-                        {isAdded ? <UserPlus size={18} /> : <UserMinus size={18} />}
-                      </div>
-                      
-                      <div className="activity-details">
-                        <p className="activity-name">{activity.name}</p>
-                        <p className="activity-plan">{activity.plan}</p>
-                      </div>
+              </div>
 
-                      <div className="activity-right">
-                        <span className={`activity-badge ${isAdded ? 'added' : 'removed'}`}>
-                          {activity.action}
-                        </span>
-                        <p className="activity-price">R$ {activity.price.toFixed(2)}</p>
-                      </div>
-                    </div>
-                  );
-                })
-              )}
+              {/* Verso (Usado para o efeito 3D sem quebrar) */}
+              <div 
+                className="award-card" 
+                style={{ 
+                  transform: 'rotateY(180deg)',
+                  borderColor: activeAward.color, 
+                  boxShadow: `0 30px 60px rgba(0,0,0,0.9), 0 0 50px ${activeAward.color}40`,
+                  background: activeAward.id === '1M' ? 'linear-gradient(135deg, #111, #333)' : 'linear-gradient(135deg, #1a1a24, #050507)'
+                }}
+              >
+                <div 
+                  className="award-inner" 
+                  style={{ 
+                    color: activeAward.color, 
+                    borderColor: `${activeAward.color}40`,
+                    textShadow: activeAward.id === '1M' ? '0 0 20px #fff' : 'none'
+                  }}
+                >
+                  <div className="a-logo" style={{ filter: `drop-shadow(0 0 15px ${activeAward.color})` }}>⚡</div>
+                  <div className="a-value">{activeAward.label}</div>
+                  <div className="a-label">{activeAward.id === '1M' ? 'Clube do Milhão' : 'Faturamento'}</div>
+                </div>
+              </div>
+
             </div>
           </div>
         </div>
-      </div>
+      </section>
 
-      {/* Background Accents */}
-      <div style={{ position: 'absolute', inset: 0, overflow: 'hidden', pointerEvents: 'none' }}>
-        <div style={{
-          position: 'absolute',
-          top: '50%',
-          left: 0,
-          width: '24rem',
-          height: '24rem',
-          background: 'rgba(16, 185, 129, 0.06)',
-          borderRadius: '50%',
-          filter: 'blur(150px)'
-        }} />
-        <div style={{
-          position: 'absolute',
-          bottom: 0,
-          right: 0,
-          width: '20rem',
-          height: '20rem',
-          background: 'rgba(6, 182, 212, 0.06)',
-          borderRadius: '50%',
-          filter: 'blur(120px)'
-        }} />
-      </div>
-    </section>
+    </div>
   );
 }

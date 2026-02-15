@@ -8,6 +8,7 @@ export function Navbar() {
   const location = useLocation();
   const navigate = useNavigate();
 
+  // Efeito de Glassmorphism ao rolar a página
   useEffect(() => {
     const handleScroll = () => {
       setScrolled(window.scrollY > 20);
@@ -16,6 +17,7 @@ export function Navbar() {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
+  // Navegação suave ancorada
   const handleNavigation = (sectionId) => {
     setMobileMenuOpen(false);
     if (location.pathname === '/') {
@@ -31,57 +33,73 @@ export function Navbar() {
   };
 
   return (
-    <nav className={`landing-navbar ${scrolled ? 'scrolled' : ''}`}>
-      <div className="navbar-container">
-        {/* Logo */}
+    <nav className={`navbar ${scrolled ? 'scrolled' : ''}`}>
+      <div className="container nav-content">
+        
+        {/* LOGO ZENYX VIPS */}
         <Link
           to="/"
           onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
-          className="navbar-logo"
+          className="logo"
         >
-          <div className="navbar-logo-icon">
-            <Zap size={18} />
+          <div className="logo-icon">
+            <Zap size={20} strokeWidth={2.5} />
           </div>
-          <span className="navbar-logo-text">
-            Zenyx<span>GBOT</span>
-          </span>
+          Zenyx<span className="grad-text">VIPs</span>
         </Link>
 
-        {/* Desktop Menu */}
-        <ul className="navbar-menu">
-          <li><a onClick={() => handleNavigation('features')}>Recursos</a></li>
-          <li><a onClick={() => handleNavigation('funcionalidades')}>Funcionalidades</a></li>
-          <li><a onClick={() => handleNavigation('tutoriais')}>Tutoriais</a></li>
-          <li><a onClick={() => handleNavigation('faq')}>FAQ</a></li>
-          <li>
-            <Link to="/login" className="navbar-cta">
-              Acessar Plataforma
-            </Link>
-          </li>
-        </ul>
+        {/* DESKTOP MENU */}
+        <div className="nav-links">
+          {/* As âncoras mantêm os IDs originais para a lógica do React funcionar */}
+          <a onClick={() => handleNavigation('features')}>Ecossistema</a>
+          <a onClick={() => handleNavigation('funcionalidades')}>A Jornada</a>
+          <a onClick={() => handleNavigation('tutoriais')}>Tutoriais</a>
+          <a onClick={() => handleNavigation('faq')}>FAQ</a>
+        </div>
 
-        {/* Mobile Toggle */}
-        <button
-          className="navbar-mobile-toggle"
-          onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-          aria-label="Toggle menu"
-        >
-          {mobileMenuOpen ? <X size={22} /> : <Menu size={22} />}
-        </button>
+        {/* ÁREA DIREITA: CTA & MENU MOBILE TOGGLE */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+          
+          {/* Oculto no mobile apenas via CSS nativo, mas se houver espaço, ele brilha! */}
+          <Link 
+            to="/login" 
+            className="btn-glow" 
+            style={{ padding: '0.6rem 1.5rem', fontSize: '0.9rem' }}
+          >
+            Acessar Painel
+          </Link>
+
+          {/* MOBILE TOGGLE (HAMBURGER) */}
+          <button
+            className="navbar-mobile-toggle"
+            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+            aria-label="Toggle menu"
+          >
+            {mobileMenuOpen ? <X size={26} /> : <Menu size={26} />}
+          </button>
+        </div>
+
       </div>
 
-      {/* Mobile Menu */}
+      {/* MOBILE MENU DROPDOWN */}
       <div className={`navbar-menu-mobile ${mobileMenuOpen ? 'active' : ''}`}>
-        <a onClick={() => handleNavigation('features')}>Recursos</a>
-        <a onClick={() => handleNavigation('funcionalidades')}>Funcionalidades</a>
+        <a onClick={() => handleNavigation('features')}>Ecossistema</a>
+        <a onClick={() => handleNavigation('funcionalidades')}>A Jornada</a>
         <a onClick={() => handleNavigation('tutoriais')}>Tutoriais</a>
         <a onClick={() => handleNavigation('faq')}>FAQ</a>
+        
         <Link
           to="/login"
-          className="navbar-cta"
-          style={{ textAlign: 'center', marginTop: '0.5rem', display: 'block' }}
+          className="btn-glow"
+          style={{ 
+            textAlign: 'center', 
+            marginTop: '1rem', 
+            display: 'flex', 
+            justifyContent: 'center',
+            padding: '1rem'
+          }}
         >
-          Acessar Plataforma
+          Acessar Painel
         </Link>
       </div>
     </nav>

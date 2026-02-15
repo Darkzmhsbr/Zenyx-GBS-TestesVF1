@@ -58,83 +58,102 @@ export function CTASection() {
     }).format(num);
   };
 
+  // Mapeamento dos dados com os ícones originais do Lucide
   const statsData = [
-    { icon: Bot, value: `${formatNumber(stats.total_bots)}+`, label: 'Bots Criados' },
-    { icon: DollarSign, value: `${formatCurrency(stats.total_revenue)}+`, label: 'em Vendas' },
-    { icon: Users, value: `${formatNumber(stats.active_users)}+`, label: 'Usuários Ativos' },
+    { icon: Bot, value: `${formatNumber(stats.total_bots)}+`, label: 'Bots Criados', color: 'var(--neon-green)' },
+    { icon: DollarSign, value: `${formatCurrency(stats.total_revenue)}+`, label: 'em Vendas', color: 'var(--neon-blue)' },
+    { icon: Users, value: `${formatNumber(stats.active_users)}+`, label: 'Usuários Ativos', color: 'var(--neon-purple)' },
   ];
 
   return (
-    <section ref={sectionRef} className="section-container">
-      <div className="cta-section" style={{ position: 'relative', overflow: 'hidden' }}>
-        {/* Background */}
-        <div className="cta-bg" />
+    <section ref={sectionRef} className="section container">
+      <div className="cta-big">
         
-        {/* Decorative orbs */}
-        <div style={{
-          position: 'absolute',
-          top: 0,
-          right: 0,
-          width: '16rem',
-          height: '16rem',
-          background: 'rgba(16, 185, 129, 0.1)',
-          borderRadius: '50%',
-          filter: 'blur(100px)'
-        }} />
-        <div style={{
-          position: 'absolute',
-          bottom: 0,
-          left: 0,
-          width: '12rem',
-          height: '12rem',
-          background: 'rgba(6, 182, 212, 0.1)',
-          borderRadius: '50%',
-          filter: 'blur(80px)'
-        }} />
-
-        {/* Content */}
-        <div style={{ position: 'relative', zIndex: 10 }}>
-          <h2 className={`cta-title ${isVisible ? 'animate-fade-in-up' : 'opacity-0'}`}>
-            Pronto para{' '}
-            <span className="grad-text neon-text">
-              Escalar suas Vendas?
-            </span>
-          </h2>
-
-          <p className={`cta-subtitle ${isVisible ? 'animate-fade-in-up delay-200' : 'opacity-0'}`}>
-            Junte-se a centenas de empreendedores que já automatizaram suas vendas
-            no Telegram e estão faturando mais com menos esforço.
-          </p>
-
-          {/* Stats */}
-          <div className={`cta-stats ${isVisible ? 'animate-fade-in-up delay-300' : 'opacity-0'}`}>
-            {statsData.map((stat, index) => {
-              const Icon = stat.icon;
-              return (
-                <div key={index} className="cta-stat">
-                  <div className="cta-stat-icon">
-                    <Icon size={20} />
-                  </div>
-                  <p className="cta-stat-value">{stat.value}</p>
-                  <p className="cta-stat-label">{stat.label}</p>
-                </div>
-              );
-            })}
-          </div>
-
-          {/* CTA Button */}
-          <div className={`${isVisible ? 'animate-fade-in-up delay-400' : 'opacity-0'}`}>
-            <Link to="/register" style={{ textDecoration: 'none' }}>
-              <button className="hero-btn-primary btn-glow" style={{
-                padding: '1.15rem 2.5rem',
-                fontSize: '1.05rem'
-              }}>
-                Começar Agora Grátis
-                <ArrowRight size={20} />
-              </button>
-            </Link>
-          </div>
+        {/* Título */}
+        <h2 
+          className={`${isVisible ? 'animate-fade-in-up' : 'opacity-0'}`} 
+          style={{ 
+            fontFamily: 'var(--font-display)', 
+            fontSize: 'clamp(2.5rem, 5vw, 4rem)', 
+            fontWeight: 800, 
+            color: 'var(--text-main)', 
+            marginBottom: '1rem',
+            letterSpacing: '-1px'
+          }}
+        >
+          Pronto para <span className="grad-text">Escalar suas Vendas?</span>
+        </h2>
+        
+        {/* Subtítulo */}
+        <p 
+          className={`${isVisible ? 'animate-fade-in-up delay-100' : 'opacity-0'}`} 
+          style={{ 
+            fontSize: '1.2rem', 
+            color: 'var(--text-muted)', 
+            marginBottom: '3rem', 
+            maxWidth: '650px', 
+            marginInline: 'auto' 
+          }}
+        >
+          Junte-se a centenas de empreendedores que já automatizaram suas vendas no Telegram e estão faturando mais com menos esforço.
+        </p>
+        
+        {/* Botão de Ação */}
+        <div className={`${isVisible ? 'animate-fade-in-up delay-200' : 'opacity-0'}`}>
+          <Link to="/register" style={{ textDecoration: 'none' }}>
+            <button className="btn-glow" style={{ 
+              padding: '1.2rem 3.5rem', 
+              fontSize: '1.15rem', 
+              display: 'inline-flex', 
+              alignItems: 'center', 
+              gap: '12px' 
+            }}>
+              Começar Agora Grátis
+              <ArrowRight size={22} />
+            </button>
+          </Link>
         </div>
+        
+        {/* Grid de Estatísticas consumindo a API */}
+        <div className={`stats-flex ${isVisible ? 'animate-fade-in-up delay-300' : 'opacity-0'}`}>
+          {statsData.map((stat, index) => {
+            const Icon = stat.icon;
+            return (
+              <div key={index} className="stat-box" style={{ 
+                display: 'flex', 
+                flexDirection: 'column', 
+                alignItems: 'center' 
+              }}>
+                <div style={{ 
+                  marginBottom: '1rem', 
+                  color: stat.color, 
+                  filter: `drop-shadow(0 0 10px ${stat.color})` 
+                }}>
+                  <Icon size={40} strokeWidth={1.5} />
+                </div>
+                <h4 style={{ 
+                  fontFamily: 'var(--font-code)', 
+                  fontSize: '2.5rem', 
+                  color: 'var(--text-main)', 
+                  textShadow: '0 0 20px rgba(255,255,255,0.2)',
+                  lineHeight: '1'
+                }}>
+                  {stat.value}
+                </h4>
+                <p style={{ 
+                  fontSize: '0.8rem', 
+                  textTransform: 'uppercase', 
+                  letterSpacing: '2px', 
+                  color: 'var(--text-muted)', 
+                  marginTop: '0.5rem' 
+                }}>
+                  {stat.label}
+                </p>
+              </div>
+            );
+          })}
+        </div>
+
       </div>
     </section>
   );

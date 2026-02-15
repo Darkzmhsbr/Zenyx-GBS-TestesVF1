@@ -14,23 +14,30 @@ export function Terms() {
     <div className="legal-page landing-page">
       <Navbar />
       <div className="legal-container">
-        <div className="legal-card glass">
+        <div className="legal-card">
+          
           <div className="legal-header">
             <h1 className="legal-title">Termos de <span className="grad-text">Uso</span></h1>
-            <p className="legal-subtitle">Ultima atualizacao: Outubro de 2023. Leia com atencao as regras da nossa parceria.</p>
+            <p className="legal-subtitle">Última atualização: Outubro de 2023. Leia com atenção as regras da nossa parceria.</p>
           </div>
+          
           <div className="legal-body">
             <h2>1. Objeto e Aceite</h2>
-            <p>A Zenyx GBOT e uma plataforma tecnologica (SaaS) focada em automacao de vendas para o ecossistema Telegram. Ao criar uma conta, voce concorda integralmente com estes termos. Nossos servicos incluem a integracao com gateways de pagamento (como Pushin Pay) e ferramentas de gestao de leads (CRM).</p>
-            <h2>2. Responsabilidades do Usuario</h2>
-            <p>Voce reconhece ser o unico e exclusivo responsavel pelo conteudo, produtos ou servicos comercializados atraves dos bots criados em nossa plataforma. A Zenyx GBOT fornece apenas a infraestrutura tecnologica ("meio"), nao tendo qualquer responsabilidade sobre a entrega final ao seu cliente ("fim").</p>
-            <h2>3. Modelo de Cobranca (v3.0)</h2>
-            <p>Conforme nossa documentacao tecnica v3.0, operamos em um modelo de taxa por sucesso. O usuario concorda com a taxa fixa de <strong>R$ 0,60 (sessenta centavos)</strong> por cada transacao de venda processada com sucesso atraves da nossa infraestrutura.</p>
-            <h2 className="accent">4. Uso Aceitavel e Proibicoes</h2>
-            <p>E estritamente proibido utilizar a Zenyx GBOT para: (a) comercializar produtos ilegais ou fraudulentos; (b) realizar spam massivo ou violar as politicas do Telegram; (c) tentar realizar engenharia reversa de nossa tecnologia. A violacao resultara no banimento imediato da conta.</p>
-            <h2 className="accent">5. Limitacao de Responsabilidade</h2>
-            <p>Devido a natureza de integracoes com terceiros (APIs do Telegram e Gateways de Pagamento), a Zenyx GBOT nao garante 100% de uptime e nao se responsabiliza por perdas decorrentes de instabilidades nessas plataformas parceiras, embora empreguemos nossos melhores esforcos para manter a estabilidade.</p>
+            <p>A Zenyx VIPs é uma plataforma tecnológica (SaaS) focada em automação de vendas para o ecossistema Telegram. Ao criar uma conta, você concorda integralmente com estes termos. Nossos serviços incluem a integração com gateways de pagamento (como Pushin Pay) e ferramentas de gestão de leads (CRM).</p>
+            
+            <h2>2. Responsabilidades do Usuário</h2>
+            <p>Você reconhece ser o único e exclusivo responsável pelo conteúdo, produtos ou serviços comercializados através dos bots criados em nossa plataforma. A Zenyx VIPs fornece apenas a infraestrutura tecnológica ("meio"), não tendo qualquer responsabilidade sobre a entrega final ao seu cliente ("fim").</p>
+            
+            <h2>3. Modelo de Cobrança (v3.0)</h2>
+            <p>Conforme nossa documentação técnica v3.0, operamos em um modelo de taxa por sucesso. O usuário concorda com a taxa fixa de <strong>R$ 0,60 (sessenta centavos)</strong> por cada transação de venda processada com sucesso através da nossa infraestrutura.</p>
+            
+            <h2 className="accent">4. Uso Aceitável e Proibições</h2>
+            <p>É estritamente proibido utilizar a Zenyx VIPs para: (a) comercializar produtos ilegais ou fraudulentos; (b) realizar spam massivo ou violar as políticas do Telegram; (c) tentar realizar engenharia reversa de nossa tecnologia. A violação resultará no banimento imediato da conta.</p>
+            
+            <h2 className="accent">5. Limitação de Responsabilidade</h2>
+            <p>Devido à natureza de integrações com terceiros (APIs do Telegram e Gateways de Pagamento), a Zenyx VIPs não garante 100% de uptime e não se responsabiliza por perdas decorrentes de instabilidades nessas plataformas parceiras, embora empreguemos nossos melhores esforços para manter a estabilidade.</p>
           </div>
+
         </div>
       </div>
       <Footer />

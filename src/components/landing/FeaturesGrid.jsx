@@ -33,32 +33,51 @@ export function FeaturesGrid() {
   }, []);
 
   return (
-    <section id="features" ref={sectionRef} className="section-container">
+    <section id="features" ref={sectionRef} className="section-container" style={{ paddingTop: '8rem', paddingBottom: '8rem' }}>
+      
       {/* Section Header */}
       <div className="section-header">
-        <div className={`section-label ${isVisible ? 'animate-fade-in-up' : 'opacity-0'}`}>
-          Recursos Poderosos
+        
+        {/* Novo Badge Neon Elite */}
+        <div 
+          className={`${isVisible ? 'animate-fade-in-up' : 'opacity-0'}`} 
+          style={{ 
+            color: 'var(--neon-purple)', 
+            fontFamily: 'var(--font-code)', 
+            fontSize: '0.85rem', 
+            marginBottom: '1rem', 
+            border: '1px solid var(--neon-purple)', 
+            padding: '4px 14px', 
+            borderRadius: '100px', 
+            display: 'inline-block',
+            boxShadow: 'inset 0 0 10px rgba(168, 85, 247, 0.15)'
+          }}
+        >
+          Infraestrutura Sólida
         </div>
+        
         <h2 className={`section-title ${isVisible ? 'animate-fade-in-up delay-100' : 'opacity-0'}`}>
           Tudo que você precisa para{' '}
           <span className="grad-text">vender mais</span>
         </h2>
-        <p className={`section-subtitle ${isVisible ? 'animate-fade-in-up delay-200' : 'opacity-0'}`}>
+        
+        <p className={`section-desc ${isVisible ? 'animate-fade-in-up delay-200' : 'opacity-0'}`}>
           Uma plataforma completa com todas as ferramentas necessárias para automatizar 
-          e escalar suas vendas no Telegram.
+          e escalar suas vendas no Telegram de forma autônoma.
         </p>
       </div>
 
-      {/* Features Grid */}
+      {/* Grid Simétrico Perfeito */}
       <div className="features-grid">
         {features.map((feature, index) => (
           <div
             key={feature.title}
             className={`feature-card ${isVisible ? 'animate-fade-in-up' : 'opacity-0'}`}
-            style={{ animationDelay: `${(index + 1) * 0.08}s` }}
+            style={{ animationDelay: `${(index + 1) * 0.06}s` }}
           >
+            {/* O ícone foi ajustado para herdar a escala hover animada do nosso novo CSS */}
             <div className="feature-icon">
-              <span style={{ fontSize: '1.5rem' }}>{feature.icon}</span>
+              {feature.icon}
             </div>
             <h3 className="feature-title">{feature.title}</h3>
             <p className="feature-description">{feature.description}</p>
