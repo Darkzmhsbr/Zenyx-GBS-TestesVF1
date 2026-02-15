@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { ChevronDown } from 'lucide-react'; 
 
 // Array reconstruído EXATAMENTE como no index5.html 
-// Títulos curtos (tabTitle) para o menu lateral e explicações ricas em detalhes.
 const tutorials = [
   { 
     icon: '🤖', 
@@ -12,8 +12,8 @@ const tutorials = [
         <p style={{ marginBottom: '1.5rem', lineHeight: '1.8', color: 'var(--text-muted)' }}>
           Abra o Telegram e procure por <strong>@BotFather</strong>. Envie o comando <code style={{ color: 'var(--neon-blue)', background: 'rgba(56, 189, 248, 0.1)', padding: '2px 6px', borderRadius: '4px' }}>/newbot</code>, escolha um nome e um username para o seu bot. Após finalizar, o BotFather enviará um Token de API.
         </p>
-        <div style={{ marginBottom: '1.5rem', background: '#0a0a0c', border: '1px solid var(--glass-border)', padding: '1rem', borderRadius: '8px', color: 'var(--neon-green)', fontFamily: 'var(--font-code)' }}>
-          Token: 123456789:ABCdefGHIjklMNOpqrSTUvwxYZ
+        <div className="hud-code" style={{ marginBottom: '1.5rem' }}>
+          {'>'} TOKEN: 123456789:AAH_XYZ...
         </div>
         <p style={{ lineHeight: '1.8', color: 'var(--text-muted)' }}>
           Copie este token, vá até o painel da Zenyx VIPs em "Novo Bot", cole e clique em conectar. Pronto!
@@ -84,7 +84,6 @@ const tutorials = [
 ];
 
 export function TutorialsSection() {
-  // Abre automaticamente a primeira aba
   const [openIndex, setOpenIndex] = useState(0); 
   const [isVisible, setIsVisible] = useState(false);
   const sectionRef = useRef(null);
@@ -98,58 +97,68 @@ export function TutorialsSection() {
     return () => observer.disconnect();
   }, []);
 
+  // Lógica para abrir/fechar como um Acordeão verdadeiro
+  const handleToggle = (index) => {
+    setOpenIndex(openIndex === index ? null : index);
+  };
+
   return (
     <section id="tutoriais" ref={sectionRef} className="section-container" style={{ paddingTop: '8rem', paddingBottom: '8rem' }}>
       
       <div className="section-header">
-        <h2 className={`section-title ${isVisible ? 'animate-fade-in-up' : 'opacity-0'}`}>
-          Central de <span className="grad-text">Comando</span>
+        <div 
+          className={`${isVisible ? 'animate-fade-in-up' : 'opacity-0'}`} 
+          style={{ 
+            color: 'var(--neon-blue)', 
+            fontFamily: 'var(--font-code)', 
+            fontSize: '0.85rem', 
+            marginBottom: '1rem', 
+            border: '1px solid var(--neon-blue)', 
+            padding: '4px 14px', 
+            borderRadius: '100px', 
+            display: 'inline-block',
+            boxShadow: 'inset 0 0 10px rgba(56, 189, 248, 0.15)'
+          }}
+        >
+          Central de Ajuda
+        </div>
+        
+        <h2 className={`section-title ${isVisible ? 'animate-fade-in-up delay-100' : 'opacity-0'}`}>
+          Command <span className="grad-text">Center</span>
         </h2>
         
-        <p className={`section-desc ${isVisible ? 'animate-fade-in-up delay-100' : 'opacity-0'}`}>
+        <p className={`section-desc ${isVisible ? 'animate-fade-in-up delay-200' : 'opacity-0'}`}>
           Simples, rápido e indestrutível. Veja como é fácil operar a Zenyx.
         </p>
       </div>
 
-      <div className={`hud-container ${isVisible ? 'animate-fade-in-up delay-200' : 'opacity-0'}`}>
+      {/* O NOVO SISTEMA ACORDEÃO (COMMAND CENTER) */}
+      <div className={`cc-wrapper ${isVisible ? 'animate-fade-in-up delay-300' : 'opacity-0'}`}>
         
-        {/* MENU LATERAL DOS TUTORIAIS */}
-        <div className="hud-sidebar">
-          {tutorials.map((tutorial, index) => (
-            <button
-              key={index}
-              className={`hud-tab ${openIndex === index ? 'active' : ''}`}
-              onClick={() => setOpenIndex(index)}
-            >
-              <span className="hud-tab-icon">{tutorial.icon}</span> 
-              {/* O texto agora usa a versão curta (tabTitle) para não quebrar no mobile! */}
-              <span className="hud-tab-text">{tutorial.tabTitle}</span>
+        {tutorials.map((tutorial, index) => (
+          <div key={index} className={`cc-item ${openIndex === index ? 'open' : ''}`}>
+            
+            {/* Botão de Controle da Aba */}
+            <button className="cc-btn" onClick={() => handleToggle(index)}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
+                <span className="cc-icon">{tutorial.icon}</span>
+                <span className="cc-tab-text">{tutorial.tabTitle}</span>
+              </div>
+              <ChevronDown className="cc-chevron" size={24} />
             </button>
-          ))}
-        </div>
 
-        {/* CONTEÚDO FIXO DO LADO DIREITO */}
-        <div className="hud-content">
-          {tutorials.map((tutorial, index) => (
-            <div 
-              key={index} 
-              className={`hud-panel ${openIndex === index ? 'active' : ''}`}
-            >
-              {/* O Título principal fica dentro do painel */}
-              <h4 style={{ 
-                fontFamily: 'var(--font-display)', 
-                fontSize: '1.6rem', 
-                color: 'var(--text-main)', 
-                marginBottom: '1.5rem', 
-                fontWeight: '700' 
-              }}>
-                {tutorial.title}
-              </h4>
-              
-              <div>{tutorial.content}</div>
+            {/* Conteúdo Expansível Animado */}
+            <div className="cc-body">
+              <div className="cc-content-inner">
+                <div className="cc-content-padding">
+                  <h4 className="cc-title-inside">{tutorial.title}</h4>
+                  <div>{tutorial.content}</div>
+                </div>
+              </div>
             </div>
-          ))}
-        </div>
+
+          </div>
+        ))}
 
       </div>
     </section>
