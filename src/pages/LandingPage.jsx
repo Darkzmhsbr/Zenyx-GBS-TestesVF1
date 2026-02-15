@@ -16,7 +16,6 @@ export function LandingPage() {
     document.body.style.margin = '0';
     document.body.style.padding = '0';
     document.body.classList.add('landing-body');
-
     return () => {
       document.body.classList.remove('landing-body');
     };

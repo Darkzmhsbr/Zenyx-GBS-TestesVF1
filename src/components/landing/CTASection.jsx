@@ -67,23 +67,17 @@ export function CTASection() {
   return (
     <section ref={sectionRef} className="section-container">
       <div className="cta-section" style={{ position: 'relative', overflow: 'hidden' }}>
-        {/* Background gradient */}
-        <div style={{
-          position: 'absolute',
-          inset: 0,
-          background: 'linear-gradient(135deg, rgba(16, 185, 129, 0.15) 0%, rgba(5, 150, 105, 0.1) 50%, rgba(6, 182, 212, 0.15) 100%)',
-          backgroundSize: '200% 200%',
-          animation: 'gradient-shift 8s ease infinite'
-        }} />
+        {/* Background */}
+        <div className="cta-bg" />
         
-        {/* Decorative elements */}
+        {/* Decorative orbs */}
         <div style={{
           position: 'absolute',
           top: 0,
           right: 0,
           width: '16rem',
           height: '16rem',
-          background: 'rgba(16, 185, 129, 0.12)',
+          background: 'rgba(16, 185, 129, 0.1)',
           borderRadius: '50%',
           filter: 'blur(100px)'
         }} />
@@ -93,7 +87,7 @@ export function CTASection() {
           left: 0,
           width: '12rem',
           height: '12rem',
-          background: 'rgba(6, 182, 212, 0.12)',
+          background: 'rgba(6, 182, 212, 0.1)',
           borderRadius: '50%',
           filter: 'blur(80px)'
         }} />
@@ -102,12 +96,7 @@ export function CTASection() {
         <div style={{ position: 'relative', zIndex: 10 }}>
           <h2 className={`cta-title ${isVisible ? 'animate-fade-in-up' : 'opacity-0'}`}>
             Pronto para{' '}
-            <span style={{
-              background: 'linear-gradient(90deg, #10b981 0%, #059669 50%, #06b6d4 100%)',
-              WebkitBackgroundClip: 'text',
-              WebkitTextFillColor: 'transparent',
-              backgroundClip: 'text'
-            }} className="neon-text">
+            <span className="grad-text neon-text">
               Escalar suas Vendas?
             </span>
           </h2>
@@ -122,18 +111,9 @@ export function CTASection() {
             {statsData.map((stat, index) => {
               const Icon = stat.icon;
               return (
-                <div key={index} className="cta-stat glass">
-                  <div style={{
-                    width: '40px',
-                    height: '40px',
-                    borderRadius: '8px',
-                    background: 'rgba(16, 185, 129, 0.15)',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    marginBottom: '0.5rem'
-                  }}>
-                    <Icon size={20} style={{ color: '#10b981' }} />
+                <div key={index} className="cta-stat">
+                  <div className="cta-stat-icon">
+                    <Icon size={20} />
                   </div>
                   <p className="cta-stat-value">{stat.value}</p>
                   <p className="cta-stat-label">{stat.label}</p>
@@ -145,25 +125,10 @@ export function CTASection() {
           {/* CTA Button */}
           <div className={`${isVisible ? 'animate-fade-in-up delay-400' : 'opacity-0'}`}>
             <Link to="/register" style={{ textDecoration: 'none' }}>
-              <button style={{
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: '0.5rem',
-                padding: '1.75rem 2.5rem',
-                background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
-                color: 'white',
-                border: 'none',
-                borderRadius: '12px',
-                fontSize: '1.125rem',
-                fontWeight: 700,
-                cursor: 'pointer',
-                boxShadow: '0 0 25px rgba(16, 185, 129, 0.35), 0 4px 20px rgba(0,0,0,0.3)',
-                animation: 'glow-pulse 3s ease-in-out infinite',
-                transition: 'transform 0.3s ease'
-              }}
-              onMouseEnter={(e) => e.currentTarget.style.transform = 'scale(1.05)'}
-              onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1)'}
-              >
+              <button className="hero-btn-primary btn-glow" style={{
+                padding: '1.15rem 2.5rem',
+                fontSize: '1.05rem'
+              }}>
                 Começar Agora Grátis
                 <ArrowRight size={20} />
               </button>

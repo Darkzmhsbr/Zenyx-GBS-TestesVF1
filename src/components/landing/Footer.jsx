@@ -3,28 +3,23 @@ import { Link } from 'react-router-dom';
 
 export function Footer() {
   const scrollToSection = (sectionId) => {
-    const element = document.getElementById(sectionId);
-    if (element) {
-      element.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    }
+    const el = document.getElementById(sectionId);
+    if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
   };
 
   return (
     <footer className="landing-footer">
       <div className="footer-container">
         <div className="footer-grid">
-          {/* Coluna 1: Produto */}
           <div className="footer-column">
             <h4>Produto</h4>
             <ul className="footer-links">
-              <li><a onClick={() => scrollToSection('recursos')}>Recursos</a></li>
+              <li><a onClick={() => scrollToSection('features')}>Recursos</a></li>
               <li><a onClick={() => scrollToSection('funcionalidades')}>Funcionalidades</a></li>
               <li><a onClick={() => scrollToSection('tutoriais')}>Tutoriais</a></li>
               <li><a onClick={() => scrollToSection('faq')}>FAQ</a></li>
             </ul>
           </div>
-
-          {/* Coluna 2: Legal */}
           <div className="footer-column">
             <h4>Legal</h4>
             <ul className="footer-links">
@@ -33,8 +28,6 @@ export function Footer() {
               <li><Link to="/reembolso">Política de Reembolso</Link></li>
             </ul>
           </div>
-
-          {/* Coluna 3: Suporte */}
           <div className="footer-column">
             <h4>Suporte</h4>
             <ul className="footer-links">
@@ -44,8 +37,6 @@ export function Footer() {
               <li><a href="#">Documentação</a></li>
             </ul>
           </div>
-
-          {/* Coluna 4: Redes Sociais */}
           <div className="footer-column">
             <h4>Redes Sociais</h4>
             <ul className="footer-links">
@@ -56,12 +47,8 @@ export function Footer() {
             </ul>
           </div>
         </div>
-
-        {/* Footer Bottom */}
         <div className="footer-bottom">
-          <p className="footer-copyright">
-            © 2026 ZenyxGbot. Todos os direitos reservados.
-          </p>
+          <p className="footer-copyright">© 2026 ZenyxGbot. Todos os direitos reservados.</p>
           <div className="footer-badges">
             <span className="footer-badge">🔒 Seguro</span>
             <span className="footer-badge">⚡ Suporte 24/7</span>
