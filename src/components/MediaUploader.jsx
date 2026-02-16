@@ -37,8 +37,8 @@ export function MediaUploader({
     const file = event.target.files[0];
     if (!file) return;
 
-    // Proteção de 50MB
-    const maxSizeMB = 50;
+    // Proteção de 250MB
+    const maxSizeMB = 250;
     if (file.size > maxSizeMB * 1024 * 1024) {
       Swal.fire({
         title: 'Arquivo muito grande',
