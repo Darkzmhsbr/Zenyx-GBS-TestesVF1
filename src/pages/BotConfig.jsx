@@ -7,7 +7,7 @@ import {
 import { Button } from '../components/Button';
 import { Card, CardContent } from '../components/Card';
 import { botService, miniappService, planService } from '../services/api'; 
-import { MediaUploader } from '../components/MediaUploader'; // 🔥 NOVO COMPONENTE DE UPLOAD
+import { MediaUploader } from '../components/MediaUploader'; // 🔥 COMPONENTE DE UPLOAD
 import Swal from 'sweetalert2';
 import './Bots.css';
 
@@ -232,7 +232,7 @@ export function BotConfig() {
       }
   };
 
-  // 🔥 ================= LÓGICA DA VITRINE (MÚLTIPLOS ITENS) ================= 🔥
+  // 🔥 ================= LÓGICA DA VITRINE (MÚLTIPLOS ITENS AVANÇADOS) ================= 🔥
   const getVitrineItems = () => {
       try {
           const parsed = JSON.parse(currentCat.content_json || '[]');
@@ -242,7 +242,26 @@ export function BotConfig() {
 
   const handleAddVitrineItem = () => {
       const items = getVitrineItems();
-      items.push({ id: Date.now(), title: '', description: '', image_url: '', link_url: '', btn_text: 'Acessar' });
+      items.push({ 
+          id: Date.now(), 
+          title: '', 
+          description: '', 
+          image_url: '', 
+          link_url: '', 
+          btn_text: 'Acessar',
+          // 🔥 NOVAS OPÇÕES INJETADAS DO SEU SCRIPT
+          bgColor: '',
+          themeColor: '',
+          videoPreview: '',
+          modelImg: '',
+          modelName: '',
+          modelDesc: '',
+          isDirectCheckout: false,
+          isComicMode: false,
+          isHackerMode: false,
+          comicImages: '', // Salvaremos como texto separado por vírgula
+          hackerFiles: ''  // Salvaremos como JSON textual para facilitar
+      });
       setCurrentCat({...currentCat, content_json: JSON.stringify(items)});
   };
 
@@ -531,7 +550,6 @@ export function BotConfig() {
                                 <input className="input-field" value={miniAppConfig.hero_subtitle} onChange={(e) => setMiniAppConfig({...miniAppConfig, hero_subtitle: e.target.value})} />
                             </div>
                             
-                            {/* 🔥 ATUALIZADO: UPLOAD DE VÍDEO HERO */}
                             <div className="form-group">
                                 <MediaUploader 
                                     label="Vídeo Hero (URL .mp4)" 
@@ -558,7 +576,6 @@ export function BotConfig() {
                                 <div className="sub-config-box" style={{background:'rgba(255,255,255,0.05)', padding:15, borderRadius:8, marginBottom:15}}>
                                     <div className="form-group"><label>Texto Popup</label><input className="input-field" value={miniAppConfig.popup_text} onChange={(e) => setMiniAppConfig({...miniAppConfig, popup_text: e.target.value})} /></div>
                                     
-                                    {/* 🔥 ATUALIZADO: UPLOAD DE VÍDEO POPUP */}
                                     <div className="form-group">
                                         <MediaUploader 
                                             label="Vídeo Popup" 
@@ -623,7 +640,7 @@ export function BotConfig() {
                                         </div>
                                     </div>
 
-                                    {/* 3. IMAGENS (🔥 ATUALIZADO PARA MEDIA UPLOADER) */}
+                                    {/* 3. IMAGENS GERAIS */}
                                     <div className="form-group" style={{gridColumn:'span 2'}}>
                                         <MediaUploader label="Imagem Card (Home)" value={currentCat.cover_image} onChange={(url) => setCurrentCat({...currentCat, cover_image: url})} />
                                     </div>
@@ -634,76 +651,121 @@ export function BotConfig() {
                                         <MediaUploader label="Banner Desktop" value={currentCat.banner_desk_url} onChange={(url) => setCurrentCat({...currentCat, banner_desk_url: url})} />
                                     </div>
 
-                                    {/* 4. ITENS DA VITRINE (MÚLTIPLOS PRODUTOS) */}
-                                    <div className="form-group" style={{gridColumn:'span 2', marginTop: 10}}>
+                                    {/* 🔥 4. CONSTRUTOR DE ITENS DA VITRINE (AVANÇADO) 🔥 */}
+                                    <div className="form-group" style={{gridColumn:'span 2', marginTop: 10, background: '#0a0a0a', padding: 20, borderRadius: 12, border: '1px solid #222'}}>
                                         <div style={{display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom: 15, borderBottom:'1px solid #333', paddingBottom:10}}>
-                                            <h4 style={{margin:0, display:'flex', alignItems:'center', gap:8}}><ShoppingBag size={18}/> Itens da Vitrine</h4>
-                                            <Button type="button" size="sm" onClick={handleAddVitrineItem} style={{background: '#c333ff'}}>+ Adicionar Item</Button>
+                                            <h4 style={{margin:0, display:'flex', alignItems:'center', gap:8, color: '#c333ff'}}><ShoppingBag size={18}/> Construtor de Produtos/Itens</h4>
+                                            <Button type="button" size="sm" onClick={handleAddVitrineItem} style={{background: '#c333ff'}}>+ Adicionar Produto</Button>
                                         </div>
                                         
                                         {getVitrineItems().length === 0 && (
                                             <div style={{padding:20, textAlign:'center', border:'1px dashed #444', borderRadius:8, color:'#888'}}>
-                                                Nenhum item adicionado nesta categoria. Clique no botão acima para começar.
+                                                Nenhum produto adicionado nesta vitrine.
                                             </div>
                                         )}
 
-                                        <div style={{display:'flex', flexDirection:'column', gap: 15}}>
+                                        <div style={{display:'flex', flexDirection:'column', gap: 20}}>
                                             {getVitrineItems().map((item, index) => (
-                                                <div key={item.id || index} style={{background:'rgba(255,255,255,0.02)', border:'1px solid #333', borderRadius:8, padding:15}}>
-                                                    <div style={{display:'flex', justifyContent:'space-between', marginBottom:15}}>
-                                                        <strong style={{color:'#10b981'}}>Item {index + 1}</strong>
+                                                <div key={item.id || index} style={{background:'#151515', border:'1px solid #333', borderRadius:8, padding:20, position:'relative'}}>
+                                                    <div style={{display:'flex', justifyContent:'space-between', marginBottom:20, borderBottom:'1px dashed #333', paddingBottom:10}}>
+                                                        <strong style={{color:'#fff', fontSize:'1.1rem'}}>Produto #{index + 1}</strong>
                                                         <div style={{display:'flex', gap:5}}>
                                                             <button type="button" onClick={() => handleMoveVitrineItem(index, 'up')} disabled={index===0} style={{background:'#222', border:'none', color:'#fff', padding:'4px 8px', borderRadius:4, cursor:'pointer'}}>⬆</button>
                                                             <button type="button" onClick={() => handleMoveVitrineItem(index, 'down')} disabled={index===getVitrineItems().length-1} style={{background:'#222', border:'none', color:'#fff', padding:'4px 8px', borderRadius:4, cursor:'pointer'}}>⬇</button>
                                                             <button type="button" onClick={() => handleRemoveVitrineItem(index)} style={{background:'#ef4444', border:'none', color:'#fff', padding:'4px 8px', borderRadius:4, cursor:'pointer'}}><Trash2 size={14}/></button>
                                                         </div>
                                                     </div>
-                                                    <div className="config-grid-layout" style={{gap:10}}>
+                                                    
+                                                    {/* GRID DO ITEM AVANÇADO */}
+                                                    <div className="config-grid-layout" style={{gap:15}}>
+                                                        
+                                                        {/* Básico */}
+                                                        <div className="form-group" style={{gridColumn:'span 2'}}>
+                                                            <label>Título do Produto / Série</label>
+                                                            <input className="input-field" value={item.title || ''} onChange={e => handleUpdateVitrineItem(index, 'title', e.target.value)} placeholder="Ex: Flagras Reais" />
+                                                        </div>
+                                                        <div className="form-group" style={{gridColumn:'span 2'}}>
+                                                            <label>Descrição Curta</label>
+                                                            <input className="input-field" value={item.description || ''} onChange={e => handleUpdateVitrineItem(index, 'description', e.target.value)} placeholder="Ex: Flagras naturais no litoral..." />
+                                                        </div>
+                                                        
+                                                        {/* Cores (Aceita Gradiente) */}
                                                         <div className="form-group">
-                                                            <label>Título do Item</label>
-                                                            <input className="input-field" value={item.title || ''} onChange={e => handleUpdateVitrineItem(index, 'title', e.target.value)} placeholder="Ex: Netflix" />
+                                                            <label>Cor de Fundo (Hex ou Gradiente)</label>
+                                                            <input className="input-field" value={item.bgColor || ''} onChange={e => handleUpdateVitrineItem(index, 'bgColor', e.target.value)} placeholder="Ex: #240505 ou linear-gradient(...)" />
+                                                            <small style={{color:'#888'}}>Use cores hex ou gradientes CSS.</small>
                                                         </div>
                                                         <div className="form-group">
-                                                            <label>Texto do Botão</label>
-                                                            <input className="input-field" value={item.btn_text || ''} onChange={e => handleUpdateVitrineItem(index, 'btn_text', e.target.value)} placeholder="Ex: Acessar" />
+                                                            <label>Cor do Tema / Botão</label>
+                                                            <input className="input-field" value={item.themeColor || ''} onChange={e => handleUpdateVitrineItem(index, 'themeColor', e.target.value)} placeholder="Ex: #ff0000" />
+                                                        </div>
+
+                                                        {/* Imagens do Produto */}
+                                                        <div className="form-group">
+                                                            <MediaUploader label="Imagem Principal do Card" value={item.image_url || ''} onChange={url => handleUpdateVitrineItem(index, 'image_url', url)} type="photo" />
+                                                        </div>
+                                                        <div className="form-group">
+                                                            <MediaUploader label="Vídeo Preview (.mp4)" value={item.videoPreview || ''} onChange={url => handleUpdateVitrineItem(index, 'videoPreview', url)} type="video" />
+                                                        </div>
+                                                        
+                                                        <div className="form-group">
+                                                            <MediaUploader label="Imagem do Ator/Modelo (Círculo)" value={item.modelImg || ''} onChange={url => handleUpdateVitrineItem(index, 'modelImg', url)} type="photo" />
+                                                        </div>
+                                                        <div className="form-group">
+                                                            <label>Nome Ator/Modelo</label>
+                                                            <input className="input-field" value={item.modelName || ''} onChange={e => handleUpdateVitrineItem(index, 'modelName', e.target.value)} placeholder="Ex: Sayuri Sakai" />
                                                         </div>
                                                         <div className="form-group" style={{gridColumn:'span 2'}}>
-                                                            <label>Descrição</label>
-                                                            <input className="input-field" value={item.description || ''} onChange={e => handleUpdateVitrineItem(index, 'description', e.target.value)} placeholder="Ex: Acesso 30 dias..." />
+                                                            <label>Descrição Completa da Cena/Filme</label>
+                                                            <textarea className="input-field" rows={3} value={item.modelDesc || ''} onChange={e => handleUpdateVitrineItem(index, 'modelDesc', e.target.value)} placeholder="Detalhes do episódio ou cena..." />
                                                         </div>
-                                                        <div className="form-group" style={{gridColumn:'span 2'}}>
-                                                            <label>Link de Destino</label>
-                                                            <input className="input-field" value={item.link_url || ''} onChange={e => handleUpdateVitrineItem(index, 'link_url', e.target.value)} placeholder="https://..." />
+
+                                                        {/* Checkboxes de Configuração (Modos Especiais) */}
+                                                        <div className="form-group toggle-group" style={{gridColumn:'span 2', display:'flex', gap: 20, flexWrap:'wrap', background:'rgba(0,0,0,0.3)', padding:15, borderRadius:8, border:'1px solid #333'}}>
+                                                            <label style={{display:'flex', alignItems:'center', gap:8, cursor:'pointer', color:'#fff', margin:0}}>
+                                                                <input type="checkbox" style={{width:18, height:18, accentColor:'#c333ff'}} checked={item.isDirectCheckout || false} onChange={e => handleUpdateVitrineItem(index, 'isDirectCheckout', e.target.checked)} /> 
+                                                                Pular Detalhes (Direto pro Checkout)
+                                                            </label>
+                                                            <label style={{display:'flex', alignItems:'center', gap:8, cursor:'pointer', color:'#fff', margin:0}}>
+                                                                <input type="checkbox" style={{width:18, height:18, accentColor:'#c333ff'}} checked={item.isComicMode || false} onChange={e => handleUpdateVitrineItem(index, 'isComicMode', e.target.checked)} /> 
+                                                                Ativar Modo Comic/Mangá (Fotos em sequência)
+                                                            </label>
+                                                            <label style={{display:'flex', alignItems:'center', gap:8, cursor:'pointer', color:'#fff', margin:0}}>
+                                                                <input type="checkbox" style={{width:18, height:18, accentColor:'#c333ff'}} checked={item.isHackerMode || false} onChange={e => handleUpdateVitrineItem(index, 'isHackerMode', e.target.checked)} /> 
+                                                                Ativar Modo Hacker (Terminal/Arquivos)
+                                                            </label>
                                                         </div>
-                                                        <div className="form-group" style={{gridColumn:'span 2'}}>
-                                                            <MediaUploader label="Imagem do Item (Card)" value={item.image_url || ''} onChange={url => handleUpdateVitrineItem(index, 'image_url', url)} type="photo" />
+
+                                                        {/* Campos Condicionais (Modos) */}
+                                                        {item.isComicMode && (
+                                                            <div className="form-group" style={{gridColumn:'span 2', borderLeft:'3px solid #c333ff', paddingLeft:10}}>
+                                                                <label>URLs das Imagens Comic (Separe por VÍRGULA)</label>
+                                                                <textarea className="input-field" rows={3} value={item.comicImages || ''} onChange={e => handleUpdateVitrineItem(index, 'comicImages', e.target.value)} placeholder="https://img1.jpg, https://img2.jpg..." />
+                                                            </div>
+                                                        )}
+                                                        
+                                                        {item.isHackerMode && (
+                                                            <div className="form-group" style={{gridColumn:'span 2', borderLeft:'3px solid #00ff00', paddingLeft:10}}>
+                                                                <label>Arquivos Hacker (Cole o Array JSON)</label>
+                                                                <textarea className="input-field" rows={4} value={item.hackerFiles || ''} onChange={e => handleUpdateVitrineItem(index, 'hackerFiles', e.target.value)} placeholder='[{"name": "vazamento.mp4", "size": "450MB"}]' style={{fontFamily:'monospace', color:'#00ff00'}} />
+                                                            </div>
+                                                        )}
+
+                                                        <div className="form-group">
+                                                            <label>Texto do Botão de Compra</label>
+                                                            <input className="input-field" value={item.btn_text || ''} onChange={e => handleUpdateVitrineItem(index, 'btn_text', e.target.value)} placeholder="Ex: ASSINAR AGORA" />
+                                                        </div>
+                                                        <div className="form-group">
+                                                            <label>Link Checkout Personalizado (Opcional)</label>
+                                                            <input className="input-field" value={item.link_url || ''} onChange={e => handleUpdateVitrineItem(index, 'link_url', e.target.value)} placeholder="Se vazio, usa o checkout do Bot" />
                                                         </div>
                                                     </div>
                                                 </div>
                                             ))}
                                         </div>
                                     </div>
-                                    
-                                    <div className="form-group">
-                                        <label>Cor do Nome (Itens)</label>
-                                        <div style={{display:'flex', gap:5}}>
-                                            <input type="color" value={currentCat.model_name_color || '#ffffff'} onChange={(e) => setCurrentCat({...currentCat, model_name_color: e.target.value})} style={{height:40}} />
-                                            <input className="input-field" value={currentCat.model_name_color} onChange={(e) => setCurrentCat({...currentCat, model_name_color: e.target.value})} />
-                                        </div>
-                                    </div>
 
-                                    <div className="form-group">
-                                        <label>Cor da Descrição (Itens)</label>
-                                        <div style={{display:'flex', gap:5}}>
-                                            <input type="color" value={currentCat.model_desc_color || '#cccccc'} onChange={(e) => setCurrentCat({...currentCat, model_desc_color: e.target.value})} style={{height:40}} />
-                                            <input className="input-field" value={currentCat.model_desc_color} onChange={(e) => setCurrentCat({...currentCat, model_desc_color: e.target.value})} />
-                                        </div>
-                                    </div>
-
-                                    {/* 5. EXTRAS */}
-                                    <div className="form-group" style={{gridColumn:'span 2'}}>
-                                        <MediaUploader label="Vídeo Preview (.mp4)" value={currentCat.video_preview_url} onChange={(url) => setCurrentCat({...currentCat, video_preview_url: url})} />
-                                    </div>
+                                    {/* 5. EXTRAS DA CATEGORIA (RODAPÉ) */}
                                     <div className="form-group">
                                         <MediaUploader label="Linhas Decorativas (URL)" value={currentCat.deco_lines_url} onChange={(url) => setCurrentCat({...currentCat, deco_lines_url: url})} />
                                     </div>
@@ -713,7 +775,7 @@ export function BotConfig() {
                                 </div>
 
                                 <div style={{display:'flex', gap: 10, marginTop: 20}}>
-                                    <Button onClick={handleSaveCategory} style={{background: '#c333ff'}}>Salvar Categoria</Button>
+                                    <Button onClick={handleSaveCategory} style={{background: '#c333ff'}}>Salvar Categoria / Vitrine</Button>
                                     <Button variant="ghost" onClick={() => setIsEditingCat(false)}>Cancelar</Button>
                                 </div>
                             </CardContent>
