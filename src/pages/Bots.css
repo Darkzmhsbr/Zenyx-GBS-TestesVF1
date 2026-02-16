@@ -412,3 +412,19 @@
 .sub-config-box {
   margin-top: 15px; padding-left: 15px; border-left: 2px solid #333;
 }
+
+/* ========================================= */
+/* 🔥 CORREÇÃO MOBILE: GRADE DO BOT CONFIG */
+/* ========================================= */
+@media (max-width: 768px) {
+    .config-grid-layout {
+        display: flex !important;
+        flex-direction: column !important;
+        gap: 15px !important;
+    }
+    
+    .config-grid-layout .form-group {
+        width: 100% !important;
+        grid-column: 1 / -1 !important;
+    }
+}
