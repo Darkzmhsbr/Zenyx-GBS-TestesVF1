@@ -6,6 +6,7 @@ import { Send, Users, Image, MessageSquare, CheckCircle, AlertTriangle, History,
 import { Button } from '../components/Button';
 import { Card, CardContent } from '../components/Card';
 import { RichInput } from '../components/RichInput';
+import { MediaUploader } from '../components/MediaUploader'; // 🔥 NOVO COMPONENTE DE UPLOAD
 import Swal from 'sweetalert2';
 import './Remarketing.css';
 
@@ -513,13 +514,11 @@ export function Remarketing() {
             </div>
 
             <div className="form-group">
-              <label><Image size={16} style={{ verticalAlign: 'middle' }} /> URL da Mídia (Opcional)</label>
-              <input
-                className="input-field"
-                type="text"
-                placeholder="https://exemplo.com/imagem.jpg"
-                value={formData.media_url}
-                onChange={(e) => setFormData({ ...formData, media_url: e.target.value })}
+              {/* 🔥 COMPONENTE DE UPLOAD ATUALIZADO AQUI */}
+              <MediaUploader 
+                label="URL da Mídia (Opcional - Foto, Vídeo ou Áudio OGG)" 
+                value={formData.media_url} 
+                onChange={(url) => setFormData({ ...formData, media_url: url })} 
               />
             </div>
 

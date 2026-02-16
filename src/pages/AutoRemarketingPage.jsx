@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useBot } from '../context/BotContext';
 import { remarketingAutoService, planService } from '../services/api';
 import { RichInput } from '../components/RichInput'; // 🔥 IMPORTAÇÃO DO COMPONENTE RICO
+import { MediaUploader } from '../components/MediaUploader'; // 🔥 NOVO COMPONENTE DE UPLOAD
 import './AutoRemarketingPage.css';
 
 // Ícones (Unicode)
@@ -365,20 +366,18 @@ export function AutoRemarketing() {
                   <h3>{Icons.Message} Conteúdo da Mensagem</h3>
                 </div>
                 
+                {/* 🔥 COMPONENTE DE UPLOAD ATUALIZADO AQUI */}
                 <div className="form-group">
-                  <label>Mídia URL (Opcional - Foto ou Vídeo)</label>
-                  <input 
-                    type="text" 
-                    className="input-field" 
-                    placeholder="https://..."
-                    value={disparoConfig.media_url || ''}
-                    onChange={e => {
-                        const url = e.target.value;
+                  <MediaUploader 
+                    label="Mídia URL (Opcional - Foto, Vídeo ou Áudio OGG)" 
+                    value={disparoConfig.media_url || ''} 
+                    onChange={(url) => {
                         let type = null;
-                        if (url.match(/\.(jpeg|jpg|png|gif)$/i)) type = 'photo';
+                        if (url.match(/\.(jpeg|jpg|png|gif|webp)$/i)) type = 'photo';
                         if (url.match(/\.(mp4|mov|avi)$/i)) type = 'video';
+                        if (url.match(/\.(ogg|mp3|wav)$/i)) type = 'audio';
                         setDisparoConfig({...disparoConfig, media_url: url, media_type: type});
-                    }}
+                    }} 
                   />
                 </div>
 
@@ -528,9 +527,20 @@ export function AutoRemarketing() {
                   
                   {/* Msg de Disparo */}
                   <div className="msg-bubble">
-                     {disparoConfig.media_url && (
+                     {disparoConfig.media_url && disparoConfig.media_url.match(/\.(jpeg|jpg|png|gif|webp)$/i) && (
                         <div className="media-preview" style={{backgroundImage: `url(${disparoConfig.media_url})`}}></div>
                      )}
+                     
+                     {/* PREVIEW PARA VÍDEO E ÁUDIO */}
+                     {disparoConfig.media_url && disparoConfig.media_url.match(/\.(mp4|mov|avi|ogg|mp3|wav)$/i) && (
+                         <div 
+                            className="media-preview-mock"
+                            style={{width: '100%', height: '120px', background: '#000', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: '8px', marginBottom: '8px'}}
+                         >
+                            {disparoConfig.media_url.match(/\.(ogg|mp3|wav)$/i) ? '🎙️ Áudio' : '📹 Vídeo'}
+                         </div>
+                     )}
+
                      <div className="msg-text" dangerouslySetInnerHTML={{ __html: disparoConfig.message_text || 'Configure a mensagem...' }}></div>
                      <div className="msg-time">10:05</div>
                      

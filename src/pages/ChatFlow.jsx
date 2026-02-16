@@ -7,6 +7,7 @@ import { Button } from '../components/Button';
 import { Card, CardContent } from '../components/Card';
 import { Input } from '../components/Input';
 import { RichInput } from '../components/RichInput';
+import { MediaUploader } from '../components/MediaUploader'; // 🔥 NOVO COMPONENTE DE UPLOAD
 import './ChatFlow.css';
 
 // --- FUNÇÃO DE LIMPEZA E DECODIFICAÇÃO ---
@@ -466,13 +467,13 @@ export function ChatFlow() {
                                 />
                             )}
                             
-                            {/* 🔥 ATUALIZAÇÃO: PREVIEW DE VÍDEO */}
-                            {flow.media_url && flow.media_url.match(/\.(mp4|mov)$/i) && (
+                            {/* 🔥 ATUALIZAÇÃO: PREVIEW DE VÍDEO E ÁUDIO */}
+                            {flow.media_url && flow.media_url.match(/\.(mp4|mov|ogg|mp3|wav)$/i) && (
                                 <div 
                                     className="media-preview-mock"
                                     style={{width: '100%', height: '120px', background: '#000', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: '8px', marginBottom: '8px'}}
                                 >
-                                    📹 Vídeo
+                                    {flow.media_url.match(/\.(ogg|mp3|wav)$/i) ? '🎙️ Áudio' : '📹 Vídeo'}
                                 </div>
                             )}
 
@@ -564,11 +565,11 @@ export function ChatFlow() {
                             value={flow.msg_boas_vindas} 
                             onChange={val => handleRichChange('msg_boas_vindas', val)} 
                         />
-                        <Input 
-                            label="Link da Mídia (Opcional)" 
+                        {/* 🔥 COMPONENTE DE UPLOAD ATUALIZADO AQUI */}
+                        <MediaUploader 
+                            label="Mídia (Foto, Vídeo ou Áudio OGG)" 
                             value={flow.media_url} 
-                            onChange={e => setFlow({...flow, media_url: e.target.value})} 
-                            icon={<Video size={16}/>} 
+                            onChange={(url) => setFlow({...flow, media_url: url})} 
                         />
 
                         {/* 🔥 SELETOR DE MODO DE BOTÃO */}
@@ -803,7 +804,12 @@ export function ChatFlow() {
                             <div className="step-header"><div className="step-title-row"><ShoppingBag size={20} color="#10b981"/><h3>Mensagem de Oferta & Checkout</h3></div></div>
                             <div className="form-grid">
                                 <RichInput label="Texto da Oferta" value={flow.msg_2_texto} onChange={val => handleRichChange('msg_2_texto', val)} />
-                                <Input label="Mídia da Oferta (Opcional)" value={flow.msg_2_media} onChange={e => setFlow({...flow, msg_2_media: e.target.value})} icon={<Video size={16}/>} />
+                                {/* 🔥 COMPONENTE DE UPLOAD ATUALIZADO AQUI TAMBÉM */}
+                                <MediaUploader 
+                                    label="Mídia da Oferta (Opcional)" 
+                                    value={flow.msg_2_media} 
+                                    onChange={(url) => setFlow({...flow, msg_2_media: url})} 
+                                />
                                 
                                 <div className="toggle-wrapper full-width">
                                     <label>Mostrar botões de Planos automaticamente?</label>
@@ -1003,7 +1009,13 @@ export function ChatFlow() {
                             setModalData({...modalData, msg_texto: clean});
                         }} 
                     />
-                    <Input label="Mídia URL" value={modalData.msg_media} onChange={e => setModalData({...modalData, msg_media: e.target.value})} />
+                    {/* 🔥 COMPONENTE DE UPLOAD NO MODAL */}
+                    <MediaUploader 
+                        label="Mídia URL" 
+                        value={modalData.msg_media} 
+                        onChange={(url) => setModalData({...modalData, msg_media: url})} 
+                    />
+                    
                     <div className="modal-options-box">
                         <label className="checkbox-label"><input type="checkbox" checked={modalData.mostrar_botao} onChange={e => setModalData({...modalData, mostrar_botao: e.target.checked})} /> Mostrar botão "Próximo"?</label>
                         {modalData.mostrar_botao ? (<Input label="Texto do Botão" value={modalData.btn_texto} onChange={e => setModalData({...modalData, btn_texto: e.target.value})} />) : (<div className="delay-input-wrapper"><Input label="Intervalo (s)" type="number" value={modalData.delay_seconds} onChange={e => setModalData({...modalData, delay_seconds: parseInt(e.target.value) || 0})} icon={<Clock size={16}/>} /></div>)}

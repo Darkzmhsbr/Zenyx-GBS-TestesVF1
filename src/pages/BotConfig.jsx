@@ -7,6 +7,7 @@ import {
 import { Button } from '../components/Button';
 import { Card, CardContent } from '../components/Card';
 import { botService, miniappService, planService } from '../services/api'; 
+import { MediaUploader } from '../components/MediaUploader'; // 🔥 NOVO COMPONENTE DE UPLOAD
 import Swal from 'sweetalert2';
 import './Bots.css';
 
@@ -492,10 +493,16 @@ export function BotConfig() {
                                 <label>Subtítulo</label>
                                 <input className="input-field" value={miniAppConfig.hero_subtitle} onChange={(e) => setMiniAppConfig({...miniAppConfig, hero_subtitle: e.target.value})} />
                             </div>
+                            
+                            {/* 🔥 ATUALIZADO: UPLOAD DE VÍDEO HERO */}
                             <div className="form-group">
-                                <label><PlayCircle size={16}/> Vídeo Hero (URL .mp4)</label>
-                                <input className="input-field" value={miniAppConfig.hero_video_url} onChange={(e) => setMiniAppConfig({...miniAppConfig, hero_video_url: e.target.value})} placeholder="https://..." />
+                                <MediaUploader 
+                                    label="Vídeo Hero (URL .mp4)" 
+                                    value={miniAppConfig.hero_video_url} 
+                                    onChange={(url) => setMiniAppConfig({...miniAppConfig, hero_video_url: url})} 
+                                />
                             </div>
+                            
                             <div className="form-group">
                                 <label>Texto do Botão</label>
                                 <input className="input-field" value={miniAppConfig.hero_btn_text} onChange={(e) => setMiniAppConfig({...miniAppConfig, hero_btn_text: e.target.value})}/>
@@ -513,7 +520,15 @@ export function BotConfig() {
                             {miniAppConfig.enable_popup && (
                                 <div className="sub-config-box" style={{background:'rgba(255,255,255,0.05)', padding:15, borderRadius:8, marginBottom:15}}>
                                     <div className="form-group"><label>Texto Popup</label><input className="input-field" value={miniAppConfig.popup_text} onChange={(e) => setMiniAppConfig({...miniAppConfig, popup_text: e.target.value})} /></div>
-                                    <div className="form-group"><label>Vídeo Popup</label><input className="input-field" value={miniAppConfig.popup_video_url} onChange={(e) => setMiniAppConfig({...miniAppConfig, popup_video_url: e.target.value})} /></div>
+                                    
+                                    {/* 🔥 ATUALIZADO: UPLOAD DE VÍDEO POPUP */}
+                                    <div className="form-group">
+                                        <MediaUploader 
+                                            label="Vídeo Popup" 
+                                            value={miniAppConfig.popup_video_url} 
+                                            onChange={(url) => setMiniAppConfig({...miniAppConfig, popup_video_url: url})} 
+                                        />
+                                    </div>
                                 </div>
                             )}
                             <div className="form-group"><label>Rodapé</label><input className="input-field" value={miniAppConfig.footer_text} onChange={(e) => setMiniAppConfig({...miniAppConfig, footer_text: e.target.value})} /></div>
@@ -571,10 +586,16 @@ export function BotConfig() {
                                         </div>
                                     </div>
 
-                                    {/* 3. IMAGENS */}
-                                    <div className="form-group"><label><ImageIcon size={16}/> Imagem Card (Home)</label><input className="input-field" value={currentCat.cover_image} onChange={(e) => setCurrentCat({...currentCat, cover_image: e.target.value})} placeholder="https://..." /></div>
-                                    <div className="form-group"><label><Layout size={16}/> Banner Mobile (Topo)</label><input className="input-field" value={currentCat.banner_mob_url} onChange={(e) => setCurrentCat({...currentCat, banner_mob_url: e.target.value})} placeholder="https://..." /></div>
-                                    <div className="form-group"><label><Layout size={16}/> Banner Desktop</label><input className="input-field" value={currentCat.banner_desk_url} onChange={(e) => setCurrentCat({...currentCat, banner_desk_url: e.target.value})} placeholder="https://..." /></div>
+                                    {/* 3. IMAGENS (🔥 ATUALIZADO PARA MEDIA UPLOADER) */}
+                                    <div className="form-group" style={{gridColumn:'span 2'}}>
+                                        <MediaUploader label="Imagem Card (Home)" value={currentCat.cover_image} onChange={(url) => setCurrentCat({...currentCat, cover_image: url})} />
+                                    </div>
+                                    <div className="form-group">
+                                        <MediaUploader label="Banner Mobile (Topo)" value={currentCat.banner_mob_url} onChange={(url) => setCurrentCat({...currentCat, banner_mob_url: url})} />
+                                    </div>
+                                    <div className="form-group">
+                                        <MediaUploader label="Banner Desktop" value={currentCat.banner_desk_url} onChange={(url) => setCurrentCat({...currentCat, banner_desk_url: url})} />
+                                    </div>
 
                                     {/* 4. CONTEÚDO RICO (MODELO) */}
                                     <div className="form-group">
@@ -600,12 +621,20 @@ export function BotConfig() {
                                             <input className="input-field" value={currentCat.model_desc_color} onChange={(e) => setCurrentCat({...currentCat, model_desc_color: e.target.value})} />
                                         </div>
                                     </div>
-                                    <div className="form-group"><label><User size={16}/> Foto da Modelo (Redonda)</label><input className="input-field" value={currentCat.model_img_url} onChange={(e) => setCurrentCat({...currentCat, model_img_url: e.target.value})} /></div>
+                                    <div className="form-group">
+                                        <MediaUploader label="Foto da Modelo (Redonda)" value={currentCat.model_img_url} onChange={(url) => setCurrentCat({...currentCat, model_img_url: url})} />
+                                    </div>
 
                                     {/* 5. EXTRAS */}
-                                    <div className="form-group"><label><PlayCircle size={16}/> Vídeo Preview</label><input className="input-field" value={currentCat.video_preview_url} onChange={(e) => setCurrentCat({...currentCat, video_preview_url: e.target.value})} /></div>
-                                    <div className="form-group"><label>Linhas Decorativas (URL)</label><input className="input-field" value={currentCat.deco_lines_url} onChange={(e) => setCurrentCat({...currentCat, deco_lines_url: e.target.value})} /></div>
-                                    <div className="form-group"><label>Banner Rodapé</label><input className="input-field" value={currentCat.footer_banner_url} onChange={(e) => setCurrentCat({...currentCat, footer_banner_url: e.target.value})} /></div>
+                                    <div className="form-group" style={{gridColumn:'span 2'}}>
+                                        <MediaUploader label="Vídeo Preview (.mp4)" value={currentCat.video_preview_url} onChange={(url) => setCurrentCat({...currentCat, video_preview_url: url})} />
+                                    </div>
+                                    <div className="form-group">
+                                        <MediaUploader label="Linhas Decorativas (URL)" value={currentCat.deco_lines_url} onChange={(url) => setCurrentCat({...currentCat, deco_lines_url: url})} />
+                                    </div>
+                                    <div className="form-group">
+                                        <MediaUploader label="Banner Rodapé" value={currentCat.footer_banner_url} onChange={(url) => setCurrentCat({...currentCat, footer_banner_url: url})} />
+                                    </div>
                                 </div>
 
                                 <div style={{display:'flex', gap: 10, marginTop: 20}}>

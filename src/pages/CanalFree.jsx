@@ -3,6 +3,7 @@ import { useBot } from '../context/BotContext';
 import { canalFreeService } from '../services/api';
 import { RefreshCw, Save, AlertCircle, CheckCircle, Info, Unlock, Plus, Trash2, Image, Video } from 'lucide-react';
 import { RichInput } from '../components/RichInput'; // Importando componente de texto rico
+import { MediaUploader } from '../components/MediaUploader'; // 🔥 NOVO COMPONENTE DE UPLOAD
 import './CanalFree.css';
 
 // --- FUNÇÃO DE LIMPEZA E DECODIFICAÇÃO (Igual ao ChatFlow) ---
@@ -275,7 +276,7 @@ export function CanalFree() {
           </p>
         </div>
 
-        {/* Mídia (Foto ou Vídeo) */}
+        {/* Mídia (Foto, Vídeo ou Áudio) */}
         <div className="form-section">
           <label className="section-title">🖼️ Mídia (Opcional)</label>
           
@@ -301,16 +302,32 @@ export function CanalFree() {
             >
               <Video size={18} /> Vídeo
             </button>
+            <button
+              type="button"
+              className={`media-btn ${config.media_type === 'audio' ? 'active' : ''}`}
+              onClick={() => setConfig({ ...config, media_type: 'audio' })}
+            >
+              🎙️ Áudio
+            </button>
           </div>
 
+          {/* 🔥 COMPONENTE DE UPLOAD ATUALIZADO AQUI */}
           {config.media_type && (
-            <input
-              type="text"
-              className="input-field mt-2"
-              placeholder={`URL da ${config.media_type === 'photo' ? 'foto' : 'vídeo'} (ex: https://i.imgur.com/abc.jpg)`}
-              value={config.media_url || ''}
-              onChange={(e) => setConfig({ ...config, media_url: e.target.value })}
-            />
+            <div className="mt-2">
+              <MediaUploader 
+                label={`Upload de ${config.media_type === 'photo' ? 'Foto' : config.media_type === 'video' ? 'Vídeo' : 'Áudio'}`} 
+                value={config.media_url || ''} 
+                onChange={(url) => {
+                  let type = config.media_type;
+                  // Auto-detecta e corrige o tipo baseado na extensão
+                  if (url.match(/\.(jpeg|jpg|png|gif|webp)$/i)) type = 'photo';
+                  if (url.match(/\.(mp4|mov|avi)$/i)) type = 'video';
+                  if (url.match(/\.(ogg|mp3|wav)$/i)) type = 'audio';
+                  
+                  setConfig({ ...config, media_url: url, media_type: type });
+                }} 
+              />
+            </div>
           )}
         </div>
 

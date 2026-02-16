@@ -7,6 +7,7 @@ import { Card, CardContent } from '../components/Card';
 import { Input } from '../components/Input';
 // import { TextArea } from '../components/TextArea'; // REMOVIDO
 import { RichInput } from '../components/RichInput'; // 🔥 NOVO COMPONENTE
+import { MediaUploader } from '../components/MediaUploader'; // 🔥 COMPONENTE DE UPLOAD
 import Swal from 'sweetalert2';
 import './OrderBump.css';
 
@@ -227,13 +228,14 @@ export function OrderBump() {
                   rows={4}
                 />
 
-                <Input 
-                  label="Link da Mídia (Imagem ou Vídeo) - Opcional"
-                  placeholder="https://exemplo.com/foto.jpg"
-                  value={formData.msg_media}
-                  onChange={e => setFormData({...formData, msg_media: e.target.value})}
-                  icon={<ImageIcon size={16}/>}
-                />
+                {/* 🔥 COMPONENTE DE UPLOAD DE MÍDIA INJETADO AQUI */}
+                <div style={{ marginTop: '15px' }}>
+                  <MediaUploader 
+                    label="Mídia da Oferta (Opcional - Imagem, Vídeo ou Áudio)" 
+                    value={formData.msg_media} 
+                    onChange={(url) => setFormData({...formData, msg_media: url})} 
+                  />
+                </div>
 
                 {/* 🔥 NOVO SWITCH DE AUTODESTRUIR */}
                 <div className="form-group toggle-group" style={{marginTop: '15px', marginBottom: '15px'}}>
