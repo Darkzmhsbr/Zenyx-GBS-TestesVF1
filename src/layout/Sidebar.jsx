@@ -78,7 +78,7 @@ export function Sidebar({ isOpen, onClose }) {
               Z
             </div>
             <span style={{ fontSize: '18px', fontWeight: 'bold', color: '#fff' }}>
-              Zenyx<span style={{color: '#c333ff'}}>GBOT</span>
+              Zenyx<span style={{color: '#c333ff'}}>VIPs</span>
             </span>
           </div>
 
