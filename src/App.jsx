@@ -47,6 +47,9 @@ import { CanalFree } from './pages/CanalFree';
 // 🆕 NOVA PÁGINA: Grupos e Canais
 import { GruposCanais } from './pages/GruposCanais';
 
+// 🏆 NOVA PÁGINA: Ranking de Top Vendedores
+import { Ranking } from './pages/Ranking';
+
 // Mini App (Loja)
 import { MiniAppHome } from './pages/miniapp/MiniAppHome';
 import { MiniAppCategory } from './pages/miniapp/MiniAppCategory';
@@ -143,6 +146,10 @@ function App() {
             {/* Rotas Protegidas (Painel Admin) */}
             <Route element={<MainLayout />}>
               <Route path="/dashboard" element={<Dashboard />} />
+              
+              {/* 🏆 NOVA ROTA: Ranking */}
+              <Route path="/ranking" element={<Ranking />} />
+
               <Route path="/bots" element={<Bots />} />
               <Route path="/bots/new" element={<NewBot />} />
               <Route path="/bots/config/:id" element={<BotConfig />} />

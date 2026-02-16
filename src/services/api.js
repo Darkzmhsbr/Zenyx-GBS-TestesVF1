@@ -963,4 +963,19 @@ export const groupService = {
   }
 };
 
+// ============================================================
+// 🏆 NOVO SERVIÇO: RANKING
+// ============================================================
+export const rankingService = {
+  getTopVendedores: async (mes, ano) => {
+    try {
+      const response = await api.get(`/api/ranking?mes=${mes}&ano=${ano}`);
+      return response.data;
+    } catch (error) {
+      console.error('Erro ao buscar ranking:', error);
+      throw error;
+    }
+  }
+};
+
 export default api;

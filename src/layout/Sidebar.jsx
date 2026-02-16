@@ -25,7 +25,8 @@ import {
   Crown, // 👑 Ícone do Super Admin
   Send, // 🚀 Ícone do Disparo Automático
   Rocket, // 🚀 Ícone do Upsell
-  ArrowDownCircle // 📉 Ícone do Downsell
+  ArrowDownCircle, // 📉 Ícone do Downsell
+  Trophy // 🏆 Ícone do Ranking (NOVO)
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import './Sidebar.css';
@@ -114,6 +115,17 @@ export function Sidebar({ isOpen, onClose }) {
           >
             <LayoutDashboard size={20} />
             <span>Dashboard</span>
+          </Link>
+
+          {/* 🏆 NOVO MENU: RANKING */}
+          <Link 
+            to={hasBot ? "/ranking" : "#"} 
+            className={`nav-item ${isActive('/ranking')} ${!hasBot ? 'locked-nav' : ''}`} 
+            onClick={(e) => !hasBot ? e.preventDefault() : onClose()}
+            style={!hasBot ? { opacity: 0.5, cursor: 'not-allowed' } : {}}
+          >
+            <Trophy size={20} />
+            <span>Ranking de Vendas</span>
           </Link>
 
           <Link 

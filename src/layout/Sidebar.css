@@ -254,3 +254,17 @@
     visibility: visible;
   }
 }
+
+/* ============================================================
+   🏆 RANKING EXTRA (DESTAQUE OPCIONAL)
+   ============================================================ */
+.nav-item.ranking-item:hover {
+  background: rgba(255, 193, 7, 0.1); /* Brilho dourado (Ouro) */
+  color: #ffc107 !important;
+}
+
+.nav-item.ranking-item.active {
+  background: rgba(255, 193, 7, 0.15);
+  border-right-color: #ffc107;
+  color: #ffc107 !important;
+}
