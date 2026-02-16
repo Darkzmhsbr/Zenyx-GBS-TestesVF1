@@ -109,9 +109,6 @@ export const botService = {
   toggleBot: async (botId) => (await api.post(`/api/admin/bots/${botId}/toggle`)).data,
   deleteBot: async (botId) => (await api.delete(`/api/admin/bots/${botId}`)).data,
   getStats: async (botId, start, end) => (await api.get(`/api/admin/dashboard/stats?bot_id=${botId}&start_date=${start}&end_date=${end}`)).data,
-  // ... dentro de botService ...
-  deleteBot: async (botId) => (await api.delete(`/api/admin/bots/${botId}`)).data,
-  getStats: async (botId, start, end) => (await api.get(`/api/admin/dashboard/stats?bot_id=${botId}&start_date=${start}&end_date=${end}`)).data,
   
   // 🔥 NOVA FUNÇÃO: TESTAR CANAL
   testChannel: async (token, channelId) => {
@@ -564,19 +561,27 @@ export const trackingService = {
 };
 
 // ============================================================
-// 📂 SERVIÇO DE UPLOAD DE MÍDIA
+// 📂 SERVIÇO DE UPLOAD DE MÍDIA (ATUALIZADO PARA BACKBLAZE)
 // ============================================================
 export const mediaService = {
-  upload: async (file, type = 'flow') => {
-    const formData = new FormData();
-    formData.append('file', file);
-    formData.append('type', type);
-    
-    const response = await api.post('/api/admin/media/upload', formData, {
-      headers: {'Content-Type': 'multipart/form-data'}
-    });
-    
-    return response.data;
+  upload: async (file, type = 'media') => {
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+      formData.append('type', type);
+      
+      const response = await api.post('/api/admin/media/upload', formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        }
+      });
+      
+      return response.data;
+    } catch (error) {
+      console.error("❌ Erro ao fazer upload de mídia:", error.response?.data || error.message);
+      // Retorna o erro bonitinho para o SweetAlert tratar na tela
+      throw error.response?.data?.detail || "Erro inesperado ao enviar arquivo.";
+    }
   }
 };
 
