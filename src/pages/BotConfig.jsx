@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom'; 
 import { 
   Save, ArrowLeft, MessageSquare, Key, Headphones, 
-  Smartphone, Layout, PlayCircle, Type, Plus, Trash2, Edit, Image as ImageIcon, Link, User, Palette, Shield, Radio, Wifi, CheckCircle, XCircle, AlertTriangle, Bell
+  Smartphone, Layout, PlayCircle, Type, Plus, Trash2, Edit, Image as ImageIcon, Link, User, Palette, Shield, Radio, Wifi, CheckCircle, XCircle, AlertTriangle, Bell, ShoppingBag
 } from 'lucide-react'; 
 import { Button } from '../components/Button';
 import { Card, CardContent } from '../components/Card';
@@ -231,6 +231,43 @@ export function BotConfig() {
           }
       }
   };
+
+  // 🔥 ================= LÓGICA DA VITRINE (MÚLTIPLOS ITENS) ================= 🔥
+  const getVitrineItems = () => {
+      try {
+          const parsed = JSON.parse(currentCat.content_json || '[]');
+          return Array.isArray(parsed) ? parsed : [];
+      } catch(e) { return []; }
+  };
+
+  const handleAddVitrineItem = () => {
+      const items = getVitrineItems();
+      items.push({ id: Date.now(), title: '', description: '', image_url: '', link_url: '', btn_text: 'Acessar' });
+      setCurrentCat({...currentCat, content_json: JSON.stringify(items)});
+  };
+
+  const handleUpdateVitrineItem = (index, field, value) => {
+      const items = getVitrineItems();
+      items[index][field] = value;
+      setCurrentCat({...currentCat, content_json: JSON.stringify(items)});
+  };
+
+  const handleRemoveVitrineItem = (index) => {
+      const items = getVitrineItems();
+      items.splice(index, 1);
+      setCurrentCat({...currentCat, content_json: JSON.stringify(items)});
+  };
+
+  const handleMoveVitrineItem = (index, direction) => {
+      const items = getVitrineItems();
+      if (direction === 'up' && index > 0) {
+          [items[index], items[index - 1]] = [items[index - 1], items[index]];
+      } else if (direction === 'down' && index < items.length - 1) {
+          [items[index], items[index + 1]] = [items[index + 1], items[index]];
+      }
+      setCurrentCat({...currentCat, content_json: JSON.stringify(items)});
+  };
+  // 🔥 ========================================================================= 🔥
 
   const copyStoreLink = () => {
       const link = `${window.location.origin}/loja/${id}`;
@@ -597,32 +634,70 @@ export function BotConfig() {
                                         <MediaUploader label="Banner Desktop" value={currentCat.banner_desk_url} onChange={(url) => setCurrentCat({...currentCat, banner_desk_url: url})} />
                                     </div>
 
-                                    {/* 4. CONTEÚDO RICO (MODELO) */}
-                                    <div className="form-group">
-                                        <label><User size={16}/> Nome da Modelo</label>
-                                        <input className="input-field" value={currentCat.model_name} onChange={(e) => setCurrentCat({...currentCat, model_name: e.target.value})} />
+                                    {/* 4. ITENS DA VITRINE (MÚLTIPLOS PRODUTOS) */}
+                                    <div className="form-group" style={{gridColumn:'span 2', marginTop: 10}}>
+                                        <div style={{display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom: 15, borderBottom:'1px solid #333', paddingBottom:10}}>
+                                            <h4 style={{margin:0, display:'flex', alignItems:'center', gap:8}}><ShoppingBag size={18}/> Itens da Vitrine</h4>
+                                            <Button type="button" size="sm" onClick={handleAddVitrineItem} style={{background: '#c333ff'}}>+ Adicionar Item</Button>
+                                        </div>
+                                        
+                                        {getVitrineItems().length === 0 && (
+                                            <div style={{padding:20, textAlign:'center', border:'1px dashed #444', borderRadius:8, color:'#888'}}>
+                                                Nenhum item adicionado nesta categoria. Clique no botão acima para começar.
+                                            </div>
+                                        )}
+
+                                        <div style={{display:'flex', flexDirection:'column', gap: 15}}>
+                                            {getVitrineItems().map((item, index) => (
+                                                <div key={item.id || index} style={{background:'rgba(255,255,255,0.02)', border:'1px solid #333', borderRadius:8, padding:15}}>
+                                                    <div style={{display:'flex', justifyContent:'space-between', marginBottom:15}}>
+                                                        <strong style={{color:'#10b981'}}>Item {index + 1}</strong>
+                                                        <div style={{display:'flex', gap:5}}>
+                                                            <button type="button" onClick={() => handleMoveVitrineItem(index, 'up')} disabled={index===0} style={{background:'#222', border:'none', color:'#fff', padding:'4px 8px', borderRadius:4, cursor:'pointer'}}>⬆</button>
+                                                            <button type="button" onClick={() => handleMoveVitrineItem(index, 'down')} disabled={index===getVitrineItems().length-1} style={{background:'#222', border:'none', color:'#fff', padding:'4px 8px', borderRadius:4, cursor:'pointer'}}>⬇</button>
+                                                            <button type="button" onClick={() => handleRemoveVitrineItem(index)} style={{background:'#ef4444', border:'none', color:'#fff', padding:'4px 8px', borderRadius:4, cursor:'pointer'}}><Trash2 size={14}/></button>
+                                                        </div>
+                                                    </div>
+                                                    <div className="config-grid-layout" style={{gap:10}}>
+                                                        <div className="form-group">
+                                                            <label>Título do Item</label>
+                                                            <input className="input-field" value={item.title || ''} onChange={e => handleUpdateVitrineItem(index, 'title', e.target.value)} placeholder="Ex: Netflix" />
+                                                        </div>
+                                                        <div className="form-group">
+                                                            <label>Texto do Botão</label>
+                                                            <input className="input-field" value={item.btn_text || ''} onChange={e => handleUpdateVitrineItem(index, 'btn_text', e.target.value)} placeholder="Ex: Acessar" />
+                                                        </div>
+                                                        <div className="form-group" style={{gridColumn:'span 2'}}>
+                                                            <label>Descrição</label>
+                                                            <input className="input-field" value={item.description || ''} onChange={e => handleUpdateVitrineItem(index, 'description', e.target.value)} placeholder="Ex: Acesso 30 dias..." />
+                                                        </div>
+                                                        <div className="form-group" style={{gridColumn:'span 2'}}>
+                                                            <label>Link de Destino</label>
+                                                            <input className="input-field" value={item.link_url || ''} onChange={e => handleUpdateVitrineItem(index, 'link_url', e.target.value)} placeholder="https://..." />
+                                                        </div>
+                                                        <div className="form-group" style={{gridColumn:'span 2'}}>
+                                                            <MediaUploader label="Imagem do Item (Card)" value={item.image_url || ''} onChange={url => handleUpdateVitrineItem(index, 'image_url', url)} type="photo" />
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            ))}
+                                        </div>
                                     </div>
+                                    
                                     <div className="form-group">
-                                        <label>Cor do Nome</label>
+                                        <label>Cor do Nome (Itens)</label>
                                         <div style={{display:'flex', gap:5}}>
                                             <input type="color" value={currentCat.model_name_color || '#ffffff'} onChange={(e) => setCurrentCat({...currentCat, model_name_color: e.target.value})} style={{height:40}} />
                                             <input className="input-field" value={currentCat.model_name_color} onChange={(e) => setCurrentCat({...currentCat, model_name_color: e.target.value})} />
                                         </div>
                                     </div>
 
-                                    <div className="form-group" style={{gridColumn:'span 2'}}>
-                                        <label>Descrição Completa da Cena</label>
-                                        <textarea className="input-field" rows={3} value={currentCat.model_desc} onChange={(e) => setCurrentCat({...currentCat, model_desc: e.target.value})} />
-                                    </div>
                                     <div className="form-group">
-                                        <label>Cor da Descrição</label>
+                                        <label>Cor da Descrição (Itens)</label>
                                         <div style={{display:'flex', gap:5}}>
                                             <input type="color" value={currentCat.model_desc_color || '#cccccc'} onChange={(e) => setCurrentCat({...currentCat, model_desc_color: e.target.value})} style={{height:40}} />
                                             <input className="input-field" value={currentCat.model_desc_color} onChange={(e) => setCurrentCat({...currentCat, model_desc_color: e.target.value})} />
                                         </div>
-                                    </div>
-                                    <div className="form-group">
-                                        <MediaUploader label="Foto da Modelo (Redonda)" value={currentCat.model_img_url} onChange={(url) => setCurrentCat({...currentCat, model_img_url: url})} />
                                     </div>
 
                                     {/* 5. EXTRAS */}
