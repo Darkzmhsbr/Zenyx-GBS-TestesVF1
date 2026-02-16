@@ -1,11 +1,13 @@
-/* CONTAINER PRINCIPAL DA PÁGINA */
+/* CONTAINER PRINCIPAL DA PÁGINA (BLINDADO) */
 .ranking-page-container {
-  padding: 24px;
+  padding: 30px;
   max-width: 1200px;
-  /* 🔥 CORREÇÃO DA SOBREPOSIÇÃO NO DESKTOP: Respeita a Sidebar de 260px e o Header de 70px */
-  margin-left: 260px;
-  margin-top: 70px; 
+  /* 🔥 Forçamos o espaçamento para não ficar atrás do menu/header */
+  margin-left: var(--sidebar-width, 260px) !important;
+  margin-top: 70px !important; 
+  box-sizing: border-box;
   animation: fadeIn 0.4s ease;
+  width: calc(100% - var(--sidebar-width, 260px)) !important;
 }
 
 /* HEADER: TÍTULO E FILTROS */
@@ -13,9 +15,10 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 30px;
+  margin-bottom: 40px;
   flex-wrap: wrap;
   gap: 20px;
+  width: 100%;
 }
 
 .ranking-title {
@@ -34,6 +37,7 @@
   align-items: center;
   justify-content: center;
   border: 1px solid rgba(195, 51, 255, 0.3);
+  flex-shrink: 0;
 }
 
 .ranking-title h1 {
@@ -48,50 +52,64 @@
   margin: 0;
 }
 
-/* GRUPO DE FILTROS - 🔥 AJUSTADO */
+/* =======================================
+   🔥 FILTROS BLINDADOS CONTRA SOBREPOSIÇÃO 
+======================================= */
 .ranking-filters {
   display: flex;
-  gap: 16px; /* Aumentei um pouco o gap entre os filtros */
+  gap: 16px;
+  align-items: center;
 }
 
 .filter-group {
   position: relative;
   display: flex;
   align-items: center;
+  background-color: #161616;
+  border: 1px solid #333;
+  border-radius: 8px;
+  overflow: hidden;
+  transition: border-color 0.2s;
+}
+
+.filter-group:hover, .filter-group:focus-within {
+  border-color: var(--primary-color, #c333ff);
 }
 
 .filter-icon {
   position: absolute;
-  left: 14px; /* Afastei um pouco mais da borda */
+  left: 12px;
   color: #a3a3a3;
   pointer-events: none;
-  z-index: 2; /* Garante que o ícone fique acima de fundos */
+  z-index: 5;
 }
 
 .ranking-select {
   appearance: none;
   -webkit-appearance: none;
   -moz-appearance: none;
-  background-color: #161616;
-  border: 1px solid #333;
+  background-color: transparent !important;
+  border: none !important;
   color: #fff;
-  /* 🔥 CORREÇÃO DA SOBREPOSIÇÃO: 45px na esquerda garante que o texto fique longe do ícone */
-  padding: 10px 35px 10px 45px; 
-  border-radius: 8px;
+  /* Espaço gigante na esquerda para abrigar o ícone perfeitamente */
+  padding: 12px 35px 12px 42px !important; 
   font-size: 0.95rem;
+  font-weight: 500;
   outline: none;
   cursor: pointer;
-  transition: border-color 0.2s;
-  min-width: 150px; /* Largura mínima ajustada */
-  /* Adiciona a setinha customizada via background-image */
+  width: 100%;
+  min-width: 160px;
+  /* Setinha customizada */
   background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23a3a3a3' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
   background-repeat: no-repeat;
   background-position: right 12px center;
   background-size: 16px;
 }
 
-.ranking-select:focus, .ranking-select:hover {
-  border-color: var(--primary-color, #c333ff);
+.ranking-select option {
+  background-color: #1a1a1a;
+  color: #fff;
+  padding: 10px;
 }
 
 /* =======================================
@@ -104,6 +122,7 @@
   gap: 24px;
   margin-bottom: 40px;
   margin-top: 30px;
+  width: 100%;
 }
 
 .podium-card {
@@ -186,6 +205,10 @@
   font-weight: 700;
   color: #e5e5e5;
   margin-bottom: 6px;
+  width: 100%;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .podium-sales-count {
@@ -212,7 +235,9 @@
 .podium-card.prata .podium-revenue { color: #fff; background: rgba(255, 255, 255, 0.05); }
 .podium-card.bronze .podium-revenue { color: #cd7f32; background: rgba(205, 127, 50, 0.1); }
 
-/* CARTÃO DA TABELA */
+/* =======================================
+   📊 TABELA BLINDADA E ALINHADA
+======================================= */
 .ranking-card {
   background-color: #0a0a0a;
   border: 1px solid #222;
@@ -220,21 +245,26 @@
   padding: 0;
   overflow: hidden;
   box-shadow: 0 8px 30px rgba(0, 0, 0, 0.2);
+  width: 100%;
 }
 
-/* RESPONSIVIDADE DA TABELA E ALINHAMENTOS - 🔥 AJUSTADO */
 .table-responsive {
   width: 100%;
   overflow-x: auto;
-  -webkit-overflow-scrolling: touch; /* Rolagem suave no iOS */
+  -webkit-overflow-scrolling: touch;
 }
 
 .ranking-table {
   width: 100%;
   border-collapse: collapse;
   text-align: left;
-  min-width: 600px; /* Garante que não esprema muito os dados no mobile */
+  min-width: 700px; /* Garante que a tabela nunca vai esmagar as colunas */
 }
+
+/* 🔥 Larguras cravadas para manter o alinhamento 100% reto */
+.ranking-table th:nth-child(1), .ranking-table td:nth-child(1) { width: 15%; text-align: center; }
+.ranking-table th:nth-child(2), .ranking-table td:nth-child(2) { width: 50%; }
+.ranking-table th:nth-child(3), .ranking-table td:nth-child(3) { width: 35%; text-align: right; }
 
 .ranking-table th {
   background-color: #111;
@@ -242,35 +272,23 @@
   font-size: 0.85rem;
   font-weight: 600;
   text-transform: uppercase;
-  padding: 18px 24px; /* Mais respiro vertical */
+  padding: 18px 24px;
   border-bottom: 1px solid #222;
   white-space: nowrap;
 }
 
 .ranking-table td {
-  padding: 18px 24px; /* Mais respiro vertical */
+  padding: 18px 24px;
   border-bottom: 1px solid #1a1a1a;
   color: #e5e5e5;
-  font-size: 0.95rem;
-  vertical-align: middle; /* Garante alinhamento vertical perfeito */
+  vertical-align: middle;
 }
 
 .ranking-table tbody tr:hover {
   background-color: #141414;
 }
 
-/* Centraliza o conteúdo da coluna de Posição */
-.ranking-table th:first-child,
-.ranking-table td:first-child {
-  text-align: center;
-  width: 120px; /* Largura fixa para manter alinhado */
-}
-
-.text-right {
-  text-align: right;
-}
-
-/* INFORMAÇÕES DE USUÁRIO */
+/* INFORMAÇÕES DE USUÁRIO (Centro da Tabela) */
 .user-cell {
   display: flex;
   align-items: center;
@@ -279,7 +297,7 @@
 }
 
 .user-avatar {
-  width: 36px; /* Levemente maior */
+  width: 36px;
   height: 36px;
   background-color: #222;
   color: #fff;
@@ -289,16 +307,21 @@
   justify-content: center;
   font-size: 0.9rem;
   font-weight: bold;
-  flex-shrink: 0; /* Impede o avatar de ser esmagado */
+  flex-shrink: 0;
 }
 
-/* VALOR FATURADO E DETALHES */
+.user-name {
+  font-size: 1rem;
+  color: #fff;
+}
+
+/* VALOR FATURADO E DETALHES (Direita da Tabela) */
 .faturamento-cell {
-  display: flex;
+  display: flex !important;
   flex-direction: column;
   align-items: flex-end;
-  justify-content: center; /* Centraliza no eixo vertical da td */
-  gap: 4px;
+  justify-content: center;
+  gap: 6px;
 }
 
 .faturamento-valor {
@@ -308,11 +331,11 @@
   align-items: center;
   justify-content: flex-end;
   gap: 8px;
-  font-size: 1.05rem;
+  font-size: 1.1rem;
 }
 
 .vendas-detalhe {
-  font-size: 0.8rem;
+  font-size: 0.85rem;
   color: #a3a3a3;
   display: flex;
   align-items: center;
@@ -320,10 +343,10 @@
 }
 
 .trend-icon {
-  color: #22c55e; /* Verde indicando crescimento/lucro */
+  color: #22c55e;
 }
 
-/* DESTAQUES DE POSIÇÃO */
+/* DESTAQUES DE POSIÇÃO (Esquerda da Tabela) */
 .posicao-badge {
   display: inline-flex;
   align-items: center;
@@ -335,7 +358,7 @@
   font-size: 0.85rem;
   background-color: #222;
   color: #a3a3a3;
-  min-width: 60px; /* Garante que os badges tenham o mesmo tamanho */
+  min-width: 65px;
 }
 
 .posicao-badge.comum {
@@ -383,7 +406,6 @@
    📱 RESPONSIVIDADE (MOBILE & TABLET)
 ======================================= */
 @media (max-width: 992px) {
-  /* Se a tela for média, empurra o pódio para flex-wrap */
   .podium-container {
     flex-wrap: wrap;
     align-items: center;
@@ -392,10 +414,10 @@
 
 @media (max-width: 768px) {
   .ranking-page-container {
-    padding: 16px;
-    margin-top: 60px; /* Header mobile costuma ser menor */
-    /* 🔥 CORREÇÃO MOBILE: Remove a margem da sidebar porque ela fica oculta! */
-    margin-left: 0; 
+    padding: 16px !important;
+    margin-top: 60px !important; 
+    margin-left: 0 !important; /* Sidebar some no mobile */
+    width: 100% !important;
   }
 
   .ranking-header {
@@ -404,22 +426,20 @@
     gap: 16px;
   }
 
-  /* 🔥 AJUSTE DOS FILTROS NO MOBILE */
+  /* Filtros no Mobile: Organizados lado a lado ocupando 100% */
   .ranking-filters {
     width: 100%;
-    flex-direction: row; /* Mantém lado a lado */
-    flex-wrap: nowrap; /* Não quebra linha se possível */
-    gap: 10px;
+    flex-direction: row;
+    gap: 12px;
   }
 
   .filter-group {
-    flex: 1;
-    width: 50%;
+    flex: 1; /* Divide o espaço igual para os dois */
+    width: 100%;
   }
 
   .ranking-select {
-    width: 100%;
-    min-width: 100%; /* Força preencher o espaço do flex */
+    padding-left: 36px !important; /* Diminui um pouco o padding interno no mobile */
   }
 
   .podium-container {
@@ -431,7 +451,7 @@
   /* No mobile, o pódio fica um em cima do outro com o Ouro no topo */
   .podium-card {
     width: 100%;
-    max-width: 320px;
+    max-width: 100%; /* Permite expandir na tela */
     height: auto !important;
     padding: 20px;
   }
@@ -442,9 +462,5 @@
 
   .podium-crown {
     top: -18px;
-  }
-
-  .ranking-table th, .ranking-table td {
-    padding: 14px 16px;
   }
 }

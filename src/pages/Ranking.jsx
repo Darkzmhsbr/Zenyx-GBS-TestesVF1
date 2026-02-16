@@ -1,10 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { Trophy, Calendar, Medal, TrendingUp, Award, Crown, ShoppingBag } from 'lucide-react';
-import { rankingService } from '../services/api'; // Importa o nosso mensageiro
+import { rankingService } from '../services/api'; 
 import './Ranking.css';
 
 export function Ranking() {
-  // Pegamos o mês e ano atuais como padrão inicial para os filtros
   const dataAtual = new Date();
   const [mesSelecionado, setMesSelecionado] = useState(dataAtual.getMonth() + 1);
   const [anoSelecionado, setAnoSelecionado] = useState(dataAtual.getFullYear());
@@ -12,28 +11,17 @@ export function Ranking() {
   const [rankingData, setRankingData] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  // Lista de meses para o Filtro (Dropdown)
   const meses = [
-    { valor: 1, nome: 'Janeiro' },
-    { valor: 2, nome: 'Fevereiro' },
-    { valor: 3, nome: 'Março' },
-    { valor: 4, nome: 'Abril' },
-    { valor: 5, nome: 'Maio' },
-    { valor: 6, nome: 'Junho' },
-    { valor: 7, nome: 'Julho' },
-    { valor: 8, nome: 'Agosto' },
-    { valor: 9, nome: 'Setembro' },
-    { valor: 10, nome: 'Outubro' },
-    { valor: 11, nome: 'Novembro' },
-    { valor: 12, nome: 'Dezembro' }
+    { valor: 1, nome: 'Janeiro' }, { valor: 2, nome: 'Fevereiro' },
+    { valor: 3, nome: 'Março' }, { valor: 4, nome: 'Abril' },
+    { valor: 5, nome: 'Maio' }, { valor: 6, nome: 'Junho' },
+    { valor: 7, nome: 'Julho' }, { valor: 8, nome: 'Agosto' },
+    { valor: 9, nome: 'Setembro' }, { valor: 10, nome: 'Outubro' },
+    { valor: 11, nome: 'Novembro' }, { valor: 12, nome: 'Dezembro' }
   ];
 
-  // Gera uma lista de anos (do ano passado até 2 anos no futuro)
   const anos = Array.from({ length: 4 }, (_, i) => dataAtual.getFullYear() - 1 + i);
 
-  // ==========================================
-  // 📡 INTEGRAÇÃO COM A API DO BACKEND
-  // ==========================================
   const carregarRanking = async () => {
     setLoading(true);
     try {
@@ -51,30 +39,23 @@ export function Ranking() {
     }
   };
 
-  // Toda vez que o Mês ou Ano mudar, a gente busca os dados de novo automaticamente!
   useEffect(() => {
     carregarRanking();
   }, [mesSelecionado, anoSelecionado]);
 
-  // Funçãozinha para formatar o dinheiro para o padrão Brasileiro (R$)
   const formatarDinheiro = (valor) => {
     return new Intl.NumberFormat('pt-BR', {
-      style: 'currency',
-      currency: 'BRL'
+      style: 'currency', currency: 'BRL'
     }).format(valor);
   };
 
-  // Ícones dinâmicos para a Tabela (Medalhas nas Posições)
   const renderPosicao = (posicao) => {
-    if (posicao === 1) return <div className="posicao-badge ouro"><Trophy size={18} /> 1º</div>;
-    if (posicao === 2) return <div className="posicao-badge prata"><Medal size={18} /> 2º</div>;
-    if (posicao === 3) return <div className="posicao-badge bronze"><Award size={18} /> 3º</div>;
-    return <div className="posicao-badge comum">{posicao}º</div>;
+    if (posicao === 1) return <div className="posicao-badge ouro" style={{ minWidth: '70px', justifyContent: 'center' }}><Trophy size={18} /> 1º</div>;
+    if (posicao === 2) return <div className="posicao-badge prata" style={{ minWidth: '70px', justifyContent: 'center' }}><Medal size={18} /> 2º</div>;
+    if (posicao === 3) return <div className="posicao-badge bronze" style={{ minWidth: '70px', justifyContent: 'center' }}><Award size={18} /> 3º</div>;
+    return <div className="posicao-badge comum" style={{ minWidth: '70px', justifyContent: 'center' }}>{posicao}º</div>;
   };
 
-  // ==========================================
-  // 🏆 RENDERIZAÇÃO DO PÓDIO (TOP 3)
-  // ==========================================
   const renderPodio = () => {
     if (rankingData.length === 0) return null;
 
@@ -84,11 +65,10 @@ export function Ranking() {
 
     return (
       <div className="podium-container">
-        {/* 2º LUGAR - PRATA (Fica na esquerda) */}
         {top2 && (
           <div className="podium-card prata">
             <div className="podium-avatar">{top2.username.charAt(0).toUpperCase()}</div>
-            <div className="podium-username">@{top2.username}</div>
+            <div className="podium-username" style={{ width: '100%', overflow: 'hidden', textOverflow: 'ellipsis' }}>@{top2.username}</div>
             <div className="podium-sales-count">
               <ShoppingBag size={14} /> {top2.total_vendas} vendas
             </div>
@@ -96,12 +76,11 @@ export function Ranking() {
           </div>
         )}
 
-        {/* 1º LUGAR - OURO (Fica no centro, maior e com coroa flutuante) */}
         {top1 && (
           <div className="podium-card ouro">
             <Crown size={36} className="podium-crown" />
             <div className="podium-avatar">{top1.username.charAt(0).toUpperCase()}</div>
-            <div className="podium-username">@{top1.username}</div>
+            <div className="podium-username" style={{ width: '100%', overflow: 'hidden', textOverflow: 'ellipsis' }}>@{top1.username}</div>
             <div className="podium-sales-count">
               <ShoppingBag size={14} /> {top1.total_vendas} vendas
             </div>
@@ -109,11 +88,10 @@ export function Ranking() {
           </div>
         )}
 
-        {/* 3º LUGAR - BRONZE (Fica na direita) */}
         {top3 && (
           <div className="podium-card bronze">
             <div className="podium-avatar">{top3.username.charAt(0).toUpperCase()}</div>
-            <div className="podium-username">@{top3.username}</div>
+            <div className="podium-username" style={{ width: '100%', overflow: 'hidden', textOverflow: 'ellipsis' }}>@{top3.username}</div>
             <div className="podium-sales-count">
               <ShoppingBag size={14} /> {top3.total_vendas} vendas
             </div>
@@ -126,9 +104,7 @@ export function Ranking() {
 
   return (
     <div className="ranking-page-container">
-      {/* ==========================================
-          CABEÇALHO E FILTROS 
-          ========================================== */}
+      {/* CABEÇALHO E FILTROS */}
       <div className="ranking-header">
         <div className="ranking-title">
           <div className="icon-wrapper">
@@ -140,39 +116,50 @@ export function Ranking() {
           </div>
         </div>
 
-        {/* FILTROS DE DATA ALINHADOS */}
-        <div className="ranking-filters">
-          <div className="filter-group">
-            <Calendar size={18} className="filter-icon" />
+        {/* 🔥 FILTROS COM ESTRUTURA BLINDADA CONTRA SOBREPOSIÇÃO */}
+        <div className="ranking-filters" style={{ display: 'flex', gap: '15px' }}>
+          
+          <div style={{ 
+            display: 'flex', alignItems: 'center', backgroundColor: '#161616', 
+            border: '1px solid #333', borderRadius: '8px', padding: '0 12px', height: '42px'
+          }}>
+            <Calendar size={18} color="#a3a3a3" style={{ marginRight: '8px', flexShrink: 0 }} />
             <select 
               value={mesSelecionado} 
               onChange={(e) => setMesSelecionado(Number(e.target.value))}
-              className="ranking-select"
+              style={{ 
+                background: 'transparent', border: 'none', color: '#fff', fontSize: '0.95rem',
+                outline: 'none', cursor: 'pointer', width: '100%', minWidth: '110px'
+              }}
             >
               {meses.map((m) => (
-                <option key={m.valor} value={m.valor}>{m.nome}</option>
+                <option key={m.valor} value={m.valor} style={{ background: '#1a1a1a' }}>{m.nome}</option>
               ))}
             </select>
           </div>
 
-          <div className="filter-group">
-            <Calendar size={18} className="filter-icon" />
+          <div style={{ 
+            display: 'flex', alignItems: 'center', backgroundColor: '#161616', 
+            border: '1px solid #333', borderRadius: '8px', padding: '0 12px', height: '42px'
+          }}>
+            <Calendar size={18} color="#a3a3a3" style={{ marginRight: '8px', flexShrink: 0 }} />
             <select 
               value={anoSelecionado} 
               onChange={(e) => setAnoSelecionado(Number(e.target.value))}
-              className="ranking-select"
+              style={{ 
+                background: 'transparent', border: 'none', color: '#fff', fontSize: '0.95rem',
+                outline: 'none', cursor: 'pointer', width: '100%', minWidth: '70px'
+              }}
             >
               {anos.map((a) => (
-                <option key={a} value={a}>{a}</option>
+                <option key={a} value={a} style={{ background: '#1a1a1a' }}>{a}</option>
               ))}
             </select>
           </div>
         </div>
       </div>
 
-      {/* ==========================================
-          CONTEÚDO PRINCIPAL (LOADING, PÓDIO E TABELA) 
-          ========================================== */}
+      {/* CONTEÚDO PRINCIPAL */}
       {loading ? (
         <div className="ranking-card">
           <div className="ranking-loading">
@@ -182,43 +169,47 @@ export function Ranking() {
         </div>
       ) : rankingData.length > 0 ? (
         <>
-          {/* 🔥 NOSSO PÓDIO DE DESTAQUE SUPERIOR */}
+          {/* PÓDIO */}
           {renderPodio()}
 
-          {/* ÁREA DA TABELA (Lista Completa) */}
+          {/* TABELA ALINHADA E CRAVADA */}
           <div className="ranking-card">
             <div className="table-responsive">
-              <table className="ranking-table">
+              <table className="ranking-table" style={{ width: '100%', minWidth: '700px', tableLayout: 'fixed' }}>
                 <thead>
                   <tr>
-                    {/* As larguras agora são tratadas de forma inteligente pelo CSS */}
-                    <th>Posição</th>
-                    <th>Usuário (Username)</th>
-                    <th className="text-right">Desempenho</th>
+                    <th style={{ width: '15%', textAlign: 'center' }}>Posição</th>
+                    <th style={{ width: '45%', textAlign: 'left', paddingLeft: '20px' }}>Usuário (Username)</th>
+                    <th style={{ width: '40%', textAlign: 'right', paddingRight: '24px' }}>Desempenho</th>
                   </tr>
                 </thead>
                 <tbody>
                   {rankingData.map((item) => (
                     <tr key={item.username} className={`rank-row rank-${item.posicao}`}>
-                      {/* Posição */}
-                      <td>{renderPosicao(item.posicao)}</td>
                       
-                      {/* Avatar e Nome */}
-                      <td className="user-cell">
-                        <div className="user-avatar">{item.username.charAt(0).toUpperCase()}</div>
-                        <span className="user-name">@{item.username}</span>
+                      <td style={{ textAlign: 'center', verticalAlign: 'middle' }}>
+                        {renderPosicao(item.posicao)}
                       </td>
                       
-                      {/* Faturamento e Quantidade de Vendas (Alinhado à direita) */}
-                      <td className="faturamento-cell">
-                        <span className="faturamento-valor">
-                          <TrendingUp size={16} className="trend-icon" />
-                          {formatarDinheiro(item.total_faturado)}
-                        </span>
-                        <span className="vendas-detalhe">
-                          <ShoppingBag size={12} /> {item.total_vendas} vendas concluídas
-                        </span>
+                      <td style={{ verticalAlign: 'middle', paddingLeft: '20px' }}>
+                        <div className="user-cell" style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
+                          <div className="user-avatar" style={{ flexShrink: 0 }}>{item.username.charAt(0).toUpperCase()}</div>
+                          <span className="user-name" style={{ overflow: 'hidden', textOverflow: 'ellipsis' }}>@{item.username}</span>
+                        </div>
                       </td>
+                      
+                      <td style={{ textAlign: 'right', verticalAlign: 'middle', paddingRight: '24px' }}>
+                        <div className="faturamento-cell" style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '4px' }}>
+                          <span className="faturamento-valor" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                            <TrendingUp size={16} className="trend-icon" color="#22c55e" />
+                            {formatarDinheiro(item.total_faturado)}
+                          </span>
+                          <span className="vendas-detalhe" style={{ color: '#a3a3a3', fontSize: '0.85rem', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                            <ShoppingBag size={12} /> {item.total_vendas} vendas concluídas
+                          </span>
+                        </div>
+                      </td>
+                      
                     </tr>
                   ))}
                 </tbody>
@@ -227,7 +218,6 @@ export function Ranking() {
           </div>
         </>
       ) : (
-        /* ESTADO VAZIO: Nenhuma venda no mês selecionado */
         <div className="ranking-card">
           <div className="ranking-empty">
             <Trophy size={48} className="empty-icon" />
