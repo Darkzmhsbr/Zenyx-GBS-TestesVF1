@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Trophy, Calendar, Medal, TrendingUp, Award } from 'lucide-react';
+import { Trophy, Calendar, Medal, TrendingUp, Award, Crown, ShoppingBag } from 'lucide-react';
 import { rankingService } from '../services/api'; // Importa o nosso mensageiro
 import './Ranking.css';
 
@@ -62,12 +62,64 @@ export function Ranking() {
     }).format(valor);
   };
 
-  // Ícones dinâmicos para o Top 3
+  // Ícones dinâmicos para a Tabela (Posições)
   const renderPosicao = (posicao) => {
     if (posicao === 1) return <div className="posicao-badge ouro"><Trophy size={18} /> 1º</div>;
     if (posicao === 2) return <div className="posicao-badge prata"><Medal size={18} /> 2º</div>;
     if (posicao === 3) return <div className="posicao-badge bronze"><Award size={18} /> 3º</div>;
     return <div className="posicao-badge comum">{posicao}º</div>;
+  };
+
+  // ==========================================
+  // 🏆 RENDERIZAÇÃO DO PÓDIO (TOP 3)
+  // ==========================================
+  const renderPodio = () => {
+    if (rankingData.length === 0) return null;
+
+    const top1 = rankingData[0];
+    const top2 = rankingData[1];
+    const top3 = rankingData[2];
+
+    return (
+      <div className="podium-container">
+        {/* 2º LUGAR - PRATA (Fica na esquerda) */}
+        {top2 && (
+          <div className="podium-card prata">
+            <div className="podium-avatar">{top2.username.charAt(0).toUpperCase()}</div>
+            <div className="podium-username">@{top2.username}</div>
+            <div className="podium-sales-count">
+              <ShoppingBag size={14} /> {top2.total_vendas} vendas
+            </div>
+            <div className="podium-revenue">{formatarDinheiro(top2.total_faturado)}</div>
+          </div>
+        )}
+
+        {/* 1º LUGAR - OURO (Fica no centro, maior e com coroa) */}
+        {top1 && (
+          <div className="podium-card ouro">
+            <Crown size={36} className="podium-crown" />
+            <div className="podium-avatar">{top1.username.charAt(0).toUpperCase()}</div>
+            <div className="podium-username">@{top1.username}</div>
+            <div className="podium-sales-count">
+              <ShoppingBag size={14} /> {top1.total_vendas} vendas
+            </div>
+            <div className="podium-revenue">{formatarDinheiro(top1.total_faturado)}</div>
+          </div>
+        )}
+
+        {/* 3º LUGAR - BRONZE (Fica na direita) */}
+        {top3 && (
+          <div className="podium-card bronze">
+            <div className="podium-avatar">{top3.username.charAt(0).toUpperCase()}</div>
+            <div className="podium-username">@{top3.username}</div>
+            <div className="podium-sales-count">
+              <ShoppingBag size={14} /> {top3.total_vendas} vendas
+            </div>
+            <div className="podium-revenue">{formatarDinheiro(top3.total_faturado)}</div>
+          </div>
+        )}
+      </div>
+    );
   };
 
   return (
@@ -114,48 +166,62 @@ export function Ranking() {
         </div>
       </div>
 
-      {/* ÁREA DA TABELA */}
-      <div className="ranking-card">
-        {loading ? (
+      {loading ? (
+        <div className="ranking-card">
           <div className="ranking-loading">
             <div className="spinner"></div>
             <p>Calculando o Ranking...</p>
           </div>
-        ) : rankingData.length > 0 ? (
-          <div className="table-responsive">
-            <table className="ranking-table">
-              <thead>
-                <tr>
-                  <th width="15%">Posição</th>
-                  <th width="50%">Usuário (Username)</th>
-                  <th width="35%" className="text-right">Faturamento</th>
-                </tr>
-              </thead>
-              <tbody>
-                {rankingData.map((item) => (
-                  <tr key={item.username} className={`rank-row rank-${item.posicao}`}>
-                    <td>{renderPosicao(item.posicao)}</td>
-                    <td className="user-cell">
-                      <div className="user-avatar">{item.username.charAt(0).toUpperCase()}</div>
-                      <span className="user-name">@{item.username}</span>
-                    </td>
-                    <td className="text-right faturamento-cell">
-                      <TrendingUp size={16} className="trend-icon" />
-                      {formatarDinheiro(item.total_faturado)}
-                    </td>
+        </div>
+      ) : rankingData.length > 0 ? (
+        <>
+          {/* 🔥 NOSSO PÓDIO DE DESTAQUE */}
+          {renderPodio()}
+
+          {/* ÁREA DA TABELA (Lista Completa) */}
+          <div className="ranking-card">
+            <div className="table-responsive">
+              <table className="ranking-table">
+                <thead>
+                  <tr>
+                    <th width="15%">Posição</th>
+                    <th width="50%">Usuário (Username)</th>
+                    <th width="35%" className="text-right">Desempenho</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody>
+                  {rankingData.map((item) => (
+                    <tr key={item.username} className={`rank-row rank-${item.posicao}`}>
+                      <td>{renderPosicao(item.posicao)}</td>
+                      <td className="user-cell">
+                        <div className="user-avatar">{item.username.charAt(0).toUpperCase()}</div>
+                        <span className="user-name">@{item.username}</span>
+                      </td>
+                      <td className="faturamento-cell">
+                        <span className="faturamento-valor">
+                          <TrendingUp size={16} className="trend-icon" />
+                          {formatarDinheiro(item.total_faturado)}
+                        </span>
+                        <span className="vendas-detalhe">
+                          <ShoppingBag size={12} /> {item.total_vendas} vendas concluídas
+                        </span>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           </div>
-        ) : (
+        </>
+      ) : (
+        <div className="ranking-card">
           <div className="ranking-empty">
             <Trophy size={48} className="empty-icon" />
             <h3>Nenhuma venda registrada</h3>
             <p>Ainda não há dados de vendas aprovadas para {meses.find(m => m.valor === mesSelecionado)?.nome} de {anoSelecionado}.</p>
           </div>
-        )}
-      </div>
+        </div>
+      )}
     </div>
   );
 }

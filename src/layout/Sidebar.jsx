@@ -117,17 +117,6 @@ export function Sidebar({ isOpen, onClose }) {
             <span>Dashboard</span>
           </Link>
 
-          {/* 🏆 NOVO MENU: RANKING */}
-          <Link 
-            to={hasBot ? "/ranking" : "#"} 
-            className={`nav-item ${isActive('/ranking')} ${!hasBot ? 'locked-nav' : ''}`} 
-            onClick={(e) => !hasBot ? e.preventDefault() : onClose()}
-            style={!hasBot ? { opacity: 0.5, cursor: 'not-allowed' } : {}}
-          >
-            <Trophy size={20} />
-            <span>Ranking de Vendas</span>
-          </Link>
-
           <Link 
             to={hasBot ? "/funil" : "#"} 
             className={`nav-item ${isActive('/funil')} ${!hasBot ? 'locked-nav' : ''}`} 
@@ -276,6 +265,17 @@ export function Sidebar({ isOpen, onClose }) {
             )}
           </div>
           
+          {/* 🏆 NOVO MENU: RANKING (MOVIDO PARA CÁ COM EFEITO DOURADO) */}
+          <Link 
+            to={hasBot ? "/ranking" : "#"} 
+            className={`nav-item ranking-item ${isActive('/ranking')} ${!hasBot ? 'locked-nav' : ''}`} 
+            onClick={(e) => !hasBot ? e.preventDefault() : onClose()}
+            style={!hasBot ? { opacity: 0.5, cursor: 'not-allowed' } : {}}
+          >
+            <Trophy size={20} />
+            <span>Ranking de Vendas</span>
+          </Link>
+
           <div className="divider"></div>
 
           <Link 

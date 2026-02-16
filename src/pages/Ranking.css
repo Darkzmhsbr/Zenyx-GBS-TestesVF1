@@ -2,7 +2,9 @@
 .ranking-page-container {
   padding: 24px;
   max-width: 1200px;
-  margin: 0 auto;
+  /* 🔥 CORREÇÃO DA SOBREPOSIÇÃO NO DESKTOP: Respeita a Sidebar de 260px e o Header de 70px */
+  margin-left: 260px;
+  margin-top: 70px; 
   animation: fadeIn 0.4s ease;
 }
 
@@ -83,6 +85,124 @@
   border-color: var(--primary-color, #c333ff);
 }
 
+/* =======================================
+   🏆 PÓDIO TOP 3 (PREMIUM VISUAL)
+======================================= */
+.podium-container {
+  display: flex;
+  justify-content: center;
+  align-items: flex-end;
+  gap: 24px;
+  margin-bottom: 40px;
+  margin-top: 30px;
+}
+
+.podium-card {
+  background-color: #0a0a0a;
+  border: 1px solid #222;
+  border-radius: 16px;
+  padding: 24px 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  width: 260px;
+  position: relative;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.3);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.podium-card:hover {
+  transform: translateY(-8px);
+}
+
+/* Alturas e Destaques Diferenciados para o Pódio */
+.podium-card.ouro {
+  height: 310px;
+  border-color: rgba(255, 215, 0, 0.5);
+  box-shadow: 0 10px 40px rgba(255, 215, 0, 0.15);
+  z-index: 3;
+}
+
+.podium-card.prata {
+  height: 270px;
+  border-color: rgba(192, 192, 192, 0.5);
+  box-shadow: 0 8px 30px rgba(192, 192, 192, 0.1);
+  z-index: 2;
+}
+
+.podium-card.bronze {
+  height: 240px;
+  border-color: rgba(205, 127, 50, 0.5);
+  box-shadow: 0 8px 30px rgba(205, 127, 50, 0.1);
+  z-index: 1;
+}
+
+/* Coroa Exclusiva para o 1º Lugar */
+.podium-crown {
+  position: absolute;
+  top: -24px;
+  color: #ffd700;
+  filter: drop-shadow(0 0 12px rgba(255, 215, 0, 0.6));
+  animation: float 3s ease-in-out infinite;
+}
+
+@keyframes float {
+  0% { transform: translateY(0); }
+  50% { transform: translateY(-5px); }
+  100% { transform: translateY(0); }
+}
+
+.podium-avatar {
+  width: 75px;
+  height: 75px;
+  border-radius: 50%;
+  background: #222;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.8rem;
+  font-weight: bold;
+  color: #fff;
+  margin-bottom: 16px;
+  border: 4px solid #333;
+}
+
+.podium-card.ouro .podium-avatar { border-color: #ffd700; background: rgba(255, 215, 0, 0.1); color: #ffd700; }
+.podium-card.prata .podium-avatar { border-color: #c0c0c0; background: rgba(192, 192, 192, 0.1); color: #c0c0c0; }
+.podium-card.bronze .podium-avatar { border-color: #cd7f32; background: rgba(205, 127, 50, 0.1); color: #cd7f32; }
+
+.podium-username {
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: #e5e5e5;
+  margin-bottom: 6px;
+}
+
+.podium-sales-count {
+  font-size: 0.85rem;
+  color: #a3a3a3;
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.podium-revenue {
+  font-size: 1.4rem;
+  font-weight: 800;
+  color: #22c55e;
+  margin-top: auto;
+  background: rgba(34, 197, 94, 0.1);
+  padding: 10px 14px;
+  border-radius: 10px;
+  width: 100%;
+}
+
+.podium-card.ouro .podium-revenue { color: #ffd700; background: rgba(255, 215, 0, 0.1); }
+.podium-card.prata .podium-revenue { color: #fff; background: rgba(255, 255, 255, 0.05); }
+.podium-card.bronze .podium-revenue { color: #cd7f32; background: rgba(205, 127, 50, 0.1); }
+
 /* CARTÃO DA TABELA */
 .ranking-card {
   background-color: #0a0a0a;
@@ -153,21 +273,37 @@
   font-weight: bold;
 }
 
-/* VALOR FATURADO */
+/* VALOR FATURADO E DETALHES */
 .faturamento-cell {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 4px;
+}
+
+.faturamento-valor {
   font-weight: 700;
   color: #fff;
   display: flex;
   align-items: center;
   justify-content: flex-end;
   gap: 8px;
+  font-size: 1.05rem;
+}
+
+.vendas-detalhe {
+  font-size: 0.8rem;
+  color: #a3a3a3;
+  display: flex;
+  align-items: center;
+  gap: 4px;
 }
 
 .trend-icon {
   color: #22c55e; /* Verde indicando crescimento/lucro */
 }
 
-/* DESTAQUES DO TOP 3 (MEDALHAS E CORES) */
+/* DESTAQUES DE POSIÇÃO */
 .posicao-badge {
   display: inline-flex;
   align-items: center;
@@ -180,27 +316,9 @@
   color: #a3a3a3;
 }
 
-.posicao-badge.ouro {
-  background: rgba(255, 215, 0, 0.15);
-  color: #ffd700;
-  border: 1px solid rgba(255, 215, 0, 0.3);
-}
-
-.posicao-badge.prata {
-  background: rgba(192, 192, 192, 0.15);
-  color: #c0c0c0;
-  border: 1px solid rgba(192, 192, 192, 0.3);
-}
-
-.posicao-badge.bronze {
-  background: rgba(205, 127, 50, 0.15);
-  color: #cd7f32;
-  border: 1px solid rgba(205, 127, 50, 0.3);
-}
-
-/* Destaque sutil na linha inteira do TOP 1 */
-.rank-row.rank-1 td {
-  background: linear-gradient(90deg, rgba(255, 215, 0, 0.03), transparent);
+.posicao-badge.comum {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid #333;
 }
 
 /* ESTADOS VAZIOS E LOADING */
@@ -242,9 +360,20 @@
 /* =======================================
    📱 RESPONSIVIDADE (MOBILE & TABLET)
 ======================================= */
+@media (max-width: 992px) {
+  /* Se a tela for média, empurra o pódio para flex-wrap */
+  .podium-container {
+    flex-wrap: wrap;
+    align-items: center;
+  }
+}
+
 @media (max-width: 768px) {
   .ranking-page-container {
     padding: 16px;
+    margin-top: 60px; /* Header mobile costuma ser menor */
+    /* 🔥 CORREÇÃO MOBILE: Remove a margem da sidebar porque ela fica oculta! */
+    margin-left: 0; 
   }
 
   .ranking-header {
@@ -265,6 +394,28 @@
 
   .ranking-select {
     width: 100%;
+  }
+
+  .podium-container {
+    flex-direction: column;
+    align-items: center;
+    gap: 16px;
+  }
+
+  /* No mobile, o pódio fica um em cima do outro com o Ouro no topo */
+  .podium-card {
+    width: 100%;
+    max-width: 320px;
+    height: auto !important;
+    padding: 20px;
+  }
+
+  .podium-card.ouro { order: 1; }
+  .podium-card.prata { order: 2; }
+  .podium-card.bronze { order: 3; }
+
+  .podium-crown {
+    top: -18px;
   }
 
   .ranking-table th, .ranking-table td {
