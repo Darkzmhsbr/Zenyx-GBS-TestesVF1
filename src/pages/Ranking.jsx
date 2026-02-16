@@ -4,7 +4,7 @@ import { rankingService } from '../services/api'; // Importa o nosso mensageiro
 import './Ranking.css';
 
 export function Ranking() {
-  // Pegamos o mês e ano atuais como padrão inicial
+  // Pegamos o mês e ano atuais como padrão inicial para os filtros
   const dataAtual = new Date();
   const [mesSelecionado, setMesSelecionado] = useState(dataAtual.getMonth() + 1);
   const [anoSelecionado, setAnoSelecionado] = useState(dataAtual.getFullYear());
@@ -12,7 +12,7 @@ export function Ranking() {
   const [rankingData, setRankingData] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  // Lista de meses para o Filtro
+  // Lista de meses para o Filtro (Dropdown)
   const meses = [
     { valor: 1, nome: 'Janeiro' },
     { valor: 2, nome: 'Fevereiro' },
@@ -31,7 +31,9 @@ export function Ranking() {
   // Gera uma lista de anos (do ano passado até 2 anos no futuro)
   const anos = Array.from({ length: 4 }, (_, i) => dataAtual.getFullYear() - 1 + i);
 
-  // Função que busca os dados lá do nosso servidor (main.py)
+  // ==========================================
+  // 📡 INTEGRAÇÃO COM A API DO BACKEND
+  // ==========================================
   const carregarRanking = async () => {
     setLoading(true);
     try {
@@ -49,7 +51,7 @@ export function Ranking() {
     }
   };
 
-  // Toda vez que o Mês ou Ano mudar, a gente busca os dados de novo!
+  // Toda vez que o Mês ou Ano mudar, a gente busca os dados de novo automaticamente!
   useEffect(() => {
     carregarRanking();
   }, [mesSelecionado, anoSelecionado]);
@@ -62,7 +64,7 @@ export function Ranking() {
     }).format(valor);
   };
 
-  // Ícones dinâmicos para a Tabela (Posições)
+  // Ícones dinâmicos para a Tabela (Medalhas nas Posições)
   const renderPosicao = (posicao) => {
     if (posicao === 1) return <div className="posicao-badge ouro"><Trophy size={18} /> 1º</div>;
     if (posicao === 2) return <div className="posicao-badge prata"><Medal size={18} /> 2º</div>;
@@ -94,7 +96,7 @@ export function Ranking() {
           </div>
         )}
 
-        {/* 1º LUGAR - OURO (Fica no centro, maior e com coroa) */}
+        {/* 1º LUGAR - OURO (Fica no centro, maior e com coroa flutuante) */}
         {top1 && (
           <div className="podium-card ouro">
             <Crown size={36} className="podium-crown" />
@@ -124,7 +126,9 @@ export function Ranking() {
 
   return (
     <div className="ranking-page-container">
-      {/* CABEÇALHO */}
+      {/* ==========================================
+          CABEÇALHO E FILTROS 
+          ========================================== */}
       <div className="ranking-header">
         <div className="ranking-title">
           <div className="icon-wrapper">
@@ -136,7 +140,7 @@ export function Ranking() {
           </div>
         </div>
 
-        {/* FILTROS */}
+        {/* FILTROS DE DATA ALINHADOS */}
         <div className="ranking-filters">
           <div className="filter-group">
             <Calendar size={18} className="filter-icon" />
@@ -166,6 +170,9 @@ export function Ranking() {
         </div>
       </div>
 
+      {/* ==========================================
+          CONTEÚDO PRINCIPAL (LOADING, PÓDIO E TABELA) 
+          ========================================== */}
       {loading ? (
         <div className="ranking-card">
           <div className="ranking-loading">
@@ -175,7 +182,7 @@ export function Ranking() {
         </div>
       ) : rankingData.length > 0 ? (
         <>
-          {/* 🔥 NOSSO PÓDIO DE DESTAQUE */}
+          {/* 🔥 NOSSO PÓDIO DE DESTAQUE SUPERIOR */}
           {renderPodio()}
 
           {/* ÁREA DA TABELA (Lista Completa) */}
@@ -184,19 +191,25 @@ export function Ranking() {
               <table className="ranking-table">
                 <thead>
                   <tr>
-                    <th width="15%">Posição</th>
-                    <th width="50%">Usuário (Username)</th>
-                    <th width="35%" className="text-right">Desempenho</th>
+                    {/* As larguras agora são tratadas de forma inteligente pelo CSS */}
+                    <th>Posição</th>
+                    <th>Usuário (Username)</th>
+                    <th className="text-right">Desempenho</th>
                   </tr>
                 </thead>
                 <tbody>
                   {rankingData.map((item) => (
                     <tr key={item.username} className={`rank-row rank-${item.posicao}`}>
+                      {/* Posição */}
                       <td>{renderPosicao(item.posicao)}</td>
+                      
+                      {/* Avatar e Nome */}
                       <td className="user-cell">
                         <div className="user-avatar">{item.username.charAt(0).toUpperCase()}</div>
                         <span className="user-name">@{item.username}</span>
                       </td>
+                      
+                      {/* Faturamento e Quantidade de Vendas (Alinhado à direita) */}
                       <td className="faturamento-cell">
                         <span className="faturamento-valor">
                           <TrendingUp size={16} className="trend-icon" />
@@ -214,6 +227,7 @@ export function Ranking() {
           </div>
         </>
       ) : (
+        /* ESTADO VAZIO: Nenhuma venda no mês selecionado */
         <div className="ranking-card">
           <div className="ranking-empty">
             <Trophy size={48} className="empty-icon" />

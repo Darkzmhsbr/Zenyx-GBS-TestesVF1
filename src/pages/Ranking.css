@@ -48,10 +48,10 @@
   margin: 0;
 }
 
-/* GRUPO DE FILTROS */
+/* GRUPO DE FILTROS - 🔥 AJUSTADO */
 .ranking-filters {
   display: flex;
-  gap: 12px;
+  gap: 16px; /* Aumentei um pouco o gap entre os filtros */
 }
 
 .filter-group {
@@ -62,23 +62,32 @@
 
 .filter-icon {
   position: absolute;
-  left: 12px;
+  left: 14px; /* Afastei um pouco mais da borda */
   color: #a3a3a3;
   pointer-events: none;
+  z-index: 2; /* Garante que o ícone fique acima de fundos */
 }
 
 .ranking-select {
   appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
   background-color: #161616;
   border: 1px solid #333;
   color: #fff;
-  padding: 10px 16px 10px 40px;
+  /* 🔥 CORREÇÃO DA SOBREPOSIÇÃO: 45px na esquerda garante que o texto fique longe do ícone */
+  padding: 10px 35px 10px 45px; 
   border-radius: 8px;
-  font-size: 0.9rem;
+  font-size: 0.95rem;
   outline: none;
   cursor: pointer;
   transition: border-color 0.2s;
-  min-width: 140px;
+  min-width: 150px; /* Largura mínima ajustada */
+  /* Adiciona a setinha customizada via background-image */
+  background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23a3a3a3' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  background-size: 16px;
 }
 
 .ranking-select:focus, .ranking-select:hover {
@@ -213,16 +222,18 @@
   box-shadow: 0 8px 30px rgba(0, 0, 0, 0.2);
 }
 
-/* RESPONSIVIDADE DA TABELA (SCROLL LATERAL EM MOBILE) */
+/* RESPONSIVIDADE DA TABELA E ALINHAMENTOS - 🔥 AJUSTADO */
 .table-responsive {
   width: 100%;
   overflow-x: auto;
+  -webkit-overflow-scrolling: touch; /* Rolagem suave no iOS */
 }
 
 .ranking-table {
   width: 100%;
   border-collapse: collapse;
   text-align: left;
+  min-width: 600px; /* Garante que não esprema muito os dados no mobile */
 }
 
 .ranking-table th {
@@ -231,21 +242,28 @@
   font-size: 0.85rem;
   font-weight: 600;
   text-transform: uppercase;
-  padding: 16px 20px;
+  padding: 18px 24px; /* Mais respiro vertical */
   border-bottom: 1px solid #222;
   white-space: nowrap;
 }
 
 .ranking-table td {
-  padding: 16px 20px;
+  padding: 18px 24px; /* Mais respiro vertical */
   border-bottom: 1px solid #1a1a1a;
   color: #e5e5e5;
   font-size: 0.95rem;
-  vertical-align: middle;
+  vertical-align: middle; /* Garante alinhamento vertical perfeito */
 }
 
 .ranking-table tbody tr:hover {
   background-color: #141414;
+}
+
+/* Centraliza o conteúdo da coluna de Posição */
+.ranking-table th:first-child,
+.ranking-table td:first-child {
+  text-align: center;
+  width: 120px; /* Largura fixa para manter alinhado */
 }
 
 .text-right {
@@ -256,21 +274,22 @@
 .user-cell {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 14px;
   font-weight: 500;
 }
 
 .user-avatar {
-  width: 32px;
-  height: 32px;
+  width: 36px; /* Levemente maior */
+  height: 36px;
   background-color: #222;
   color: #fff;
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 0.85rem;
+  font-size: 0.9rem;
   font-weight: bold;
+  flex-shrink: 0; /* Impede o avatar de ser esmagado */
 }
 
 /* VALOR FATURADO E DETALHES */
@@ -278,6 +297,7 @@
   display: flex;
   flex-direction: column;
   align-items: flex-end;
+  justify-content: center; /* Centraliza no eixo vertical da td */
   gap: 4px;
 }
 
@@ -307,6 +327,7 @@
 .posicao-badge {
   display: inline-flex;
   align-items: center;
+  justify-content: center;
   gap: 6px;
   padding: 6px 12px;
   border-radius: 20px;
@@ -314,6 +335,7 @@
   font-size: 0.85rem;
   background-color: #222;
   color: #a3a3a3;
+  min-width: 60px; /* Garante que os badges tenham o mesmo tamanho */
 }
 
 .posicao-badge.comum {
@@ -323,7 +345,7 @@
 
 /* ESTADOS VAZIOS E LOADING */
 .ranking-loading, .ranking-empty {
-  padding: 60px 20px;
+  padding: 80px 20px;
   text-align: center;
   color: #a3a3a3;
   display: flex;
@@ -382,18 +404,22 @@
     gap: 16px;
   }
 
+  /* 🔥 AJUSTE DOS FILTROS NO MOBILE */
   .ranking-filters {
     width: 100%;
-    flex-wrap: wrap;
+    flex-direction: row; /* Mantém lado a lado */
+    flex-wrap: nowrap; /* Não quebra linha se possível */
+    gap: 10px;
   }
 
   .filter-group {
     flex: 1;
-    min-width: calc(50% - 6px); /* 2 filtros lado a lado no mobile */
+    width: 50%;
   }
 
   .ranking-select {
     width: 100%;
+    min-width: 100%; /* Força preencher o espaço do flex */
   }
 
   .podium-container {
@@ -419,6 +445,6 @@
   }
 
   .ranking-table th, .ranking-table td {
-    padding: 12px 16px;
+    padding: 14px 16px;
   }
 }
