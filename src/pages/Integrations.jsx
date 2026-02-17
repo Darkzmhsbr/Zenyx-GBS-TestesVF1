@@ -134,11 +134,26 @@ export function Integrations() {
 
   // Salvar token no modal
   const salvarToken = async () => {
-    if (!modalToken || modalToken.trim().length < 10) {
+    const token = modalToken.trim();
+    
+    // Validação básica de tamanho
+    if (!token || token.length < 20) {
       return Swal.fire({
         title: 'Token inválido',
-        text: 'O token deve ter pelo menos 10 caracteres.',
+        text: 'O token deve ter pelo menos 20 caracteres.',
         icon: 'warning',
+        background: '#0d0b14',
+        color: '#e2e8f0',
+        confirmButtonColor: '#10b981'
+      });
+    }
+
+    // Validação específica por gateway
+    if (modalGateway === 'wiinpay' && !token.startsWith('eyJ')) {
+      return Swal.fire({
+        title: 'API Key WiinPay inválida',
+        text: 'A API Key da WiinPay deve ser um token JWT (começa com "eyJ..."). Verifique se copiou o token completo.',
+        icon: 'error',
         background: '#0d0b14',
         color: '#e2e8f0',
         confirmButtonColor: '#10b981'
@@ -149,15 +164,15 @@ export function Integrations() {
     try {
       if (modalGateway === 'pushinpay') {
         if (modalMode === 'edit') {
-          await integrationService.updatePushinToken(selectedBot.id, modalToken.trim());
+          await integrationService.updatePushinToken(selectedBot.id, token);
         } else {
-          await integrationService.savePushinToken(selectedBot.id, modalToken.trim());
+          await integrationService.savePushinToken(selectedBot.id, token);
         }
       } else if (modalGateway === 'wiinpay') {
         if (modalMode === 'edit') {
-          await integrationService.updateWiinpayToken(selectedBot.id, modalToken.trim());
+          await integrationService.updateWiinpayToken(selectedBot.id, token);
         } else {
-          await integrationService.saveWiinpayToken(selectedBot.id, modalToken.trim());
+          await integrationService.saveWiinpayToken(selectedBot.id, token);
         }
       }
 
