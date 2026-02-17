@@ -432,14 +432,16 @@ export const integrationService = {
     }
   },
   
+  // =========================================================
+  // 💳 PUSHINPAY
+  // =========================================================
   getPushinStatus: async (botId) => {
     if (!botId) return { status: 'desconectado' };
-    
     try {
       const response = await api.get(`/api/admin/integrations/pushinpay/${botId}`);
       return response.data;
     } catch (error) {
-      console.error("Erro ao buscar status Pushin Pay:", error);
+      console.error("Erro ao buscar status PushinPay:", error);
       return { status: 'desconectado' };
     }
   },
@@ -449,7 +451,75 @@ export const integrationService = {
       const response = await api.post(`/api/admin/integrations/pushinpay/${botId}`, { token });
       return response.data;
     } catch (error) {
-      console.error("Erro ao salvar token Pushin Pay:", error);
+      console.error("Erro ao salvar token PushinPay:", error);
+      throw error;
+    }
+  },
+
+  updatePushinToken: async (botId, token) => {
+    try {
+      const response = await api.put(`/api/admin/integrations/pushinpay/${botId}`, { token });
+      return response.data;
+    } catch (error) {
+      console.error("Erro ao atualizar token PushinPay:", error);
+      throw error;
+    }
+  },
+
+  // =========================================================
+  // 💰 WIINPAY
+  // =========================================================
+  getWiinpayStatus: async (botId) => {
+    if (!botId) return { status: 'desconectado' };
+    try {
+      const response = await api.get(`/api/admin/integrations/wiinpay/${botId}`);
+      return response.data;
+    } catch (error) {
+      console.error("Erro ao buscar status WiinPay:", error);
+      return { status: 'desconectado' };
+    }
+  },
+
+  saveWiinpayToken: async (botId, token) => {
+    try {
+      const response = await api.post(`/api/admin/integrations/wiinpay/${botId}`, { token });
+      return response.data;
+    } catch (error) {
+      console.error("Erro ao salvar API Key WiinPay:", error);
+      throw error;
+    }
+  },
+
+  updateWiinpayToken: async (botId, token) => {
+    try {
+      const response = await api.put(`/api/admin/integrations/wiinpay/${botId}`, { token });
+      return response.data;
+    } catch (error) {
+      console.error("Erro ao atualizar API Key WiinPay:", error);
+      throw error;
+    }
+  },
+
+  // =========================================================
+  // 🔄 MULTI-GATEWAY CONFIG (CONTINGÊNCIA)
+  // =========================================================
+  getGatewayConfig: async (botId) => {
+    if (!botId) return null;
+    try {
+      const response = await api.get(`/api/admin/integrations/gateway-config/${botId}`);
+      return response.data;
+    } catch (error) {
+      console.error("Erro ao buscar config de gateways:", error);
+      return null;
+    }
+  },
+
+  updateGatewayConfig: async (botId, data) => {
+    try {
+      const response = await api.put(`/api/admin/integrations/gateway-config/${botId}`, data);
+      return response.data;
+    } catch (error) {
+      console.error("Erro ao atualizar config de gateways:", error);
       throw error;
     }
   }

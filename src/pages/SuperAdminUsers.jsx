@@ -26,7 +26,7 @@ export function SuperAdminUsers() {
   const [actionLoading, setActionLoading] = useState(false);
 
   // Estado para edição de dados extras
-  const [editData, setEditData] = useState({ taxa_venda: 60, pushin_pay_id: '' });
+  const [editData, setEditData] = useState({ taxa_venda: 60, pushin_pay_id: '', wiinpay_user_id: '' });
 
   useEffect(() => {
     loadUsers();
@@ -94,7 +94,8 @@ export function SuperAdminUsers() {
       // Pegamos o que veio do banco e jogamos no editData para aparecer na caixa
       setEditData({
         taxa_venda: details.user.taxa_venda || 60,
-        pushin_pay_id: details.user.pushin_pay_id || ''
+        pushin_pay_id: details.user.pushin_pay_id || '',
+        wiinpay_user_id: details.user.wiinpay_user_id || ''
       });
 
       setModalType('details');
@@ -115,7 +116,8 @@ export function SuperAdminUsers() {
     try {
         await superAdminService.updateUser(selectedUser.user.id, {
             taxa_venda: parseInt(editData.taxa_venda),
-            pushin_pay_id: editData.pushin_pay_id
+            pushin_pay_id: editData.pushin_pay_id,
+            wiinpay_user_id: editData.wiinpay_user_id
         });
         
         // Atualiza visualmente o objeto selecionado na tela para não precisar recarregar
@@ -124,7 +126,8 @@ export function SuperAdminUsers() {
             user: {
                 ...prev.user,
                 taxa_venda: editData.taxa_venda,
-                pushin_pay_id: editData.pushin_pay_id
+                pushin_pay_id: editData.pushin_pay_id,
+                wiinpay_user_id: editData.wiinpay_user_id
             }
         }));
         
@@ -429,6 +432,25 @@ export function SuperAdminUsers() {
                                     value={editData.pushin_pay_id}
                                     onChange={(e) => setEditData({...editData, pushin_pay_id: e.target.value})}
                                     placeholder="Ex: 9D4FA0F6-..."
+                                    style={{ 
+                                        width: '100%', 
+                                        padding: '10px', 
+                                        background: '#1a1a1a',
+                                        border: '1px solid #444', 
+                                        color: '#fff',
+                                        borderRadius: '4px' 
+                                    }}
+                                />
+                            </div>
+                            <div>
+                                <label style={{ fontSize: '13px', display: 'block', marginBottom: '5px', color: '#ccc' }}>
+                                    WiinPay User ID (Destino do Lucro)
+                                </label>
+                                <input 
+                                    type="text" 
+                                    value={editData.wiinpay_user_id}
+                                    onChange={(e) => setEditData({...editData, wiinpay_user_id: e.target.value})}
+                                    placeholder="Ex: cmllismb726j1od..."
                                     style={{ 
                                         width: '100%', 
                                         padding: '10px', 

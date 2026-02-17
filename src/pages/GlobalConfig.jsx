@@ -15,6 +15,7 @@ export function GlobalConfig() {
   const [config, setConfig] = useState({
     default_fee: 60, // 60 centavos
     master_pushin_pay_id: '',
+    master_wiinpay_user_id: '',
     maintenance_mode: false
   });
 
@@ -36,6 +37,7 @@ export function GlobalConfig() {
         setConfig({
           default_fee: data.default_fee || 60,
           master_pushin_pay_id: data.master_pushin_pay_id || '',
+          master_wiinpay_user_id: data.master_wiinpay_user_id || '',
           maintenance_mode: data.maintenance_mode || false
         });
       }
@@ -144,7 +146,18 @@ export function GlobalConfig() {
                     value={config.master_pushin_pay_id}
                     onChange={(e) => setConfig({...config, master_pushin_pay_id: e.target.value})}
                   />
-                  <small>Para onde vai o lucro das taxas (Split).</small>
+                  <small>Para onde vai o lucro das taxas (Split PushinPay).</small>
+                </div>
+
+                <div className="form-group">
+                  <label>WiinPay User ID (Conta Mestra)</label>
+                  <input 
+                    type="text" 
+                    placeholder="Ex: cmllismb726j1od0kzd76mzau..."
+                    value={config.master_wiinpay_user_id}
+                    onChange={(e) => setConfig({...config, master_wiinpay_user_id: e.target.value})}
+                  />
+                  <small>Para onde vai o lucro das taxas (Split WiinPay).</small>
                 </div>
               </div>
 
