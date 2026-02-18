@@ -72,12 +72,12 @@ export function MiniAppCategory() {
         const sepTextColor = category.separator_text_color || (sepColor.includes('gradient') ? '#fff' : '#000');
         const sepBtnTextColor = category.separator_btn_text_color || '#fff';
 
-        // ✨ NEON GLOW: Extrai cor base para o brilho (funciona com hex e gradientes)
+        // ✨ NEON GLOW: Usa cor personalizada ou fallback para cor da barra
         const isNeon = category.separator_is_neon || false;
-        let neonColor = sepColor;
-        // Se for gradiente, extrai a primeira cor hex para usar no glow
-        if (sepColor.includes('gradient')) {
-            const hexMatch = sepColor.match(/#[0-9A-Fa-f]{3,8}/);
+        let neonColor = category.separator_neon_color || sepColor;
+        // Se a cor do neon for gradiente, extrai a primeira cor hex
+        if (neonColor.includes('gradient')) {
+            const hexMatch = neonColor.match(/#[0-9A-Fa-f]{3,8}/);
             neonColor = hexMatch ? hexMatch[0] : '#ffffff';
         }
         

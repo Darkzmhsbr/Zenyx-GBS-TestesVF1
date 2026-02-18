@@ -247,7 +247,8 @@ export function BotConfig() {
           separator_text_color: '#ffffff',
           separator_btn_text_color: '#ffffff',
           // ✨ NEON GLOW
-          separator_is_neon: false
+          separator_is_neon: false,
+          separator_neon_color: ''
       });
       setIsEditingCat(true);
   };
@@ -261,7 +262,8 @@ export function BotConfig() {
           separator_btn_text_color: cat.separator_btn_text_color || '#ffffff',
           model_name_color: cat.model_name_color || '#ffffff',
           model_desc_color: cat.model_desc_color || '#cccccc',
-          separator_is_neon: cat.separator_is_neon || false
+          separator_is_neon: cat.separator_is_neon || false,
+          separator_neon_color: cat.separator_neon_color || ''
       }); 
       setIsEditingCat(true);
   };
@@ -291,7 +293,8 @@ export function BotConfig() {
               // Força o envio das cores caso o spread operator (...) tenha falhado
               separator_text_color: currentCat.separator_text_color,
               separator_btn_text_color: currentCat.separator_btn_text_color,
-              separator_is_neon: currentCat.separator_is_neon || false
+              separator_is_neon: currentCat.separator_is_neon || false,
+              separator_neon_color: currentCat.separator_neon_color || null
           };
 
           await miniappService.createCategory(payload);
@@ -889,8 +892,22 @@ export function BotConfig() {
                                                         </span>
                                                     </label>
                                                     <small style={{color:'#888', marginTop:6, display:'block', marginLeft:30}}>
-                                                        Adiciona um brilho neon automático baseado na cor da barra.
+                                                        Adiciona um brilho neon personalizado ao redor da barra separadora.
                                                     </small>
+
+                                                    {/* Cor do Neon (só aparece quando ativado) */}
+                                                    {currentCat.separator_is_neon && (
+                                                        <div style={{marginTop:12, marginLeft:30}}>
+                                                            <ColorPreview 
+                                                                label="Cor do Brilho Neon" 
+                                                                value={currentCat.separator_neon_color} 
+                                                                onChange={(val) => setCurrentCat({...currentCat, separator_neon_color: val})} 
+                                                            />
+                                                            <small style={{color:'#888', marginTop:4, display:'block'}}>
+                                                                Escolha uma cor vibrante para o efeito glow. Se vazio, usa a cor da barra.
+                                                            </small>
+                                                        </div>
+                                                    )}
                                                 </div>
                                                 
                                                 {/* Preview da Barra */}
@@ -902,7 +919,7 @@ export function BotConfig() {
                                                         display:'flex', alignItems:'center', justifyContent:'space-between',
                                                         gap:15, flexWrap:'wrap', borderRadius:8,
                                                         ...(currentCat.separator_is_neon ? {
-                                                            boxShadow: `0 0 15px ${currentCat.separator_color || '#ffffff'}, 0 0 30px ${currentCat.separator_color || '#ffffff'}50`
+                                                            boxShadow: `0 0 15px ${currentCat.separator_neon_color || currentCat.separator_color || '#ffffff'}, 0 0 30px ${currentCat.separator_neon_color || currentCat.separator_color || '#ffffff'}50`
                                                         } : {})
                                                     }}>
                                                         <div style={{display:'flex', alignItems:'center', gap:12, flex:1}}>
