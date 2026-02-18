@@ -71,6 +71,15 @@ export function MiniAppCategory() {
         // Se a cor do texto não estiver definida, calcula contraste básico
         const sepTextColor = category.separator_text_color || (sepColor.includes('gradient') ? '#fff' : '#000');
         const sepBtnTextColor = category.separator_btn_text_color || '#fff';
+
+        // ✨ NEON GLOW: Extrai cor base para o brilho (funciona com hex e gradientes)
+        const isNeon = category.separator_is_neon || false;
+        let neonColor = sepColor;
+        // Se for gradiente, extrai a primeira cor hex para usar no glow
+        if (sepColor.includes('gradient')) {
+            const hexMatch = sepColor.match(/#[0-9A-Fa-f]{3,8}/);
+            neonColor = hexMatch ? hexMatch[0] : '#ffffff';
+        }
         
         return (
             <div className="separator-bar" style={{
@@ -82,7 +91,11 @@ export function MiniAppCategory() {
                 justifyContent: 'space-between',
                 gap: 12,
                 flexWrap: 'wrap',
-                margin: '0'
+                margin: '0',
+                ...(isNeon ? {
+                    boxShadow: `0 0 15px ${neonColor}, 0 0 30px ${neonColor}50`,
+                    border: `1px solid ${neonColor}80`
+                } : {})
             }}>
                 <div style={{display:'flex', alignItems:'center', gap:12, flex:1, minWidth:0}}>
                     {category.separator_logo_url && (

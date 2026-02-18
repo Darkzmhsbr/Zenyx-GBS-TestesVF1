@@ -245,7 +245,9 @@ export function BotConfig() {
           model_img_shape: 'square',
           // 🆕 CORES NOVAS DO SEPARADOR (Default)
           separator_text_color: '#ffffff',
-          separator_btn_text_color: '#ffffff'
+          separator_btn_text_color: '#ffffff',
+          // ✨ NEON GLOW
+          separator_is_neon: false
       });
       setIsEditingCat(true);
   };
@@ -258,7 +260,8 @@ export function BotConfig() {
           separator_text_color: cat.separator_text_color || '#ffffff',
           separator_btn_text_color: cat.separator_btn_text_color || '#ffffff',
           model_name_color: cat.model_name_color || '#ffffff',
-          model_desc_color: cat.model_desc_color || '#cccccc'
+          model_desc_color: cat.model_desc_color || '#cccccc',
+          separator_is_neon: cat.separator_is_neon || false
       }); 
       setIsEditingCat(true);
   };
@@ -287,7 +290,8 @@ export function BotConfig() {
               content_json: contentJsonParsed,
               // Força o envio das cores caso o spread operator (...) tenha falhado
               separator_text_color: currentCat.separator_text_color,
-              separator_btn_text_color: currentCat.separator_btn_text_color
+              separator_btn_text_color: currentCat.separator_btn_text_color,
+              separator_is_neon: currentCat.separator_is_neon || false
           };
 
           await miniappService.createCategory(payload);
@@ -870,6 +874,24 @@ export function BotConfig() {
                                                 <div className="form-group" style={{gridColumn:'span 2'}}>
                                                     <MediaUploader label="Logo da Barra (Opcional)" value={currentCat.separator_logo_url} onChange={(url) => setCurrentCat({...currentCat, separator_logo_url: url})} />
                                                 </div>
+
+                                                {/* ✨ CHECKBOX NEON GLOW */}
+                                                <div className="form-group" style={{gridColumn:'span 2', background:'rgba(0,0,0,0.3)', padding:15, borderRadius:8, border:'1px solid #333'}}>
+                                                    <label style={{display:'flex', alignItems:'center', gap:10, cursor:'pointer', color:'#fff', margin:0}}>
+                                                        <input 
+                                                            type="checkbox" 
+                                                            style={{width:20, height:20, accentColor:'#c333ff'}} 
+                                                            checked={currentCat.separator_is_neon || false} 
+                                                            onChange={(e) => setCurrentCat({...currentCat, separator_is_neon: e.target.checked})} 
+                                                        />
+                                                        <span style={{fontWeight:600, fontSize:'0.95rem'}}>
+                                                            ✨ Ativar Efeito Neon/Glow
+                                                        </span>
+                                                    </label>
+                                                    <small style={{color:'#888', marginTop:6, display:'block', marginLeft:30}}>
+                                                        Adiciona um brilho neon automático baseado na cor da barra.
+                                                    </small>
+                                                </div>
                                                 
                                                 {/* Preview da Barra */}
                                                 <div style={{gridColumn:'span 2', borderRadius:10, overflow:'hidden', border:'1px solid #333'}}>
@@ -878,7 +900,10 @@ export function BotConfig() {
                                                         background: currentCat.separator_color || '#ffffff',
                                                         padding:'16px 24px',
                                                         display:'flex', alignItems:'center', justifyContent:'space-between',
-                                                        gap:15, flexWrap:'wrap', borderRadius:8
+                                                        gap:15, flexWrap:'wrap', borderRadius:8,
+                                                        ...(currentCat.separator_is_neon ? {
+                                                            boxShadow: `0 0 15px ${currentCat.separator_color || '#ffffff'}, 0 0 30px ${currentCat.separator_color || '#ffffff'}50`
+                                                        } : {})
                                                     }}>
                                                         <div style={{display:'flex', alignItems:'center', gap:12, flex:1}}>
                                                             {currentCat.separator_logo_url && (
