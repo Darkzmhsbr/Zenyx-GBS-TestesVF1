@@ -159,6 +159,12 @@ export const botService = {
     } catch (error) {
       throw error.response ? error.response.data : error;
     }
+  },
+
+  // 🔁 NOVA FUNÇÃO: CLONAR BOT
+  cloneBot: async (botId, dados) => {
+    const response = await api.post(`/api/admin/bots/${botId}/clone`, dados);
+    return response.data;
   }
 };
 

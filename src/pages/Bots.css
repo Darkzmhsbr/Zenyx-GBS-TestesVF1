@@ -600,3 +600,243 @@
     grid-column: 1 / -1 !important;
   }
 }
+
+/* ============================================================ */
+/* 🔁 MODAL DE CLONAGEM DE BOT                                 */
+/* ============================================================ */
+.clone-overlay {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0, 0, 0, 0.75);
+  backdrop-filter: blur(6px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  animation: fadeIn 0.2s ease;
+}
+
+.clone-modal {
+  background: #1a1a1a;
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 16px;
+  width: 90%;
+  max-width: 520px;
+  max-height: 85vh;
+  overflow-y: auto;
+  box-shadow: 0 25px 60px rgba(0,0,0,0.5);
+  animation: slideUp 0.3s ease;
+}
+
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(30px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.clone-modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 20px 24px 10px;
+}
+
+.clone-modal-header h2 {
+  font-size: 1.2rem;
+  color: #fff;
+  margin: 0;
+}
+
+.clone-close-btn {
+  background: none;
+  border: none;
+  color: #666;
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 8px;
+  transition: all 0.2s;
+}
+
+.clone-close-btn:hover {
+  background: rgba(255,255,255,0.1);
+  color: #fff;
+}
+
+/* STEPPER (3 bolinhas) */
+.clone-stepper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 30px;
+  padding: 15px 24px;
+  position: relative;
+}
+
+.clone-stepper::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 30%;
+  right: 30%;
+  height: 2px;
+  background: #333;
+  z-index: 0;
+}
+
+.clone-step-dot {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.8rem;
+  font-weight: 700;
+  background: #222;
+  border: 2px solid #333;
+  color: #666;
+  z-index: 1;
+  transition: all 0.3s ease;
+}
+
+.clone-step-dot.active {
+  background: #10b981;
+  border-color: #10b981;
+  color: #fff;
+}
+
+.clone-step-dot.current {
+  box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.25);
+}
+
+/* BODY */
+.clone-body {
+  padding: 10px 24px 24px;
+}
+
+/* INFO BOXES (Etapa 1) */
+.clone-info-box {
+  background: rgba(16, 185, 129, 0.06);
+  border: 1px solid rgba(16, 185, 129, 0.2);
+  border-radius: 10px;
+  padding: 16px;
+  margin-bottom: 14px;
+}
+
+.clone-info-box.warn {
+  background: rgba(245, 158, 11, 0.06);
+  border-color: rgba(245, 158, 11, 0.2);
+}
+
+.clone-info-box h3 {
+  margin: 0 0 10px;
+  font-size: 0.9rem;
+  color: #fff;
+}
+
+.clone-info-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px;
+  font-size: 0.82rem;
+  color: #aaa;
+}
+
+/* FORM (Etapa 2) */
+.clone-form-group {
+  margin-bottom: 16px;
+}
+
+.clone-form-group label {
+  display: block;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #ccc;
+  margin-bottom: 6px;
+}
+
+.clone-form-group small {
+  display: block;
+  margin-top: 4px;
+  font-size: 0.78rem;
+  color: #666;
+}
+
+.clone-input {
+  width: 100%;
+  padding: 10px 14px;
+  background: #111;
+  border: 1px solid #333;
+  border-radius: 8px;
+  color: #fff;
+  font-size: 0.9rem;
+  outline: none;
+  transition: border-color 0.2s;
+  box-sizing: border-box;
+}
+
+.clone-input:focus {
+  border-color: #10b981;
+}
+
+.clone-input::placeholder {
+  color: #555;
+}
+
+/* CONFIRM (Etapa 3) */
+.clone-confirm-box {
+  background: rgba(255,255,255,0.03);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 10px;
+  padding: 18px;
+  margin-bottom: 16px;
+}
+
+.clone-confirm-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 0;
+}
+
+.clone-confirm-label {
+  font-size: 0.85rem;
+  color: #888;
+}
+
+.clone-confirm-value {
+  font-size: 0.9rem;
+  color: #fff;
+  font-weight: 600;
+}
+
+.clone-confirm-divider {
+  height: 1px;
+  background: rgba(255,255,255,0.08);
+  margin: 4px 0;
+}
+
+/* FOOTER (Botões) */
+.clone-footer {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  margin-top: 20px;
+  padding-top: 16px;
+  border-top: 1px solid rgba(255,255,255,0.06);
+}
+
+.clone-footer button {
+  flex: 1;
+}
+
+/* RESPONSIVO */
+@media (max-width: 480px) {
+  .clone-modal {
+    width: 95%;
+    max-height: 90vh;
+  }
+  
+  .clone-info-grid {
+    grid-template-columns: 1fr;
+  }
+}
