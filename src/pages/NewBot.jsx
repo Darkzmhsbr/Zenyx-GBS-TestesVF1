@@ -23,6 +23,7 @@ export function NewBot() {
   const [token, setToken] = useState('');
   const [channelId, setChannelId] = useState('');
   const [botName, setBotName] = useState('');
+  const [protectContent, setProtectContent] = useState(false);
   const [loading, setLoading] = useState(false);
 
   // Seleciona o tipo e avança para o formulário
@@ -40,7 +41,8 @@ export function NewBot() {
       const dados = {
         nome: botName || "Bot Zenyx",
         token: token.trim(),
-        id_canal_vip: channelId.trim()
+        id_canal_vip: channelId.trim(),
+        protect_content: protectContent
       };
 
       // 1. Cria o Bot
@@ -199,6 +201,43 @@ export function NewBot() {
               onChange={(e) => setChannelId(e.target.value)}
               helper="O bot deve ser ADMIN do canal. Pegue o ID com o @userinfobot."
             />
+
+            {/* 🔒 TOGGLE: PROTEGER CONTEÚDO */}
+            <div style={{
+              marginTop: 15,
+              padding: '14px 18px',
+              background: protectContent ? 'rgba(16, 185, 129, 0.08)' : 'rgba(255,255,255,0.03)',
+              border: `1px solid ${protectContent ? 'rgba(16, 185, 129, 0.3)' : '#333'}`,
+              borderRadius: 10,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              transition: 'all 0.3s ease',
+              cursor: 'pointer'
+            }}
+            onClick={() => setProtectContent(!protectContent)}
+            >
+              <div>
+                <div style={{display:'flex', alignItems:'center', gap: 8, marginBottom: 2}}>
+                  <ShieldCheck size={18} color={protectContent ? '#10b981' : '#888'}/>
+                  <span style={{fontWeight: 600, color: '#fff', fontSize: '0.9rem'}}>Proteger conteúdo</span>
+                </div>
+                <small style={{color:'#888', fontSize: '0.8rem'}}>
+                  Mensagens protegidas (não copiar/encaminhar)
+                </small>
+              </div>
+              <div style={{
+                width: 44, height: 24, borderRadius: 24, flexShrink: 0, marginLeft: 10,
+                background: protectContent ? '#10b981' : '#333',
+                position: 'relative', transition: 'all 0.3s ease'
+              }}>
+                <div style={{
+                  position:'absolute', top: 2, left: protectContent ? 22 : 2,
+                  width: 20, height: 20, borderRadius: '50%', background: '#fff',
+                  transition: 'all 0.3s ease', boxShadow: '0 2px 4px rgba(0,0,0,0.3)'
+                }}/>
+              </div>
+            </div>
 
             <div style={{ paddingTop: '20px', marginTop: '10px' }}>
               <Button onClick={handleSave} style={{ width: '100%' }} disabled={loading}>

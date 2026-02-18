@@ -70,6 +70,7 @@ export function BotConfig() {
     admin_principal_id: '',
     suporte_username: '', 
     id_canal_notificacao: '',  // ✅ Canal de Notificações
+    protect_content: false,    // 🔒 Proteção de Conteúdo
     status: 'desconectado'
   });
 
@@ -120,6 +121,7 @@ export function BotConfig() {
           admin_principal_id: currentBot.admin_principal_id || '',
           suporte_username: currentBot.suporte_username || '', 
           id_canal_notificacao: currentBot.id_canal_notificacao || '',  // ✅ Canal de Notificações
+          protect_content: currentBot.protect_content || false,         // 🔒 Proteção de Conteúdo
           status: currentBot.status || 'desconectado'
         });
 
@@ -505,6 +507,50 @@ export function BotConfig() {
                         ID do canal onde o bot enviará avisos de vendas, alterações de status e notificações.
                         O bot precisa ser <b style={{color:'#f59e0b'}}>ADMIN</b> deste canal.
                       </small>
+                    </div>
+
+                    {/* 🔒 PROTEÇÃO DE CONTEÚDO */}
+                    <div style={{
+                      marginTop: 20,
+                      padding: '16px 20px',
+                      background: config.protect_content ? 'rgba(16, 185, 129, 0.08)' : 'rgba(255,255,255,0.03)',
+                      border: `1px solid ${config.protect_content ? 'rgba(16, 185, 129, 0.3)' : 'rgba(255,255,255,0.08)'}`,
+                      borderRadius: 10,
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                      transition: 'all 0.3s ease'
+                    }}>
+                      <div>
+                        <div style={{display:'flex', alignItems:'center', gap: 8, marginBottom: 4}}>
+                          <Shield size={18} color={config.protect_content ? '#10b981' : '#888'}/>
+                          <span style={{fontWeight: 600, color: '#fff', fontSize: '0.95rem'}}>Proteger Conteúdo</span>
+                        </div>
+                        <small style={{color:'#888', lineHeight: 1.4, display:'block', maxWidth: 400}}>
+                          Quando ativo, todas as mídias e mensagens enviadas pelo bot ficam protegidas — 
+                          não podem ser encaminhadas, salvas ou copiadas pelo usuário.
+                        </small>
+                      </div>
+                      <label style={{position:'relative', display:'inline-block', width: 50, height: 26, cursor:'pointer', flexShrink: 0, marginLeft: 15}}>
+                        <input 
+                          type="checkbox" 
+                          checked={config.protect_content} 
+                          onChange={(e) => setConfig({...config, protect_content: e.target.checked})}
+                          style={{opacity: 0, width: 0, height: 0}}
+                        />
+                        <span style={{
+                          position:'absolute', top:0, left:0, right:0, bottom:0,
+                          background: config.protect_content ? '#10b981' : '#333',
+                          borderRadius: 26, transition: 'all 0.3s ease'
+                        }}>
+                          <span style={{
+                            position:'absolute', left: config.protect_content ? 26 : 3, top: 3,
+                            width: 20, height: 20, background: '#fff', borderRadius: '50%',
+                            transition: 'all 0.3s ease',
+                            boxShadow: '0 2px 4px rgba(0,0,0,0.3)'
+                          }}/>
+                        </span>
+                      </label>
                     </div>
 
                     {/* 🔥 SEÇÃO NOVA: CENTRAL DE CONEXÕES */}
