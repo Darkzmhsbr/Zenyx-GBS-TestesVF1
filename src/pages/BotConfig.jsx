@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom'; 
 import { 
   Save, ArrowLeft, MessageSquare, Key, Headphones, 
-  Smartphone, Layout, PlayCircle, Type, Plus, Trash2, Edit, Image as ImageIcon, Link, User, Palette, Shield, Radio, Wifi, CheckCircle, XCircle, AlertTriangle, Bell, ShoppingBag
+  Smartphone, Layout, PlayCircle, Type, Plus, Trash2, Edit, Image as ImageIcon, Link, User, Palette, Shield, Radio, Wifi, CheckCircle, XCircle, AlertTriangle, Bell, ShoppingBag, Layers, Grid, Square, Circle
 } from 'lucide-react'; 
 import { Button } from '../components/Button';
 import { Card, CardContent } from '../components/Card';
@@ -10,6 +10,50 @@ import { botService, miniappService, planService } from '../services/api';
 import { MediaUploader } from '../components/MediaUploader'; // 🔥 COMPONENTE DE UPLOAD
 import Swal from 'sweetalert2';
 import './Bots.css';
+
+// 🎨 COMPONENTE: Preview de Cor (Suporta hex E gradientes CSS)
+const ColorPreview = ({ value, onChange, label }) => {
+    const isGradient = value && value.includes('gradient');
+    const isValidHex = value && /^#[0-9A-Fa-f]{3,8}$/.test(value);
+    return (
+        <div className="form-group">
+            <label><Palette size={16}/> {label}</label>
+            <div style={{display:'flex', gap:8, alignItems:'center'}}>
+                <div style={{
+                    width: 44, height: 44, minWidth: 44,
+                    borderRadius: 6,
+                    border: '2px solid #444',
+                    background: value || '#000',
+                    cursor: 'pointer',
+                    position: 'relative',
+                    overflow: 'hidden'
+                }}>
+                    {/* Input color nativo só funciona com hex puro, esconde se for gradient */}
+                    {!isGradient && (
+                        <input 
+                            type="color" 
+                            value={isValidHex ? value : '#000000'} 
+                            onChange={(e) => onChange(e.target.value)} 
+                            style={{
+                                position:'absolute', top:0, left:0, 
+                                width:'100%', height:'100%', 
+                                opacity: 0, cursor:'pointer'
+                            }} 
+                        />
+                    )}
+                </div>
+                <input 
+                    className="input-field" 
+                    value={value || ''} 
+                    onChange={(e) => onChange(e.target.value)} 
+                    placeholder="Ex: #ff0000 ou linear-gradient(...)"
+                    style={{flex:1}}
+                />
+            </div>
+            {isGradient && <small style={{color:'#10b981', marginTop:4, display:'block'}}>✓ Gradiente detectado</small>}
+        </div>
+    );
+};
 
 export function BotConfig() {
   const { id } = useParams();
@@ -187,7 +231,16 @@ export function BotConfig() {
           model_img_url: '', model_name: '', model_desc: '',
           model_name_color: '#ffffff', model_desc_color: '#cccccc', 
           footer_banner_url: '', deco_lines_url: '',
-          is_direct_checkout: false, content_json: '[]'
+          is_direct_checkout: false, content_json: '[]',
+          // Mini App V2
+          items_per_page: null,
+          separator_enabled: false,
+          separator_color: '#ffffff',
+          separator_text: '',
+          separator_btn_text: '',
+          separator_btn_url: '',
+          separator_logo_url: '',
+          model_img_shape: 'square'
       });
       setIsEditingCat(true);
   };
@@ -259,8 +312,10 @@ export function BotConfig() {
           isDirectCheckout: false,
           isComicMode: false,
           isHackerMode: false,
-          comicImages: '', // Salvaremos como texto separado por vírgula
-          hackerFiles: ''  // Salvaremos como JSON textual para facilitar
+          comicImages: '',
+          hackerFiles: '',
+          // Mini App V2
+          fakeVideo: false  // Simula botão de play na imagem principal
       });
       setCurrentCat({...currentCat, content_json: JSON.stringify(items)});
   };
@@ -625,20 +680,16 @@ export function BotConfig() {
                                     </div>
                                     
                                     {/* 2. VISUAL E CORES */}
-                                    <div className="form-group">
-                                        <label><Palette size={16}/> Cor de Fundo (Página)</label>
-                                        <div style={{display:'flex', gap:5}}>
-                                            <input type="color" value={currentCat.bg_color || '#000000'} onChange={(e) => setCurrentCat({...currentCat, bg_color: e.target.value})} style={{height:40}} />
-                                            <input className="input-field" value={currentCat.bg_color} onChange={(e) => setCurrentCat({...currentCat, bg_color: e.target.value})} />
-                                        </div>
-                                    </div>
-                                    <div className="form-group">
-                                        <label><Palette size={16}/> Cor do Tema (Botões)</label>
-                                        <div style={{display:'flex', gap:5}}>
-                                            <input type="color" value={currentCat.theme_color || '#ffffff'} onChange={(e) => setCurrentCat({...currentCat, theme_color: e.target.value})} style={{height:40}} />
-                                            <input className="input-field" value={currentCat.theme_color} onChange={(e) => setCurrentCat({...currentCat, theme_color: e.target.value})} />
-                                        </div>
-                                    </div>
+                                    <ColorPreview 
+                                        label="Cor de Fundo (Página)" 
+                                        value={currentCat.bg_color} 
+                                        onChange={(val) => setCurrentCat({...currentCat, bg_color: val})} 
+                                    />
+                                    <ColorPreview 
+                                        label="Cor do Tema (Botões)" 
+                                        value={currentCat.theme_color} 
+                                        onChange={(val) => setCurrentCat({...currentCat, theme_color: val})} 
+                                    />
 
                                     {/* 3. IMAGENS GERAIS */}
                                     <div className="form-group" style={{gridColumn:'span 2'}}>
@@ -649,6 +700,140 @@ export function BotConfig() {
                                     </div>
                                     <div className="form-group">
                                         <MediaUploader label="Banner Desktop" value={currentCat.banner_desk_url} onChange={(url) => setCurrentCat({...currentCat, banner_desk_url: url})} />
+                                    </div>
+
+                                    {/* 3.1 FORMATO DA FOTO DO MODELO */}
+                                    <div className="form-group" style={{gridColumn:'span 2'}}>
+                                        <label style={{marginBottom:10, display:'block'}}><User size={16}/> Formato da Foto do Ator/Modelo</label>
+                                        <div style={{display:'flex', gap:12, flexWrap:'wrap'}}>
+                                            <button 
+                                                type="button" 
+                                                onClick={() => setCurrentCat({...currentCat, model_img_shape: 'square'})}
+                                                style={{
+                                                    flex:1, minWidth:140, padding:'14px 20px',
+                                                    background: currentCat.model_img_shape === 'square' ? 'rgba(195,51,255,0.15)' : '#0a0a0a',
+                                                    border: currentCat.model_img_shape === 'square' ? '2px solid #c333ff' : '2px solid #333',
+                                                    borderRadius:8, color: currentCat.model_img_shape === 'square' ? '#c333ff' : '#888',
+                                                    cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', gap:8, fontWeight:600, fontSize:'0.9rem'
+                                                }}
+                                            >
+                                                <Square size={18}/> Quadrado
+                                            </button>
+                                            <button 
+                                                type="button" 
+                                                onClick={() => setCurrentCat({...currentCat, model_img_shape: 'circle'})}
+                                                style={{
+                                                    flex:1, minWidth:140, padding:'14px 20px',
+                                                    background: currentCat.model_img_shape === 'circle' ? 'rgba(195,51,255,0.15)' : '#0a0a0a',
+                                                    border: currentCat.model_img_shape === 'circle' ? '2px solid #c333ff' : '2px solid #333',
+                                                    borderRadius:8, color: currentCat.model_img_shape === 'circle' ? '#c333ff' : '#888',
+                                                    cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', gap:8, fontWeight:600, fontSize:'0.9rem'
+                                                }}
+                                            >
+                                                <Circle size={18}/> Círculo
+                                            </button>
+                                        </div>
+                                    </div>
+
+                                    {/* 3.2 PAGINAÇÃO */}
+                                    <div className="form-group" style={{gridColumn:'span 2'}}>
+                                        <label><Grid size={16}/> Paginação (Itens por Página)</label>
+                                        <div style={{display:'flex', gap:10, alignItems:'center'}}>
+                                            <input 
+                                                className="input-field" 
+                                                type="number" 
+                                                min="1" 
+                                                max="50"
+                                                value={currentCat.items_per_page || ''} 
+                                                onChange={(e) => setCurrentCat({...currentCat, items_per_page: e.target.value ? parseInt(e.target.value) : null})} 
+                                                placeholder="Deixe vazio = sem paginação (todos na mesma página)"
+                                                style={{flex:1}}
+                                            />
+                                            {currentCat.items_per_page && (
+                                                <button 
+                                                    type="button" 
+                                                    onClick={() => setCurrentCat({...currentCat, items_per_page: null})}
+                                                    style={{background:'#333', border:'none', color:'#ef4444', padding:'10px 14px', borderRadius:6, cursor:'pointer', fontSize:'0.85rem'}}
+                                                >
+                                                    Desativar
+                                                </button>
+                                            )}
+                                        </div>
+                                        <small style={{color:'#888'}}>Ex: 5 = exibe 5 itens por página com navegação (1, 2, 3...).</small>
+                                    </div>
+
+                                    {/* 3.3 BARRA SEPARADORA ENTRE ITENS */}
+                                    <div className="form-group" style={{gridColumn:'span 2', background:'#0d0d0d', border:'1px solid #222', borderRadius:10, padding:20}}>
+                                        <div style={{display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:15}}>
+                                            <label style={{margin:0, display:'flex', alignItems:'center', gap:8, fontSize:'1rem', color:'#fff'}}>
+                                                <Layers size={18} color="#c333ff"/> Barra Separadora entre Itens
+                                            </label>
+                                            <label style={{display:'flex', alignItems:'center', gap:8, cursor:'pointer', margin:0}}>
+                                                <input 
+                                                    type="checkbox" 
+                                                    style={{width:20, height:20, accentColor:'#c333ff'}} 
+                                                    checked={currentCat.separator_enabled || false} 
+                                                    onChange={(e) => setCurrentCat({...currentCat, separator_enabled: e.target.checked})} 
+                                                />
+                                                <span style={{color: currentCat.separator_enabled ? '#10b981' : '#888', fontWeight:600}}>
+                                                    {currentCat.separator_enabled ? 'Ativada' : 'Desativada'}
+                                                </span>
+                                            </label>
+                                        </div>
+                                        
+                                        {currentCat.separator_enabled && (
+                                            <div style={{display:'grid', gridTemplateColumns:'1fr 1fr', gap:15}}>
+                                                <div className="form-group">
+                                                    <label>Texto da Barra</label>
+                                                    <input className="input-field" value={currentCat.separator_text || ''} onChange={(e) => setCurrentCat({...currentCat, separator_text: e.target.value})} placeholder="Ex: QUER VER O CONTEÚDO COMPLETO?" />
+                                                </div>
+                                                <div className="form-group">
+                                                    <label>Texto do Botão CTA</label>
+                                                    <input className="input-field" value={currentCat.separator_btn_text || ''} onChange={(e) => setCurrentCat({...currentCat, separator_btn_text: e.target.value})} placeholder="Ex: ASSINE AGORA" />
+                                                </div>
+                                                <div className="form-group">
+                                                    <label>Link do Botão (Opcional)</label>
+                                                    <input className="input-field" value={currentCat.separator_btn_url || ''} onChange={(e) => setCurrentCat({...currentCat, separator_btn_url: e.target.value})} placeholder="https://... (vazio = checkout do bot)" />
+                                                </div>
+                                                <ColorPreview 
+                                                    label="Cor da Barra" 
+                                                    value={currentCat.separator_color} 
+                                                    onChange={(val) => setCurrentCat({...currentCat, separator_color: val})} 
+                                                />
+                                                <div className="form-group" style={{gridColumn:'span 2'}}>
+                                                    <MediaUploader label="Logo da Barra (Opcional)" value={currentCat.separator_logo_url} onChange={(url) => setCurrentCat({...currentCat, separator_logo_url: url})} />
+                                                </div>
+                                                
+                                                {/* Preview da Barra */}
+                                                <div style={{gridColumn:'span 2', borderRadius:10, overflow:'hidden', border:'1px solid #333'}}>
+                                                    <small style={{color:'#888', display:'block', marginBottom:8}}>👁️ Preview:</small>
+                                                    <div style={{
+                                                        background: currentCat.separator_color || '#ffffff',
+                                                        padding:'16px 24px',
+                                                        display:'flex', alignItems:'center', justifyContent:'space-between',
+                                                        gap:15, flexWrap:'wrap', borderRadius:8
+                                                    }}>
+                                                        <div style={{display:'flex', alignItems:'center', gap:12, flex:1}}>
+                                                            {currentCat.separator_logo_url && (
+                                                                <img src={currentCat.separator_logo_url} style={{height:36, objectFit:'contain'}} alt="Logo" />
+                                                            )}
+                                                            <span style={{fontWeight:'bold', color:'#000', fontSize:'0.9rem'}}>
+                                                                {currentCat.separator_text || 'TEXTO DA BARRA'}
+                                                            </span>
+                                                        </div>
+                                                        {currentCat.separator_btn_text && (
+                                                            <div style={{
+                                                                background: currentCat.theme_color || '#000',
+                                                                color:'#fff', padding:'10px 20px', borderRadius:6,
+                                                                fontWeight:'bold', fontSize:'0.85rem', whiteSpace:'nowrap'
+                                                            }}>
+                                                                🔒 {currentCat.separator_btn_text}
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        )}
                                     </div>
 
                                     {/* 🔥 4. CONSTRUTOR DE ITENS DA VITRINE (AVANÇADO) 🔥 */}
@@ -689,27 +874,35 @@ export function BotConfig() {
                                                             <input className="input-field" value={item.description || ''} onChange={e => handleUpdateVitrineItem(index, 'description', e.target.value)} placeholder="Ex: Flagras naturais no litoral..." />
                                                         </div>
                                                         
-                                                        {/* Cores (Aceita Gradiente) */}
-                                                        <div className="form-group">
-                                                            <label>Cor de Fundo (Hex ou Gradiente)</label>
-                                                            <input className="input-field" value={item.bgColor || ''} onChange={e => handleUpdateVitrineItem(index, 'bgColor', e.target.value)} placeholder="Ex: #240505 ou linear-gradient(...)" />
-                                                            <small style={{color:'#888'}}>Use cores hex ou gradientes CSS.</small>
-                                                        </div>
-                                                        <div className="form-group">
-                                                            <label>Cor do Tema / Botão</label>
-                                                            <input className="input-field" value={item.themeColor || ''} onChange={e => handleUpdateVitrineItem(index, 'themeColor', e.target.value)} placeholder="Ex: #ff0000" />
-                                                        </div>
+                                                        {/* Cores (Aceita Gradiente) - COM PREVIEW */}
+                                                        <ColorPreview 
+                                                            label="Cor de Fundo (Hex ou Gradiente)" 
+                                                            value={item.bgColor || ''} 
+                                                            onChange={val => handleUpdateVitrineItem(index, 'bgColor', val)} 
+                                                        />
+                                                        <ColorPreview 
+                                                            label="Cor do Tema / Botão" 
+                                                            value={item.themeColor || ''} 
+                                                            onChange={val => handleUpdateVitrineItem(index, 'themeColor', val)} 
+                                                        />
 
                                                         {/* Imagens do Produto */}
                                                         <div className="form-group">
                                                             <MediaUploader label="Imagem Principal do Card" value={item.image_url || ''} onChange={url => handleUpdateVitrineItem(index, 'image_url', url)} type="photo" />
+                                                            <div style={{marginTop:8}}>
+                                                                <label style={{display:'flex', alignItems:'center', gap:8, cursor:'pointer', color:'#fff', margin:0, fontSize:'0.85rem'}}>
+                                                                    <input type="checkbox" style={{width:18, height:18, accentColor:'#c333ff'}} checked={item.fakeVideo || false} onChange={e => handleUpdateVitrineItem(index, 'fakeVideo', e.target.checked)} />
+                                                                    <PlayCircle size={16} color="#c333ff"/> Simular Vídeo (botão Play sobre a imagem)
+                                                                </label>
+                                                                <small style={{color:'#888', marginLeft:26, display:'block'}}>Ao clicar, direciona pro checkout ao invés de reproduzir.</small>
+                                                            </div>
                                                         </div>
                                                         <div className="form-group">
                                                             <MediaUploader label="Vídeo Preview (.mp4)" value={item.videoPreview || ''} onChange={url => handleUpdateVitrineItem(index, 'videoPreview', url)} type="video" />
                                                         </div>
                                                         
                                                         <div className="form-group">
-                                                            <MediaUploader label="Imagem do Ator/Modelo (Círculo)" value={item.modelImg || ''} onChange={url => handleUpdateVitrineItem(index, 'modelImg', url)} type="photo" />
+                                                            <MediaUploader label="Imagem do Ator/Modelo" value={item.modelImg || ''} onChange={url => handleUpdateVitrineItem(index, 'modelImg', url)} type="photo" />
                                                         </div>
                                                         <div className="form-group">
                                                             <label>Nome Ator/Modelo</label>

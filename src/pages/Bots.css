@@ -428,3 +428,151 @@
         grid-column: 1 / -1 !important;
     }
 }
+
+/* ============================================================
+   🆕 MINI APP V2 - NOVOS ESTILOS
+   ============================================================ */
+
+/* --- BARRA SEPARADORA (LOJA PÚBLICA) --- */
+.separator-bar {
+  transition: transform 0.2s;
+}
+
+.separator-bar:hover {
+  transform: scale(1.005);
+}
+
+@media (max-width: 600px) {
+  .separator-bar {
+    padding: 12px 14px !important;
+    flex-direction: column !important;
+    text-align: center;
+    gap: 10px !important;
+  }
+  
+  .separator-bar > div:first-child {
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+  
+  .separator-bar button {
+    width: 100%;
+    justify-content: center;
+  }
+}
+
+/* --- PAGINAÇÃO (LOJA PÚBLICA) --- */
+.pagination-controls {
+  padding: 10px 0;
+}
+
+.pagination-controls button {
+  transition: all 0.2s;
+}
+
+.pagination-controls button:hover {
+  transform: translateY(-2px);
+  opacity: 0.9;
+}
+
+.pagination-controls button:active {
+  transform: translateY(0);
+}
+
+@media (max-width: 480px) {
+  .pagination-controls {
+    gap: 4px !important;
+  }
+  
+  .pagination-controls button {
+    padding: 8px 12px !important;
+    min-width: 38px !important;
+    font-size: 0.85rem !important;
+  }
+}
+
+/* --- FAKE VÍDEO OVERLAY (LOJA PÚBLICA) --- */
+.vitrine-card [style*="rgba(0,0,0,0.35)"]:hover {
+  background: rgba(0,0,0,0.25) !important;
+}
+
+.vitrine-card [style*="rgba(0,0,0,0.35)"] > div {
+  transition: transform 0.2s;
+}
+
+.vitrine-card [style*="rgba(0,0,0,0.35)"]:hover > div {
+  transform: scale(1.1);
+}
+
+/* --- COLOR PREVIEW (PAINEL ADMIN) --- */
+.form-group .input-field[placeholder*="linear-gradient"] {
+  font-family: 'Consolas', 'Monaco', monospace;
+  font-size: 0.85rem;
+}
+
+/* --- SECTION TITLE (MINI APP) --- */
+.section-title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #fff;
+  margin-bottom: 20px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid #222;
+}
+
+/* --- CATEGORIES SECTION HEADER --- */
+.categories-section .section-header {
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+@media (max-width: 600px) {
+  .categories-section .section-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  
+  .categories-section .section-header button {
+    width: 100%;
+  }
+}
+
+/* --- CATEGORIES GRID MOBILE --- */
+@media (max-width: 600px) {
+  .categories-list-grid {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+/* --- VITRINE CARD RESPONSIVO --- */
+@media (max-width: 600px) {
+  .vitrine-card {
+    border-radius: 12px !important;
+  }
+  
+  .vitrine-card img {
+    max-height: 250px !important;
+  }
+}
+
+/* --- TOGGLE/SHAPE BUTTONS (ADMIN) --- */
+@media (max-width: 600px) {
+  .form-group [style*="minWidth:140"] {
+    min-width: 100% !important;
+  }
+}
+
+/* --- SEPARATOR PREVIEW (ADMIN) --- */
+@media (max-width: 600px) {
+  .form-group [style*="gridTemplateColumns"] {
+    grid-template-columns: 1fr !important;
+  }
+  
+  .form-group [style*="gridColumn:'span 2'"],
+  .form-group [style*="gridColumn: 'span 2'"] {
+    grid-column: 1 / -1 !important;
+  }
+}
