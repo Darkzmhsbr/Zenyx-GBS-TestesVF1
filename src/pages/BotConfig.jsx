@@ -229,7 +229,9 @@ export function BotConfig() {
           bg_color: '#000000', theme_color: '#ffffff',
           video_preview_url: '',
           model_img_url: '', model_name: '', model_desc: '',
-          model_name_color: '#ffffff', model_desc_color: '#cccccc', 
+          // 🔥 GARANTINDO VALORES PADRÃO PARA AS CORES 🔥
+          model_name_color: '#ffffff', 
+          model_desc_color: '#cccccc', 
           footer_banner_url: '', deco_lines_url: '',
           is_direct_checkout: false, content_json: '[]',
           // Mini App V2
@@ -241,7 +243,7 @@ export function BotConfig() {
           separator_btn_url: '',
           separator_logo_url: '',
           model_img_shape: 'square',
-          // 🆕 CORES NOVAS DO SEPARADOR
+          // 🆕 CORES NOVAS DO SEPARADOR (Default)
           separator_text_color: '#ffffff',
           separator_btn_text_color: '#ffffff'
       });
@@ -249,7 +251,15 @@ export function BotConfig() {
   };
 
   const handleEditCategory = (cat) => {
-      setCurrentCat({ ...cat }); 
+      // 🔥 CORREÇÃO: Garante que campos novos existam mesmo em categorias antigas
+      // Isso resolve o problema de "não salvar" porque o campo vinha undefined
+      setCurrentCat({ 
+          ...cat,
+          separator_text_color: cat.separator_text_color || '#ffffff',
+          separator_btn_text_color: cat.separator_btn_text_color || '#ffffff',
+          model_name_color: cat.model_name_color || '#ffffff',
+          model_desc_color: cat.model_desc_color || '#cccccc'
+      }); 
       setIsEditingCat(true);
   };
 
@@ -708,7 +718,7 @@ export function BotConfig() {
                                         onChange={(val) => setCurrentCat({...currentCat, bg_color: val})} 
                                     />
                                     <ColorPreview 
-                                        label="Cor do Tema (Botões)" 
+                                        label="Cor do Tema (Botões Gerais)" 
                                         value={currentCat.theme_color} 
                                         onChange={(val) => setCurrentCat({...currentCat, theme_color: val})} 
                                     />
@@ -724,10 +734,11 @@ export function BotConfig() {
                                         <MediaUploader label="Banner Desktop" value={currentCat.banner_desk_url} onChange={(url) => setCurrentCat({...currentCat, banner_desk_url: url})} />
                                     </div>
 
-                                    {/* 3.1 FORMATO DA FOTO DO MODELO */}
-                                    <div className="form-group" style={{gridColumn:'span 2'}}>
-                                        <label style={{marginBottom:10, display:'block'}}><User size={16}/> Formato da Foto do Ator/Modelo</label>
-                                        <div style={{display:'flex', gap:12, flexWrap:'wrap'}}>
+                                    {/* 3.1 FORMATO DA FOTO DO MODELO + CORES DO NOME */}
+                                    <div className="form-group" style={{gridColumn:'span 2', background:'#0d0d0d', padding:15, borderRadius:10}}>
+                                        <label style={{marginBottom:10, display:'block'}}><User size={16}/> Configurações do Ator/Modelo</label>
+                                        
+                                        <div style={{display:'flex', gap:12, flexWrap:'wrap', marginBottom:15}}>
                                             <button 
                                                 type="button" 
                                                 onClick={() => setCurrentCat({...currentCat, model_img_shape: 'square'})}
@@ -754,6 +765,20 @@ export function BotConfig() {
                                             >
                                                 <Circle size={18}/> Círculo
                                             </button>
+                                        </div>
+
+                                        {/* 🔥 AQUI ESTÁ A CORREÇÃO: INPUTS SEPARADOS PARA O NOME DA MODELO */}
+                                        <div style={{display:'grid', gridTemplateColumns:'1fr 1fr', gap:15}}>
+                                            <ColorPreview 
+                                                label="Cor do Nome" 
+                                                value={currentCat.model_name_color} 
+                                                onChange={(val) => setCurrentCat({...currentCat, model_name_color: val})} 
+                                            />
+                                            <ColorPreview 
+                                                label="Cor da Descrição" 
+                                                value={currentCat.model_desc_color} 
+                                                onChange={(val) => setCurrentCat({...currentCat, model_desc_color: val})} 
+                                            />
                                         </div>
                                     </div>
 
@@ -809,9 +834,10 @@ export function BotConfig() {
                                                     <label>Texto da Barra</label>
                                                     <input className="input-field" value={currentCat.separator_text || ''} onChange={(e) => setCurrentCat({...currentCat, separator_text: e.target.value})} placeholder="Ex: QUER VER O CONTEÚDO COMPLETO?" />
                                                 </div>
+                                                
                                                 {/* 🆕 COR DO TEXTO DA BARRA */}
                                                 <ColorPreview 
-                                                    label="Cor do Texto" 
+                                                    label="Cor do Texto da Barra" 
                                                     value={currentCat.separator_text_color} 
                                                     onChange={(val) => setCurrentCat({...currentCat, separator_text_color: val})} 
                                                 />
@@ -820,6 +846,7 @@ export function BotConfig() {
                                                     <label>Texto do Botão CTA</label>
                                                     <input className="input-field" value={currentCat.separator_btn_text || ''} onChange={(e) => setCurrentCat({...currentCat, separator_btn_text: e.target.value})} placeholder="Ex: ASSINE AGORA" />
                                                 </div>
+                                                
                                                 {/* 🆕 COR DO TEXTO DO BOTÃO */}
                                                 <ColorPreview 
                                                     label="Cor do Texto do Botão" 
@@ -831,11 +858,13 @@ export function BotConfig() {
                                                     <label>Link do Botão (Opcional)</label>
                                                     <input className="input-field" value={currentCat.separator_btn_url || ''} onChange={(e) => setCurrentCat({...currentCat, separator_btn_url: e.target.value})} placeholder="https://... (vazio = checkout do bot)" />
                                                 </div>
+                                                
                                                 <ColorPreview 
                                                     label="Cor da Barra (Fundo)" 
                                                     value={currentCat.separator_color} 
                                                     onChange={(val) => setCurrentCat({...currentCat, separator_color: val})} 
                                                 />
+                                                
                                                 <div className="form-group" style={{gridColumn:'span 2'}}>
                                                     <MediaUploader label="Logo da Barra (Opcional)" value={currentCat.separator_logo_url} onChange={(url) => setCurrentCat({...currentCat, separator_logo_url: url})} />
                                                 </div>

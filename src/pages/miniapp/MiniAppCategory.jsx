@@ -107,7 +107,7 @@ export function MiniAppCategory() {
                         }}
                         style={{
                             background: category.theme_color || '#000',
-                            color: sepBtnTextColor,
+                            color: sepBtnTextColor, // 🔥 AQUI ESTÁ A COR DO TEXTO DO BOTÃO
                             boxShadow: '0 2px 8px rgba(0,0,0,0.3)'
                         }}
                     >
