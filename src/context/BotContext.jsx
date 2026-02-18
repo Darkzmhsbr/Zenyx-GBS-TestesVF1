@@ -1,5 +1,5 @@
-import React, { createContext, useState, useEffect, useContext } from 'react';
-import { botService } from '../services/api';
+import React, { createContext, useState, useEffect, useContext, useRef } from 'react';
+import { botService, isSessionExpired } from '../services/api';
 // 👇 1. Importamos o Auth para saber quando o usuário muda
 import { useAuth } from './AuthContext';
 
@@ -10,6 +10,9 @@ export function BotProvider({ children }) {
   const [selectedBot, setSelectedBot] = useState(null);
   const [loading, setLoading] = useState(true);
   
+  // 🔥 Ref para evitar chamadas duplicadas simultâneas
+  const isLoadingRef = useRef(false);
+  
   // 👇 2. Pegamos o usuário atual do sistema
   const { user } = useAuth();
 
@@ -17,15 +20,34 @@ export function BotProvider({ children }) {
   useEffect(() => {
     if (user) {
       loadBots();
+    } else {
+      // 🔥 Se não tem user (logout), limpa bots sem marcar como "sem bots"
+      setBots([]);
+      setSelectedBot(null);
+      setLoading(false);
     }
   }, [user]); // 👈 O segredo está aqui: Mudou o user? Recarrega os bots!
 
   async function loadBots() {
+    // 🔥 Evita chamadas duplicadas simultâneas
+    if (isLoadingRef.current) return;
+    isLoadingRef.current = true;
+    
     try {
       setLoading(true);
       
+      // 🔥 Se a sessão expirou (401 em andamento), não faz nada
+      if (isSessionExpired()) {
+        return;
+      }
+      
       // 1. Busca TODOS os bots do banco (A API JÁ FILTRA POR DONO AGORA)
       const allBots = await botService.listBots();
+      
+      // 🔥 PROTEÇÃO: Se durante o await a sessão expirou, não atualiza estado
+      if (isSessionExpired()) {
+        return;
+      }
       
       // 🔥 CORREÇÃO FASE 2: 
       // Não filtramos mais no frontend. A API (listar_bots) já retorna 
@@ -59,11 +81,23 @@ export function BotProvider({ children }) {
       }
 
     } catch (error) {
-      console.error("Erro ao carregar bots no contexto:", error);
-      // Se der erro (ex: 401), zera a lista
-      setBots([]);
+      // 🔥 CORREÇÃO DO BUG "PAINEL FANTASMA":
+      // Se o erro é 401 (token expirado), NÃO zera a lista de bots.
+      // O interceptor do api.js já está redirecionando para /login.
+      // Zerar aqui causava o flash de "sem bots" antes do redirect.
+      const status = error?.response?.status;
+      
+      if (status === 401 || isSessionExpired()) {
+        console.warn("🔐 Sessão expirada — mantendo estado atual até redirect.");
+        // NÃO faz setBots([]) — mantém o estado anterior
+      } else {
+        console.error("Erro ao carregar bots no contexto:", error);
+        // Apenas zera se for um erro REAL (500, rede, etc) e não logout
+        setBots([]);
+      }
     } finally {
       setLoading(false);
+      isLoadingRef.current = false;
     }
   }
 

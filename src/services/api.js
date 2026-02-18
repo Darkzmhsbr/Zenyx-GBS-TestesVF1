@@ -11,10 +11,36 @@ const api = axios.create({
 });
 
 // ============================================================
+// 🔐 FLAG GLOBAL: Evita múltiplos redirects simultâneos (401)
+// Quando o token expira, várias chamadas API retornam 401 ao
+// mesmo tempo. Sem essa flag, cada uma tenta limpar o storage
+// e redirecionar, causando o "painel fantasma".
+// ============================================================
+let _isLoggingOut = false;
+
+/** Retorna true se estamos em processo de logout por token expirado */
+export function isSessionExpired() {
+  return _isLoggingOut;
+}
+
+/** Reseta a flag — chamar após login com sucesso */
+export function resetSessionState() {
+  _isLoggingOut = false;
+}
+
+// ============================================================
 // 🔐 INTERCEPTOR: ADICIONA TOKEN JWT EM TODAS AS REQUISIÇÕES
 // ============================================================
 api.interceptors.request.use(
   (config) => {
+    // 🔥 Se estamos em logout, aborta requisições pendentes silenciosamente
+    if (_isLoggingOut) {
+      const controller = new AbortController();
+      controller.abort();
+      config.signal = controller.signal;
+      return config;
+    }
+
     const token = localStorage.getItem('zenyx_token');
     
     if (token) {
@@ -36,7 +62,17 @@ api.interceptors.response.use(
   (error) => {
     // Se receber 401 (não autorizado)
     if (error.response?.status === 401) {
+      
+      // 🔥 CORREÇÃO: Só processa o PRIMEIRO 401, ignora os demais
+      if (_isLoggingOut) {
+        return Promise.reject(error);
+      }
+      
       console.warn("⚠ Token inválido ou expirado.");
+      
+      // 🔥 Marca ANTES de limpar — impede que BotContext/outros
+      // componentes reajam ao estado vazio (painel fantasma)
+      _isLoggingOut = true;
       
       // Limpa dados locais
       localStorage.removeItem('zenyx_token');
@@ -50,9 +86,14 @@ api.interceptors.response.use(
       // Se estiver na Landing Page ('/'), não faz nada, pois é pública
       if (!path.includes('/login') && !path.includes('/register') && path !== '/') {
          console.log("🔄 Redirecionando para login...");
-         window.location.href = '/login';
+         // 🔥 setTimeout garante que o redirect acontece DEPOIS de todas
+         // as promises rejeitadas serem tratadas, evitando renders intermediários
+         setTimeout(() => {
+           window.location.href = '/login';
+         }, 100);
       } else {
          console.log("⚠️ Já estamos no login/home, ignorando redirect.");
+         _isLoggingOut = false;
       }
     }
     
@@ -740,6 +781,8 @@ export const authService = {
   
   // 🔥 ATUALIZADO: Recebe turnstileToken e envia no payload
   login: async (username, password, turnstileToken) => {
+    // 🔥 Reseta flag de sessão expirada antes do login
+    resetSessionState();
     const response = await api.post('/api/auth/login', {
       username,
       password,
