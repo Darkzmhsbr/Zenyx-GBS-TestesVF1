@@ -442,6 +442,30 @@
   transform: scale(1.005);
 }
 
+/* ✨ ESTILOS NOVOS PARA TEXTO E BOTÃO DA BARRA */
+.sep-text {
+  font-weight: 700;
+  font-size: 0.95rem;
+}
+
+.sep-btn {
+  font-weight: 700;
+  font-size: 0.85rem;
+  padding: 10px 20px;
+  border-radius: 6px;
+  white-space: nowrap;
+  border: none;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  transition: opacity 0.2s;
+}
+
+.sep-btn:hover {
+  opacity: 0.9;
+}
+
 @media (max-width: 600px) {
   .separator-bar {
     padding: 12px 14px !important;

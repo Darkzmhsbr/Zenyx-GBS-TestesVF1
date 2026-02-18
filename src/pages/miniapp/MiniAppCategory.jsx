@@ -62,11 +62,15 @@ export function MiniAppCategory() {
     // 🖼️ Formato da foto do modelo (da categoria)
     const modelShape = category.model_img_shape || 'square';
 
-    // 📐 Barra Separadora
+    // 📐 Barra Separadora (Atualizada com Cores de Texto)
     const SeparatorBar = () => {
         if (!category.separator_enabled) return null;
+        
+        // Cores padrão caso não venham do banco
         const sepColor = category.separator_color || '#ffffff';
-        const isGradient = sepColor.includes('gradient');
+        const sepTextColor = category.separator_text_color || (sepColor.includes('gradient') ? '#fff' : '#000');
+        const sepBtnTextColor = category.separator_btn_text_color || '#fff';
+        
         return (
             <div className="separator-bar" style={{
                 background: sepColor,
@@ -84,12 +88,11 @@ export function MiniAppCategory() {
                         <img src={category.separator_logo_url} style={{height:32, objectFit:'contain', flexShrink:0}} alt="Logo" />
                     )}
                     {category.separator_text && (
-                        <span style={{
-                            fontWeight:'bold', 
-                            color: isGradient ? '#fff' : '#000', 
-                            fontSize:'0.85rem',
+                        <span className="sep-text" style={{
+                            color: sepTextColor, 
                             lineHeight: 1.3,
-                            textShadow: isGradient ? '0 1px 3px rgba(0,0,0,0.3)' : 'none'
+                            // Adiciona sombra sutil se for gradiente e texto branco pra dar leitura
+                            textShadow: (sepColor.includes('gradient') && sepTextColor === '#ffffff') ? '0 1px 3px rgba(0,0,0,0.3)' : 'none'
                         }}>
                             {category.separator_text}
                         </span>
@@ -97,23 +100,14 @@ export function MiniAppCategory() {
                 </div>
                 {category.separator_btn_text && (
                     <button 
+                        className="sep-btn"
                         onClick={() => {
                             if (category.separator_btn_url) window.open(category.separator_btn_url, '_blank');
                             else navigate(`/loja/${botId}/checkout`);
                         }}
                         style={{
                             background: category.theme_color || '#000',
-                            color: '#fff',
-                            border: 'none',
-                            padding: '10px 20px',
-                            borderRadius: 6,
-                            fontWeight: 'bold',
-                            fontSize: '0.85rem',
-                            cursor: 'pointer',
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: 6,
-                            whiteSpace: 'nowrap',
+                            color: sepBtnTextColor,
                             boxShadow: '0 2px 8px rgba(0,0,0,0.3)'
                         }}
                     >

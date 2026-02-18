@@ -240,7 +240,10 @@ export function BotConfig() {
           separator_btn_text: '',
           separator_btn_url: '',
           separator_logo_url: '',
-          model_img_shape: 'square'
+          model_img_shape: 'square',
+          // 🆕 CORES NOVAS DO SEPARADOR
+          separator_text_color: '#ffffff',
+          separator_btn_text_color: '#ffffff'
       });
       setIsEditingCat(true);
   };
@@ -787,16 +790,30 @@ export function BotConfig() {
                                                     <label>Texto da Barra</label>
                                                     <input className="input-field" value={currentCat.separator_text || ''} onChange={(e) => setCurrentCat({...currentCat, separator_text: e.target.value})} placeholder="Ex: QUER VER O CONTEÚDO COMPLETO?" />
                                                 </div>
+                                                {/* 🆕 COR DO TEXTO DA BARRA */}
+                                                <ColorPreview 
+                                                    label="Cor do Texto" 
+                                                    value={currentCat.separator_text_color} 
+                                                    onChange={(val) => setCurrentCat({...currentCat, separator_text_color: val})} 
+                                                />
+
                                                 <div className="form-group">
                                                     <label>Texto do Botão CTA</label>
                                                     <input className="input-field" value={currentCat.separator_btn_text || ''} onChange={(e) => setCurrentCat({...currentCat, separator_btn_text: e.target.value})} placeholder="Ex: ASSINE AGORA" />
                                                 </div>
+                                                {/* 🆕 COR DO TEXTO DO BOTÃO */}
+                                                <ColorPreview 
+                                                    label="Cor do Texto do Botão" 
+                                                    value={currentCat.separator_btn_text_color} 
+                                                    onChange={(val) => setCurrentCat({...currentCat, separator_btn_text_color: val})} 
+                                                />
+
                                                 <div className="form-group">
                                                     <label>Link do Botão (Opcional)</label>
                                                     <input className="input-field" value={currentCat.separator_btn_url || ''} onChange={(e) => setCurrentCat({...currentCat, separator_btn_url: e.target.value})} placeholder="https://... (vazio = checkout do bot)" />
                                                 </div>
                                                 <ColorPreview 
-                                                    label="Cor da Barra" 
+                                                    label="Cor da Barra (Fundo)" 
                                                     value={currentCat.separator_color} 
                                                     onChange={(val) => setCurrentCat({...currentCat, separator_color: val})} 
                                                 />
@@ -817,14 +834,15 @@ export function BotConfig() {
                                                             {currentCat.separator_logo_url && (
                                                                 <img src={currentCat.separator_logo_url} style={{height:36, objectFit:'contain'}} alt="Logo" />
                                                             )}
-                                                            <span style={{fontWeight:'bold', color:'#000', fontSize:'0.9rem'}}>
+                                                            <span style={{fontWeight:'bold', color: currentCat.separator_text_color || '#000', fontSize:'0.9rem'}}>
                                                                 {currentCat.separator_text || 'TEXTO DA BARRA'}
                                                             </span>
                                                         </div>
                                                         {currentCat.separator_btn_text && (
                                                             <div style={{
                                                                 background: currentCat.theme_color || '#000',
-                                                                color:'#fff', padding:'10px 20px', borderRadius:6,
+                                                                color: currentCat.separator_btn_text_color || '#fff', 
+                                                                padding:'10px 20px', borderRadius:6,
                                                                 fontWeight:'bold', fontSize:'0.85rem', whiteSpace:'nowrap'
                                                             }}>
                                                                 🔒 {currentCat.separator_btn_text}
