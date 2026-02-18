@@ -245,7 +245,6 @@ export function MiniAppCategory() {
                                                     />
                                                 )}
                                                 <div>
-                                                    {/* 🔥 CORREÇÃO AQUI: Usa category.model_name_color */}
                                                     <h3 style={{ margin:0, color: category.model_name_color || '#ffffff', fontSize:'1.2rem' }}>
                                                         {item.modelName}
                                                     </h3>
@@ -302,24 +301,27 @@ export function MiniAppCategory() {
                                             </div>
                                         )}
 
-                                        {/* Botão de Ação */}
-                                        <div style={{ padding: '15px 20px 20px 20px', marginTop: 'auto' }}>
-                                            <button 
-                                                onClick={() => handleItemClick(item)}
-                                                className="btn-pulse-main"
-                                                style={{
-                                                    backgroundColor: itemThemeColor,
-                                                    color: itemThemeColor === '#ffffff' ? '#000' : '#fff',
-                                                    width: '100%', padding: '16px', border: 'none', borderRadius: '10px',
-                                                    fontSize: '1.05rem', fontWeight: 'bold', cursor: 'pointer', textTransform: 'uppercase',
-                                                    display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
-                                                    boxShadow: `0 4px 15px ${itemThemeColor}60`
-                                                }}
-                                            >
-                                                {item.isDirectCheckout ? <CheckCircle size={18}/> : <Lock size={18}/>}
-                                                {item.btn_text || 'ACESSAR AGORA'}
-                                            </button>
-                                        </div>
+                                        {/* 🛒 6. BOTÃO DE AÇÃO DO ITEM (Condicional: Só exibe se NÃO estiver oculto) */}
+                                        {!item.hideMainButton && (
+                                            <div style={{ padding: '15px 20px 20px 20px', marginTop: 'auto' }}>
+                                                <button 
+                                                    onClick={() => handleItemClick(item)}
+                                                    className="btn-pulse-main"
+                                                    style={{
+                                                        backgroundColor: itemThemeColor,
+                                                        color: itemThemeColor === '#ffffff' ? '#000' : '#fff',
+                                                        width: '100%', padding: '16px', border: 'none', borderRadius: '10px',
+                                                        fontSize: '1.05rem', fontWeight: 'bold', cursor: 'pointer', textTransform: 'uppercase',
+                                                        display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+                                                        boxShadow: `0 4px 15px ${itemThemeColor}60`
+                                                    }}
+                                                >
+                                                    {item.isDirectCheckout ? <CheckCircle size={18}/> : <Lock size={18}/>}
+                                                    {item.btn_text || 'ACESSAR AGORA'}
+                                                </button>
+                                            </div>
+                                        )}
+
                                     </div>
 
                                     {/* Separador */}

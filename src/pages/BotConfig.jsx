@@ -264,44 +264,44 @@ export function BotConfig() {
   };
 
   const handleSaveCategory = async () => {
-    if (!currentCat.title) return Swal.fire('Erro', 'Digite um título', 'warning');
+      if (!currentCat.title) return Swal.fire('Erro', 'Digite um título', 'warning');
 
-    try {
-        // 🔥 DEBUG: Verifique no console do navegador se as cores estão aqui
-        console.log("Enviando Categoria:", currentCat);
+      try {
+          // 🔥 DEBUG: Verifique no console do navegador se as cores estão aqui
+          console.log("Enviando Categoria:", currentCat);
 
-        let contentJsonParsed = [];
-        if (typeof currentCat.content_json === 'string') {
-            try {
-                contentJsonParsed = JSON.parse(currentCat.content_json);
-            } catch (e) {
-                contentJsonParsed = [];
-            }
-        } else {
-            contentJsonParsed = currentCat.content_json;
-        }
+          let contentJsonParsed = [];
+          if (typeof currentCat.content_json === 'string') {
+              try {
+                  contentJsonParsed = JSON.parse(currentCat.content_json);
+              } catch (e) {
+                  contentJsonParsed = [];
+              }
+          } else {
+              contentJsonParsed = currentCat.content_json;
+          }
 
-        const payload = {
-            ...currentCat,
-            bot_id: id,
-            content_json: contentJsonParsed,
-            // Força o envio das cores caso o spread operator (...) tenha falhado
-            separator_text_color: currentCat.separator_text_color,
-            separator_btn_text_color: currentCat.separator_btn_text_color
-        };
+          const payload = {
+              ...currentCat,
+              bot_id: id,
+              content_json: contentJsonParsed,
+              // Força o envio das cores caso o spread operator (...) tenha falhado
+              separator_text_color: currentCat.separator_text_color,
+              separator_btn_text_color: currentCat.separator_btn_text_color
+          };
 
-        await miniappService.createCategory(payload);
-        setIsEditingCat(false);
-        setCurrentCat(null);
-        
-        const appData = await miniappService.getPublicData(id);
-        setCategories(appData.categories || []);
-        
-        Swal.fire('Sucesso', 'Categoria salva!', 'success');
-    } catch (error) {
-        console.error(error);
-        Swal.fire('Erro', 'Erro ao salvar categoria', 'error');
-    }
+          await miniappService.createCategory(payload);
+          setIsEditingCat(false);
+          setCurrentCat(null);
+          
+          const appData = await miniappService.getPublicData(id);
+          setCategories(appData.categories || []);
+          
+          Swal.fire('Sucesso', 'Categoria salva!', 'success');
+      } catch (error) {
+          console.error(error);
+          Swal.fire('Erro', 'Erro ao salvar categoria', 'error');
+      }
   };
 
   const handleDeleteCategory = async (catId) => {
@@ -351,7 +351,8 @@ export function BotConfig() {
           comicImages: '',
           hackerFiles: '',
           // Mini App V2
-          fakeVideo: false  // Simula botão de play na imagem principal
+          fakeVideo: false,  // Simula botão de play na imagem principal
+          hideMainButton: false // ✅ NOVO: Ocultar botão principal
       });
       setCurrentCat({...currentCat, content_json: JSON.stringify(items)});
   };
@@ -771,7 +772,6 @@ export function BotConfig() {
                                             </button>
                                         </div>
 
-                                        {/* 🔥 AQUI ESTÁ A CORREÇÃO: INPUTS SEPARADOS PARA O NOME DA MODELO */}
                                         <div style={{display:'grid', gridTemplateColumns:'1fr 1fr', gap:15}}>
                                             <ColorPreview 
                                                 label="Cor do Nome" 
@@ -839,7 +839,6 @@ export function BotConfig() {
                                                     <input className="input-field" value={currentCat.separator_text || ''} onChange={(e) => setCurrentCat({...currentCat, separator_text: e.target.value})} placeholder="Ex: QUER VER O CONTEÚDO COMPLETO?" />
                                                 </div>
                                                 
-                                                {/* 🆕 COR DO TEXTO DA BARRA */}
                                                 <ColorPreview 
                                                     label="Cor do Texto da Barra" 
                                                     value={currentCat.separator_text_color} 
@@ -851,7 +850,6 @@ export function BotConfig() {
                                                     <input className="input-field" value={currentCat.separator_btn_text || ''} onChange={(e) => setCurrentCat({...currentCat, separator_btn_text: e.target.value})} placeholder="Ex: ASSINE AGORA" />
                                                 </div>
                                                 
-                                                {/* 🆕 COR DO TEXTO DO BOTÃO */}
                                                 <ColorPreview 
                                                     label="Cor do Texto do Botão" 
                                                     value={currentCat.separator_btn_text_color} 
@@ -1014,9 +1012,28 @@ export function BotConfig() {
                                                             </div>
                                                         )}
 
+                                                        {/* TRECHO ATUALIZADO: Botão de Compra com Opção de Ocultar */}
                                                         <div className="form-group">
-                                                            <label>Texto do Botão de Compra</label>
-                                                            <input className="input-field" value={item.btn_text || ''} onChange={e => handleUpdateVitrineItem(index, 'btn_text', e.target.value)} placeholder="Ex: ASSINAR AGORA" />
+                                                            <div style={{display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:5}}>
+                                                                <label>Texto do Botão de Compra</label>
+                                                                <label style={{display:'flex', alignItems:'center', gap:6, cursor:'pointer', color:'#ef4444', fontSize:'0.85rem'}}>
+                                                                    <input 
+                                                                        type="checkbox" 
+                                                                        style={{width:16, height:16, accentColor:'#ef4444'}} 
+                                                                        checked={item.hideMainButton || false} 
+                                                                        onChange={e => handleUpdateVitrineItem(index, 'hideMainButton', e.target.checked)} 
+                                                                    /> 
+                                                                    Ocultar Botão Principal
+                                                                </label>
+                                                            </div>
+                                                            <input 
+                                                                className="input-field" 
+                                                                value={item.btn_text || ''} 
+                                                                onChange={e => handleUpdateVitrineItem(index, 'btn_text', e.target.value)} 
+                                                                placeholder="Ex: ASSINAR AGORA" 
+                                                                disabled={item.hideMainButton} // Desabilita input se estiver oculto
+                                                                style={{opacity: item.hideMainButton ? 0.5 : 1}}
+                                                            />
                                                         </div>
                                                         <div className="form-group">
                                                             <label>Link Checkout Personalizado (Opcional)</label>
