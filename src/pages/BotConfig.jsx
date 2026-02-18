@@ -264,40 +264,44 @@ export function BotConfig() {
   };
 
   const handleSaveCategory = async () => {
-      if (!currentCat.title) return Swal.fire('Erro', 'Digite um título', 'warning');
+    if (!currentCat.title) return Swal.fire('Erro', 'Digite um título', 'warning');
 
-      try {
-          // 🔥 CORREÇÃO 422: O Backend espera um objeto/lista JSON real, mas o estado React guarda string.
-          // Convertemos de volta para objeto antes de enviar.
-          let contentJsonParsed = [];
-          if (typeof currentCat.content_json === 'string') {
-              try {
-                  contentJsonParsed = JSON.parse(currentCat.content_json);
-              } catch (e) {
-                  contentJsonParsed = [];
-              }
-          } else {
-              contentJsonParsed = currentCat.content_json;
-          }
+    try {
+        // 🔥 DEBUG: Verifique no console do navegador se as cores estão aqui
+        console.log("Enviando Categoria:", currentCat);
 
-          const payload = {
-              ...currentCat,
-              bot_id: id,
-              content_json: contentJsonParsed // Envia como Array, não como String
-          };
+        let contentJsonParsed = [];
+        if (typeof currentCat.content_json === 'string') {
+            try {
+                contentJsonParsed = JSON.parse(currentCat.content_json);
+            } catch (e) {
+                contentJsonParsed = [];
+            }
+        } else {
+            contentJsonParsed = currentCat.content_json;
+        }
 
-          await miniappService.createCategory(payload);
-          setIsEditingCat(false);
-          setCurrentCat(null);
-          
-          const appData = await miniappService.getPublicData(id);
-          setCategories(appData.categories || []);
-          
-          Swal.fire('Sucesso', 'Categoria salva!', 'success');
-      } catch (error) {
-          console.error(error);
-          Swal.fire('Erro', 'Erro ao salvar categoria', 'error');
-      }
+        const payload = {
+            ...currentCat,
+            bot_id: id,
+            content_json: contentJsonParsed,
+            // Força o envio das cores caso o spread operator (...) tenha falhado
+            separator_text_color: currentCat.separator_text_color,
+            separator_btn_text_color: currentCat.separator_btn_text_color
+        };
+
+        await miniappService.createCategory(payload);
+        setIsEditingCat(false);
+        setCurrentCat(null);
+        
+        const appData = await miniappService.getPublicData(id);
+        setCategories(appData.categories || []);
+        
+        Swal.fire('Sucesso', 'Categoria salva!', 'success');
+    } catch (error) {
+        console.error(error);
+        Swal.fire('Erro', 'Erro ao salvar categoria', 'error');
+    }
   };
 
   const handleDeleteCategory = async (catId) => {
