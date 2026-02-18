@@ -26,7 +26,8 @@ import {
   Send, // 🚀 Ícone do Disparo Automático
   Rocket, // 🚀 Ícone do Upsell
   ArrowDownCircle, // 📉 Ícone do Downsell
-  Trophy // 🏆 Ícone do Ranking (NOVO)
+  Trophy, // 🏆 Ícone do Ranking (NOVO)
+  BarChart3 // 📊 Ícone de Estatísticas (NOVO)
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import './Sidebar.css';
@@ -115,6 +116,17 @@ export function Sidebar({ isOpen, onClose }) {
           >
             <LayoutDashboard size={20} />
             <span>Dashboard</span>
+          </Link>
+
+          {/* 📊 NOVA ROTA: ESTATÍSTICAS */}
+          <Link 
+            to={hasBot ? "/estatisticas" : "#"} 
+            className={`nav-item ${isActive('/estatisticas')} ${!hasBot ? 'locked-nav' : ''}`} 
+            onClick={(e) => !hasBot ? e.preventDefault() : onClose()}
+            style={!hasBot ? { opacity: 0.5, cursor: 'not-allowed' } : {}}
+          >
+            <BarChart3 size={20} />
+            <span>Estatísticas</span>
           </Link>
 
           <Link 

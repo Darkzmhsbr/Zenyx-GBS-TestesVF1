@@ -1039,6 +1039,37 @@ export const groupService = {
 };
 
 // ============================================================
+// 📊 SERVIÇO DE ESTATÍSTICAS AVANÇADAS
+// ============================================================
+export const statisticsService = {
+  getStats: async (botId = null, period = '30d') => {
+    try {
+      const params = new URLSearchParams();
+      if (botId) params.append('bot_id', botId);
+      if (period) params.append('period', period);
+      
+      const queryString = params.toString();
+      const url = queryString ? `/api/admin/statistics?${queryString}` : '/api/admin/statistics';
+      
+      const response = await api.get(url);
+      return response.data;
+    } catch (error) {
+      console.error('Erro ao buscar estatísticas:', error);
+      return {
+        metricas: {
+          receita_total: 0, ticket_medio: 0, total_usuarios: 0,
+          ltv_medio: 0, total_vendas: 0, total_pendentes: 0,
+          receita_pendentes: 0, total_geradas: 0, taxa_conversao: 0, total_leads: 0
+        },
+        chart_receita: [], top_planos: [], top_horas: [], top_dias: [],
+        donut_conversao: { convertidas: 0, pendentes: 0, perdidas: 0 },
+        periodo: { inicio: '', fim: '', label: '30d' }
+      };
+    }
+  }
+};
+
+// ============================================================
 // 🏆 NOVO SERVIÇO: RANKING
 // ============================================================
 export const rankingService = {

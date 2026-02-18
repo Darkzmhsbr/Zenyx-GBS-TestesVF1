@@ -50,6 +50,9 @@ import { GruposCanais } from './pages/GruposCanais';
 // 🏆 NOVA PÁGINA: Ranking de Top Vendedores
 import { Ranking } from './pages/Ranking';
 
+// 📊 NOVA PÁGINA: Estatísticas Avançadas
+import { Statistics } from './pages/Statistics';
+
 // Mini App (Loja)
 import { MiniAppHome } from './pages/miniapp/MiniAppHome';
 import { MiniAppCategory } from './pages/miniapp/MiniAppCategory';
@@ -146,6 +149,9 @@ function App() {
             {/* Rotas Protegidas (Painel Admin) */}
             <Route element={<MainLayout />}>
               <Route path="/dashboard" element={<Dashboard />} />
+              
+              {/* 📊 NOVA ROTA: Estatísticas */}
+              <Route path="/estatisticas" element={<Statistics />} />
               
               {/* 🏆 NOVA ROTA: Ranking */}
               <Route path="/ranking" element={<Ranking />} />
