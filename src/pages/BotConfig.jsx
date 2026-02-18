@@ -257,7 +257,26 @@ export function BotConfig() {
       if (!currentCat.title) return Swal.fire('Erro', 'Digite um título', 'warning');
 
       try {
-          await miniappService.createCategory({ ...currentCat, bot_id: id });
+          // 🔥 CORREÇÃO 422: O Backend espera um objeto/lista JSON real, mas o estado React guarda string.
+          // Convertemos de volta para objeto antes de enviar.
+          let contentJsonParsed = [];
+          if (typeof currentCat.content_json === 'string') {
+              try {
+                  contentJsonParsed = JSON.parse(currentCat.content_json);
+              } catch (e) {
+                  contentJsonParsed = [];
+              }
+          } else {
+              contentJsonParsed = currentCat.content_json;
+          }
+
+          const payload = {
+              ...currentCat,
+              bot_id: id,
+              content_json: contentJsonParsed // Envia como Array, não como String
+          };
+
+          await miniappService.createCategory(payload);
           setIsEditingCat(false);
           setCurrentCat(null);
           
