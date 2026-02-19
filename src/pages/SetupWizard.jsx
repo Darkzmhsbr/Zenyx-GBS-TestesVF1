@@ -1,19 +1,21 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { 
   ChevronDown, Bot, CreditCard, Gem, MessageSquare, 
   CheckCircle2, Info, Zap, Settings, ShieldCheck,
-  Rocket, ArrowRight, Star, Sparkles, CircleDot,
-  AlertTriangle, ExternalLink
+  Star, Sparkles, CircleDot, AlertTriangle, ExternalLink,
+  Wrench
 } from 'lucide-react';
 import { useBot } from '../context/BotContext';
 import { useAuth } from '../context/AuthContext';
+import { integrationService, planService, flowService } from '../services/api';
 import './SetupWizard.css';
 
 // =========================================================
-// 🔥 IMPORTAÇÃO DOS COMPONENTES REAIS (SEM DUPLICAÇÃO)
+// 🔥 IMPORTAÇÃO DOS COMPONENTES REAIS
 // =========================================================
 import { NewBot } from './NewBot';
+import { BotConfig } from './BotConfig';
 import { Integrations } from './Integrations';
 import { Plans } from './Plans';
 import { ChatFlow } from './ChatFlow';
@@ -23,20 +25,103 @@ import { ChatFlow } from './ChatFlow';
 // =========================================================
 export function SetupWizard() {
   const navigate = useNavigate();
-  const { selectedBot } = useBot();
+  const { selectedBot, bots } = useBot();
   const { hasBot } = useAuth();
 
   const [openIndex, setOpenIndex] = useState(null);
   const [isVisible, setIsVisible] = useState(false);
   const [completedSteps, setCompletedSteps] = useState([]);
 
+  // 🆕 Estado para o bot recém-criado (mostra BotConfig embarcado)
+  const [newlyCreatedBotId, setNewlyCreatedBotId] = useState(null);
+
+  // =========================================================
+  // 🔍 AUTO-DETECÇÃO DE ETAPAS CONCLUÍDAS
+  // =========================================================
+  const detectCompletedSteps = useCallback(async () => {
+    if (!selectedBot) return;
+
+    const detected = [];
+
+    try {
+      // Etapa 0 (Criar Bot): Se tem bot, está concluída
+      if (hasBot && bots.length > 0) {
+        detected.push(0);
+      }
+
+      // Etapa 1 (BotConfig): Se o bot tem admin_principal_id ou suporte configurado
+      // Consideramos concluída se o bot existe (configuração básica já foi feita na criação)
+      if (hasBot && selectedBot) {
+        detected.push(1);
+      }
+
+      // Etapa 2 (Gateway): Verifica se tem gateway configurada e ativa
+      try {
+        const gwConfig = await integrationService.getGatewayConfig(selectedBot.id);
+        const temGatewayAtiva = gwConfig?.pushinpay?.ativo || gwConfig?.wiinpay?.ativo;
+        if (temGatewayAtiva) {
+          detected.push(2);
+        }
+      } catch (e) { /* Gateway não configurada */ }
+
+      // Etapa 3 (Planos): Verifica se tem pelo menos 1 plano criado
+      try {
+        const plans = await planService.listPlans(selectedBot.id);
+        if (plans && plans.length > 0) {
+          detected.push(3);
+        }
+      } catch (e) { /* Sem planos */ }
+
+      // Etapa 4 (Flow Chat): Verifica se tem fluxo configurado
+      try {
+        const flow = await flowService.getFlow(selectedBot.id);
+        if (flow && flow.msg_boas_vindas && flow.msg_boas_vindas.trim().length > 0) {
+          detected.push(4);
+        }
+      } catch (e) { /* Sem flow */ }
+
+      // Etapa 5 (Final): Se todas as anteriores (0-4) estão completas
+      if (detected.includes(0) && detected.includes(2) && detected.includes(3)) {
+        detected.push(5);
+      }
+
+    } catch (e) {
+      console.error("Erro na auto-detecção:", e);
+    }
+
+    // Merge: mantém as marcações manuais + adiciona as automáticas
+    setCompletedSteps(prev => {
+      const merged = [...new Set([...prev, ...detected])];
+      localStorage.setItem('zenyx_setup_progress', JSON.stringify(merged));
+      return merged;
+    });
+
+    // Auto-abre a primeira etapa não concluída
+    if (detected.length > 0 && openIndex === null) {
+      const firstIncomplete = [0, 1, 2, 3, 4, 5].find(i => !detected.includes(i));
+      if (firstIncomplete !== undefined) {
+        setOpenIndex(firstIncomplete);
+      }
+    }
+
+  }, [selectedBot, hasBot, bots]);
+
   useEffect(() => {
     setIsVisible(true);
+    
+    // Carrega progresso salvo
     const saved = localStorage.getItem('zenyx_setup_progress');
     if (saved) {
       try { setCompletedSteps(JSON.parse(saved)); } catch(e) {}
     }
   }, []);
+
+  // Auto-detecta quando tem bot selecionado
+  useEffect(() => {
+    if (selectedBot) {
+      detectCompletedSteps();
+    }
+  }, [selectedBot, detectCompletedSteps]);
 
   const toggleStep = (index) => {
     setOpenIndex(openIndex === index ? null : index);
@@ -50,12 +135,38 @@ export function SetupWizard() {
     localStorage.setItem('zenyx_setup_progress', JSON.stringify(updated));
   };
 
+  // 🆕 Auto-avança para a próxima etapa
+  const autoAdvance = (currentIndex) => {
+    // Marca atual como concluída
+    if (!completedSteps.includes(currentIndex)) {
+      const updated = [...completedSteps, currentIndex];
+      setCompletedSteps(updated);
+      localStorage.setItem('zenyx_setup_progress', JSON.stringify(updated));
+    }
+    // Abre a próxima
+    const nextIndex = currentIndex + 1;
+    if (nextIndex <= 5) {
+      setTimeout(() => {
+        setOpenIndex(nextIndex);
+        // Scroll suave para a próxima etapa
+        const el = document.getElementById(`sw-step-${nextIndex}`);
+        if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }, 400);
+    }
+  };
+
+  // 🆕 Callback quando o bot é criado pelo NewBot embarcado
+  const handleBotCreated = (botId) => {
+    setNewlyCreatedBotId(botId);
+    autoAdvance(0);
+  };
+
   // =========================================================
-  // 📋 DEFINIÇÃO DAS ETAPAS
+  // 📋 DEFINIÇÃO DAS ETAPAS (6 ETAPAS)
   // =========================================================
   const steps = [
     // =====================================================
-    // ETAPA 1 — CRIAR E CONECTAR BOT (COMPONENTE REAL)
+    // ETAPA 1 — CRIAR BOT
     // =====================================================
     {
       icon: Bot,
@@ -70,7 +181,7 @@ export function SetupWizard() {
             </div>
             <div>
               <h4>Antes de começar</h4>
-              <p>Você precisa ter um bot criado no Telegram usando o @BotFather e um canal/grupo privado (VIP). Se ainda não tem, siga os passos rápidos abaixo antes de preencher o formulário.</p>
+              <p>Você precisa ter um bot criado no Telegram usando o @BotFather e um canal/grupo privado (VIP). Siga os passos abaixo e depois preencha o formulário.</p>
             </div>
           </div>
 
@@ -99,24 +210,62 @@ export function SetupWizard() {
             <p><strong>Permissões obrigatórias:</strong> O bot precisa ser admin com permissão de adicionar membros, banir usuários e gerenciar convites.</p>
           </div>
 
-          {/* 🔥 COMPONENTE REAL: NewBot (Formulário de criação) */}
+          {/* 🔥 COMPONENTE REAL: NewBot com callback */}
           <div className="sw-embedded-component">
             <div className="sw-embedded-label">
               <Zap size={14} />
-              <span>{hasBot ? 'Criar outro bot ou gerenciar existente' : 'Crie seu primeiro bot agora'}</span>
+              <span>{hasBot ? 'Criar outro bot' : 'Crie seu primeiro bot agora'}</span>
             </div>
-            <NewBot />
+            <NewBot onBotCreated={handleBotCreated} />
           </div>
         </div>
       )
     },
 
     // =====================================================
-    // ETAPA 2 — GATEWAY DE PAGAMENTO (COMPONENTE REAL)
+    // ETAPA 2 — CONFIGURAÇÕES DO BOT (BotConfig)
+    // =====================================================
+    {
+      icon: Wrench,
+      title: "Etapa 2 — Configurações do Bot",
+      description: "Ajuste credenciais, IDs, suporte e proteção de conteúdo",
+      color: '#f97316',
+      content: (
+        <div className="sw-content-inner">
+          <div className="sw-instruction-box sw-instruction-box--amber">
+            <div className="sw-instruction-icon" style={{ background: 'rgba(249, 115, 22, 0.12)', color: '#f97316' }}>
+              <Info size={20} />
+            </div>
+            <div>
+              <h4>Configurações Gerais do Bot</h4>
+              <p>Configure o ID do admin principal, username de suporte, canal de notificações e proteção de conteúdo. Essas configurações definem como o bot se comporta.</p>
+            </div>
+          </div>
+
+          {(selectedBot || newlyCreatedBotId) ? (
+            <div className="sw-embedded-component">
+              <div className="sw-embedded-label">
+                <Zap size={14} />
+                <span>Painel de configuração do bot</span>
+              </div>
+              <BotConfig />
+            </div>
+          ) : (
+            <div className="sw-warning-box">
+              <AlertTriangle size={20} />
+              <p>Crie um bot primeiro (Etapa 1) para acessar as configurações.</p>
+            </div>
+          )}
+        </div>
+      )
+    },
+
+    // =====================================================
+    // ETAPA 3 — GATEWAY DE PAGAMENTO
     // =====================================================
     {
       icon: CreditCard,
-      title: "Etapa 2 — Gateway de Pagamento",
+      title: "Etapa 3 — Gateway de Pagamento",
       description: "Configure como você vai receber seus pagamentos via PIX",
       color: '#10b981',
       content: (
@@ -169,7 +318,7 @@ export function SetupWizard() {
           ) : (
             <div className="sw-warning-box">
               <AlertTriangle size={20} />
-              <p>Você precisa criar um bot primeiro (Etapa 1) para configurar a gateway de pagamento.</p>
+              <p>Você precisa criar um bot primeiro (Etapa 1) para configurar a gateway.</p>
             </div>
           )}
         </div>
@@ -177,11 +326,11 @@ export function SetupWizard() {
     },
 
     // =====================================================
-    // ETAPA 3 — PLANOS DE ACESSO (COMPONENTE REAL)
+    // ETAPA 4 — PLANOS DE ACESSO
     // =====================================================
     {
       icon: Gem,
-      title: "Etapa 3 — Planos de Acesso",
+      title: "Etapa 4 — Planos de Acesso",
       description: "Crie os planos que seus clientes poderão comprar",
       color: '#f59e0b',
       content: (
@@ -192,7 +341,7 @@ export function SetupWizard() {
             </div>
             <div>
               <h4>Como funcionam os planos?</h4>
-              <p>Cada plano define um preço e uma duração de acesso ao seu canal/grupo VIP. Quando o cliente paga, o bot libera o acesso automaticamente pelo tempo definido.</p>
+              <p>Cada plano define um preço e uma duração de acesso ao seu canal/grupo VIP. Quando o cliente paga, o bot libera o acesso automaticamente.</p>
             </div>
           </div>
 
@@ -227,7 +376,7 @@ export function SetupWizard() {
           ) : (
             <div className="sw-warning-box">
               <AlertTriangle size={20} />
-              <p>Você precisa criar um bot primeiro (Etapa 1) para gerenciar planos.</p>
+              <p>Crie um bot primeiro (Etapa 1) para gerenciar planos.</p>
             </div>
           )}
         </div>
@@ -235,12 +384,12 @@ export function SetupWizard() {
     },
 
     // =====================================================
-    // ETAPA 4 — FLOW CHAT / MENSAGENS (COMPONENTE REAL)
+    // ETAPA 5 — FLOW CHAT / MENSAGENS
     // =====================================================
     {
       icon: MessageSquare,
-      title: "Etapa 4 — Mensagens do Bot (Flow Chat)",
-      description: "Configure o fluxo de conversa e mensagens automáticas do bot",
+      title: "Etapa 5 — Mensagens do Bot (Flow Chat)",
+      description: "Configure o fluxo de conversa e mensagens automáticas",
       color: '#3b82f6',
       content: (
         <div className="sw-content-inner">
@@ -250,7 +399,7 @@ export function SetupWizard() {
             </div>
             <div>
               <h4>Flow Chat — Fluxo de Mensagens</h4>
-              <p>Configure as mensagens que o bot envia automaticamente em cada etapa: boas-vindas, apresentação da oferta, pagamento PIX e mais. Personalize textos, mídias e botões.</p>
+              <p>Configure as mensagens que o bot envia automaticamente: boas-vindas, oferta, pagamento PIX e mais. Personalize textos, mídias e botões.</p>
             </div>
           </div>
 
@@ -280,7 +429,7 @@ export function SetupWizard() {
               <div className="sw-msg-type__dot" style={{ background: '#a855f7' }}></div>
               <div>
                 <h5>Passos Extras (Opcional)</h5>
-                <p>Mensagens intermediárias entre boas-vindas e oferta</p>
+                <p>Mensagens intermediárias personalizadas</p>
               </div>
             </div>
           </div>
@@ -289,7 +438,7 @@ export function SetupWizard() {
             <div className="sw-embedded-component">
               <div className="sw-embedded-label">
                 <Zap size={14} />
-                <span>Configure o fluxo completo do bot aqui</span>
+                <span>Configure o fluxo completo aqui</span>
               </div>
               <ChatFlow />
             </div>
@@ -304,11 +453,11 @@ export function SetupWizard() {
     },
 
     // =====================================================
-    // ETAPA 5 — CONFIGURAÇÕES FINAIS
+    // ETAPA 6 — CONFIGURAÇÕES FINAIS
     // =====================================================
     {
       icon: Settings,
-      title: "Etapa 5 — Configurações Finais",
+      title: "Etapa 6 — Configurações Finais",
       description: "Checklist e dicas para começar a vender",
       color: '#ec4899',
       content: (
@@ -318,28 +467,39 @@ export function SetupWizard() {
             
             <div className="sw-checklist-items">
               <div className="sw-checklist-item">
-                <CircleDot size={18} color="#10b981" />
-                <span>Bot criado e conectado à plataforma</span>
+                <CircleDot size={18} color={completedSteps.includes(0) ? '#10b981' : '#555'} />
+                <span style={{ textDecoration: completedSteps.includes(0) ? 'line-through' : 'none', opacity: completedSteps.includes(0) ? 0.6 : 1 }}>
+                  Bot criado e conectado à plataforma
+                </span>
+                {completedSteps.includes(0) && <CheckCircle2 size={16} color="#10b981" style={{ marginLeft: 'auto' }} />}
               </div>
               <div className="sw-checklist-item">
-                <CircleDot size={18} color="#10b981" />
-                <span>Canal/Grupo VIP criado e bot adicionado como admin</span>
+                <CircleDot size={18} color={completedSteps.includes(1) ? '#10b981' : '#555'} />
+                <span style={{ textDecoration: completedSteps.includes(1) ? 'line-through' : 'none', opacity: completedSteps.includes(1) ? 0.6 : 1 }}>
+                  Configurações do bot ajustadas
+                </span>
+                {completedSteps.includes(1) && <CheckCircle2 size={16} color="#10b981" style={{ marginLeft: 'auto' }} />}
               </div>
               <div className="sw-checklist-item">
-                <CircleDot size={18} color="#10b981" />
-                <span>Gateway de pagamento configurada e ativada</span>
+                <CircleDot size={18} color={completedSteps.includes(2) ? '#10b981' : '#555'} />
+                <span style={{ textDecoration: completedSteps.includes(2) ? 'line-through' : 'none', opacity: completedSteps.includes(2) ? 0.6 : 1 }}>
+                  Gateway de pagamento configurada e ativada
+                </span>
+                {completedSteps.includes(2) && <CheckCircle2 size={16} color="#10b981" style={{ marginLeft: 'auto' }} />}
               </div>
               <div className="sw-checklist-item">
-                <CircleDot size={18} color="#10b981" />
-                <span>Pelo menos 1 plano de acesso criado</span>
+                <CircleDot size={18} color={completedSteps.includes(3) ? '#10b981' : '#555'} />
+                <span style={{ textDecoration: completedSteps.includes(3) ? 'line-through' : 'none', opacity: completedSteps.includes(3) ? 0.6 : 1 }}>
+                  Pelo menos 1 plano de acesso criado
+                </span>
+                {completedSteps.includes(3) && <CheckCircle2 size={16} color="#10b981" style={{ marginLeft: 'auto' }} />}
               </div>
               <div className="sw-checklist-item">
-                <CircleDot size={18} color="#f59e0b" />
-                <span>Flow Chat personalizado (opcional, mas recomendado)</span>
-              </div>
-              <div className="sw-checklist-item">
-                <CircleDot size={18} color="#f59e0b" />
-                <span>Mini App / Loja configurada (opcional)</span>
+                <CircleDot size={18} color={completedSteps.includes(4) ? '#10b981' : '#f59e0b'} />
+                <span style={{ opacity: completedSteps.includes(4) ? 0.6 : 1 }}>
+                  Flow Chat personalizado (opcional)
+                </span>
+                {completedSteps.includes(4) && <CheckCircle2 size={16} color="#10b981" style={{ marginLeft: 'auto' }} />}
               </div>
             </div>
           </div>
@@ -349,21 +509,21 @@ export function SetupWizard() {
               <div className="sw-final-tip__number">01</div>
               <div>
                 <h5>Teste o pagamento</h5>
-                <p>Faça uma compra teste com valor baixo (R$ 1,00) para garantir que tudo funciona corretamente.</p>
+                <p>Faça uma compra teste com valor baixo (R$ 1,00) para garantir que tudo funciona.</p>
               </div>
             </div>
             <div className="sw-final-tip">
               <div className="sw-final-tip__number">02</div>
               <div>
                 <h5>Configure o Remarketing</h5>
-                <p>Na aba Remarketing, crie mensagens para recuperar clientes que não finalizaram a compra.</p>
+                <p>Crie mensagens para recuperar clientes que não finalizaram a compra.</p>
               </div>
             </div>
             <div className="sw-final-tip">
               <div className="sw-final-tip__number">03</div>
               <div>
                 <h5>Divulgue seu Bot</h5>
-                <p>Compartilhe o link do seu bot (t.me/seubot) nas redes sociais e comece a receber clientes.</p>
+                <p>Compartilhe o link do seu bot (t.me/seubot) nas redes sociais.</p>
               </div>
             </div>
           </div>
@@ -424,7 +584,8 @@ export function SetupWizard() {
 
             return (
               <div 
-                key={index} 
+                key={index}
+                id={`sw-step-${index}`}
                 className={`sw-step-item ${isOpen ? 'active' : ''} ${isCompleted ? 'completed' : ''}`}
               >
                 <div className="sw-step-header" onClick={() => toggleStep(index)}>

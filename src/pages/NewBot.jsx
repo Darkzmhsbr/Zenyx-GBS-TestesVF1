@@ -9,7 +9,7 @@ import { useBot } from '../context/BotContext';
 import { useAuth } from '../context/AuthContext'; 
 import './Bots.css';
 
-export function NewBot() {
+export function NewBot({ onBotCreated }) {
   const navigate = useNavigate();
   const { refreshBots } = useBot();
   const { hasBot, updateHasBotStatus } = useAuth();
@@ -66,9 +66,14 @@ export function NewBot() {
       });
 
       // 4. Redireciona para a configuração JÁ NA ABA CERTA
-      navigate(`/bots/config/${response.id}`, { 
-        state: { initialTab: targetTab } 
-      });
+      // 🆕 Se veio callback externo (ex: SetupWizard), usa ele em vez de navegar
+      if (onBotCreated) {
+        onBotCreated(response.id);
+      } else {
+        navigate(`/bots/config/${response.id}`, { 
+          state: { initialTab: targetTab } 
+        });
+      }
 
     } catch (error) {
       console.error(error);
