@@ -39,6 +39,13 @@ export function Remarketing() {
     expiration_value: ''
   });
 
+
+  // 🔊 HELPER: Detecta se a URL é um áudio OGG
+  const isAudioUrl = (url) => {
+    if (!url) return false;
+    return url.toLowerCase().match(/\.(ogg|mp3|wav)$/i);
+  };
+
   useEffect(() => {
     if (selectedBot) {
       planService.listPlans(selectedBot.id).then(setPlans).catch(console.error);
@@ -521,6 +528,21 @@ export function Remarketing() {
                 onChange={(url) => setFormData({ ...formData, media_url: url })} 
               />
             </div>
+
+            {/* 🔊 ALERTA DE ÁUDIO */}
+            {isAudioUrl(formData.media_url) && (
+                <div style={{
+                    background: 'rgba(234, 179, 8, 0.1)',
+                    border: '1px solid rgba(234, 179, 8, 0.3)',
+                    borderRadius: '8px',
+                    padding: '12px 15px',
+                    marginBottom: '15px'
+                }}>
+                    <p style={{color: '#eab308', fontSize: '0.85rem', margin: 0}}>
+                        🎙️ <strong>Modo Áudio Ativo</strong> — O áudio será enviado como voice note nativo do Telegram. O texto da mensagem e botões de oferta serão enviados em uma mensagem separada logo após o áudio.
+                    </p>
+                </div>
+            )}
 
             {/* OFERTA ESPECIAL */}
             <div className="offer-section">

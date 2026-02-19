@@ -46,6 +46,14 @@ export function CanalFree() {
   const [newButton, setNewButton] = useState({ text: '', url: '' });
   const [showInstructions, setShowInstructions] = useState(true);
 
+  // 🔊 HELPER: Detecta se a URL é um áudio OGG
+  const isAudioUrl = (url) => {
+    if (!url) return false;
+    return url.toLowerCase().match(/\.(ogg|mp3|wav)$/i);
+  };
+
+
+
   // Carregar configuração ao montar
   useEffect(() => {
     if (selectedBot?.id) {
@@ -271,6 +279,12 @@ export function CanalFree() {
             rows={6}
           />
           
+          {config.media_type === 'audio' && (
+              <p className="helper-text" style={{color: '#eab308', marginTop: '5px'}}>
+                  ⚠️ Com áudio ativo, este texto será enviado em uma mensagem separada após o voice note.
+              </p>
+          )}
+          
           <p className="helper-text">
             Esta mensagem será enviada no privado quando o usuário solicitar entrada. Use a barra de ferramentas para formatar (Negrito, Itálico, Links).
           </p>
@@ -329,11 +343,26 @@ export function CanalFree() {
               />
             </div>
           )}
+
+          {/* 🔊 ALERTA DE ÁUDIO */}
+          {config.media_type === 'audio' && (
+              <div style={{
+                  background: 'rgba(234, 179, 8, 0.1)',
+                  border: '1px solid rgba(234, 179, 8, 0.3)',
+                  borderRadius: '8px',
+                  padding: '12px 15px',
+                  marginTop: '12px'
+              }}>
+                  <p style={{color: '#eab308', fontSize: '0.85rem', margin: 0}}>
+                      🎙️ <strong>Modo Áudio Ativo</strong> — O áudio será enviado como voice note nativo do Telegram. O texto da mensagem e os botões abaixo serão enviados em uma mensagem separada automaticamente pelo bot.
+                  </p>
+              </div>
+          )}
         </div>
 
         {/* Botões Personalizados */}
         <div className="form-section">
-          <label className="section-title">🔘 Botões Personalizados</label>
+          <label className="section-title">🔘 Botões Personalizados {config.media_type === 'audio' && <span style={{fontSize: '0.75rem', color: '#eab308', fontWeight: 'normal'}}>(enviados em mensagem separada após o áudio)</span>}</label>
           
           {/* Lista de botões */}
           {config.buttons && config.buttons.length > 0 && (

@@ -67,6 +67,13 @@ export function UpsellDownsell({ type = 'upsell' }) {
     btn_recusar: cfg.defaultBtnRecusar
   });
 
+
+  // 🔊 HELPER: Detecta se a URL é um áudio OGG
+  const isAudioUrl = (url) => {
+    if (!url) return false;
+    return url.toLowerCase().match(/\.(ogg|mp3|wav)$/i);
+  };
+
   useEffect(() => {
     if (selectedBot) {
       carregarConfig();
@@ -290,7 +297,7 @@ export function UpsellDownsell({ type = 'upsell' }) {
                 </div>
 
                 <RichInput 
-                  label="Texto da Oferta"
+                  label={isAudioUrl(formData.msg_media) ? "Texto da Oferta (enviado SEPARADO após o áudio)" : "Texto da Oferta"}
                   placeholder="Ex: 🔥 Parabéns pela compra! Tenho uma oferta exclusiva para você..."
                   value={formData.msg_texto}
                   onChange={e => setFormData({...formData, msg_texto: e.target.value})}
@@ -305,6 +312,22 @@ export function UpsellDownsell({ type = 'upsell' }) {
                     onChange={(url) => setFormData({...formData, msg_media: url})} 
                   />
                 </div>
+
+                {/* 🔊 ALERTA DE ÁUDIO */}
+                {isAudioUrl(formData.msg_media) && (
+                    <div style={{
+                        background: 'rgba(234, 179, 8, 0.1)',
+                        border: '1px solid rgba(234, 179, 8, 0.3)',
+                        borderRadius: '8px',
+                        padding: '12px 15px',
+                        marginTop: '10px',
+                        marginBottom: '10px'
+                    }}>
+                        <p style={{color: '#eab308', fontSize: '0.85rem', margin: 0}}>
+                            🎙️ <strong>Modo Áudio Ativo</strong> — O áudio será enviado como voice note nativo do Telegram. O texto da oferta e os botões Aceitar/Recusar serão enviados em uma mensagem separada logo após o áudio.
+                        </p>
+                    </div>
+                )}
 
                 {/* SWITCH DE AUTODESTRUIR */}
                 <div className="form-group toggle-group" style={{marginTop: '15px', marginBottom: '15px'}}>
@@ -327,19 +350,19 @@ export function UpsellDownsell({ type = 'upsell' }) {
 
                 <div className="form-row">
                   <Input 
-                    label="Texto Botão Aceitar"
+                    label={isAudioUrl(formData.msg_media) ? "Botão Aceitar (msg separada)" : "Texto Botão Aceitar"}
                     value={formData.btn_aceitar}
                     onChange={e => setFormData({...formData, btn_aceitar: e.target.value})}
                   />
                   <Input 
-                    label="Texto Botão Recusar"
+                    label={isAudioUrl(formData.msg_media) ? "Botão Recusar (msg separada)" : "Texto Botão Recusar"}
                     value={formData.btn_recusar}
                     onChange={e => setFormData({...formData, btn_recusar: e.target.value})}
                   />
                 </div>
 
                 <div className="preview-buttons">
-                  <label>Prévia dos Botões:</label>
+                  <label>Prévia dos Botões: {isAudioUrl(formData.msg_media) && <span style={{fontSize: '0.75rem', color: '#eab308'}}>(enviados em msg separada)</span>}</label>
                   <div className="telegram-buttons">
                     <button type="button" className="tg-btn accept" style={{borderColor: cfg.iconColor}}>
                       {formData.btn_aceitar} (R$ {formData.preco || '0'})

@@ -74,6 +74,13 @@ export function AutoRemarketing() {
     logs: [] // Fallback
   });
   
+
+  // 🔊 HELPER: Detecta se a URL é um áudio OGG
+  const isAudioUrl = (url) => {
+    if (!url) return false;
+    return url.toLowerCase().match(/\.(ogg|mp3|wav)$/i);
+  };
+
   // Carregar dados ao iniciar
   useEffect(() => {
     if (selectedBot) {
@@ -381,9 +388,25 @@ export function AutoRemarketing() {
                   />
                 </div>
 
+                {/* 🔊 ALERTA DE ÁUDIO */}
+                {isAudioUrl(disparoConfig.media_url) && (
+                    <div style={{
+                        background: 'rgba(234, 179, 8, 0.1)',
+                        border: '1px solid rgba(234, 179, 8, 0.3)',
+                        borderRadius: '8px',
+                        padding: '12px 15px',
+                        marginTop: '10px',
+                        marginBottom: '10px'
+                    }}>
+                        <p style={{color: '#eab308', fontSize: '0.85rem', margin: 0}}>
+                            🎙️ <strong>Modo Áudio Ativo</strong> — O áudio será enviado como voice note nativo. O texto abaixo e os botões de oferta serão enviados em uma mensagem separada automaticamente.
+                        </p>
+                    </div>
+                )}
+
                 <div className="form-group">
                   <RichInput
-                    label="Legenda / Texto"
+                    label={isAudioUrl(disparoConfig.media_url) ? "Texto (enviado SEPARADO após o áudio)" : "Legenda / Texto"}
                     value={disparoConfig.message_text}
                     onChange={(e) => setDisparoConfig({...disparoConfig, message_text: e.target.value})}
                     placeholder="Olá {first_name}, vi que gerou um PIX..."
@@ -531,13 +554,27 @@ export function AutoRemarketing() {
                         <div className="media-preview" style={{backgroundImage: `url(${disparoConfig.media_url})`}}></div>
                      )}
                      
-                     {/* PREVIEW PARA VÍDEO E ÁUDIO */}
-                     {disparoConfig.media_url && disparoConfig.media_url.match(/\.(mp4|mov|avi|ogg|mp3|wav)$/i) && (
+                     {/* PREVIEW PARA VÍDEO */}
+                     {disparoConfig.media_url && disparoConfig.media_url.match(/\.(mp4|mov|avi)$/i) && (
                          <div 
                             className="media-preview-mock"
                             style={{width: '100%', height: '120px', background: '#000', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: '8px', marginBottom: '8px'}}
                          >
-                            {disparoConfig.media_url.match(/\.(ogg|mp3|wav)$/i) ? '🎙️ Áudio' : '📹 Vídeo'}
+                            📹 Vídeo
+                         </div>
+                     )}
+                     {/* 🔊 PREVIEW ÁUDIO - VOICE NOTE */}
+                     {isAudioUrl(disparoConfig.media_url) && (
+                         <div style={{
+                             display: 'flex', alignItems: 'center', gap: '10px',
+                             background: 'rgba(195, 51, 255, 0.15)', borderRadius: '20px',
+                             padding: '8px 14px', marginBottom: '8px'
+                         }}>
+                             <div style={{width:'32px', height:'32px', borderRadius:'50%', background:'#c333ff', display:'flex', alignItems:'center', justifyContent:'center', fontSize:'14px'}}>▶</div>
+                             <div style={{flex:1, height:'4px', background:'rgba(255,255,255,0.2)', borderRadius:'2px', position:'relative'}}>
+                                 <div style={{width:'40%', height:'100%', background:'#c333ff', borderRadius:'2px'}}></div>
+                             </div>
+                             <span style={{fontSize:'0.75rem', color:'#aaa'}}>0:05</span>
                          </div>
                      )}
 

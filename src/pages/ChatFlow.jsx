@@ -102,6 +102,13 @@ export function ChatFlow() {
     delay_seconds: 0 
   });
 
+
+  // 🔊 HELPER: Detecta se a URL é um áudio OGG
+  const isAudioUrl = (url) => {
+    if (!url) return false;
+    return url.toLowerCase().match(/\.(ogg|mp3|wav)$/i);
+  };
+
   // Carrega tudo ao mudar o bot
   useEffect(() => {
     if (selectedBot) {
@@ -467,13 +474,27 @@ export function ChatFlow() {
                                 />
                             )}
                             
-                            {/* 🔥 ATUALIZAÇÃO: PREVIEW DE VÍDEO E ÁUDIO */}
-                            {flow.media_url && flow.media_url.match(/\.(mp4|mov|ogg|mp3|wav)$/i) && (
+                            {/* 🔥 ATUALIZAÇÃO: PREVIEW DE VÍDEO */}
+                            {flow.media_url && flow.media_url.match(/\.(mp4|mov)$/i) && (
                                 <div 
                                     className="media-preview-mock"
                                     style={{width: '100%', height: '120px', background: '#000', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: '8px', marginBottom: '8px'}}
                                 >
-                                    {flow.media_url.match(/\.(ogg|mp3|wav)$/i) ? '🎙️ Áudio' : '📹 Vídeo'}
+                                    📹 Vídeo
+                                </div>
+                            )}
+                            {/* 🔊 PREVIEW DE ÁUDIO - VOICE NOTE NATIVO */}
+                            {flow.media_url && isAudioUrl(flow.media_url) && (
+                                <div style={{
+                                    display: 'flex', alignItems: 'center', gap: '10px',
+                                    background: 'rgba(195, 51, 255, 0.15)', borderRadius: '20px',
+                                    padding: '8px 14px', marginBottom: '8px'
+                                }}>
+                                    <div style={{width:'32px', height:'32px', borderRadius:'50%', background:'#c333ff', display:'flex', alignItems:'center', justifyContent:'center', fontSize:'14px'}}>▶</div>
+                                    <div style={{flex:1, height:'4px', background:'rgba(255,255,255,0.2)', borderRadius:'2px', position:'relative'}}>
+                                        <div style={{width:'40%', height:'100%', background:'#c333ff', borderRadius:'2px'}}></div>
+                                    </div>
+                                    <span style={{fontSize:'0.75rem', color:'#aaa'}}>0:05</span>
                                 </div>
                             )}
 
@@ -572,8 +593,24 @@ export function ChatFlow() {
                             onChange={(url) => setFlow({...flow, media_url: url})} 
                         />
 
+                        {/* 🔊 ALERTA: ÁUDIO DETECTADO */}
+                        {isAudioUrl(flow.media_url) && (
+                            <div style={{
+                                background: 'rgba(234, 179, 8, 0.1)',
+                                border: '1px solid rgba(234, 179, 8, 0.3)',
+                                borderRadius: '8px',
+                                padding: '12px 15px',
+                                marginTop: '10px',
+                                marginBottom: '10px'
+                            }}>
+                                <p style={{color: '#eab308', fontSize: '0.85rem', margin: 0}}>
+                                    🎙️ <strong>Modo Áudio Ativo</strong> — Botões de ação ficam desabilitados. O áudio será enviado como voice note nativo e o texto/botões serão enviados em mensagem separada automaticamente pelo bot.
+                                </p>
+                            </div>
+                        )}
+
                         {/* 🔥 SELETOR DE MODO DE BOTÃO */}
-                        {flow.start_mode === 'padrao' && (
+                        {flow.start_mode === 'padrao' && !isAudioUrl(flow.media_url) && (
                             <div className="buttons-config">
                                 <p className="config-title" style={{marginBottom: 15}}>⚙️ Configurar Botões de Ação</p>
                                 
@@ -1016,9 +1053,34 @@ export function ChatFlow() {
                         onChange={(url) => setModalData({...modalData, msg_media: url})} 
                     />
                     
+                    {/* 🔊 ALERTA DE ÁUDIO NO MODAL */}
+                    {isAudioUrl(modalData.msg_media) && (
+                        <div style={{
+                            background: 'rgba(234, 179, 8, 0.1)',
+                            border: '1px solid rgba(234, 179, 8, 0.3)',
+                            borderRadius: '8px',
+                            padding: '12px 15px',
+                            marginTop: '10px',
+                            marginBottom: '10px'
+                        }}>
+                            <p style={{color: '#eab308', fontSize: '0.85rem', margin: 0}}>
+                                🎙️ <strong>Modo Áudio</strong> — Botões ficam desabilitados. O áudio será enviado sozinho como voice note. Texto e navegação serão enviados em mensagem separada.
+                            </p>
+                        </div>
+                    )}
+
                     <div className="modal-options-box">
-                        <label className="checkbox-label"><input type="checkbox" checked={modalData.mostrar_botao} onChange={e => setModalData({...modalData, mostrar_botao: e.target.checked})} /> Mostrar botão "Próximo"?</label>
-                        {modalData.mostrar_botao ? (<Input label="Texto do Botão" value={modalData.btn_texto} onChange={e => setModalData({...modalData, btn_texto: e.target.value})} />) : (<div className="delay-input-wrapper"><Input label="Intervalo (s)" type="number" value={modalData.delay_seconds} onChange={e => setModalData({...modalData, delay_seconds: parseInt(e.target.value) || 0})} icon={<Clock size={16}/>} /></div>)}
+                        {!isAudioUrl(modalData.msg_media) ? (
+                            <>
+                                <label className="checkbox-label"><input type="checkbox" checked={modalData.mostrar_botao} onChange={e => setModalData({...modalData, mostrar_botao: e.target.checked})} /> Mostrar botão "Próximo"?</label>
+                                {modalData.mostrar_botao ? (<Input label="Texto do Botão" value={modalData.btn_texto} onChange={e => setModalData({...modalData, btn_texto: e.target.value})} />) : (<div className="delay-input-wrapper"><Input label="Intervalo (s)" type="number" value={modalData.delay_seconds} onChange={e => setModalData({...modalData, delay_seconds: parseInt(e.target.value) || 0})} icon={<Clock size={16}/>} /></div>)}
+                            </>
+                        ) : (
+                            <div className="delay-input-wrapper">
+                                <Input label="Intervalo até próxima mensagem (s)" type="number" value={modalData.delay_seconds} onChange={e => setModalData({...modalData, delay_seconds: parseInt(e.target.value) || 0})} icon={<Clock size={16}/>} />
+                                <p style={{fontSize: '0.8rem', color: '#888', marginTop: '5px'}}>Tempo de espera após o áudio antes de enviar a próxima mensagem.</p>
+                            </div>
+                        )}
                     </div>
                     <div className="toggle-wrapper modal-toggle">
                         <label>Auto-destruir?</label>
