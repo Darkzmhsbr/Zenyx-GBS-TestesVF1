@@ -53,6 +53,9 @@ import { Ranking } from './pages/Ranking';
 // 📊 NOVA PÁGINA: Estatísticas Avançadas
 import { Statistics } from './pages/Statistics';
 
+// 🆕 NOVA PÁGINA: Configuração Guiada (Setup Wizard)
+import { SetupWizard } from './pages/SetupWizard';
+
 // Mini App (Loja)
 import { MiniAppHome } from './pages/miniapp/MiniAppHome';
 import { MiniAppCategory } from './pages/miniapp/MiniAppCategory';
@@ -186,6 +189,9 @@ function App() {
               {/* Tutoriais */}
               <Route path="/tutorial" element={<Tutorial />} />
               <Route path="/tutoriais" element={<Tutorial />} />
+              
+              {/* 🆕 NOVA ROTA: Configuração Guiada */}
+              <Route path="/setup" element={<SetupWizard />} />
               
               {/* Funções Extras */}
               <Route path="/funcoes" element={<PlaceholderPage title="Funções Extras" />} />

@@ -27,7 +27,8 @@ import {
   Rocket, // 🚀 Ícone do Upsell
   ArrowDownCircle, // 📉 Ícone do Downsell
   Trophy, // 🏆 Ícone do Ranking (NOVO)
-  BarChart3 // 📊 Ícone de Estatísticas (NOVO)
+  BarChart3, // 📊 Ícone de Estatísticas (NOVO)
+  Compass // 🧭 Ícone da Configuração Guiada (NOVO)
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import './Sidebar.css';
@@ -245,6 +246,11 @@ export function Sidebar({ isOpen, onClose }) {
 
             {hasBot && isExtrasMenuOpen && (
               <div className="nav-subitems">
+                {/* 🆕 NOVA ROTA: CONFIGURAÇÃO GUIADA */}
+                <Link to="/setup" className={`nav-item ${isActive('/setup')}`} onClick={onClose}>
+                  <Compass size={18} /> <span>Configuração Guiada</span>
+                </Link>
+
                 <Link to="/tutorial" className={`nav-item ${isActive('/tutorial')}`} onClick={onClose}>
                   <BookOpen size={18} /> <span>Tutoriais</span>
                 </Link>
