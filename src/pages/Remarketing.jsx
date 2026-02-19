@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useBot } from '../context/BotContext';
 import { useProgress } from '../context/ProgressContext';
 import { remarketingService, planService } from '../services/api';
-import { Send, Users, Image, MessageSquare, CheckCircle, AlertTriangle, History, Tag, Clock, RotateCcw, Edit, Play, Trash2, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Send, Users, Image, MessageSquare, CheckCircle, AlertTriangle, History, Tag, Clock, RotateCcw, Edit, Play, Trash2, ChevronLeft, ChevronRight, Mic } from 'lucide-react';
 import { Button } from '../components/Button';
 import { Card, CardContent } from '../components/Card';
 import { RichInput } from '../components/RichInput';
@@ -30,6 +30,11 @@ export function Remarketing() {
   const [formData, setFormData] = useState({
     target: 'todos', 
     mensagem: '',
+    
+    // 🔥 NOVOS CAMPOS PARA COMBO ÁUDIO
+    audio_url: '', 
+    audio_delay_seconds: 3,
+
     media_url: '',
     incluir_oferta: false,
     plano_oferta_id: '',
@@ -159,6 +164,11 @@ export function Remarketing() {
       setFormData({
         target: item.target || 'todos',
         mensagem: config.mensagem || '',
+        
+        // 🔥 Reuso de áudio
+        audio_url: config.audio_url || '',
+        audio_delay_seconds: config.audio_delay_seconds || 3,
+
         media_url: config.media_url || '',
         incluir_oferta: config.incluir_oferta || false,
         plano_oferta_id: config.plano_oferta_id || '',
@@ -242,10 +252,13 @@ export function Remarketing() {
   };
 
   const handleEnviar = async () => {
-    if (!formData.mensagem.trim()) {
+    // Validação
+    const hasContent = formData.mensagem.trim() || formData.audio_url || formData.media_url;
+    
+    if (!hasContent) {
       Swal.fire({
         title: 'Atenção',
-        text: 'Por favor, escreva uma mensagem.',
+        text: 'Sua campanha precisa ter ao menos uma mensagem, um áudio ou uma mídia.',
         icon: 'warning',
         background: '#151515',
         color: '#fff'
@@ -291,6 +304,8 @@ export function Remarketing() {
         setFormData({
           target: 'todos',
           mensagem: '',
+          audio_url: '',
+          audio_delay_seconds: 3,
           media_url: '',
           incluir_oferta: false,
           plano_oferta_id: '',
@@ -399,7 +414,7 @@ export function Remarketing() {
                         ❌ {item.blocked_count || 0} bloqueados
                       </div>
                       <div style={{ fontSize: '0.7rem', color: '#444', marginTop: '3px', fontStyle:'italic' }}>
-                         "{msgPreview.substring(0, 40)}..."
+                          "{msgPreview.substring(0, 40)}..."
                       </div>
                     </div>
                     <div className="history-actions">
@@ -510,8 +525,48 @@ export function Remarketing() {
           <>
             <h3 style={{ marginBottom: '20px' }}>Monte sua mensagem</h3>
             
+            {/* 🔥 NOVO: ÁUDIO INTRODUTÓRIO */}
+            <div className="form-group" style={{
+                background: 'rgba(195, 51, 255, 0.03)', 
+                padding: '15px', 
+                borderRadius: '8px', 
+                borderLeft: '3px solid #c333ff', 
+                marginBottom: '20px'
+            }}>
+                <label style={{display:'flex', alignItems:'center', gap:'8px', color:'#c333ff'}}>
+                    <Mic size={18} /> Áudio de Introdução (Voice Note)
+                </label>
+                
+                <div style={{marginTop:'10px'}}>
+                    <MediaUploader 
+                        label="🎤 Upload de Áudio OGG (Chega PRIMEIRO)" 
+                        value={formData.audio_url} 
+                        onChange={(url) => setFormData({ ...formData, audio_url: url })} 
+                    />
+                </div>
+                
+                {formData.audio_url && (
+                    <div style={{marginTop:'15px', display:'flex', gap:'15px', alignItems:'center'}}>
+                        <div style={{flex: 1}}>
+                            <label style={{fontSize:'0.85rem'}}>⏳ Delay após Áudio (seg)</label>
+                            <input 
+                                className="input-field"
+                                type="number"
+                                value={formData.audio_delay_seconds}
+                                onChange={(e) => setFormData({...formData, audio_delay_seconds: parseInt(e.target.value) || 0})}
+                            />
+                        </div>
+                        <div style={{flex: 3}}>
+                             <p style={{fontSize:'0.8rem', color:'#888', marginTop:'22px'}}>
+                                Tempo que o bot espera antes de enviar a Mensagem e a Oferta abaixo.
+                             </p>
+                        </div>
+                    </div>
+                )}
+            </div>
+
             <div className="form-group">
-              <label><MessageSquare size={16} style={{ verticalAlign: 'middle' }} /> Mensagem</label>
+              <label><MessageSquare size={16} style={{ verticalAlign: 'middle' }} /> Mensagem {formData.audio_url && "(Enviada após o áudio)"}</label>
               <RichInput
                 value={formData.mensagem}
                 onChange={(e) => setFormData({ ...formData, mensagem: e.target.value })}
@@ -521,16 +576,16 @@ export function Remarketing() {
             </div>
 
             <div className="form-group">
-              {/* 🔥 COMPONENTE DE UPLOAD ATUALIZADO AQUI */}
+              <label><Image size={16} style={{ verticalAlign: 'middle' }} /> Mídia Visual (Opcional)</label>
               <MediaUploader 
-                label="URL da Mídia (Opcional - Foto, Vídeo ou Áudio OGG)" 
+                label="URL da Mídia (Foto ou Vídeo)" 
                 value={formData.media_url} 
                 onChange={(url) => setFormData({ ...formData, media_url: url })} 
               />
             </div>
 
-            {/* 🔊 ALERTA DE ÁUDIO */}
-            {isAudioUrl(formData.media_url) && (
+            {/* ALERTA DE ÁUDIO NO CAMPO ERRADO (LEGADO) */}
+            {isAudioUrl(formData.media_url) && !formData.audio_url && (
                 <div style={{
                     background: 'rgba(234, 179, 8, 0.1)',
                     border: '1px solid rgba(234, 179, 8, 0.3)',
@@ -539,7 +594,22 @@ export function Remarketing() {
                     marginBottom: '15px'
                 }}>
                     <p style={{color: '#eab308', fontSize: '0.85rem', margin: 0}}>
-                        🎙️ <strong>Modo Áudio Ativo</strong> — O áudio será enviado como voice note nativo do Telegram. O texto da mensagem e botões de oferta serão enviados em uma mensagem separada logo após o áudio.
+                        ⚠️ <strong>Dica:</strong> Para usar a função de Combo (Áudio + Texto), use o campo "Áudio de Introdução" no topo da página.
+                    </p>
+                </div>
+            )}
+            
+            {/* ALERTA COMBO ATIVO */}
+            {formData.audio_url && (formData.mensagem || formData.media_url) && (
+                <div style={{
+                    background: 'rgba(16, 185, 129, 0.1)',
+                    border: '1px solid rgba(16, 185, 129, 0.3)',
+                    borderRadius: '8px',
+                    padding: '12px 15px',
+                    marginBottom: '15px'
+                }}>
+                    <p style={{color: '#059669', fontSize: '0.85rem', margin: 0}}>
+                        🚀 <strong>Combo Ativado!</strong> Áudio chega primeiro ➔ espera {formData.audio_delay_seconds}s ➔ Mensagem/Oferta chega depois.
                     </p>
                 </div>
             )}
@@ -685,6 +755,13 @@ export function Remarketing() {
             
             <div className="review-box">
               <p><strong>Público:</strong> {targetOptions.find(o => o.id === formData.target)?.title}</p>
+              
+              {formData.audio_url && (
+                <div style={{marginBottom:'10px', color:'#c333ff'}}>
+                    <strong>🎤 Áudio + Delay ({formData.audio_delay_seconds}s)</strong>
+                </div>
+              )}
+              
               {formData.media_url && <p><strong>Mídia:</strong> {formData.media_url}</p>}
               {formData.incluir_oferta && (
                 <p><strong>Oferta:</strong> {plans.find(p => p.id === parseInt(formData.plano_oferta_id))?.nome_exibicao}</p>

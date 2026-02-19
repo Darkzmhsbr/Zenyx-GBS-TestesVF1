@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useBot } from '../context/BotContext';
 import { orderBumpService, groupService } from '../services/api';
-import { ShoppingBag, Save, AlertCircle, Image as ImageIcon, Link as LinkIcon, DollarSign, MessageSquare, Trash2, Layers } from 'lucide-react';
+import { ShoppingBag, Save, AlertCircle, Image as ImageIcon, Link as LinkIcon, DollarSign, MessageSquare, Trash2, Layers, Mic } from 'lucide-react';
 import { Button } from '../components/Button';
 import { Card, CardContent } from '../components/Card';
 import { Input } from '../components/Input';
@@ -27,7 +27,12 @@ export function OrderBump() {
     group_id: null, // ✅ FASE 2: Grupo do catálogo
     autodestruir: false,
     msg_texto: '',
-    msg_media: '',
+    
+    // 🔥 NOVOS CAMPOS PARA COMBO ÁUDIO
+    audio_url: '', 
+    audio_delay_seconds: 3,
+    
+    msg_media: '', // Mantido como "Mídia Visual"
     btn_aceitar: '✅ SIM, ADICIONAR',
     btn_recusar: '❌ NÃO, OBRIGADO'
   });
@@ -66,6 +71,8 @@ export function OrderBump() {
           group_id: data.group_id || null, // ✅ FASE 2
           autodestruir: data.autodestruir ?? false,
           msg_texto: data.msg_texto || '',
+          audio_url: data.audio_url || '', // 🔥 Carrega áudio separado
+          audio_delay_seconds: data.audio_delay_seconds || 3, // 🔥 Carrega delay
           msg_media: data.msg_media || '',
           btn_aceitar: data.btn_aceitar || '✅ SIM, ADICIONAR',
           btn_recusar: data.btn_recusar || '❌ NÃO, OBRIGADO'
@@ -226,26 +233,75 @@ export function OrderBump() {
                   <h3>Mensagem e Aparência</h3>
                 </div>
 
+                {/* 🔥 UPLOADER DE ÁUDIO SEPARADO (ESTRATÉGIA COMBO) */}
+                <div style={{ marginBottom: '15px', background: 'rgba(195, 51, 255, 0.05)', padding: '10px', borderRadius: '8px', borderLeft: '3px solid #c333ff' }}>
+                   <div style={{display:'flex', alignItems:'center', gap:'6px', marginBottom:'8px'}}>
+                      <Mic size={16} color="#c333ff" />
+                      <label style={{fontSize:'0.9rem', color:'#fff', fontWeight:'600'}}>Áudio de Introdução (Opcional)</label>
+                   </div>
+                   <MediaUploader 
+                     label="🎤 Voice Note (Chega PRIMEIRO)" 
+                     value={formData.audio_url || ''} 
+                     onChange={(url) => setFormData({...formData, audio_url: url})} 
+                   />
+                   
+                   {formData.audio_url && (
+                      <div style={{marginTop:'10px'}}>
+                        <label style={{fontSize:'0.85rem', color:'#ccc'}}>⏳ Delay do Áudio (segundos)</label>
+                        <input 
+                            type="number" 
+                            style={{
+                                width: '100%',
+                                background: 'rgba(0,0,0,0.2)',
+                                border: '1px solid #444',
+                                padding: '8px',
+                                borderRadius: '6px',
+                                color: '#fff',
+                                marginTop: '4px'
+                            }}
+                            value={formData.audio_delay_seconds || 0}
+                            onChange={e => setFormData({...formData, audio_delay_seconds: parseInt(e.target.value) || 0})}
+                        />
+                      </div>
+                   )}
+                </div>
+
                 {/* 🔥 ATUALIZADO PARA RICH INPUT */}
                 <RichInput 
-                  label={isAudioUrl(formData.msg_media) ? "Texto da Oferta (enviado SEPARADO após o áudio)" : "Texto da Oferta"}
+                  label={formData.audio_url ? "Texto da Oferta (enviado APÓS o áudio)" : "Texto da Oferta"}
                   placeholder="Ex: Gostaria de adicionar o acesso ao meu Pack de Fotos por apenas + R$ 9,90?"
                   value={formData.msg_texto}
                   onChange={e => setFormData({...formData, msg_texto: e.target.value})}
                   rows={4}
                 />
 
-                {/* 🔥 COMPONENTE DE UPLOAD DE MÍDIA INJETADO AQUI */}
+                {/* 🔥 COMPONENTE DE UPLOAD DE MÍDIA VISUAL */}
                 <div style={{ marginTop: '15px' }}>
                   <MediaUploader 
-                    label="Mídia da Oferta (Opcional - Imagem, Vídeo ou Áudio)" 
+                    label="🖼️ Mídia Visual (Acompanha o Texto/Botões)" 
                     value={formData.msg_media} 
                     onChange={(url) => setFormData({...formData, msg_media: url})} 
                   />
                 </div>
 
-                {/* 🔊 ALERTA DE ÁUDIO */}
-                {isAudioUrl(formData.msg_media) && (
+                {/* 🔊 ALERTA DE MODO COMBO */}
+                {formData.audio_url && (formData.msg_media || formData.msg_texto) && (
+                    <div style={{
+                        background: 'rgba(16, 185, 129, 0.1)',
+                        border: '1px solid rgba(16, 185, 129, 0.3)',
+                        borderRadius: '8px',
+                        padding: '12px 15px',
+                        marginTop: '10px',
+                        marginBottom: '10px'
+                    }}>
+                        <p style={{color: '#059669', fontSize: '0.85rem', margin: 0}}>
+                            🚀 <strong>Combo Ativado!</strong> Áudio chega primeiro, espera {formData.audio_delay_seconds}s e depois chega a oferta visual.
+                        </p>
+                    </div>
+                )}
+
+                {/* Fallback de aviso para áudio no campo de mídia visual (Legado) */}
+                {isAudioUrl(formData.msg_media) && !formData.audio_url && (
                     <div style={{
                         background: 'rgba(234, 179, 8, 0.1)',
                         border: '1px solid rgba(234, 179, 8, 0.3)',
@@ -255,7 +311,7 @@ export function OrderBump() {
                         marginBottom: '10px'
                     }}>
                         <p style={{color: '#eab308', fontSize: '0.85rem', margin: 0}}>
-                            🎙️ <strong>Modo Áudio Ativo</strong> — O áudio será enviado como voice note nativo. O texto da oferta e os botões Aceitar/Recusar serão enviados em uma mensagem separada logo após o áudio.
+                            ⚠️ <strong>Dica:</strong> Use o campo de "Áudio de Introdução" acima para separar o áudio dos botões corretamente.
                         </p>
                     </div>
                 )}
@@ -281,19 +337,19 @@ export function OrderBump() {
 
                 <div className="form-row">
                   <Input 
-                    label={isAudioUrl(formData.msg_media) ? "Botão Aceitar (msg separada)" : "Texto Botão Aceitar"}
+                    label={formData.audio_url ? "Botão Aceitar (msg separada)" : "Texto Botão Aceitar"}
                     value={formData.btn_aceitar}
                     onChange={e => setFormData({...formData, btn_aceitar: e.target.value})}
                   />
                   <Input 
-                    label={isAudioUrl(formData.msg_media) ? "Botão Recusar (msg separada)" : "Texto Botão Recusar"}
+                    label={formData.audio_url ? "Botão Recusar (msg separada)" : "Texto Botão Recusar"}
                     value={formData.btn_recusar}
                     onChange={e => setFormData({...formData, btn_recusar: e.target.value})}
                   />
                 </div>
 
                 <div className="preview-buttons">
-                  <label>Prévia dos Botões: {isAudioUrl(formData.msg_media) && <span style={{fontSize: '0.75rem', color: '#eab308'}}>(enviados em msg separada)</span>}</label>
+                  <label>Prévia dos Botões: {formData.audio_url && <span style={{fontSize: '0.75rem', color: '#eab308'}}>(enviados após o áudio)</span>}</label>
                   <div className="telegram-buttons">
                     <button type="button" className="tg-btn accept">{formData.btn_aceitar} (+ R$ {formData.preco || '0'})</button>
                     <button type="button" className="tg-btn decline">{formData.btn_recusar}</button>

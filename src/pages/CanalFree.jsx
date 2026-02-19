@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useBot } from '../context/BotContext';
 import { canalFreeService } from '../services/api';
-import { RefreshCw, Save, AlertCircle, CheckCircle, Info, Unlock, Plus, Trash2, Image, Video } from 'lucide-react';
+import { RefreshCw, Save, AlertCircle, CheckCircle, Info, Unlock, Plus, Trash2, Image, Video, Mic } from 'lucide-react';
 import { RichInput } from '../components/RichInput'; // Importando componente de texto rico
 import { MediaUploader } from '../components/MediaUploader'; // 🔥 NOVO COMPONENTE DE UPLOAD
 import './CanalFree.css';
@@ -34,6 +34,11 @@ export function CanalFree() {
     canal_name: '',
     is_active: false,
     message_text: 'Olá! Percebi que você solicitou entrar no meu Canal FREE, mas só lembrando que a promoção do meu canal VIP está prestes a encerrar! Aproveita agora, pois em poucos minutos o valor vai dobrar... Venha!',
+    
+    // 🔥 NOVOS CAMPOS PARA COMBO ÁUDIO
+    audio_url: '', 
+    audio_delay_seconds: 3,
+
     media_url: '',
     media_type: null,
     buttons: [],
@@ -52,8 +57,6 @@ export function CanalFree() {
     return url.toLowerCase().match(/\.(ogg|mp3|wav)$/i);
   };
 
-
-
   // Carregar configuração ao montar
   useEffect(() => {
     if (selectedBot?.id) {
@@ -65,11 +68,23 @@ export function CanalFree() {
     try {
       setLoading(true);
       const data = await canalFreeService.getConfig(selectedBot.id);
-      // Garante que message_text seja tratado como string para o RichInput
+      
+      // Merge seguro dos dados
       setConfig({
-        ...data,
-        message_text: data.message_text || ''
+        canal_id: '',
+        canal_name: '',
+        is_active: false,
+        message_text: '',
+        audio_url: '',
+        audio_delay_seconds: 3,
+        media_url: '',
+        media_type: null,
+        buttons: [],
+        delay_seconds: 60,
+        ...data, // Sobrescreve com o que veio da API
+        message_text: data.message_text || '' // Garante string
       });
+
     } catch (error) {
       console.error('Erro ao carregar config:', error);
       setStatus({ type: 'error', message: 'Erro ao carregar configuração' });
@@ -80,13 +95,14 @@ export function CanalFree() {
 
   const handleSave = async () => {
     // Validações
-    if (!config.message_text.trim()) {
-      setStatus({ type: 'error', message: 'Mensagem de boas-vindas é obrigatória' });
+    // Se tiver áudio OU texto, passa.
+    if (!config.message_text.trim() && !config.audio_url) {
+      setStatus({ type: 'error', message: 'Defina ao menos um Áudio ou uma Mensagem de texto.' });
       return;
     }
 
     if (config.delay_seconds < 1 || config.delay_seconds > 86400) {
-      setStatus({ type: 'error', message: 'Delay deve estar entre 1 e 86400 segundos (24h)' });
+      setStatus({ type: 'error', message: 'Delay de aprovação deve estar entre 1 e 86400 segundos (24h)' });
       return;
     }
 
@@ -255,9 +271,46 @@ export function CanalFree() {
           </p>
         </div>
 
+        {/* 🔥 NOVA SEÇÃO: ÁUDIO INTRODUTÓRIO (VOICE NOTE) */}
+        <div className="form-section" style={{background: 'rgba(195, 51, 255, 0.02)', borderLeft: '3px solid #c333ff'}}>
+          <label className="section-title" style={{display:'flex', alignItems:'center', gap:'8px'}}>
+             <Mic size={18} color="#c333ff"/> 
+             Áudio de Entrada (Voice Note)
+          </label>
+          
+          <div className="mt-2">
+            <MediaUploader 
+              label="🎤 Upload de Áudio OGG (Chega PRIMEIRO)" 
+              value={config.audio_url || ''} 
+              onChange={(url) => setConfig({ ...config, audio_url: url })} 
+            />
+          </div>
+
+          {config.audio_url && (
+            <div className="mt-3" style={{paddingLeft: '5px'}}>
+               <div style={{display:'flex', alignItems:'center', gap:'10px'}}>
+                  <div style={{flex: 1}}>
+                    <label style={{fontWeight:'bold', color:'#c333ff', fontSize:'0.9rem'}}>⏳ Delay do Áudio (segundos)</label>
+                    <input 
+                        type="number" 
+                        className="input-field"
+                        value={config.audio_delay_seconds || 0}
+                        onChange={e => setConfig({...config, audio_delay_seconds: parseInt(e.target.value) || 0})}
+                    />
+                  </div>
+                  <div style={{flex: 2}}>
+                     <p className="helper-text" style={{marginTop:'25px'}}>
+                       Tempo que o bot espera o cliente ouvir o áudio antes de mandar o Texto + Botões.
+                     </p>
+                  </div>
+               </div>
+            </div>
+          )}
+        </div>
+
         {/* Mensagem de Boas-Vindas (COM RICH INPUT E DICAS) */}
         <div className="form-section">
-          <label className="section-title">💬 Mensagem de Boas-Vindas</label>
+          <label className="section-title">💬 Mensagem de Boas-Vindas {config.audio_url && <small style={{fontWeight:'normal', color:'#666'}}>(Chega após o áudio)</small>}</label>
           
           {/* Box de Dicas de Variáveis */}
           <div className="status-alert info" style={{ padding: '0.8rem', marginBottom: '1rem', alignItems: 'center' }}>
@@ -279,12 +332,6 @@ export function CanalFree() {
             rows={6}
           />
           
-          {config.media_type === 'audio' && (
-              <p className="helper-text" style={{color: '#eab308', marginTop: '5px'}}>
-                  ⚠️ Com áudio ativo, este texto será enviado em uma mensagem separada após o voice note.
-              </p>
-          )}
-          
           <p className="helper-text">
             Esta mensagem será enviada no privado quando o usuário solicitar entrada. Use a barra de ferramentas para formatar (Negrito, Itálico, Links).
           </p>
@@ -292,7 +339,7 @@ export function CanalFree() {
 
         {/* Mídia (Foto, Vídeo ou Áudio) */}
         <div className="form-section">
-          <label className="section-title">🖼️ Mídia (Opcional)</label>
+          <label className="section-title">🖼️ Mídia Visual (Acompanha o Texto)</label>
           
           <div className="media-type-selector">
             <button
@@ -300,7 +347,7 @@ export function CanalFree() {
               className={`media-btn ${!config.media_type ? 'active' : ''}`}
               onClick={() => setConfig({ ...config, media_type: null, media_url: '' })}
             >
-              Sem mídia
+              Sem mídia visual
             </button>
             <button
               type="button"
@@ -316,12 +363,13 @@ export function CanalFree() {
             >
               <Video size={18} /> Vídeo
             </button>
+            {/* Opção legada de áudio no media_type mantida para compatibilidade, mas o foco é o campo separado acima */}
             <button
               type="button"
               className={`media-btn ${config.media_type === 'audio' ? 'active' : ''}`}
               onClick={() => setConfig({ ...config, media_type: 'audio' })}
             >
-              🎙️ Áudio
+              🎙️ Áudio (Legado)
             </button>
           </div>
 
@@ -344,8 +392,8 @@ export function CanalFree() {
             </div>
           )}
 
-          {/* 🔊 ALERTA DE ÁUDIO */}
-          {config.media_type === 'audio' && (
+          {/* 🔊 ALERTA DE ÁUDIO LEGADO */}
+          {config.media_type === 'audio' && !config.audio_url && (
               <div style={{
                   background: 'rgba(234, 179, 8, 0.1)',
                   border: '1px solid rgba(234, 179, 8, 0.3)',
@@ -354,15 +402,30 @@ export function CanalFree() {
                   marginTop: '12px'
               }}>
                   <p style={{color: '#eab308', fontSize: '0.85rem', margin: 0}}>
-                      🎙️ <strong>Modo Áudio Ativo</strong> — O áudio será enviado como voice note nativo do Telegram. O texto da mensagem e os botões abaixo serão enviados em uma mensagem separada automaticamente pelo bot.
+                      ⚠️ <strong>Dica:</strong> Para enviar áudio + texto/botões juntos, use o campo "Áudio de Entrada" acima e deixe esta mídia visual vazia ou como Foto.
                   </p>
               </div>
+          )}
+
+          {/* ALERTA DE COMBO ATIVO */}
+          {config.audio_url && (config.media_url || config.message_text) && (
+             <div style={{
+                background: 'rgba(16, 185, 129, 0.1)',
+                border: '1px solid rgba(16, 185, 129, 0.3)',
+                borderRadius: '8px',
+                padding: '12px 15px',
+                marginTop: '12px'
+             }}>
+                 <p style={{color: '#059669', fontSize: '0.85rem', margin: 0}}>
+                    🚀 <strong>Combo Ativado!</strong> 1º Voice Note ➔ espera {config.audio_delay_seconds}s ➔ 2º Texto/Mídia + Botões.
+                 </p>
+             </div>
           )}
         </div>
 
         {/* Botões Personalizados */}
         <div className="form-section">
-          <label className="section-title">🔘 Botões Personalizados {config.media_type === 'audio' && <span style={{fontSize: '0.75rem', color: '#eab308', fontWeight: 'normal'}}>(enviados em mensagem separada após o áudio)</span>}</label>
+          <label className="section-title">🔘 Botões Personalizados {config.audio_url && <span style={{fontSize: '0.75rem', color: '#666', fontWeight: 'normal'}}>(enviados junto com o texto)</span>}</label>
           
           {/* Lista de botões */}
           {config.buttons && config.buttons.length > 0 && (

@@ -30,6 +30,8 @@ const DEFAULT_DISPARO = {
   is_active: false,
   message_text: '',
   media_url: '',
+  audio_url: '', // 🔥 NOVO: Áudio separado (Voice Note)
+  audio_delay_seconds: 3, // 🔥 NOVO: Delay entre áudio e próxima msg
   media_type: null,
   delay_minutes: 5,
   auto_destruct_enabled: false,      // ✅ NOVO
@@ -102,7 +104,11 @@ export function AutoRemarketing() {
       ]);
       
       // Validação de dados vindos da API
-      setDisparoConfig(remarketing || DEFAULT_DISPARO);
+      // Mesclamos com DEFAULT_DISPARO para garantir que audio_url exista
+      setDisparoConfig({
+          ...DEFAULT_DISPARO,
+          ...(remarketing || {})
+      });
       
       // Merge com defaults para garantir que os novos campos existam
       setAlternatingConfig({
@@ -139,8 +145,11 @@ export function AutoRemarketing() {
     if (!selectedBot?.id) return;
     
     if (disparoConfig.is_active) {
-      if (!disparoConfig.message_text.trim()) {
-        alert('Por favor, adicione uma mensagem de remarketing.');
+      // Se tiver áudio ou mídia visual ou texto, tá valendo
+      const hasContent = disparoConfig.message_text.trim() || disparoConfig.media_url || disparoConfig.audio_url;
+
+      if (!hasContent) {
+        alert('Por favor, adicione ao menos um texto, áudio ou mídia.');
         return;
       }
       
@@ -355,15 +364,15 @@ export function AutoRemarketing() {
                 </div>
 
                 {disparoConfig.is_active && (
-                   <div className="form-group mt-3">
-                     <label>{Icons.Clock} Tempo de espera (minutos)</label>
-                     <input 
-                       type="number" 
-                       className="input-field"
-                       value={disparoConfig.delay_minutes}
-                       onChange={e => setDisparoConfig({...disparoConfig, delay_minutes: parseInt(e.target.value)})}
-                     />
-                   </div>
+                    <div className="form-group mt-3">
+                      <label>{Icons.Clock} Tempo de espera (minutos)</label>
+                      <input 
+                        type="number" 
+                        className="input-field"
+                        value={disparoConfig.delay_minutes}
+                        onChange={e => setDisparoConfig({...disparoConfig, delay_minutes: parseInt(e.target.value)})}
+                      />
+                    </div>
                 )}
               </div>
 
@@ -373,40 +382,71 @@ export function AutoRemarketing() {
                   <h3>{Icons.Message} Conteúdo da Mensagem</h3>
                 </div>
                 
-                {/* 🔥 COMPONENTE DE UPLOAD ATUALIZADO AQUI */}
+                {/* 🔥 UPLOADER DE ÁUDIO SEPARADO (ESTRATÉGIA COMBO) */}
+                <div className="form-group">
+                   <MediaUploader 
+                     label="🎤 Áudio / Voice Note (Chega PRIMEIRO)" 
+                     value={disparoConfig.audio_url || ''} 
+                     onChange={(url) => setDisparoConfig({...disparoConfig, audio_url: url})} 
+                   />
+                </div>
+
+                {/* Delay entre Áudio e Mídia Visual */}
+                {disparoConfig.audio_url && (
+                    <div className="form-group" style={{
+                        marginLeft:'15px', 
+                        borderLeft:'3px solid #c333ff', 
+                        paddingLeft:'10px', 
+                        marginBottom:'20px',
+                        background: 'rgba(195, 51, 255, 0.05)',
+                        padding: '10px',
+                        borderRadius: '0 8px 8px 0'
+                    }}>
+                        <label style={{color: '#c333ff', fontWeight: 'bold'}}>⏳ Delay do Áudio (segundos)</label>
+                        <input 
+                            type="number" 
+                            className="input-field"
+                            value={disparoConfig.audio_delay_seconds || 0}
+                            onChange={e => setDisparoConfig({...disparoConfig, audio_delay_seconds: parseInt(e.target.value)})}
+                        />
+                        <small style={{color:'#666'}}>Tempo para o cliente ouvir o áudio antes de chegar a Imagem + Botões.</small>
+                    </div>
+                )}
+
+                {/* 🔥 COMPONENTE DE UPLOAD VISUAL ATUALIZADO */}
                 <div className="form-group">
                   <MediaUploader 
-                    label="Mídia URL (Opcional - Foto, Vídeo ou Áudio OGG)" 
+                    label="🖼️ Mídia Visual (Foto/Vídeo - Chega DEPOIS)" 
                     value={disparoConfig.media_url || ''} 
                     onChange={(url) => {
                         let type = null;
                         if (url.match(/\.(jpeg|jpg|png|gif|webp)$/i)) type = 'photo';
                         if (url.match(/\.(mp4|mov|avi)$/i)) type = 'video';
-                        if (url.match(/\.(ogg|mp3|wav)$/i)) type = 'audio';
+                        if (url.match(/\.(ogg|mp3|wav)$/i)) type = 'audio'; // Fallback
                         setDisparoConfig({...disparoConfig, media_url: url, media_type: type});
                     }} 
                   />
                 </div>
 
-                {/* 🔊 ALERTA DE ÁUDIO */}
-                {isAudioUrl(disparoConfig.media_url) && (
+                {/* 🔊 ALERTA DE MODO COMBO */}
+                {disparoConfig.audio_url && disparoConfig.media_url && (
                     <div style={{
-                        background: 'rgba(234, 179, 8, 0.1)',
-                        border: '1px solid rgba(234, 179, 8, 0.3)',
+                        background: 'rgba(16, 185, 129, 0.1)',
+                        border: '1px solid rgba(16, 185, 129, 0.3)',
                         borderRadius: '8px',
                         padding: '12px 15px',
                         marginTop: '10px',
                         marginBottom: '10px'
                     }}>
-                        <p style={{color: '#eab308', fontSize: '0.85rem', margin: 0}}>
-                            🎙️ <strong>Modo Áudio Ativo</strong> — O áudio será enviado como voice note nativo. O texto abaixo e os botões de oferta serão enviados em uma mensagem separada automaticamente.
+                        <p style={{color: '#059669', fontSize: '0.85rem', margin: 0}}>
+                            🚀 <strong>Combo Ativado!</strong> Primeiro envia o Áudio, espera {disparoConfig.audio_delay_seconds}s e depois envia a Mídia com a Oferta.
                         </p>
                     </div>
                 )}
 
                 <div className="form-group">
                   <RichInput
-                    label={isAudioUrl(disparoConfig.media_url) ? "Texto (enviado SEPARADO após o áudio)" : "Legenda / Texto"}
+                    label={disparoConfig.audio_url ? "Legenda (acompanha a Mídia Visual/Botões)" : "Legenda / Texto"}
                     value={disparoConfig.message_text}
                     onChange={(e) => setDisparoConfig({...disparoConfig, message_text: e.target.value})}
                     placeholder="Olá {first_name}, vi que gerou um PIX..."
@@ -549,54 +589,69 @@ export function AutoRemarketing() {
                 <div className="screen-content">
                   
                   {/* Msg de Disparo */}
-                  <div className="msg-bubble">
-                     {disparoConfig.media_url && disparoConfig.media_url.match(/\.(jpeg|jpg|png|gif|webp)$/i) && (
-                        <div className="media-preview" style={{backgroundImage: `url(${disparoConfig.media_url})`}}></div>
-                     )}
-                     
-                     {/* PREVIEW PARA VÍDEO */}
-                     {disparoConfig.media_url && disparoConfig.media_url.match(/\.(mp4|mov|avi)$/i) && (
-                         <div 
-                            className="media-preview-mock"
-                            style={{width: '100%', height: '120px', background: '#000', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: '8px', marginBottom: '8px'}}
-                         >
-                            📹 Vídeo
-                         </div>
-                     )}
-                     {/* 🔊 PREVIEW ÁUDIO - VOICE NOTE */}
-                     {isAudioUrl(disparoConfig.media_url) && (
-                         <div style={{
-                             display: 'flex', alignItems: 'center', gap: '10px',
-                             background: 'rgba(195, 51, 255, 0.15)', borderRadius: '20px',
-                             padding: '8px 14px', marginBottom: '8px'
-                         }}>
-                             <div style={{width:'32px', height:'32px', borderRadius:'50%', background:'#c333ff', display:'flex', alignItems:'center', justifyContent:'center', fontSize:'14px'}}>▶</div>
-                             <div style={{flex:1, height:'4px', background:'rgba(255,255,255,0.2)', borderRadius:'2px', position:'relative'}}>
-                                 <div style={{width:'40%', height:'100%', background:'#c333ff', borderRadius:'2px'}}></div>
+                  <div className="msg-bubble-container" style={{display:'flex', flexDirection:'column', gap:'5px'}}>
+                      
+                      {/* PREVIEW 1: ÁUDIO (Se houver) */}
+                      {disparoConfig.audio_url && (
+                          <div className="msg-bubble" style={{borderRadius: '20px 20px 20px 5px', width: '80%'}}>
+                             <div style={{
+                                display: 'flex', alignItems: 'center', gap: '10px',
+                                padding: '5px'
+                             }}>
+                                <div style={{width:'32px', height:'32px', borderRadius:'50%', background:'#c333ff', display:'flex', alignItems:'center', justifyContent:'center', fontSize:'14px'}}>▶</div>
+                                <div style={{flex:1, height:'4px', background:'rgba(0,0,0,0.1)', borderRadius:'2px', position:'relative'}}>
+                                    <div style={{width:'40%', height:'100%', background:'#c333ff', borderRadius:'2px'}}></div>
+                                </div>
+                                <span style={{fontSize:'0.75rem', color:'#666'}}>0:21</span>
                              </div>
-                             <span style={{fontSize:'0.75rem', color:'#aaa'}}>0:05</span>
-                         </div>
-                     )}
+                             <div className="msg-time" style={{textAlign:'right', fontSize:'0.7em', color:'#aaa', marginTop:'2px'}}>10:05</div>
+                          </div>
+                      )}
 
-                     <div className="msg-text" dangerouslySetInnerHTML={{ __html: disparoConfig.message_text || 'Configure a mensagem...' }}></div>
-                     <div className="msg-time">10:05</div>
-                     
-                     {/* Botão Fake */}
-                     <div className="inline-btn">
-                       Ver Oferta 🔥
-                     </div>
+                      {/* PREVIEW 2: MÍDIA VISUAL + TEXTO */}
+                      <div className="msg-bubble">
+                          {disparoConfig.media_url && disparoConfig.media_url.match(/\.(jpeg|jpg|png|gif|webp)$/i) && (
+                             <div className="media-preview" style={{backgroundImage: `url(${disparoConfig.media_url})`}}></div>
+                          )}
+                          
+                          {/* PREVIEW PARA VÍDEO */}
+                          {disparoConfig.media_url && disparoConfig.media_url.match(/\.(mp4|mov|avi)$/i) && (
+                              <div 
+                                 className="media-preview-mock"
+                                 style={{width: '100%', height: '120px', background: '#000', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: '8px', marginBottom: '8px'}}
+                              >
+                                 📹 Vídeo
+                              </div>
+                          )}
+                          
+                          {/* Fallback se user colocou audio no media_url (Legado) */}
+                          {isAudioUrl(disparoConfig.media_url) && !disparoConfig.audio_url && (
+                              <div style={{padding:'10px', background:'#eee', borderRadius:'5px', marginBottom:'5px'}}>
+                                  🎤 Áudio (Legado)
+                              </div>
+                          )}
+
+                          <div className="msg-text" dangerouslySetInnerHTML={{ __html: disparoConfig.message_text || 'Configure a mensagem...' }}></div>
+                          <div className="msg-time">10:05</div>
+                          
+                          {/* Botão Fake */}
+                          <div className="inline-btn">
+                            Ver Oferta 🔥
+                          </div>
+                      </div>
+
                   </div>
 
                   {/* Mensagem Alternante (Exemplo) */}
                   {alternatingConfig.is_active && alternatingConfig.messages.length > 0 && (
-                     <div className="msg-bubble" style={{opacity:0.7}}>
-                        <div className="msg-text">
-                           {typeof alternatingConfig.messages[0] === 'string' 
-                              ? alternatingConfig.messages[0] 
-                              : alternatingConfig.messages[0].content}
-                        </div>
-                        <div className="msg-time">10:02</div>
-                     </div>
+                      <div className="msg-bubble" style={{opacity:0.7, marginTop:'10px'}}>
+                         <div className="msg-text">
+                            {typeof alternatingConfig.messages[0] === 'string' 
+                               ? alternatingConfig.messages[0] 
+                               : alternatingConfig.messages[0].content}
+                         </div>
+                         <div className="msg-time">10:02</div>
+                      </div>
                   )}
 
                 </div>
@@ -777,7 +832,7 @@ export function AutoRemarketing() {
                 <div className="stat-info">
                   <div className="stat-label">Receita Recuperada</div>
                   <div className="stat-value">
-                     {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(stats.total_revenue || 0)}
+                      {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(stats.total_revenue || 0)}
                   </div>
                 </div>
               </div>
