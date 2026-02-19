@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { 
   LayoutDashboard, 
@@ -22,17 +22,62 @@ import {
   ShoppingBag,
   User, 
   Target,
-  Crown, // 👑 Ícone do Super Admin
-  Send, // 🚀 Ícone do Disparo Automático
-  Rocket, // 🚀 Ícone do Upsell
-  ArrowDownCircle, // 📉 Ícone do Downsell
-  Trophy, // 🏆 Ícone do Ranking (NOVO)
-  BarChart3, // 📊 Ícone de Estatísticas (NOVO)
-  Compass // 🧭 Ícone da Configuração Guiada (NOVO)
+  Crown,
+  Send,
+  Rocket,
+  ArrowDownCircle,
+  Trophy,
+  BarChart3,
+  Compass
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+import { profileService } from '../services/api';
 import './Sidebar.css';
 
+// =========================================================
+// 🏆 NÍVEIS DE GAMIFICAÇÃO (Mesma lógica do Profile.jsx)
+// =========================================================
+const LEVELS = [
+  { name: 'Iniciante', target: 100, color: '#10b981' },
+  { name: 'Barão', target: 5000000, color: '#f59e0b' },
+  { name: 'Prodígio', target: 10000000, color: '#3b82f6' },
+  { name: 'Empreendedor', target: 50000000, color: '#8b5cf6' },
+  { name: 'Milionário', target: 100000000, color: '#ef4444' },
+  { name: 'Magnata', target: 1000000000, color: '#c333ff' }
+];
+
+function getGamificationData(totalRevenue) {
+  const sorted = [...LEVELS].sort((a, b) => a.target - b.target);
+  let currentLevel = sorted[0];
+  let nextLevel = sorted[1] || null;
+
+  for (let i = 0; i < sorted.length; i++) {
+    if (totalRevenue >= sorted[i].target) {
+      currentLevel = sorted[i];
+      nextLevel = sorted[i + 1] || null;
+    }
+  }
+
+  let progress = 0;
+  if (nextLevel) {
+    const currentMin = currentLevel.target;
+    const nextTarget = nextLevel.target;
+    progress = ((totalRevenue - currentMin) / (nextTarget - currentMin)) * 100;
+    progress = Math.min(Math.max(progress, 0), 100);
+  } else {
+    progress = 100;
+  }
+
+  return { currentLevel, nextLevel, progress };
+}
+
+function formatMoney(cents) {
+  return (cents / 100).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+}
+
+// =========================================================
+// 📦 COMPONENTE SIDEBAR
+// =========================================================
 export function Sidebar({ isOpen, onClose }) {
   const location = useLocation();
   const navigate = useNavigate();
@@ -46,6 +91,29 @@ export function Sidebar({ isOpen, onClose }) {
   const [isExtrasMenuOpen, setIsExtrasMenuOpen] = useState(false);
   const [isOffersMenuOpen, setIsOffersMenuOpen] = useState(false);
 
+  // 🆕 Estado do widget de faturamento
+  const [revenueData, setRevenueData] = useState(null);
+
+  // 🆕 Carrega stats do perfil
+  useEffect(() => {
+    if (hasBot) {
+      loadRevenueData();
+    }
+  }, [hasBot]);
+
+  const loadRevenueData = async () => {
+    try {
+      const stats = await profileService.getStats();
+      if (stats) {
+        setRevenueData({
+          totalRevenue: stats.total_revenue || 0
+        });
+      }
+    } catch (e) {
+      console.error('Sidebar: erro ao carregar stats', e);
+    }
+  };
+
   const handleLogout = () => {
     if (onClose) onClose();
     logout();
@@ -55,6 +123,11 @@ export function Sidebar({ isOpen, onClose }) {
   const isActive = (path) => {
     return currentPath === path ? 'active' : '';
   };
+
+  // 🆕 Calcula gamificação
+  const gamification = revenueData 
+    ? getGamificationData(revenueData.totalRevenue) 
+    : null;
 
   return (
     <>
@@ -119,7 +192,7 @@ export function Sidebar({ isOpen, onClose }) {
             <span>Dashboard</span>
           </Link>
 
-          {/* 📊 NOVA ROTA: ESTATÍSTICAS */}
+          {/* 📊 ESTATÍSTICAS */}
           <Link 
             to={hasBot ? "/estatisticas" : "#"} 
             className={`nav-item ${isActive('/estatisticas')} ${!hasBot ? 'locked-nav' : ''}`} 
@@ -231,7 +304,7 @@ export function Sidebar({ isOpen, onClose }) {
             )}
           </div>
 
-          {/* SUBMENU: EXTRAS - 🆕 COM DISPARO AUTOMÁTICO */}
+          {/* SUBMENU: EXTRAS */}
           <div className="nav-group" style={!hasBot ? { opacity: 0.5 } : {}}>
             <div 
               className={`nav-item-header ${isExtrasMenuOpen ? 'open' : ''}`} 
@@ -246,7 +319,7 @@ export function Sidebar({ isOpen, onClose }) {
 
             {hasBot && isExtrasMenuOpen && (
               <div className="nav-subitems">
-                {/* 🆕 NOVA ROTA: CONFIGURAÇÃO GUIADA */}
+                {/* 🆕 CONFIGURAÇÃO GUIADA */}
                 <Link to="/setup" className={`nav-item ${isActive('/setup')}`} onClick={onClose}>
                   <Compass size={18} /> <span>Configuração Guiada</span>
                 </Link>
@@ -271,7 +344,7 @@ export function Sidebar({ isOpen, onClose }) {
                   <Target size={18} /> <span>Rastreamento</span>
                 </Link>
 
-                {/* 🆕 NOVA ROTA: DISPARO AUTOMÁTICO */}
+                {/* 🆕 DISPARO AUTOMÁTICO */}
                 <Link 
                   to="/extras/auto-remarketing" 
                   className={`nav-item ${isActive('/extras/auto-remarketing')}`} 
@@ -283,7 +356,7 @@ export function Sidebar({ isOpen, onClose }) {
             )}
           </div>
           
-          {/* 🏆 NOVO MENU: RANKING (MOVIDO PARA CÁ COM EFEITO DOURADO) */}
+          {/* 🏆 RANKING */}
           <Link 
             to={hasBot ? "/ranking" : "#"} 
             className={`nav-item ranking-item ${isActive('/ranking')} ${!hasBot ? 'locked-nav' : ''}`} 
@@ -293,6 +366,38 @@ export function Sidebar({ isOpen, onClose }) {
             <Trophy size={20} />
             <span>Ranking de Vendas</span>
           </Link>
+
+          {/* =========================================================
+              💰 WIDGET DE FATURAMENTO / NÍVEL (ENTRE RANKING E INTEGRAÇÕES)
+              ========================================================= */}
+          {hasBot && gamification && (
+            <Link to="/perfil" className="sidebar-revenue-widget" onClick={onClose}>
+              <div className="srw-header">
+                <div className="srw-icon" style={{ background: `${gamification.currentLevel.color}18`, color: gamification.currentLevel.color }}>
+                  <Trophy size={16} />
+                </div>
+                <div className="srw-info">
+                  <span className="srw-label">Faturamento</span>
+                  <span className="srw-value">{formatMoney(revenueData.totalRevenue)}</span>
+                </div>
+              </div>
+              <div className="srw-progress-track">
+                <div 
+                  className="srw-progress-fill" 
+                  style={{ 
+                    width: `${gamification.progress}%`,
+                    background: `linear-gradient(90deg, ${gamification.currentLevel.color}, ${gamification.nextLevel?.color || gamification.currentLevel.color})`
+                  }}
+                />
+              </div>
+              <div className="srw-footer">
+                <span className="srw-percentage">{gamification.progress.toFixed(1)}%</span>
+                <span className="srw-next">
+                  PRÓXIMO: <strong>{gamification.nextLevel?.name || 'MAX'}</strong>
+                </span>
+              </div>
+            </Link>
+          )}
 
           <div className="divider"></div>
 
