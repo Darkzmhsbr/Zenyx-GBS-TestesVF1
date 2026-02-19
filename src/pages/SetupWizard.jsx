@@ -90,38 +90,50 @@ export function SetupWizard() {
     }
 
     // Merge: mantém as marcações manuais + adiciona as automáticas
+    const botKey = `zenyx_setup_progress_${selectedBot.id}`;
     setCompletedSteps(prev => {
       const merged = [...new Set([...prev, ...detected])];
-      localStorage.setItem('zenyx_setup_progress', JSON.stringify(merged));
+      localStorage.setItem(botKey, JSON.stringify(merged));
       return merged;
     });
 
     // Auto-abre a primeira etapa não concluída
-    if (detected.length > 0 && openIndex === null) {
-      const firstIncomplete = [0, 1, 2, 3, 4, 5].find(i => !detected.includes(i));
-      if (firstIncomplete !== undefined) {
-        setOpenIndex(firstIncomplete);
-      }
+    const firstIncomplete = [0, 1, 2, 3, 4, 5].find(i => !detected.includes(i));
+    if (firstIncomplete !== undefined) {
+      setOpenIndex(firstIncomplete);
+    } else {
+      setOpenIndex(null); // Tudo concluído
     }
 
   }, [selectedBot, hasBot, bots]);
 
+  // Helper: chave de storage por bot
+  const storageKey = selectedBot 
+    ? `zenyx_setup_progress_${selectedBot.id}` 
+    : 'zenyx_setup_progress_global';
+
   useEffect(() => {
     setIsVisible(true);
-    
-    // Carrega progresso salvo
-    const saved = localStorage.getItem('zenyx_setup_progress');
-    if (saved) {
-      try { setCompletedSteps(JSON.parse(saved)); } catch(e) {}
-    }
   }, []);
 
-  // Auto-detecta quando tem bot selecionado
+  // Quando trocar de bot: reseta estado e re-detecta
   useEffect(() => {
     if (selectedBot) {
+      // Reseta para o progresso salvo DESTE bot específico
+      const saved = localStorage.getItem(`zenyx_setup_progress_${selectedBot.id}`);
+      if (saved) {
+        try { setCompletedSteps(JSON.parse(saved)); } catch(e) { setCompletedSteps([]); }
+      } else {
+        setCompletedSteps([]);
+      }
+      setOpenIndex(null);
+      // Re-detecta status real via API
       detectCompletedSteps();
+    } else {
+      setCompletedSteps([]);
+      setOpenIndex(0);
     }
-  }, [selectedBot, detectCompletedSteps]);
+  }, [selectedBot]);
 
   const toggleStep = (index) => {
     setOpenIndex(openIndex === index ? null : index);
@@ -132,7 +144,7 @@ export function SetupWizard() {
       ? completedSteps.filter(i => i !== index)
       : [...completedSteps, index];
     setCompletedSteps(updated);
-    localStorage.setItem('zenyx_setup_progress', JSON.stringify(updated));
+    localStorage.setItem(storageKey, JSON.stringify(updated));
   };
 
   // 🆕 Auto-avança para a próxima etapa
@@ -141,7 +153,7 @@ export function SetupWizard() {
     if (!completedSteps.includes(currentIndex)) {
       const updated = [...completedSteps, currentIndex];
       setCompletedSteps(updated);
-      localStorage.setItem('zenyx_setup_progress', JSON.stringify(updated));
+      localStorage.setItem(storageKey, JSON.stringify(updated));
     }
     // Abre a próxima
     const nextIndex = currentIndex + 1;
