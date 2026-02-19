@@ -4,7 +4,7 @@ import {
   ChevronDown, Bot, CreditCard, Gem, MessageSquare, 
   CheckCircle2, Info, Zap, Settings, ShieldCheck,
   Star, Sparkles, CircleDot, AlertTriangle, ExternalLink,
-  Wrench
+  Wrench, ArrowRight
 } from 'lucide-react';
 import { useBot } from '../context/BotContext';
 import { useAuth } from '../context/AuthContext';
@@ -15,7 +15,6 @@ import './SetupWizard.css';
 // 🔥 IMPORTAÇÃO DOS COMPONENTES REAIS
 // =========================================================
 import { NewBot } from './NewBot';
-import { BotConfig } from './BotConfig';
 import { Integrations } from './Integrations';
 import { Plans } from './Plans';
 import { ChatFlow } from './ChatFlow';
@@ -32,9 +31,6 @@ export function SetupWizard() {
   const [isVisible, setIsVisible] = useState(false);
   const [completedSteps, setCompletedSteps] = useState([]);
 
-  // 🆕 Estado para o bot recém-criado (mostra BotConfig embarcado)
-  const [newlyCreatedBotId, setNewlyCreatedBotId] = useState(null);
-
   // =========================================================
   // 🔍 AUTO-DETECÇÃO DE ETAPAS CONCLUÍDAS
   // =========================================================
@@ -49,41 +45,37 @@ export function SetupWizard() {
         detected.push(0);
       }
 
-      // Etapa 1 (BotConfig): Se o bot tem admin_principal_id ou suporte configurado
-      // Consideramos concluída se o bot existe (configuração básica já foi feita na criação)
-      if (hasBot && selectedBot) {
-        detected.push(1);
-      }
-
-      // Etapa 2 (Gateway): Verifica se tem gateway configurada e ativa
+      // Etapa 1 (Gateway): Verifica se tem gateway configurada e ativa
       try {
         const gwConfig = await integrationService.getGatewayConfig(selectedBot.id);
         const temGatewayAtiva = gwConfig?.pushinpay?.ativo || gwConfig?.wiinpay?.ativo;
         if (temGatewayAtiva) {
-          detected.push(2);
+          detected.push(1);
         }
       } catch (e) { /* Gateway não configurada */ }
 
-      // Etapa 3 (Planos): Verifica se tem pelo menos 1 plano criado
+      // Etapa 2 (Planos): Verifica se tem pelo menos 1 plano criado
       try {
         const plans = await planService.listPlans(selectedBot.id);
         if (plans && plans.length > 0) {
-          detected.push(3);
+          detected.push(2);
         }
       } catch (e) { /* Sem planos */ }
 
-      // Etapa 4 (Flow Chat): Verifica se tem fluxo configurado
+      // Etapa 3 (Flow Chat): Verifica se tem fluxo configurado
       try {
         const flow = await flowService.getFlow(selectedBot.id);
         if (flow && flow.msg_boas_vindas && flow.msg_boas_vindas.trim().length > 0) {
-          detected.push(4);
+          detected.push(3);
         }
       } catch (e) { /* Sem flow */ }
 
-      // Etapa 5 (Final): Se todas as anteriores (0-4) estão completas
-      if (detected.includes(0) && detected.includes(2) && detected.includes(3)) {
-        detected.push(5);
+      // Etapa 4 (Checklist): Se as essenciais (0, 1, 2) estão completas
+      if (detected.includes(0) && detected.includes(1) && detected.includes(2)) {
+        detected.push(4);
       }
+
+      // Etapa 5 (Config Avançada): Marcação manual apenas
 
     } catch (e) {
       console.error("Erro na auto-detecção:", e);
@@ -169,7 +161,6 @@ export function SetupWizard() {
 
   // 🆕 Callback quando o bot é criado pelo NewBot embarcado
   const handleBotCreated = (botId) => {
-    setNewlyCreatedBotId(botId);
     autoAdvance(0);
   };
 
@@ -234,50 +225,13 @@ export function SetupWizard() {
       )
     },
 
-    // =====================================================
-    // ETAPA 2 — CONFIGURAÇÕES DO BOT (BotConfig)
-    // =====================================================
-    {
-      icon: Wrench,
-      title: "Etapa 2 — Configurações do Bot",
-      description: "Ajuste credenciais, IDs, suporte e proteção de conteúdo",
-      color: '#f97316',
-      content: (
-        <div className="sw-content-inner">
-          <div className="sw-instruction-box sw-instruction-box--amber">
-            <div className="sw-instruction-icon" style={{ background: 'rgba(249, 115, 22, 0.12)', color: '#f97316' }}>
-              <Info size={20} />
-            </div>
-            <div>
-              <h4>Configurações Gerais do Bot</h4>
-              <p>Configure o ID do admin principal, username de suporte, canal de notificações e proteção de conteúdo. Essas configurações definem como o bot se comporta.</p>
-            </div>
-          </div>
-
-          {(selectedBot || newlyCreatedBotId) ? (
-            <div className="sw-embedded-component">
-              <div className="sw-embedded-label">
-                <Zap size={14} />
-                <span>Painel de configuração do bot</span>
-              </div>
-              <BotConfig />
-            </div>
-          ) : (
-            <div className="sw-warning-box">
-              <AlertTriangle size={20} />
-              <p>Crie um bot primeiro (Etapa 1) para acessar as configurações.</p>
-            </div>
-          )}
-        </div>
-      )
-    },
 
     // =====================================================
-    // ETAPA 3 — GATEWAY DE PAGAMENTO
+    // ETAPA 2 — GATEWAY DE PAGAMENTO
     // =====================================================
     {
       icon: CreditCard,
-      title: "Etapa 3 — Gateway de Pagamento",
+      title: "Etapa 2 — Gateway de Pagamento",
       description: "Configure como você vai receber seus pagamentos via PIX",
       color: '#10b981',
       content: (
@@ -338,11 +292,11 @@ export function SetupWizard() {
     },
 
     // =====================================================
-    // ETAPA 4 — PLANOS DE ACESSO
+    // ETAPA 3 — PLANOS DE ACESSO
     // =====================================================
     {
       icon: Gem,
-      title: "Etapa 4 — Planos de Acesso",
+      title: "Etapa 3 — Planos de Acesso",
       description: "Crie os planos que seus clientes poderão comprar",
       color: '#f59e0b',
       content: (
@@ -396,11 +350,11 @@ export function SetupWizard() {
     },
 
     // =====================================================
-    // ETAPA 5 — FLOW CHAT / MENSAGENS
+    // ETAPA 4 — FLOW CHAT / MENSAGENS
     // =====================================================
     {
       icon: MessageSquare,
-      title: "Etapa 5 — Mensagens do Bot (Flow Chat)",
+      title: "Etapa 4 — Mensagens do Bot (Flow Chat)",
       description: "Configure o fluxo de conversa e mensagens automáticas",
       color: '#3b82f6',
       content: (
@@ -465,11 +419,11 @@ export function SetupWizard() {
     },
 
     // =====================================================
-    // ETAPA 6 — CONFIGURAÇÕES FINAIS
+    // ETAPA 5 — CHECKLIST FINAL
     // =====================================================
     {
       icon: Settings,
-      title: "Etapa 6 — Configurações Finais",
+      title: "Etapa 5 — Checklist Final",
       description: "Checklist e dicas para começar a vender",
       color: '#ec4899',
       content: (
@@ -488,30 +442,23 @@ export function SetupWizard() {
               <div className="sw-checklist-item">
                 <CircleDot size={18} color={completedSteps.includes(1) ? '#10b981' : '#555'} />
                 <span style={{ textDecoration: completedSteps.includes(1) ? 'line-through' : 'none', opacity: completedSteps.includes(1) ? 0.6 : 1 }}>
-                  Configurações do bot ajustadas
+                  Gateway de pagamento configurada e ativada
                 </span>
                 {completedSteps.includes(1) && <CheckCircle2 size={16} color="#10b981" style={{ marginLeft: 'auto' }} />}
               </div>
               <div className="sw-checklist-item">
                 <CircleDot size={18} color={completedSteps.includes(2) ? '#10b981' : '#555'} />
                 <span style={{ textDecoration: completedSteps.includes(2) ? 'line-through' : 'none', opacity: completedSteps.includes(2) ? 0.6 : 1 }}>
-                  Gateway de pagamento configurada e ativada
+                  Pelo menos 1 plano de acesso criado
                 </span>
                 {completedSteps.includes(2) && <CheckCircle2 size={16} color="#10b981" style={{ marginLeft: 'auto' }} />}
               </div>
               <div className="sw-checklist-item">
-                <CircleDot size={18} color={completedSteps.includes(3) ? '#10b981' : '#555'} />
-                <span style={{ textDecoration: completedSteps.includes(3) ? 'line-through' : 'none', opacity: completedSteps.includes(3) ? 0.6 : 1 }}>
-                  Pelo menos 1 plano de acesso criado
-                </span>
-                {completedSteps.includes(3) && <CheckCircle2 size={16} color="#10b981" style={{ marginLeft: 'auto' }} />}
-              </div>
-              <div className="sw-checklist-item">
-                <CircleDot size={18} color={completedSteps.includes(4) ? '#10b981' : '#f59e0b'} />
-                <span style={{ opacity: completedSteps.includes(4) ? 0.6 : 1 }}>
+                <CircleDot size={18} color={completedSteps.includes(3) ? '#10b981' : '#f59e0b'} />
+                <span style={{ opacity: completedSteps.includes(3) ? 0.6 : 1 }}>
                   Flow Chat personalizado (opcional)
                 </span>
-                {completedSteps.includes(4) && <CheckCircle2 size={16} color="#10b981" style={{ marginLeft: 'auto' }} />}
+                {completedSteps.includes(3) && <CheckCircle2 size={16} color="#10b981" style={{ marginLeft: 'auto' }} />}
               </div>
             </div>
           </div>
@@ -546,6 +493,75 @@ export function SetupWizard() {
               <h4>Tudo pronto!</h4>
               <p>Seu bot está configurado e pronto para receber pagamentos. Agora é só divulgar e vender!</p>
             </div>
+          </div>
+        </div>
+      )
+    },
+
+    // =====================================================
+    // ETAPA 6 — CONFIGURAÇÕES AVANÇADAS DO BOT
+    // =====================================================
+    {
+      icon: Wrench,
+      title: "Etapa 6 — Configurações Avançadas",
+      description: "Ajuste credenciais, IDs, suporte, proteção de conteúdo e Mini App",
+      color: '#f97316',
+      content: (
+        <div className="sw-content-inner">
+          <div className="sw-instruction-box sw-instruction-box--amber">
+            <div className="sw-instruction-icon" style={{ background: 'rgba(249, 115, 22, 0.12)', color: '#f97316' }}>
+              <Info size={20} />
+            </div>
+            <div>
+              <h4>Configurações Avançadas</h4>
+              <p>Agora que seu bot já está funcionando, você pode ajustar configurações avançadas como admin principal, suporte, canal de notificações, proteção de conteúdo e visual da Mini App.</p>
+            </div>
+          </div>
+
+          <div className="sw-msg-types">
+            <div className="sw-msg-type">
+              <div className="sw-msg-type__dot" style={{ background: '#f97316' }}></div>
+              <div>
+                <h5>ID do Admin Principal</h5>
+                <p>Seu ID pessoal para receber notificações e ter controle total</p>
+              </div>
+            </div>
+            <div className="sw-msg-type">
+              <div className="sw-msg-type__dot" style={{ background: '#8b5cf6' }}></div>
+              <div>
+                <h5>Username de Suporte</h5>
+                <p>Username que aparece como contato de suporte para seus clientes</p>
+              </div>
+            </div>
+            <div className="sw-msg-type">
+              <div className="sw-msg-type__dot" style={{ background: '#f59e0b' }}></div>
+              <div>
+                <h5>Canal de Notificações</h5>
+                <p>Canal onde o bot envia avisos de vendas e status</p>
+              </div>
+            </div>
+            <div className="sw-msg-type">
+              <div className="sw-msg-type__dot" style={{ background: '#10b981' }}></div>
+              <div>
+                <h5>Proteção de Conteúdo & Mini App</h5>
+                <p>Proteja mídias e configure a interface visual da loja</p>
+              </div>
+            </div>
+          </div>
+
+          <div className="sw-action-row">
+            {selectedBot ? (
+              <button className="sw-btn sw-btn--primary" onClick={() => navigate(`/bots/config/${selectedBot.id}`)}>
+                <Wrench size={18} />
+                Configurar: {selectedBot.nome}
+                <ArrowRight size={16} />
+              </button>
+            ) : (
+              <div className="sw-warning-box">
+                <AlertTriangle size={20} />
+                <p>Complete as etapas anteriores primeiro para desbloquear as configurações avançadas.</p>
+              </div>
+            )}
           </div>
         </div>
       )
