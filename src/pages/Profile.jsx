@@ -289,56 +289,60 @@ export function Profile() {
       )}
 
       {/* =========================================================
-          🆕 ALTERAR USERNAME
+          🆕 ALTERAR USERNAME (APENAS MODO EDIÇÃO)
           ========================================================= */}
-      <div className="profile-security-section">
-        <h3 className="security-section-title"><AtSign size={20} color="#8b5cf6" /> Alterar Username</h3>
-        <p className="security-section-desc">Seu username é usado para fazer login. Ao alterar, você precisará usar o novo username para acessar.</p>
-        <div className="security-form-row">
-          <div className="security-input-group">
-            <label>Username atual</label>
-            <input type="text" value={user?.username || ''} disabled className="security-input disabled" />
+      {editing && (
+        <div className="profile-security-section">
+          <h3 className="security-section-title"><AtSign size={20} color="#8b5cf6" /> Alterar Username</h3>
+          <p className="security-section-desc">Seu username é usado para fazer login. Ao alterar, você precisará usar o novo username para acessar.</p>
+          <div className="security-form-row">
+            <div className="security-input-group">
+              <label>Username atual</label>
+              <input type="text" value={user?.username || ''} disabled className="security-input disabled" />
+            </div>
+            <div className="security-input-group">
+              <label>Novo username</label>
+              <input type="text" value={usernameForm} onChange={(e) => setUsernameForm(e.target.value)} placeholder="Digite o novo username" className="security-input" />
+            </div>
+            <button className="security-btn purple" onClick={handleChangeUsername} disabled={changingUsername}>
+              <AtSign size={16} /> {changingUsername ? 'Alterando...' : 'Alterar Username'}
+            </button>
           </div>
-          <div className="security-input-group">
-            <label>Novo username</label>
-            <input type="text" value={usernameForm} onChange={(e) => setUsernameForm(e.target.value)} placeholder="Digite o novo username" className="security-input" />
-          </div>
-          <button className="security-btn purple" onClick={handleChangeUsername} disabled={changingUsername}>
-            <AtSign size={16} /> {changingUsername ? 'Alterando...' : 'Alterar Username'}
-          </button>
         </div>
-      </div>
+      )}
 
       {/* =========================================================
-          🆕 ALTERAR SENHA
+          🆕 ALTERAR SENHA (APENAS MODO EDIÇÃO)
           ========================================================= */}
-      <div className="profile-security-section">
-        <h3 className="security-section-title"><KeyRound size={20} color="#f59e0b" /> Alterar Senha</h3>
-        <p className="security-section-desc">Para sua segurança, insira sua senha atual antes de definir uma nova.</p>
-        <div className="security-form-grid">
-          <div className="security-input-group">
-            <label>Senha atual</label>
-            <div className="password-input-wrapper">
-              <input type={showCurrentPass ? 'text' : 'password'} value={passwordForm.current_password} onChange={(e) => setPasswordForm({...passwordForm, current_password: e.target.value})} placeholder="Digite sua senha atual" className="security-input" />
-              <button type="button" className="password-toggle" onClick={() => setShowCurrentPass(!showCurrentPass)}>{showCurrentPass ? <EyeOff size={16} /> : <Eye size={16} />}</button>
+      {editing && (
+        <div className="profile-security-section">
+          <h3 className="security-section-title"><KeyRound size={20} color="#f59e0b" /> Alterar Senha</h3>
+          <p className="security-section-desc">Para sua segurança, insira sua senha atual antes de definir uma nova.</p>
+          <div className="security-form-grid">
+            <div className="security-input-group">
+              <label>Senha atual</label>
+              <div className="password-input-wrapper">
+                <input type={showCurrentPass ? 'text' : 'password'} value={passwordForm.current_password} onChange={(e) => setPasswordForm({...passwordForm, current_password: e.target.value})} placeholder="Digite sua senha atual" className="security-input" />
+                <button type="button" className="password-toggle" onClick={() => setShowCurrentPass(!showCurrentPass)}>{showCurrentPass ? <EyeOff size={16} /> : <Eye size={16} />}</button>
+              </div>
+            </div>
+            <div className="security-input-group">
+              <label>Nova senha</label>
+              <div className="password-input-wrapper">
+                <input type={showNewPass ? 'text' : 'password'} value={passwordForm.new_password} onChange={(e) => setPasswordForm({...passwordForm, new_password: e.target.value})} placeholder="Mínimo 6 caracteres" className="security-input" />
+                <button type="button" className="password-toggle" onClick={() => setShowNewPass(!showNewPass)}>{showNewPass ? <EyeOff size={16} /> : <Eye size={16} />}</button>
+              </div>
+            </div>
+            <div className="security-input-group">
+              <label>Confirmar nova senha</label>
+              <input type="password" value={passwordForm.confirm_password} onChange={(e) => setPasswordForm({...passwordForm, confirm_password: e.target.value})} placeholder="Repita a nova senha" className="security-input" />
             </div>
           </div>
-          <div className="security-input-group">
-            <label>Nova senha</label>
-            <div className="password-input-wrapper">
-              <input type={showNewPass ? 'text' : 'password'} value={passwordForm.new_password} onChange={(e) => setPasswordForm({...passwordForm, new_password: e.target.value})} placeholder="Mínimo 6 caracteres" className="security-input" />
-              <button type="button" className="password-toggle" onClick={() => setShowNewPass(!showNewPass)}>{showNewPass ? <EyeOff size={16} /> : <Eye size={16} />}</button>
-            </div>
-          </div>
-          <div className="security-input-group">
-            <label>Confirmar nova senha</label>
-            <input type="password" value={passwordForm.confirm_password} onChange={(e) => setPasswordForm({...passwordForm, confirm_password: e.target.value})} placeholder="Repita a nova senha" className="security-input" />
-          </div>
+          <button className="security-btn amber" onClick={handleChangePassword} disabled={changingPassword} style={{ marginTop: '15px' }}>
+            <KeyRound size={16} /> {changingPassword ? 'Alterando...' : 'Alterar Senha'}
+          </button>
         </div>
-        <button className="security-btn amber" onClick={handleChangePassword} disabled={changingPassword} style={{ marginTop: '15px' }}>
-          <KeyRound size={16} /> {changingPassword ? 'Alterando...' : 'Alterar Senha'}
-        </button>
-      </div>
+      )}
 
       {/* ESTATÍSTICAS */}
       <div className="empire-stats-section">

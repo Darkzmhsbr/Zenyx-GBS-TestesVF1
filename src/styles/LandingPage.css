@@ -1202,8 +1202,8 @@
 }
 
 .award-inner {
-  width: 85%;
-  height: 88%;
+  width: 92%;
+  height: 94%;
   border: 1px dashed rgba(56, 189, 248, 0.4);
   border-radius: 12px;
   display: flex;
@@ -1250,7 +1250,7 @@
 /* 🆕 IMAGEM DA PLACA NA CARTA 3D */
 .award-placa-img {
   width: 100%;
-  max-width: 220px;
+  max-width: 270px;
   height: auto;
   object-fit: contain;
   border-radius: 8px;

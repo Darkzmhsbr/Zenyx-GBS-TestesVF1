@@ -443,12 +443,12 @@
    ============================================================ */
 .badge-placa-wrapper {
   width: 100%;
-  max-width: 160px;
+  max-width: 220px;
   aspect-ratio: 1;
   display: flex;
   align-items: center;
   justify-content: center;
-  margin-bottom: 12px;
+  margin-bottom: 20px;
   overflow: hidden;
   border-radius: 12px;
 }
@@ -475,7 +475,7 @@
   background: #111;
   border: 1px solid #333;
   border-radius: 12px;
-  padding: 20px;
+  padding: 24px;
   text-align: center;
   display: flex;
   flex-direction: column;

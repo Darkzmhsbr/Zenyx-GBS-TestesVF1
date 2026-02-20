@@ -58,14 +58,20 @@ function getGamificationData(totalRevenue) {
     }
   }
 
-  let progress = 0;
+  let progress = 100;
   if (nextLevel) {
     const currentMin = currentLevel.target;
     const nextTarget = nextLevel.target;
     progress = ((totalRevenue - currentMin) / (nextTarget - currentMin)) * 100;
     progress = Math.min(Math.max(progress, 0), 100);
-  } else {
-    progress = 100;
+  }
+
+  // CORREÇÃO: Trata usuários que ainda não bateram a primeira meta de 10K
+  if (totalRevenue < sorted[0].target) {
+    currentLevel = { name: 'Sem nível', target: 0, color: '#555' };
+    nextLevel = sorted[0];
+    progress = (totalRevenue / sorted[0].target) * 100;
+    progress = Math.min(Math.max(progress, 0), 100);
   }
 
   return { currentLevel, nextLevel, progress };

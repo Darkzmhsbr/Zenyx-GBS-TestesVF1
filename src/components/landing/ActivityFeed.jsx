@@ -142,11 +142,11 @@ export function ActivityFeed() {
     }
   };
 
-  // Handler que aciona a rotação 3D da carta e atualiza as cores Neon
+  // Handler atualizado: troca imediata, sem flip forçado. Mais responsividade!
   const handleAwardClick = (award) => {
     if (award.id === activeAward.id) return; // Se já tá no mesmo, ignora
     setActiveAward(award);
-    setIsFlipped(!isFlipped); // Inverte a carta para o efeito 3D (flip)
+    // Removido o setIsFlipped(!isFlipped) daqui para evitar a lentidão visual da animação na troca
   };
 
   return (
