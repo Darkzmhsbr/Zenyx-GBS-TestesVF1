@@ -168,3 +168,78 @@ button,
               color 0.3s ease, 
               border-color 0.3s ease;
 }
+
+/* =========================================================
+   🌞 OVERRIDES GLOBAIS PARA TEMA CLARO (LIGHT THEME FIXES)
+   Força a legibilidade em páginas que tinham cores "chumbadas"
+   ========================================================= */
+
+/* 1. Remove gradientes brancos e força cor escura nos títulos principais */
+body.light-theme .funil-header h1,
+body.light-theme .contacts-header h1,
+body.light-theme .page-header h1,
+body.light-theme .current-level-title,
+body.light-theme .profile-name,
+body.light-theme .stat-value,
+body.light-theme .metric-value-large,
+body.light-theme .chart-value,
+body.light-theme .kpi-value,
+body.light-theme .security-section-title,
+body.light-theme .progress-info strong {
+    background: none !important;
+    -webkit-text-fill-color: var(--foreground) !important;
+    color: var(--foreground) !important;
+}
+
+/* 2. Força fundos de Cards e Seções (que eram pretos) a ficarem brancos */
+body.light-theme .edit-section,
+body.light-theme .finance-section,
+body.light-theme .profile-security-section,
+body.light-theme .gamification-section,
+body.light-theme .badge-card,
+body.light-theme .clone-confirm-box,
+body.light-theme .alert-box {
+    background: var(--card) !important;
+    border-color: var(--card-border) !important;
+    color: var(--foreground) !important;
+}
+
+/* 3. Ajuste de Inputs e Textareas que estavam com fundo preto fixo */
+body.light-theme .security-input,
+body.light-theme .clone-input,
+body.light-theme input[type="text"],
+body.light-theme input[type="password"],
+body.light-theme input[type="email"],
+body.light-theme input[type="number"],
+body.light-theme textarea,
+body.light-theme select {
+    background-color: var(--background) !important;
+    border-color: var(--card-border) !important;
+    color: var(--foreground) !important;
+}
+
+/* Inputs desativados no modo claro */
+body.light-theme .security-input.disabled,
+body.light-theme input:disabled {
+    background-color: var(--muted) !important;
+    color: var(--muted-foreground) !important;
+    border-color: var(--card-border) !important;
+}
+
+/* 4. Textos secundários, subtítulos e labels */
+body.light-theme .security-section-desc,
+body.light-theme .progress-labels,
+body.light-theme .badge-target,
+body.light-theme .stat-label,
+body.light-theme .page-info,
+body.light-theme .clone-form-group small {
+    color: var(--muted-foreground) !important;
+}
+
+/* 5. Ajuste visual fino para cards com destaques no modo claro */
+body.light-theme .badge-card.unlocked,
+body.light-theme .stat-card.highlight {
+    background: linear-gradient(180deg, rgba(195, 51, 255, 0.05), var(--card)) !important;
+    border-color: var(--primary) !important;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05) !important;
+}
