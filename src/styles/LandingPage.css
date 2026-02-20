@@ -1247,6 +1247,20 @@
   color: var(--text-muted);
 }
 
+/* 🆕 IMAGEM DA PLACA NA CARTA 3D */
+.award-placa-img {
+  width: 100%;
+  max-width: 220px;
+  height: auto;
+  object-fit: contain;
+  border-radius: 8px;
+  transition: transform 0.3s ease;
+}
+
+.award-card:hover .award-placa-img {
+  transform: scale(1.03);
+}
+
 /* ============================================================
    COMMAND CENTER (ACORDEÃO SLEEK)
    ============================================================ */

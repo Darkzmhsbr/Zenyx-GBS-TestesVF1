@@ -118,8 +118,22 @@ export function AuthProvider({ children }) {
     setHasBot(status);
   };
 
+  // 🆕 Função para atualizar username e token após troca de username
+  const updateUserCredentials = (newUsername, newToken) => {
+    // Atualiza token no localStorage e axios
+    localStorage.setItem('zenyx_token', newToken);
+    axios.defaults.headers.common['Authorization'] = `Bearer ${newToken}`;
+    
+    // Atualiza dados do usuário no state e localStorage
+    const updatedUser = { ...user, username: newUsername, name: newUsername };
+    setUser(updatedUser);
+    localStorage.setItem('zenyx_admin_user', JSON.stringify(updatedUser));
+    
+    console.log("✅ Credenciais atualizadas:", newUsername);
+  };
+
   return (
-    <AuthContext.Provider value={{ user, login, logout, loading, hasBot, updateHasBotStatus }}>
+    <AuthContext.Provider value={{ user, login, logout, loading, hasBot, updateHasBotStatus, updateUserCredentials }}>
       {!loading && children}
     </AuthContext.Provider>
   );

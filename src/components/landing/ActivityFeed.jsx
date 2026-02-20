@@ -75,16 +75,15 @@ function isAggressivePlanName(planName) {
 }
 
 // ============================================================
-// 🏆 DADOS DAS PREMIAÇÕES DO HALL DA FAMA (COSMOS PURPLE)
-// Cores exatas mapeadas do index11.html
+// 🏆 DADOS DAS PREMIAÇÕES DO HALL DA FAMA (COM IMAGENS DE PLACAS)
 // ============================================================
 const awardsData = [
-  { id: '10k', label: '10K', color: '#94a3b8' },
-  { id: '50k', label: '50K', color: 'var(--neon-blue)' },
-  { id: '100k', label: '100K', color: 'var(--neon-purple)' },
-  { id: '250k', label: '250K', color: 'var(--neon-green)' },
-  { id: '500k', label: '500K', color: 'var(--neon-gold)' },
-  { id: '1M', label: '1 MILHÃO', color: '#ffffff' }
+  { id: '10k', label: '10K', color: '#10b981', image: '/placas/placa10k-conquistado.png' },
+  { id: '50k', label: '50K', color: 'var(--neon-blue)', image: '/placas/placa50k-conquistado.png' },
+  { id: '100k', label: '100K', color: 'var(--neon-purple)', image: '/placas/placa100k-conquistado.png' },
+  { id: '500k', label: '500K', color: 'var(--neon-gold)', image: '/placas/placa500k-conquistado.png' },
+  { id: '1M', label: '1 MILHÃO', color: '#ffffff', image: '/placas/placa1M-conquistado.png' },
+  { id: '10M', label: '10 MILHÕES', color: '#c333ff', image: '/placas/placa10M-conquistado.png' }
 ];
 
 // ============================================================
@@ -257,7 +256,7 @@ export function ActivityFeed() {
                 style={{ 
                   borderColor: activeAward.color, 
                   boxShadow: `0 30px 60px rgba(0,0,0,0.9), 0 0 50px ${activeAward.color}40`,
-                  background: activeAward.id === '1M' ? 'linear-gradient(135deg, #111, #333)' : 'linear-gradient(135deg, var(--bg-panel), var(--bg-base))'
+                  background: 'linear-gradient(135deg, var(--bg-panel), var(--bg-base))'
                 }}
               >
                 <div 
@@ -267,36 +266,30 @@ export function ActivityFeed() {
                     borderColor: `${activeAward.color}40`
                   }}
                 >
-                  <div 
-                    className="a-logo" 
-                    style={{ 
-                      boxShadow: `inset 0 0 15px ${activeAward.color}30`,
-                      background: `${activeAward.color}10`,
-                      color: activeAward.id === '1M' ? '#000' : '#fff'
-                    }}
-                  >
-                    ⚡
-                  </div>
-                  <div 
-                    className="a-value" 
-                    style={{ 
-                      textShadow: `0 0 20px ${activeAward.color}50`
-                    }}
-                  >
-                    {activeAward.label}
-                  </div>
-                  <div className="a-label">Faturamento</div>
+                  {activeAward.image ? (
+                    <img 
+                      src={activeAward.image} 
+                      alt={`Placa ${activeAward.label}`} 
+                      className="award-placa-img"
+                    />
+                  ) : (
+                    <>
+                      <div className="a-logo" style={{ boxShadow: `inset 0 0 15px ${activeAward.color}30`, background: `${activeAward.color}10` }}>⚡</div>
+                      <div className="a-value" style={{ textShadow: `0 0 20px ${activeAward.color}50` }}>{activeAward.label}</div>
+                      <div className="a-label">Faturamento</div>
+                    </>
+                  )}
                 </div>
               </div>
 
-              {/* VERSO DA CARTA (Necessário para a ilusão 3D contínua) */}
+              {/* VERSO DA CARTA */}
               <div 
                 className="award-card back" 
                 style={{ 
-                  transform: 'rotateY(180deg)', // Mantém o verso posicionado atrás
+                  transform: 'rotateY(180deg)',
                   borderColor: activeAward.color, 
                   boxShadow: `0 30px 60px rgba(0,0,0,0.9), 0 0 50px ${activeAward.color}40`,
-                  background: activeAward.id === '1M' ? 'linear-gradient(135deg, #111, #333)' : 'linear-gradient(135deg, var(--bg-panel), var(--bg-base))'
+                  background: 'linear-gradient(135deg, var(--bg-panel), var(--bg-base))'
                 }}
               >
                 <div 
@@ -306,25 +299,19 @@ export function ActivityFeed() {
                     borderColor: `${activeAward.color}40`
                   }}
                 >
-                  <div 
-                    className="a-logo" 
-                    style={{ 
-                      boxShadow: `inset 0 0 15px ${activeAward.color}30`,
-                      background: `${activeAward.color}10`,
-                      color: activeAward.id === '1M' ? '#000' : '#fff'
-                    }}
-                  >
-                    ⚡
-                  </div>
-                  <div 
-                    className="a-value" 
-                    style={{ 
-                      textShadow: `0 0 20px ${activeAward.color}50`
-                    }}
-                  >
-                    {activeAward.label}
-                  </div>
-                  <div className="a-label">Faturamento</div>
+                  {activeAward.image ? (
+                    <img 
+                      src={activeAward.image} 
+                      alt={`Placa ${activeAward.label}`} 
+                      className="award-placa-img"
+                    />
+                  ) : (
+                    <>
+                      <div className="a-logo" style={{ boxShadow: `inset 0 0 15px ${activeAward.color}30`, background: `${activeAward.color}10` }}>⚡</div>
+                      <div className="a-value" style={{ textShadow: `0 0 20px ${activeAward.color}50` }}>{activeAward.label}</div>
+                      <div className="a-label">Faturamento</div>
+                    </>
+                  )}
                 </div>
               </div>
 

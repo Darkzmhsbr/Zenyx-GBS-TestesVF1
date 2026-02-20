@@ -38,7 +38,7 @@ import './Sidebar.css';
 // 🏆 NÍVEIS DE GAMIFICAÇÃO (Mesma lógica do Profile.jsx)
 // =========================================================
 const LEVELS = [
-  { name: 'Iniciante', target: 100, color: '#10b981' },
+  { name: 'Iniciante', target: 1000000, color: '#10b981' },
   { name: 'Barão', target: 5000000, color: '#f59e0b' },
   { name: 'Prodígio', target: 10000000, color: '#3b82f6' },
   { name: 'Empreendedor', target: 50000000, color: '#8b5cf6' },

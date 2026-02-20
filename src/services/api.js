@@ -578,7 +578,11 @@ export const integrationService = {
 export const profileService = {
   get: async () => (await api.get('/api/admin/profile')).data,
   update: async (data) => (await api.post('/api/admin/profile', data)).data,
-  getStats: async () => (await api.get('/api/profile/stats')).data
+  getStats: async () => (await api.get('/api/profile/stats')).data,
+  // 🆕 Alterar senha
+  changePassword: async (data) => (await api.post('/api/admin/profile/change-password', data)).data,
+  // 🆕 Alterar username
+  changeUsername: async (data) => (await api.post('/api/admin/profile/change-username', data)).data
 };
 
 // ============================================================
