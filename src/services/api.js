@@ -548,6 +548,46 @@ export const integrationService = {
   },
 
   // =========================================================
+  // 🔄 SYNC PAY (NOVO)
+  // =========================================================
+  getSyncPayStatus: async (botId) => {
+    if (!botId) return { status: 'desconectado' };
+    try {
+      const response = await api.get(`/api/admin/integrations/syncpay/${botId}`);
+      return response.data;
+    } catch (error) {
+      console.error("Erro ao buscar status Sync Pay:", error);
+      return { status: 'desconectado' };
+    }
+  },
+
+  saveSyncPayToken: async (botId, clientId, clientSecret) => {
+    try {
+      const response = await api.post(`/api/admin/integrations/syncpay/${botId}`, { 
+        client_id: clientId, 
+        client_secret: clientSecret 
+      });
+      return response.data;
+    } catch (error) {
+      console.error("Erro ao salvar credenciais Sync Pay:", error);
+      throw error;
+    }
+  },
+
+  updateSyncPayToken: async (botId, clientId, clientSecret) => {
+    try {
+      const response = await api.put(`/api/admin/integrations/syncpay/${botId}`, { 
+        client_id: clientId, 
+        client_secret: clientSecret 
+      });
+      return response.data;
+    } catch (error) {
+      console.error("Erro ao atualizar credenciais Sync Pay:", error);
+      throw error;
+    }
+  },
+
+  // =========================================================
   // 🔄 MULTI-GATEWAY CONFIG (CONTINGÊNCIA)
   // =========================================================
   getGatewayConfig: async (botId) => {

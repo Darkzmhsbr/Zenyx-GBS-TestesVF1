@@ -25,8 +25,13 @@ export function SuperAdminUsers() {
   const [modalType, setModalType] = useState(null); // 'details', 'delete', 'status', 'promote'
   const [actionLoading, setActionLoading] = useState(false);
 
-  // Estado para edição de dados extras
-  const [editData, setEditData] = useState({ taxa_venda: 60, pushin_pay_id: '', wiinpay_user_id: '' });
+  // 🔥 ESTADO CORRIGIDO: Incluindo a syncpay_client_id para o React gerenciar
+  const [editData, setEditData] = useState({ 
+    taxa_venda: 60, 
+    pushin_pay_id: '', 
+    wiinpay_user_id: '',
+    syncpay_client_id: '' 
+  });
 
   useEffect(() => {
     loadUsers();
@@ -83,19 +88,19 @@ export function SuperAdminUsers() {
     setModalType(null);
   };
 
-  // 🔥 CORREÇÃO AQUI: Busca detalhes E preenche os inputs
+  // 🔥 CORREÇÃO AQUI: Busca detalhes E preenche TODOS os inputs (incluindo Sync Pay)
   const handleViewDetails = async (user) => {
     setActionLoading(true);
     try {
       const details = await superAdminService.getUserDetails(user.id);
       setSelectedUser(details);
       
-      // 👇 AQUI ESTÁ O PULO DO GATO:
       // Pegamos o que veio do banco e jogamos no editData para aparecer na caixa
       setEditData({
         taxa_venda: details.user.taxa_venda || 60,
         pushin_pay_id: details.user.pushin_pay_id || '',
-        wiinpay_user_id: details.user.wiinpay_user_id || ''
+        wiinpay_user_id: details.user.wiinpay_user_id || '',
+        syncpay_client_id: details.user.syncpay_client_id || ''
       });
 
       setModalType('details');
@@ -107,7 +112,7 @@ export function SuperAdminUsers() {
     }
   };
 
-  // Salvar Taxa e Dados Financeiros
+  // 🔥 CORREÇÃO AQUI: Salvar Taxa e Dados Financeiros atualizados
   const handleSaveFinancials = async () => {
     // Verifica se temos o usuário carregado
     if (!selectedUser || !selectedUser.user) return;
@@ -117,7 +122,8 @@ export function SuperAdminUsers() {
         await superAdminService.updateUser(selectedUser.user.id, {
             taxa_venda: parseInt(editData.taxa_venda),
             pushin_pay_id: editData.pushin_pay_id,
-            wiinpay_user_id: editData.wiinpay_user_id
+            wiinpay_user_id: editData.wiinpay_user_id,
+            syncpay_client_id: editData.syncpay_client_id
         });
         
         // Atualiza visualmente o objeto selecionado na tela para não precisar recarregar
@@ -127,7 +133,8 @@ export function SuperAdminUsers() {
                 ...prev.user,
                 taxa_venda: editData.taxa_venda,
                 pushin_pay_id: editData.pushin_pay_id,
-                wiinpay_user_id: editData.wiinpay_user_id
+                wiinpay_user_id: editData.wiinpay_user_id,
+                syncpay_client_id: editData.syncpay_client_id
             }
         }));
         
@@ -461,6 +468,28 @@ export function SuperAdminUsers() {
                                     }}
                                 />
                             </div>
+
+                            {/* 🆕 NOVO CAMPO: SYNC PAY */}
+                            <div>
+                                <label style={{ fontSize: '13px', display: 'block', marginBottom: '5px', color: '#ccc' }}>
+                                    Client ID Sync Pay (Split)
+                                </label>
+                                <input 
+                                    type="text" 
+                                    value={editData.syncpay_client_id}
+                                    onChange={(e) => setEditData({...editData, syncpay_client_id: e.target.value})}
+                                    placeholder="Ex: 5ee78200-8b99-4936..."
+                                    style={{ 
+                                        width: '100%', 
+                                        padding: '10px', 
+                                        background: '#1a1a1a',
+                                        border: '1px solid #444', 
+                                        color: '#fff',
+                                        borderRadius: '4px' 
+                                    }}
+                                />
+                            </div>
+
                             <button 
                                 onClick={handleSaveFinancials}
                                 disabled={actionLoading}

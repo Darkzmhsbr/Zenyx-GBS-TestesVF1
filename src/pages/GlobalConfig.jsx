@@ -16,6 +16,7 @@ export function GlobalConfig() {
     default_fee: 60, // 60 centavos
     master_pushin_pay_id: '',
     master_wiinpay_user_id: '',
+    master_syncpay_client_id: '', // 🆕 NOVO: Conta Mestra da Sync Pay
     maintenance_mode: false
   });
 
@@ -38,6 +39,7 @@ export function GlobalConfig() {
           default_fee: data.default_fee || 60,
           master_pushin_pay_id: data.master_pushin_pay_id || '',
           master_wiinpay_user_id: data.master_wiinpay_user_id || '',
+          master_syncpay_client_id: data.master_syncpay_client_id || '', // 🆕 NOVO
           maintenance_mode: data.maintenance_mode || false
         });
       }
@@ -159,6 +161,19 @@ export function GlobalConfig() {
                   />
                   <small>Para onde vai o lucro das taxas (Split WiinPay).</small>
                 </div>
+
+                {/* 🆕 NOVO CAMPO: SYNC PAY MASTER ID */}
+                <div className="form-group">
+                  <label>Sync Pay Client ID (Conta Mestra)</label>
+                  <input 
+                    type="text" 
+                    placeholder="Ex: 5ee78200-8b99-4936..."
+                    value={config.master_syncpay_client_id}
+                    onChange={(e) => setConfig({...config, master_syncpay_client_id: e.target.value})}
+                  />
+                  <small>Para onde vai o lucro das taxas (Split Sync Pay).</small>
+                </div>
+
               </div>
 
               <div className="divider"></div>

@@ -39,6 +39,22 @@ const GATEWAYS_INFO = {
     tokenPlaceholder: 'Cole sua API Key WiinPay aqui...',
     disponivel: true
   },
+  syncpay: {
+    id: 'syncpay',
+    nome: 'Sync Pay',
+    descricao: 'Pagamento via PIX',
+    cor: '#3b82f6', // Azul tecnológico
+    corGradient: 'linear-gradient(135deg, #3b82f6, #1d4ed8)',
+    logo: 'https://f005.backblazeb2.com/file/Bot-TikTok/zenyx/syncpay-logo-3d.png',
+    taxaInfo: 'Taxa Personalizada',
+    site: 'https://syncpay.com.br',
+    // Sync Pay usa duas chaves, então labels duplas:
+    tokenLabel: 'Client ID (Chave Pública)',
+    tokenPlaceholder: 'Ex: 5ee78200-8b99...',
+    tokenLabel2: 'Client Secret (Chave Privada)',
+    tokenPlaceholder2: 'Ex: a490fcdb-78dd...',
+    disponivel: true
+  },
   mercadopago: {
     id: 'mercadopago',
     nome: 'Mercado Pago',
@@ -65,8 +81,13 @@ export function Integrations() {
   // Modal de configuração
   const [modalOpen, setModalOpen] = useState(false);
   const [modalGateway, setModalGateway] = useState(null);
-  const [modalToken, setModalToken] = useState('');
+  
+  // 🆕 Estados para lidar com campos únicos ou duplos (Sync Pay)
+  const [modalToken, setModalToken] = useState(''); // Usado para Pushin e Wiin
+  const [modalClientSecret, setModalClientSecret] = useState(''); // Usado só na Sync Pay
+  
   const [showToken, setShowToken] = useState(false);
+  const [showSecret, setShowSecret] = useState(false);
   const [modalMode, setModalMode] = useState('new'); // 'new' ou 'edit'
   
   // Modal de contingência
@@ -92,7 +113,8 @@ export function Integrations() {
         gateway_principal: 'pushinpay',
         gateway_fallback: null,
         pushinpay: { ativo: false, configurado: false, token_mask: '' },
-        wiinpay: { ativo: false, configurado: false, token_mask: '' }
+        wiinpay: { ativo: false, configurado: false, token_mask: '' },
+        syncpay: { ativo: false, configurado: false, token_mask: '' }
       });
     } finally {
       setLoading(false);
@@ -109,11 +131,13 @@ export function Integrations() {
   const contadores = {
     ativos: [
       gatewayConfig?.pushinpay?.ativo,
-      gatewayConfig?.wiinpay?.ativo
+      gatewayConfig?.wiinpay?.ativo,
+      gatewayConfig?.syncpay?.ativo
     ].filter(Boolean).length,
     configurados: [
       gatewayConfig?.pushinpay?.configurado,
-      gatewayConfig?.wiinpay?.configurado
+      gatewayConfig?.wiinpay?.configurado,
+      gatewayConfig?.syncpay?.configurado
     ].filter(Boolean).length,
     disponiveis: Object.values(GATEWAYS_INFO).filter(g => g.disponivel).length
   };
@@ -127,7 +151,9 @@ export function Integrations() {
     const isConfigurado = gatewayConfig?.[gwId]?.configurado;
     setModalGateway(gwId);
     setModalToken('');
+    setModalClientSecret('');
     setShowToken(false);
+    setShowSecret(false);
     setModalMode(isConfigurado ? 'edit' : 'new');
     setModalOpen(true);
   };
@@ -135,29 +161,44 @@ export function Integrations() {
   // Salvar token no modal
   const salvarToken = async () => {
     const token = modalToken.trim();
+    const secret = modalClientSecret.trim();
     
-    // Validação básica de tamanho
-    if (!token || token.length < 20) {
-      return Swal.fire({
-        title: 'Token inválido',
-        text: 'O token deve ter pelo menos 20 caracteres.',
-        icon: 'warning',
-        background: '#0d0b14',
-        color: '#e2e8f0',
-        confirmButtonColor: '#10b981'
-      });
-    }
+    // Validação para Sync Pay (exige 2 campos)
+    if (modalGateway === 'syncpay') {
+      if (!token || token.length < 10 || !secret || secret.length < 10) {
+        return Swal.fire({
+          title: 'Credenciais inválidas',
+          text: 'O Client ID e o Client Secret devem ser preenchidos corretamente.',
+          icon: 'warning',
+          background: '#0d0b14',
+          color: '#e2e8f0',
+          confirmButtonColor: '#10b981'
+        });
+      }
+    } else {
+      // Validação básica de tamanho para outras gateways
+      if (!token || token.length < 20) {
+        return Swal.fire({
+          title: 'Token inválido',
+          text: 'O token deve ter pelo menos 20 caracteres.',
+          icon: 'warning',
+          background: '#0d0b14',
+          color: '#e2e8f0',
+          confirmButtonColor: '#10b981'
+        });
+      }
 
-    // Validação específica por gateway
-    if (modalGateway === 'wiinpay' && !token.startsWith('eyJ')) {
-      return Swal.fire({
-        title: 'API Key WiinPay inválida',
-        text: 'A API Key da WiinPay deve ser um token JWT (começa com "eyJ..."). Verifique se copiou o token completo.',
-        icon: 'error',
-        background: '#0d0b14',
-        color: '#e2e8f0',
-        confirmButtonColor: '#10b981'
-      });
+      // Validação específica por gateway
+      if (modalGateway === 'wiinpay' && !token.startsWith('eyJ')) {
+        return Swal.fire({
+          title: 'API Key WiinPay inválida',
+          text: 'A API Key da WiinPay deve ser um token JWT (começa com "eyJ..."). Verifique se copiou o token completo.',
+          icon: 'error',
+          background: '#0d0b14',
+          color: '#e2e8f0',
+          confirmButtonColor: '#10b981'
+        });
+      }
     }
 
     setSaving(true);
@@ -174,6 +215,12 @@ export function Integrations() {
         } else {
           await integrationService.saveWiinpayToken(selectedBot.id, token);
         }
+      } else if (modalGateway === 'syncpay') {
+        if (modalMode === 'edit') {
+          await integrationService.updateSyncPayToken(selectedBot.id, token, secret);
+        } else {
+          await integrationService.saveSyncPayToken(selectedBot.id, token, secret);
+        }
       }
 
       Swal.fire({
@@ -187,11 +234,12 @@ export function Integrations() {
 
       setModalOpen(false);
       setModalToken('');
+      setModalClientSecret('');
       await carregarConfig();
     } catch (error) {
       Swal.fire({
         title: 'Erro',
-        text: 'Falha ao salvar. Verifique o token e tente novamente.',
+        text: 'Falha ao salvar. Verifique as credenciais e tente novamente.',
         icon: 'error',
         background: '#0d0b14',
         color: '#e2e8f0'
@@ -208,7 +256,7 @@ export function Integrations() {
     if (ativar && !gatewayConfig?.[gwId]?.configurado) {
       return Swal.fire({
         title: 'Configure primeiro',
-        text: `Você precisa configurar o token da ${gwNome} antes de ativar.`,
+        text: `Você precisa configurar as credenciais da ${gwNome} antes de ativar.`,
         icon: 'info',
         background: '#0d0b14',
         color: '#e2e8f0',
@@ -238,6 +286,7 @@ export function Integrations() {
       const payload = {};
       if (gwId === 'pushinpay') payload.pushinpay_ativo = ativar;
       if (gwId === 'wiinpay') payload.wiinpay_ativo = ativar;
+      if (gwId === 'syncpay') payload.syncpay_ativo = ativar;
       
       await integrationService.updateGatewayConfig(selectedBot.id, payload);
       await carregarConfig();
@@ -374,7 +423,7 @@ export function Integrations() {
         {isConfigurado && (
           <div className="gw-card__token-info">
             <ShieldCheck size={14} />
-            <span>Token: {config.token_mask || '••••••••'}</span>
+            <span>Credencial: {config.token_mask || '••••••••'}</span>
           </div>
         )}
 
@@ -386,7 +435,7 @@ export function Integrations() {
               className="gw-btn gw-btn--config"
               onClick={() => abrirConfigurar(gwId)}
             >
-              {isConfigurado ? <><Edit3 size={16} /> Editar Token</> : <><Settings size={16} /> Configurar</>}
+              {isConfigurado ? <><Edit3 size={16} /> Editar Acesso</> : <><Settings size={16} /> Configurar</>}
             </button>
 
             {/* Botão Taxa (info) */}
@@ -509,10 +558,11 @@ export function Integrations() {
             </div>
 
             <div className="gw-modal__body">
+              {/* CAMPO 1 (Para todos) */}
               <label className="gw-modal__label">
                 {GATEWAYS_INFO[modalGateway].tokenLabel}
               </label>
-              <div className="gw-modal__input-wrap">
+              <div className="gw-modal__input-wrap" style={{ marginBottom: modalGateway === 'syncpay' ? '15px' : '0' }}>
                 <input
                   type={showToken ? 'text' : 'password'}
                   className="gw-modal__input"
@@ -526,16 +576,39 @@ export function Integrations() {
                 </button>
               </div>
 
+              {/* CAMPO 2 (Somente Sync Pay) */}
+              {modalGateway === 'syncpay' && (
+                <>
+                  <label className="gw-modal__label">
+                    {GATEWAYS_INFO[modalGateway].tokenLabel2}
+                  </label>
+                  <div className="gw-modal__input-wrap">
+                    <input
+                      type={showSecret ? 'text' : 'password'}
+                      className="gw-modal__input"
+                      placeholder={GATEWAYS_INFO[modalGateway].tokenPlaceholder2}
+                      value={modalClientSecret}
+                      onChange={e => setModalClientSecret(e.target.value)}
+                    />
+                    <button className="gw-modal__eye" onClick={() => setShowSecret(!showSecret)}>
+                      {showSecret ? <EyeOff size={18} /> : <Eye size={18} />}
+                    </button>
+                  </div>
+                </>
+              )}
+
               {modalMode === 'edit' && gatewayConfig?.[modalGateway]?.token_mask && (
-                <div className="gw-modal__current-token">
+                <div className="gw-modal__current-token" style={{ marginTop: '15px' }}>
                   <ShieldCheck size={14} />
-                  Token atual: {gatewayConfig[modalGateway].token_mask}
+                  Credencial atual: {gatewayConfig[modalGateway].token_mask}
                 </div>
               )}
 
-              <p className="gw-modal__hint">
+              <p className="gw-modal__hint" style={{ marginTop: '15px' }}>
                 {modalGateway === 'pushinpay' 
                   ? 'Gere seu token em pushinpay.com.br → Painel → Configurações → API.'
+                  : modalGateway === 'syncpay'
+                  ? 'Gere suas chaves em syncpay.com.br → API → Cadastrar API.'
                   : 'Gere sua API Key em wiinpay.com.br → Painel → Integrações → API Key.'
                 }
               </p>
@@ -589,6 +662,7 @@ export function Integrations() {
                   >
                     <option value="pushinpay">PushinPay</option>
                     <option value="wiinpay">WiinPay</option>
+                    <option value="syncpay">Sync Pay</option>
                   </select>
                 </div>
 
@@ -607,6 +681,7 @@ export function Integrations() {
                     <option value="">Nenhuma (sem backup)</option>
                     <option value="pushinpay">PushinPay</option>
                     <option value="wiinpay">WiinPay</option>
+                    <option value="syncpay">Sync Pay</option>
                   </select>
                 </div>
               </div>
