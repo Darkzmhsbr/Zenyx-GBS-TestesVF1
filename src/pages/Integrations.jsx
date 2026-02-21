@@ -47,7 +47,7 @@ const GATEWAYS_INFO = {
     corGradient: 'linear-gradient(135deg, #3b82f6, #1d4ed8)',
     logo: 'https://f005.backblazeb2.com/file/Bot-TikTok/zenyx/syncpay-logo-3d.png',
     taxaInfo: 'Taxa Personalizada',
-    site: 'https://syncpay.com.br',
+    site: 'https://app.syncpayments.com.br',
     // Sync Pay usa duas chaves, então labels duplas:
     tokenLabel: 'Client ID (Chave Pública)',
     tokenPlaceholder: 'Ex: 5ee78200-8b99...',
