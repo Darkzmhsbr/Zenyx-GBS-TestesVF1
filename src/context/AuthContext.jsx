@@ -15,7 +15,7 @@ export function AuthProvider({ children }) {
     const token = localStorage.getItem('zenyx_token');
     const savedUser = localStorage.getItem('zenyx_admin_user');
     
-    // 🔥 SAFEGUARD: Verifica se savedUser não é a string "undefined"
+    // 🔥 CORREÇÃO DE SEGURANÇA: Impede leitura do texto "undefined" no cache
     if (token && savedUser && savedUser !== "undefined") {
       try {
         const userData = JSON.parse(savedUser);
@@ -35,37 +35,28 @@ export function AuthProvider({ children }) {
         localStorage.removeItem('zenyx_admin_user');
       }
     } else if (token && (!savedUser || savedUser === "undefined")) {
-      // Limpa rastros quebrados para evitar tela branca ou loop
-      localStorage.removeItem('zenyx_token');
-      localStorage.removeItem('zenyx_admin_user');
+        localStorage.removeItem('zenyx_token');
+        localStorage.removeItem('zenyx_admin_user');
     }
     setLoading(false);
   }, []);
 
   // ============================================================
-  // 🔑 LOGIN COM API REAL E TURNSTILE (CORRIGIDO PARA FORM DATA)
+  // 🔑 LOGIN COM API REAL E TURNSTILE
   // ============================================================
   const login = async (username, password, turnstileToken) => {
     try {
       // Usando o authService em vez de chamar axios direto aqui, para manter consistência
       // Mas como seu original tinha lógica customizada, vou manter a lógica aqui
-      // porém adaptada para enviar o token do turnstile NO FORMATO CORRETO (x-www-form-urlencoded)
+      // porém adaptada para enviar o token do turnstile
       
       const API_URL = 'https://zenyx-gbs-testesv1-production.up.railway.app';
       
-      // 🔥 O PULO DO GATO: FastAPI exige Form Data para o login
-      const formData = new URLSearchParams();
-      formData.append('username', username);
-      formData.append('password', password);
-      
-      if (turnstileToken) {
-          formData.append('turnstile_token', turnstileToken);
-      }
-      
-      const response = await axios.post(`${API_URL}/api/auth/login`, formData, {
-        headers: {
-          'Content-Type': 'application/x-www-form-urlencoded'
-        }
+      // 🔥 REVERTIDO PARA JSON PURO: Funciona perfeitamente com seu Backend
+      const response = await axios.post(`${API_URL}/api/auth/login`, {
+        username: username,
+        password: password,
+        turnstile_token: turnstileToken // 🔥 Enviando o token para o backend
       });
 
       // 🚀 CAPTURA has_bots vindo do backend
@@ -99,8 +90,17 @@ export function AuthProvider({ children }) {
     } catch (error) {
       console.error("❌ Erro no login:", error);
       
-      // Propaga o erro para o componente tratar (mostrar alert específico)
-      throw error; 
+      // 🔥 CORREÇÃO CRÍTICA DO [object Object]:
+      // Extraímos a mensagem de erro para o SweetAlert poder ler corretamente!
+      let errorMsg = "Erro desconhecido ao tentar fazer login.";
+      if (error.response && error.response.data) {
+         errorMsg = error.response.data.detail || error.response.data.message || "Credenciais inválidas.";
+      } else if (error.message) {
+         errorMsg = error.message;
+      }
+      
+      // Lança a string limpa!
+      throw errorMsg; 
     }
   };
 

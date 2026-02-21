@@ -814,43 +814,30 @@ export const miniappService = {
 };
 
 // ============================================================
-// 🔐 SERVIÇO DE AUTENTICAÇÃO (🔥 ATUALIZADO PARA TURNSTILE)
-// ============================================================
-// ============================================================
-// 🔐 SERVIÇO DE AUTENTICAÇÃO (BLINDADO)
+// 🔐 SERVIÇO DE AUTENTICAÇÃO
 // ============================================================
 export const authService = {
+  // 🔥 ATUALIZADO: Recebe turnstileToken e envia no payload
   register: async (username, email, password, fullName, turnstileToken) => {
     const response = await api.post('/api/auth/register', {
       username,
       email,
       password,
       full_name: fullName,
-      turnstile_token: turnstileToken
+      turnstile_token: turnstileToken // 🛡️ NOVO CAMPO
     });
     return response.data;
   },
   
+  // 🔥 ATUALIZADO: Recebe turnstileToken e envia no payload
   login: async (username, password, turnstileToken) => {
-    // Reseta flag de sessão expirada antes do login
+    // 🔥 Reseta flag de sessão expirada antes do login
     resetSessionState();
-    
-    // 🔥 O PULO DO GATO: FastAPI exige "Form Data" para o login padrão!
-    const formData = new URLSearchParams();
-    formData.append('username', username);
-    formData.append('password', password);
-    
-    // Adiciona o token do Cloudflare se existir
-    if (turnstileToken) {
-        formData.append('turnstile_token', turnstileToken);
-    }
-
-    const response = await api.post('/api/auth/login', formData, {
-        headers: {
-            'Content-Type': 'application/x-www-form-urlencoded'
-        }
+    const response = await api.post('/api/auth/login', {
+      username,
+      password,
+      turnstile_token: turnstileToken // 🛡️ NOVO CAMPO
     });
-    
     return response.data;
   },
   
@@ -1044,7 +1031,7 @@ export const superAdminService = {
       console.error("Erro ao deletar bot forçado:", error);
       throw error;
     }
-  },
+  }
 };
 // ============================================================
 // 🆓 CANAL FREE SERVICE
