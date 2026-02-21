@@ -15,7 +15,8 @@ export function AuthProvider({ children }) {
     const token = localStorage.getItem('zenyx_token');
     const savedUser = localStorage.getItem('zenyx_admin_user');
     
-    if (token && savedUser) {
+    // 🔥 SAFEGUARD: Verifica se savedUser não é a string "undefined"
+    if (token && savedUser && savedUser !== "undefined") {
       try {
         const userData = JSON.parse(savedUser);
         setUser(userData);
@@ -33,25 +34,38 @@ export function AuthProvider({ children }) {
         localStorage.removeItem('zenyx_token');
         localStorage.removeItem('zenyx_admin_user');
       }
+    } else if (token && (!savedUser || savedUser === "undefined")) {
+      // Limpa rastros quebrados para evitar tela branca ou loop
+      localStorage.removeItem('zenyx_token');
+      localStorage.removeItem('zenyx_admin_user');
     }
     setLoading(false);
   }, []);
 
   // ============================================================
-  // 🔑 LOGIN COM API REAL E TURNSTILE
+  // 🔑 LOGIN COM API REAL E TURNSTILE (CORRIGIDO PARA FORM DATA)
   // ============================================================
   const login = async (username, password, turnstileToken) => {
     try {
       // Usando o authService em vez de chamar axios direto aqui, para manter consistência
       // Mas como seu original tinha lógica customizada, vou manter a lógica aqui
-      // porém adaptada para enviar o token do turnstile
+      // porém adaptada para enviar o token do turnstile NO FORMATO CORRETO (x-www-form-urlencoded)
       
       const API_URL = 'https://zenyx-gbs-testesv1-production.up.railway.app';
       
-      const response = await axios.post(`${API_URL}/api/auth/login`, {
-        username: username,
-        password: password,
-        turnstile_token: turnstileToken // 🔥 Enviando o token para o backend
+      // 🔥 O PULO DO GATO: FastAPI exige Form Data para o login
+      const formData = new URLSearchParams();
+      formData.append('username', username);
+      formData.append('password', password);
+      
+      if (turnstileToken) {
+          formData.append('turnstile_token', turnstileToken);
+      }
+      
+      const response = await axios.post(`${API_URL}/api/auth/login`, formData, {
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded'
+        }
       });
 
       // 🚀 CAPTURA has_bots vindo do backend
