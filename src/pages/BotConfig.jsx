@@ -71,6 +71,7 @@ export function BotConfig() {
     suporte_username: '', 
     id_canal_notificacao: '',  // ✅ Canal de Notificações
     protect_content: false,    // 🔒 Proteção de Conteúdo
+    notificar_no_bot: true,    // 🔔 Notificação no bot
     status: 'desconectado'
   });
 
@@ -122,6 +123,7 @@ export function BotConfig() {
           suporte_username: currentBot.suporte_username || '', 
           id_canal_notificacao: currentBot.id_canal_notificacao || '',  // ✅ Canal de Notificações
           protect_content: currentBot.protect_content || false,         // 🔒 Proteção de Conteúdo
+          notificar_no_bot: currentBot.notificar_no_bot !== undefined ? currentBot.notificar_no_bot : true, // 🔔 Notificação no bot
           status: currentBot.status || 'desconectado'
         });
 
@@ -545,6 +547,50 @@ export function BotConfig() {
                         }}>
                           <span style={{
                             position:'absolute', left: config.protect_content ? 26 : 3, top: 3,
+                            width: 20, height: 20, background: '#fff', borderRadius: '50%',
+                            transition: 'all 0.3s ease',
+                            boxShadow: '0 2px 4px rgba(0,0,0,0.3)'
+                          }}/>
+                        </span>
+                      </label>
+                    </div>
+
+                    {/* 🔔 NOTIFICAÇÃO NO BOT */}
+                    <div style={{
+                      marginTop: 15,
+                      padding: '16px 20px',
+                      background: config.notificar_no_bot ? 'rgba(59, 130, 246, 0.08)' : 'rgba(255,255,255,0.03)',
+                      border: `1px solid ${config.notificar_no_bot ? 'rgba(59, 130, 246, 0.3)' : 'rgba(255,255,255,0.08)'}`,
+                      borderRadius: 10,
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                      transition: 'all 0.3s ease'
+                    }}>
+                      <div>
+                        <div style={{display:'flex', alignItems:'center', gap: 8, marginBottom: 4}}>
+                          <Bell size={18} color={config.notificar_no_bot ? '#3b82f6' : '#888'}/>
+                          <span style={{fontWeight: 600, color: '#fff', fontSize: '0.95rem'}}>Notificações no Bot</span>
+                        </div>
+                        <small style={{color:'#888', lineHeight: 1.4, display:'block', maxWidth: 400}}>
+                          Quando ativo, o bot envia avisos de vendas e alertas diretamente 
+                          via DM para o admin. Desative se preferir receber apenas no canal de notificações.
+                        </small>
+                      </div>
+                      <label style={{position:'relative', display:'inline-block', width: 50, height: 26, cursor:'pointer', flexShrink: 0, marginLeft: 15}}>
+                        <input 
+                          type="checkbox" 
+                          checked={config.notificar_no_bot} 
+                          onChange={(e) => setConfig({...config, notificar_no_bot: e.target.checked})}
+                          style={{opacity: 0, width: 0, height: 0}}
+                        />
+                        <span style={{
+                          position:'absolute', top:0, left:0, right:0, bottom:0,
+                          background: config.notificar_no_bot ? '#3b82f6' : '#333',
+                          borderRadius: 26, transition: 'all 0.3s ease'
+                        }}>
+                          <span style={{
+                            position:'absolute', left: config.notificar_no_bot ? 26 : 3, top: 3,
                             width: 20, height: 20, background: '#fff', borderRadius: '50%',
                             transition: 'all 0.3s ease',
                             boxShadow: '0 2px 4px rgba(0,0,0,0.3)'

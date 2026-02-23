@@ -426,7 +426,12 @@ export const crmService = {
   },
   
   updateUser: async (userId, data) => (await api.put(`/api/admin/users/${userId}`, data)).data,
-  resendAccess: async (userId) => (await api.post(`/api/admin/users/${userId}/resend-access`)).data
+  resendAccess: async (userId, planoId = null) => {
+    const params = planoId ? `?plano_id=${planoId}` : '';
+    return (await api.post(`/api/admin/users/${userId}/resend-access${params}`)).data;
+  },
+  removeFromVip: async (userId) => (await api.post(`/api/admin/users/${userId}/remove-vip`)).data,
+  getPlanosCanais: async (botId) => (await api.get(`/api/admin/bots/${botId}/planos-canais`)).data
 };
 
 export const admin = crmService;

@@ -23,8 +23,28 @@ export function Header({ onToggleMenu }) {
   const [notifications, setNotifications] = useState([]);
   const [unreadCount, setUnreadCount] = useState(0);
 
-  // Refs para fechar ao clicar fora (opcional, mas bom ter)
+  // 🔥 Refs para fechar ao clicar fora
   const notifRef = useRef(null);
+  const botRef = useRef(null);
+  const profileRef = useRef(null);
+
+  // 🔥 CLICK OUTSIDE: Fecha TODOS os dropdowns ao clicar fora
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (botRef.current && !botRef.current.contains(e.target)) {
+        setIsBotMenuOpen(false);
+      }
+      if (notifRef.current && !notifRef.current.contains(e.target)) {
+        setIsNotificationOpen(false);
+      }
+      if (profileRef.current && !profileRef.current.contains(e.target)) {
+        setIsProfileMenuOpen(false);
+      }
+    };
+    
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   useEffect(() => {
     const savedTheme = localStorage.getItem('zenyx_theme') || 'dark';
@@ -129,7 +149,7 @@ export function Header({ onToggleMenu }) {
         </button>
 
         {/* --- SELETOR DE BOTS (ESTILO ANTIGO) --- */}
-        <div className="bot-selector-wrapper">
+        <div className="bot-selector-wrapper" ref={botRef}>
           <button 
             className={`bot-selector-btn ${isBotMenuOpen ? 'active' : ''}`}
             onClick={() => setIsBotMenuOpen(!isBotMenuOpen)}
@@ -240,7 +260,7 @@ export function Header({ onToggleMenu }) {
         </div>
 
         {/* --- PERFIL (ESTILO ANTIGO) --- */}
-        <div className="profile-dropdown-wrapper">
+        <div className="profile-dropdown-wrapper" ref={profileRef}>
           <div 
             className="user-avatar"
             onClick={() => {
