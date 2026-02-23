@@ -43,7 +43,7 @@ registerLocale('pt-BR', ptBR);
 export function Dashboard() {
   const navigate = useNavigate();
   const { selectedBot } = useBot();
-  const { onboarding } = useAuth();
+  const { user, onboarding } = useAuth();
   const [loading, setLoading] = useState(true);
   
   // Estado para controlar banner de conclusão
@@ -81,6 +81,18 @@ export function Dashboard() {
       localStorage.setItem('zenyx_welcome_shown', 'true');
     }
   }, [onboarding]);
+
+  // 🔥 MÁGICA DO ONESIGNAL: Etiquetar o dispositivo com o ID do usuário
+  useEffect(() => {
+    // Só executa se tiver um usuário logado e se o OneSignal estiver instalado no site
+    if (user && user.id && window.OneSignal) {
+      window.OneSignal.push(function() {
+        window.OneSignal.sendTag("user_id", user.id.toString()).then(() => {
+          console.log("✅ Dispositivo etiquetado no OneSignal com user_id:", user.id);
+        });
+      });
+    }
+  }, [user]);
 
   // Carregar métricas - CORRIGIDO: usa getStats do backend
   useEffect(() => {
