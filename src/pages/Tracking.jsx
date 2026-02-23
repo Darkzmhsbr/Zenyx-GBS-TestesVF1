@@ -479,18 +479,18 @@ export function Tracking() {
                                 <div className="link-stats">
                                     <div className="stat-box">
                                         <MousePointer size={14} />
-                                        <span>{link.clicks} <small>Cliques</small></span>
+                                        <span>{link.clicks || 0} <small>Cliques</small></span>
                                     </div>
                                     <div className="stat-box highlight">
                                         <Users size={14} />
-                                        <span>{link.leads} <small>Leads</small></span>
+                                        <span>{link.leads || 0} <small>Leads</small></span>
                                     </div>
                                     <div className="stat-box success">
                                         <DollarSign size={14} />
-                                        <span>{link.vendas} <small>Vendas</small></span>
+                                        <span>{link.vendas || 0} <small>Vendas</small></span>
                                     </div>
                                     <div className="stat-box money">
-                                        <span>R$ {link.faturamento?.toFixed(2)}</span>
+                                        <span>R$ {(link.faturamento || 0).toFixed(2)}</span>
                                     </div>
                                 </div>
 
@@ -515,105 +515,117 @@ export function Tracking() {
                                             <div className="metrics-summary">
                                                 <div className="metric-card">
                                                     <small>Faturamento Total</small>
-                                                    <strong style={{color:'#fbbf24'}}>R$ {linkMetrics[link.id].faturamento_total?.toFixed(2)}</strong>
+                                                    <strong style={{color:'#fbbf24'}}>R$ {(linkMetrics[link.id].faturamento_total || 0).toFixed(2)}</strong>
                                                 </div>
                                                 <div className="metric-card">
                                                     <small>Total Vendas</small>
-                                                    <strong style={{color:'#10b981'}}>{linkMetrics[link.id].vendas_total}</strong>
+                                                    <strong style={{color:'#10b981'}}>{linkMetrics[link.id].vendas_total || 0}</strong>
                                                 </div>
                                                 <div className="metric-card">
                                                     <small>Leads</small>
-                                                    <strong style={{color:'#3b82f6'}}>{linkMetrics[link.id].leads}</strong>
+                                                    <strong style={{color:'#3b82f6'}}>{linkMetrics[link.id].leads || 0}</strong>
                                                 </div>
                                                 <div className="metric-card">
                                                     <small>Conversão</small>
-                                                    <strong style={{color:'#c333ff'}}>{linkMetrics[link.id].conversao}%</strong>
+                                                    <strong style={{color:'#c333ff'}}>{(linkMetrics[link.id].conversao || 0)}%</strong>
                                                 </div>
                                             </div>
                                             <div className="breakdown-bars">
-                                                <div className="breakdown-item">
-                                                    <div className="breakdown-label">
-                                                        <ShoppingBag size={14} color="#3b82f6"/>
-                                                        <span>Normais</span>
+                                                {/* Somente renderiza as barras de breakdown se existirem para evitar erro */}
+                                                {linkMetrics[link.id].breakdown?.normais && (
+                                                    <div className="breakdown-item">
+                                                        <div className="breakdown-label">
+                                                            <ShoppingBag size={14} color="#3b82f6"/>
+                                                            <span>Normais</span>
+                                                        </div>
+                                                        <div className="breakdown-values">
+                                                            <span>R$ {(linkMetrics[link.id].breakdown.normais.faturamento || 0).toFixed(2)}</span>
+                                                            <small>{linkMetrics[link.id].breakdown.normais.vendas || 0} vendas</small>
+                                                        </div>
+                                                        <div className="breakdown-bar-track">
+                                                            <div className="breakdown-bar-fill normal" style={{width: `${linkMetrics[link.id].faturamento_total > 0 ? (linkMetrics[link.id].breakdown.normais.faturamento / linkMetrics[link.id].faturamento_total * 100) : 0}%`}}/>
+                                                        </div>
                                                     </div>
-                                                    <div className="breakdown-values">
-                                                        <span>R$ {linkMetrics[link.id].breakdown.normais.faturamento.toFixed(2)}</span>
-                                                        <small>{linkMetrics[link.id].breakdown.normais.vendas} vendas</small>
-                                                    </div>
-                                                    <div className="breakdown-bar-track">
-                                                        <div className="breakdown-bar-fill normal" style={{width: `${linkMetrics[link.id].faturamento_total > 0 ? (linkMetrics[link.id].breakdown.normais.faturamento / linkMetrics[link.id].faturamento_total * 100) : 0}%`}}/>
-                                                    </div>
-                                                </div>
-                                                <div className="breakdown-item">
-                                                    <div className="breakdown-label">
-                                                        <Rocket size={14} color="#10b981"/>
-                                                        <span>Upsell</span>
-                                                    </div>
-                                                    <div className="breakdown-values">
-                                                        <span>R$ {linkMetrics[link.id].breakdown.upsell.faturamento.toFixed(2)}</span>
-                                                        <small>{linkMetrics[link.id].breakdown.upsell.vendas} vendas</small>
-                                                    </div>
-                                                    <div className="breakdown-bar-track">
-                                                        <div className="breakdown-bar-fill upsell" style={{width: `${linkMetrics[link.id].faturamento_total > 0 ? (linkMetrics[link.id].breakdown.upsell.faturamento / linkMetrics[link.id].faturamento_total * 100) : 0}%`}}/>
-                                                    </div>
-                                                </div>
-                                                <div className="breakdown-item">
-                                                    <div className="breakdown-label">
-                                                        <ArrowDownCircle size={14} color="#ef4444"/>
-                                                        <span>Downsell</span>
-                                                    </div>
-                                                    <div className="breakdown-values">
-                                                        <span>R$ {linkMetrics[link.id].breakdown.downsell.faturamento.toFixed(2)}</span>
-                                                        <small>{linkMetrics[link.id].breakdown.downsell.vendas} vendas</small>
-                                                    </div>
-                                                    <div className="breakdown-bar-track">
-                                                        <div className="breakdown-bar-fill downsell" style={{width: `${linkMetrics[link.id].faturamento_total > 0 ? (linkMetrics[link.id].breakdown.downsell.faturamento / linkMetrics[link.id].faturamento_total * 100) : 0}%`}}/>
-                                                    </div>
-                                                </div>
-                                                {linkMetrics[link.id].breakdown.remarketing && (
-                                                <div className="breakdown-item">
-                                                    <div className="breakdown-label">
-                                                        <Megaphone size={14} color="#f59e0b"/>
-                                                        <span>Remarketing</span>
-                                                    </div>
-                                                    <div className="breakdown-values">
-                                                        <span>R$ {linkMetrics[link.id].breakdown.remarketing.faturamento.toFixed(2)}</span>
-                                                        <small>{linkMetrics[link.id].breakdown.remarketing.vendas} vendas</small>
-                                                    </div>
-                                                    <div className="breakdown-bar-track">
-                                                        <div className="breakdown-bar-fill remarketing" style={{width: `${linkMetrics[link.id].faturamento_total > 0 ? (linkMetrics[link.id].breakdown.remarketing.faturamento / linkMetrics[link.id].faturamento_total * 100) : 0}%`}}/>
-                                                    </div>
-                                                </div>
                                                 )}
-                                                {linkMetrics[link.id].breakdown.disparo_auto && (
-                                                <div className="breakdown-item">
-                                                    <div className="breakdown-label">
-                                                        <Zap size={14} color="#8b5cf6"/>
-                                                        <span>Disparo Auto</span>
+                                                
+                                                {linkMetrics[link.id].breakdown?.upsell && (
+                                                    <div className="breakdown-item">
+                                                        <div className="breakdown-label">
+                                                            <Rocket size={14} color="#10b981"/>
+                                                            <span>Upsell</span>
+                                                        </div>
+                                                        <div className="breakdown-values">
+                                                            <span>R$ {(linkMetrics[link.id].breakdown.upsell.faturamento || 0).toFixed(2)}</span>
+                                                            <small>{linkMetrics[link.id].breakdown.upsell.vendas || 0} vendas</small>
+                                                        </div>
+                                                        <div className="breakdown-bar-track">
+                                                            <div className="breakdown-bar-fill upsell" style={{width: `${linkMetrics[link.id].faturamento_total > 0 ? (linkMetrics[link.id].breakdown.upsell.faturamento / linkMetrics[link.id].faturamento_total * 100) : 0}%`}}/>
+                                                        </div>
                                                     </div>
-                                                    <div className="breakdown-values">
-                                                        <span>R$ {linkMetrics[link.id].breakdown.disparo_auto.faturamento.toFixed(2)}</span>
-                                                        <small>{linkMetrics[link.id].breakdown.disparo_auto.vendas} vendas</small>
-                                                    </div>
-                                                    <div className="breakdown-bar-track">
-                                                        <div className="breakdown-bar-fill disparo_auto" style={{width: `${linkMetrics[link.id].faturamento_total > 0 ? (linkMetrics[link.id].breakdown.disparo_auto.faturamento / linkMetrics[link.id].faturamento_total * 100) : 0}%`}}/>
-                                                    </div>
-                                                </div>
                                                 )}
-                                                {linkMetrics[link.id].breakdown.order_bump && (
-                                                <div className="breakdown-item">
-                                                    <div className="breakdown-label">
-                                                        <Gift size={14} color="#ec4899"/>
-                                                        <span>Order Bump</span>
+                                                
+                                                {linkMetrics[link.id].breakdown?.downsell && (
+                                                    <div className="breakdown-item">
+                                                        <div className="breakdown-label">
+                                                            <ArrowDownCircle size={14} color="#ef4444"/>
+                                                            <span>Downsell</span>
+                                                        </div>
+                                                        <div className="breakdown-values">
+                                                            <span>R$ {(linkMetrics[link.id].breakdown.downsell.faturamento || 0).toFixed(2)}</span>
+                                                            <small>{linkMetrics[link.id].breakdown.downsell.vendas || 0} vendas</small>
+                                                        </div>
+                                                        <div className="breakdown-bar-track">
+                                                            <div className="breakdown-bar-fill downsell" style={{width: `${linkMetrics[link.id].faturamento_total > 0 ? (linkMetrics[link.id].breakdown.downsell.faturamento / linkMetrics[link.id].faturamento_total * 100) : 0}%`}}/>
+                                                        </div>
                                                     </div>
-                                                    <div className="breakdown-values">
-                                                        <span>R$ {linkMetrics[link.id].breakdown.order_bump.faturamento.toFixed(2)}</span>
-                                                        <small>{linkMetrics[link.id].breakdown.order_bump.vendas} vendas</small>
+                                                )}
+                                                
+                                                {linkMetrics[link.id].breakdown?.remarketing && (
+                                                    <div className="breakdown-item">
+                                                        <div className="breakdown-label">
+                                                            <Megaphone size={14} color="#f59e0b"/>
+                                                            <span>Remarketing</span>
+                                                        </div>
+                                                        <div className="breakdown-values">
+                                                            <span>R$ {(linkMetrics[link.id].breakdown.remarketing.faturamento || 0).toFixed(2)}</span>
+                                                            <small>{linkMetrics[link.id].breakdown.remarketing.vendas || 0} vendas</small>
+                                                        </div>
+                                                        <div className="breakdown-bar-track">
+                                                            <div className="breakdown-bar-fill remarketing" style={{width: `${linkMetrics[link.id].faturamento_total > 0 ? (linkMetrics[link.id].breakdown.remarketing.faturamento / linkMetrics[link.id].faturamento_total * 100) : 0}%`}}/>
+                                                        </div>
                                                     </div>
-                                                    <div className="breakdown-bar-track">
-                                                        <div className="breakdown-bar-fill order_bump" style={{width: `${linkMetrics[link.id].faturamento_total > 0 ? (linkMetrics[link.id].breakdown.order_bump.faturamento / linkMetrics[link.id].faturamento_total * 100) : 0}%`}}/>
+                                                )}
+                                                
+                                                {linkMetrics[link.id].breakdown?.disparo_auto && (
+                                                    <div className="breakdown-item">
+                                                        <div className="breakdown-label">
+                                                            <Zap size={14} color="#8b5cf6"/>
+                                                            <span>Disparo Auto</span>
+                                                        </div>
+                                                        <div className="breakdown-values">
+                                                            <span>R$ {(linkMetrics[link.id].breakdown.disparo_auto.faturamento || 0).toFixed(2)}</span>
+                                                            <small>{linkMetrics[link.id].breakdown.disparo_auto.vendas || 0} vendas</small>
+                                                        </div>
+                                                        <div className="breakdown-bar-track">
+                                                            <div className="breakdown-bar-fill disparo_auto" style={{width: `${linkMetrics[link.id].faturamento_total > 0 ? (linkMetrics[link.id].breakdown.disparo_auto.faturamento / linkMetrics[link.id].faturamento_total * 100) : 0}%`}}/>
+                                                        </div>
                                                     </div>
-                                                </div>
+                                                )}
+                                                
+                                                {linkMetrics[link.id].breakdown?.order_bump && (
+                                                    <div className="breakdown-item">
+                                                        <div className="breakdown-label">
+                                                            <Gift size={14} color="#ec4899"/>
+                                                            <span>Order Bump</span>
+                                                        </div>
+                                                        <div className="breakdown-values">
+                                                            <span>R$ {(linkMetrics[link.id].breakdown.order_bump.faturamento || 0).toFixed(2)}</span>
+                                                            <small>{linkMetrics[link.id].breakdown.order_bump.vendas || 0} vendas</small>
+                                                        </div>
+                                                        <div className="breakdown-bar-track">
+                                                            <div className="breakdown-bar-fill order_bump" style={{width: `${linkMetrics[link.id].faturamento_total > 0 ? (linkMetrics[link.id].breakdown.order_bump.faturamento / linkMetrics[link.id].faturamento_total * 100) : 0}%`}}/>
+                                                        </div>
+                                                    </div>
                                                 )}
                                             </div>
                                         </>
