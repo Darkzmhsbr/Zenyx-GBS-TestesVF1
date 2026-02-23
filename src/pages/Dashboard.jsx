@@ -43,7 +43,7 @@ registerLocale('pt-BR', ptBR);
 export function Dashboard() {
   const navigate = useNavigate();
   const { selectedBot } = useBot();
-  const { user, onboarding } = useAuth();
+  const { onboarding } = useAuth();
   const [loading, setLoading] = useState(true);
   
   // Estado para controlar banner de conclusão
@@ -81,24 +81,6 @@ export function Dashboard() {
       localStorage.setItem('zenyx_welcome_shown', 'true');
     }
   }, [onboarding]);
-
-  // 🔥 MÁGICA DO ONESIGNAL: Etiquetar o dispositivo (Web e APK)
-  useEffect(() => {
-    if (user && user.id) {
-      // 1. Etiqueta o Web Push (Navegador Chrome/PC)
-      if (window.OneSignal) {
-        window.OneSignal.push(function() {
-          window.OneSignal.sendTag("user_id", user.id.toString());
-        });
-      }
-      
-      // 2. A PONTE PARA O APK: Envia o ID para o Kodular ler
-      if (window.AppInventor) {
-        window.AppInventor.setWebViewString(user.id.toString());
-        console.log("✅ ID enviado para o aplicativo Android!");
-      }
-    }
-  }, [user]);
 
   // Carregar métricas - CORRIGIDO: usa getStats do backend
   useEffect(() => {
