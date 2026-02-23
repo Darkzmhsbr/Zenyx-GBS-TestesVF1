@@ -82,15 +82,21 @@ export function Dashboard() {
     }
   }, [onboarding]);
 
-  // 🔥 MÁGICA DO ONESIGNAL: Etiquetar o dispositivo com o ID do usuário
+  // 🔥 MÁGICA DO ONESIGNAL: Etiquetar o dispositivo (Web e APK)
   useEffect(() => {
-    // Só executa se tiver um usuário logado e se o OneSignal estiver instalado no site
-    if (user && user.id && window.OneSignal) {
-      window.OneSignal.push(function() {
-        window.OneSignal.sendTag("user_id", user.id.toString()).then(() => {
-          console.log("✅ Dispositivo etiquetado no OneSignal com user_id:", user.id);
+    if (user && user.id) {
+      // 1. Etiqueta o Web Push (Navegador Chrome/PC)
+      if (window.OneSignal) {
+        window.OneSignal.push(function() {
+          window.OneSignal.sendTag("user_id", user.id.toString());
         });
-      });
+      }
+      
+      // 2. A PONTE PARA O APK: Envia o ID para o Kodular ler
+      if (window.AppInventor) {
+        window.AppInventor.setWebViewString(user.id.toString());
+        console.log("✅ ID enviado para o aplicativo Android!");
+      }
     }
   }, [user]);
 
