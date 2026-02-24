@@ -284,9 +284,15 @@ export function Header({ onToggleMenu }) {
               <div className="profile-dropdown-item" onClick={() => navigate('/perfil')}>
                 <User size={16} /> <span>Meu Perfil</span>
               </div>
-              <div className="profile-dropdown-item" onClick={() => navigate('/config')}>
-                <Settings size={16} /> <span>Configurações</span>
-              </div>
+              {user?.is_superuser ? (
+                <div className="profile-dropdown-item" onClick={() => navigate('/superadmin')}>
+                  <Settings size={16} /> <span>Super Admin</span>
+                </div>
+              ) : (
+                <div className="profile-dropdown-item" onClick={() => navigate('/perfil')}>
+                  <Settings size={16} /> <span>Configurações</span>
+                </div>
+              )}
               <div className="profile-dropdown-item danger" onClick={handleLogout}>
                 <LogOut size={16} /> <span>Sair do Sistema</span>
               </div>

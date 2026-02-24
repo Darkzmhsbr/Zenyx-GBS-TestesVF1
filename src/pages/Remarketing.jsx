@@ -741,7 +741,39 @@ export function Remarketing() {
               <button className="btn-back" onClick={() => setStep(1)}>
                 Voltar
               </button>
-              <button className="btn-next" onClick={() => setStep(3)}>
+              <button className="btn-next" onClick={() => {
+                // 🔥 VALIDAÇÃO OBRIGATÓRIA DO PASSO 2
+                // Verifica se tem pelo menos uma mensagem OU áudio preenchido
+                const temMensagem = formData.mensagem && formData.mensagem.trim().length > 0;
+                const temAudio = formData.audio_url && formData.audio_url.trim().length > 0;
+                
+                if (!temMensagem && !temAudio) {
+                  import('sweetalert2').then(({ default: Swal }) => {
+                    Swal.fire({
+                      icon: 'warning',
+                      title: 'Mensagem obrigatória!',
+                      text: 'Defina pelo menos um texto para a mensagem ou um áudio de introdução antes de avançar.',
+                      confirmButtonColor: '#c333ff'
+                    });
+                  });
+                  return;
+                }
+                
+                // Se oferta está ativa, plano deve estar selecionado
+                if (formData.incluir_oferta && !formData.plano_oferta_id) {
+                  import('sweetalert2').then(({ default: Swal }) => {
+                    Swal.fire({
+                      icon: 'warning',
+                      title: 'Plano obrigatório!',
+                      text: 'Você ativou a oferta especial mas não selecionou um plano. Escolha um plano ou desative a oferta.',
+                      confirmButtonColor: '#c333ff'
+                    });
+                  });
+                  return;
+                }
+                
+                setStep(3);
+              }}>
                 Próximo
               </button>
             </div>
