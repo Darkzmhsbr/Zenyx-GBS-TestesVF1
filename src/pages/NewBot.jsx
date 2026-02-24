@@ -26,6 +26,14 @@ export function NewBot({ onBotCreated }) {
   const [protectContent, setProtectContent] = useState(false);
   const [loading, setLoading] = useState(false);
 
+  // 🆕 Estado do limite de bots
+  const [botLimit, setBotLimit] = useState(null);
+
+  // 🆕 Buscar limite ao montar
+  useEffect(() => {
+    botService.getBotLimit().then(setBotLimit).catch(() => {});
+  }, []);
+
   // Seleciona o tipo e avança para o formulário
   const handleSelectType = (type) => {
     setTargetTab(type === 'custom' ? 'miniapp' : 'geral');
@@ -34,6 +42,16 @@ export function NewBot({ onBotCreated }) {
 
   const handleSave = async () => {
     if (!token || !channelId) return Swal.fire('Erro', 'Preencha o Token e o ID do Canal!', 'warning');
+    
+    // 🆕 Validação de limite no frontend
+    if (botLimit && !botLimit.can_create) {
+      return Swal.fire({
+        title: 'Limite Atingido',
+        html: `Você atingiu o limite de <b>${botLimit.max}</b> bots do plano <b>${botLimit.plano.toUpperCase()}</b>.<br><br>Exclua bots inativos para liberar espaço.`,
+        icon: 'warning',
+        background: '#151515', color: '#fff'
+      });
+    }
     
     setLoading(true);
 
@@ -102,6 +120,21 @@ export function NewBot({ onBotCreated }) {
         <h1 style={{ margin: 0, fontSize: '1.8rem' }}>
           {step === 'selection' ? 'Qual o seu objetivo?' : 'Conectar Novo Bot'}
         </h1>
+        {/* 🆕 Indicador de limite */}
+        {botLimit && (
+          <div style={{
+            marginLeft: 'auto',
+            background: botLimit.can_create ? 'rgba(195, 51, 255, 0.1)' : 'rgba(239, 68, 68, 0.1)',
+            border: `1px solid ${botLimit.can_create ? 'rgba(195, 51, 255, 0.3)' : 'rgba(239, 68, 68, 0.3)'}`,
+            padding: '6px 14px',
+            borderRadius: '20px',
+            fontSize: '0.85rem',
+            fontWeight: 700,
+            color: botLimit.can_create ? '#c333ff' : '#ef4444'
+          }}>
+            {botLimit.current}/{botLimit.max} bots
+          </div>
+        )}
       </div>
 
       {/* --- PASSO 1: SELEÇÃO --- */}

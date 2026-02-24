@@ -165,7 +165,13 @@ export const botService = {
   cloneBot: async (botId, dados) => {
     const response = await api.post(`/api/admin/bots/${botId}/clone`, dados);
     return response.data;
-  }
+  },
+
+  // 🆕 LIMITE DE BOTS
+  getBotLimit: async () => (await api.get('/api/admin/bot-limit')).data,
+
+  // 🆕 ORDEM DO SELETOR
+  updateSelectorOrder: async (order) => (await api.put('/api/admin/bots/selector-order', { order })).data
 };
 
 // ============================================================

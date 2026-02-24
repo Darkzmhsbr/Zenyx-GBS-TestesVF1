@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { authService, profileService } from '../services/api';
+import { authService, profileService, botService } from '../services/api';
 import { useAuth } from '../context/AuthContext';
-import { User, Award, Lock, Shield, Briefcase, Star, CreditCard, Save, Edit2, KeyRound, AtSign, Eye, EyeOff } from 'lucide-react';
+import { User, Award, Lock, Shield, Briefcase, Star, CreditCard, Save, Edit2, KeyRound, AtSign, Eye, EyeOff, Bot } from 'lucide-react';
 import { Button } from '../components/Button';
 import Swal from 'sweetalert2';
 import './Profile.css';
@@ -47,6 +47,9 @@ export function Profile() {
   const [usernameForm, setUsernameForm] = useState('');
   const [changingUsername, setChangingUsername] = useState(false);
 
+  // 🆕 Estado do limite de bots
+  const [botLimit, setBotLimit] = useState(null);
+
   // ✅ METAS ATUALIZADAS — Iniciante agora é R$ 10.000,00
   const badges = [
     { name: 'Iniciante', target: 1000000, color: '#10b981', image: '10k' },            // R$ 10.000,00
@@ -71,10 +74,13 @@ export function Profile() {
 
   const loadData = async () => {
     try {
-      const [userData, statsData] = await Promise.all([
+      const [userData, statsData, limitData] = await Promise.all([
         authService.getMe(),
-        profileService.getStats()
+        profileService.getStats(),
+        botService.getBotLimit().catch(() => null)
       ]);
+      
+      if (limitData) setBotLimit(limitData);
       
       setProfile({
         name: userData.full_name || '',
@@ -350,7 +356,31 @@ export function Profile() {
         <div className="stats-grid">
           <div className="stat-card highlight"><span className="stat-label">Faturamento Total</span><span className="stat-value">{formatMoney(stats.total_revenue)}</span></div>
           <div className="stat-card"><span className="stat-label">Vendas Realizadas</span><span className="stat-value">{stats.total_sales}</span></div>
-          <div className="stat-card"><span className="stat-label">Bots Ativos</span><span className="stat-value">{stats.total_bots}</span></div>
+          <div className="stat-card">
+            <span className="stat-label">Bots Ativos</span>
+            <span className="stat-value">
+              {stats.total_bots}
+              {botLimit && (
+                <span style={{ fontSize: '0.9rem', color: '#888', fontWeight: 400 }}>/{botLimit.max}</span>
+              )}
+            </span>
+            {botLimit && (
+              <div style={{ marginTop: '8px' }}>
+                <div style={{ height: '4px', background: '#222', borderRadius: '4px', overflow: 'hidden' }}>
+                  <div style={{ 
+                    height: '100%', 
+                    width: `${Math.min(100, (botLimit.current / botLimit.max) * 100)}%`,
+                    background: botLimit.current >= botLimit.max ? '#ef4444' : '#c333ff',
+                    borderRadius: '4px',
+                    transition: 'width 0.5s ease'
+                  }} />
+                </div>
+                <span style={{ fontSize: '0.7rem', color: '#666', marginTop: '4px', display: 'block' }}>
+                  Plano {(botLimit.plano || 'free').toUpperCase()}
+                </span>
+              </div>
+            )}
+          </div>
           <div className="stat-card"><span className="stat-label">Membros Totais</span><span className="stat-value">{stats.total_members}</span></div>
         </div>
       </div>

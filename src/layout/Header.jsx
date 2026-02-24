@@ -2,11 +2,12 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useBot } from '../context/BotContext';
-import { notificationService } from '../services/api';
+import { notificationService, botService } from '../services/api';
 import { 
   Bot, ChevronDown, Check, Bell, Moon, Sun, Menu, User, Settings, LogOut, 
-  Info, AlertTriangle, XCircle, CheckCircle 
+  Info, AlertTriangle, XCircle, CheckCircle, LayoutGrid
 } from 'lucide-react'; 
+import { BotSidebar } from './BotSidebar';
 import './Header.css'; 
 
 export function Header({ onToggleMenu }) {
@@ -18,6 +19,12 @@ export function Header({ onToggleMenu }) {
   const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
   const [isNotificationOpen, setIsNotificationOpen] = useState(false);
   const [isDarkMode, setIsDarkMode] = useState(true);
+
+  // 🆕 Estado da Sidebar de Bots
+  const [isBotSidebarOpen, setIsBotSidebarOpen] = useState(false);
+
+  // 🆕 Estado do Limite de Bots
+  const [botLimit, setBotLimit] = useState(null);
 
   // Estados de Notificação
   const [notifications, setNotifications] = useState([]);
@@ -52,6 +59,13 @@ export function Header({ onToggleMenu }) {
     setIsDarkMode(isDark);
     applyTheme(isDark);
   }, []);
+
+  // 🆕 Buscar limite de bots
+  useEffect(() => {
+    if (user) {
+      botService.getBotLimit().then(setBotLimit).catch(() => {});
+    }
+  }, [user, bots]);
 
   // Busca notificações reais
   const fetchNotifications = async () => {
@@ -120,6 +134,25 @@ export function Header({ onToggleMenu }) {
     navigate('/login');
   };
 
+  // 🆕 Handler para criar novo bot (com validação de limite)
+  const handleCreateBot = () => {
+    setIsBotMenuOpen(false);
+    if (botLimit && !botLimit.can_create) {
+      import('sweetalert2').then(({ default: Swal }) => {
+        Swal.fire({
+          title: 'Limite Atingido',
+          html: `Você atingiu o limite de <b>${botLimit.max}</b> bots do plano <b>${botLimit.plano.toUpperCase()}</b>.<br><br>Exclua bots inativos para liberar espaço.`,
+          icon: 'warning',
+          background: '#151515',
+          color: '#fff',
+          confirmButtonColor: '#c333ff'
+        });
+      });
+      return;
+    }
+    navigate('/bots/new');
+  };
+
   const formatTime = (dateString) => {
     const date = new Date(dateString);
     const now = new Date();
@@ -130,7 +163,6 @@ export function Header({ onToggleMenu }) {
     return date.toLocaleDateString('pt-BR');
   };
 
-  // Ícone baseado no tipo da notificação
   const getNotificationIcon = (type) => {
     switch(type) {
       case 'success': return <CheckCircle size={18} />;
@@ -140,6 +172,11 @@ export function Header({ onToggleMenu }) {
     }
   };
 
+  // 🆕 Bots visíveis no dropdown (máximo 7)
+  const MAX_DROPDOWN_BOTS = 7;
+  const visibleBots = bots.slice(0, MAX_DROPDOWN_BOTS);
+  const hasMoreBots = bots.length > MAX_DROPDOWN_BOTS;
+
   return (
     <header className="header">
       {/* ESQUERDA: Menu Mobile e Bot Selector */}
@@ -148,7 +185,7 @@ export function Header({ onToggleMenu }) {
           <Menu size={24} />
         </button>
 
-        {/* --- SELETOR DE BOTS (ESTILO ANTIGO) --- */}
+        {/* --- SELETOR DE BOTS (COM LIMITE DE 7) --- */}
         <div className="bot-selector-wrapper" ref={botRef}>
           <button 
             className={`bot-selector-btn ${isBotMenuOpen ? 'active' : ''}`}
@@ -165,34 +202,61 @@ export function Header({ onToggleMenu }) {
 
           {isBotMenuOpen && (
             <div className="bot-dropdown-menu">
-              <div className="dropdown-header">SEUS BOTS</div>
+              <div className="dropdown-header">
+                <span>SEUS BOTS</span>
+                {botLimit && (
+                  <span className="bot-count-badge">
+                    {botLimit.current}/{botLimit.max}
+                  </span>
+                )}
+              </div>
               
               {bots.length === 0 ? (
                 <div style={{padding: '20px', textAlign: 'center', color: '#888'}}>Nenhum bot</div>
               ) : (
-                bots.map(bot => (
-                  <div 
-                    key={bot.id} 
-                    className={`dropdown-item ${selectedBot?.id === bot.id ? 'selected' : ''}`}
-                    onClick={() => {
-                      changeBot(bot);
-                      setIsBotMenuOpen(false);
-                    }}
-                  >
-                    <div className="bot-mini-icon">
-                      <Bot size={14} />
+                <>
+                  {visibleBots.map(bot => (
+                    <div 
+                      key={bot.id} 
+                      className={`dropdown-item ${selectedBot?.id === bot.id ? 'selected' : ''}`}
+                      onClick={() => {
+                        changeBot(bot);
+                        setIsBotMenuOpen(false);
+                      }}
+                    >
+                      <div className="bot-mini-icon">
+                        <Bot size={14} />
+                      </div>
+                      <span>{bot.nome}</span>
+                      {selectedBot?.id === bot.id && <Check size={14} className="check-icon" />}
                     </div>
-                    <span>{bot.nome}</span>
-                    {selectedBot?.id === bot.id && <Check size={14} className="check-icon" />}
-                  </div>
-                ))
+                  ))}
+
+                  {hasMoreBots && (
+                    <div 
+                      className="dropdown-item view-all-item"
+                      onClick={() => {
+                        setIsBotMenuOpen(false);
+                        setIsBotSidebarOpen(true);
+                      }}
+                    >
+                      <div className="bot-mini-icon view-all-icon">
+                        <LayoutGrid size={14} />
+                      </div>
+                      <span>Ver todos os bots ({bots.length})</span>
+                    </div>
+                  )}
+                </>
               )}
               
               <div 
                 className="dropdown-footer"
-                onClick={() => { navigate('/bots/new'); setIsBotMenuOpen(false); }}
+                onClick={handleCreateBot}
               >
                 + CRIAR NOVO BOT
+                {botLimit && !botLimit.can_create && (
+                  <span style={{ fontSize: '0.7rem', color: '#ef4444', marginLeft: '8px' }}>LIMITE</span>
+                )}
               </div>
             </div>
           )}
@@ -205,7 +269,6 @@ export function Header({ onToggleMenu }) {
           {isDarkMode ? <Sun size={20} /> : <Moon size={20} />}
         </button>
 
-        {/* --- NOTIFICAÇÕES (ESTILO NOVO NA CAIXA ANTIGA) --- */}
         <div className="notification-dropdown-wrapper" ref={notifRef}>
           <button 
             className={`icon-btn ${isNotificationOpen ? 'active' : ''}`}
@@ -259,7 +322,6 @@ export function Header({ onToggleMenu }) {
           )}
         </div>
 
-        {/* --- PERFIL (ESTILO ANTIGO) --- */}
         <div className="profile-dropdown-wrapper" ref={profileRef}>
           <div 
             className="user-avatar"
@@ -281,15 +343,15 @@ export function Header({ onToggleMenu }) {
                 <div className="profile-email">{user?.username}</div>
               </div>
               
-              <div className="profile-dropdown-item" onClick={() => navigate('/perfil')}>
+              <div className="profile-dropdown-item" onClick={() => { navigate('/perfil'); setIsProfileMenuOpen(false); }}>
                 <User size={16} /> <span>Meu Perfil</span>
               </div>
               {user?.is_superuser ? (
-                <div className="profile-dropdown-item" onClick={() => navigate('/superadmin')}>
+                <div className="profile-dropdown-item" onClick={() => { navigate('/superadmin'); setIsProfileMenuOpen(false); }}>
                   <Settings size={16} /> <span>Super Admin</span>
                 </div>
               ) : (
-                <div className="profile-dropdown-item" onClick={() => navigate('/perfil')}>
+                <div className="profile-dropdown-item" onClick={() => { navigate('/perfil'); setIsProfileMenuOpen(false); }}>
                   <Settings size={16} /> <span>Configurações</span>
                 </div>
               )}
@@ -300,6 +362,17 @@ export function Header({ onToggleMenu }) {
           )}
         </div>
       </div>
+
+      {/* 🆕 SIDEBAR DE BOTS */}
+      <BotSidebar 
+        isOpen={isBotSidebarOpen}
+        onClose={() => setIsBotSidebarOpen(false)}
+        bots={bots}
+        selectedBot={selectedBot}
+        changeBot={changeBot}
+        botLimit={botLimit}
+        onCreateBot={handleCreateBot}
+      />
     </header>
   );
 }

@@ -15,6 +15,9 @@ export function Bots() {
   const [loading, setLoading] = useState(true);
   const [activeMenu, setActiveMenu] = useState(null);
 
+  // 🆕 Estado do limite de bots
+  const [botLimit, setBotLimit] = useState(null);
+
   // 🔁 CLONE MODAL STATE
   const [cloneModal, setCloneModal] = useState(false);
   const [cloneStep, setCloneStep] = useState(1); // 1=info, 2=form, 3=confirm
@@ -24,6 +27,7 @@ export function Bots() {
 
   useEffect(() => {
     carregarBots();
+    botService.getBotLimit().then(setBotLimit).catch(() => {});
     const handleClickOutside = () => setActiveMenu(null);
     window.addEventListener('click', handleClickOutside);
     return () => window.removeEventListener('click', handleClickOutside);
@@ -165,9 +169,36 @@ export function Bots() {
       <div className="bots-header">
         <div>
             <h1>Meus Bots</h1>
-            <p style={{color: 'var(--muted-foreground)'}}>Gerencie seus assistentes de venda.</p>
+            <p style={{color: 'var(--muted-foreground)'}}>
+              Gerencie seus assistentes de venda.
+              {botLimit && (
+                <span style={{
+                  marginLeft: '12px',
+                  background: botLimit.can_create ? 'rgba(195, 51, 255, 0.1)' : 'rgba(239, 68, 68, 0.1)',
+                  border: `1px solid ${botLimit.can_create ? 'rgba(195, 51, 255, 0.3)' : 'rgba(239, 68, 68, 0.3)'}`,
+                  padding: '3px 10px',
+                  borderRadius: '12px',
+                  fontSize: '0.8rem',
+                  fontWeight: 700,
+                  color: botLimit.can_create ? '#c333ff' : '#ef4444'
+                }}>
+                  {botLimit.current}/{botLimit.max} bots
+                </span>
+              )}
+            </p>
         </div>
-        <Button onClick={() => navigate('/bots/new')}>
+        <Button onClick={() => {
+          if (botLimit && !botLimit.can_create) {
+            Swal.fire({
+              title: 'Limite Atingido',
+              html: `Você atingiu o limite de <b>${botLimit.max}</b> bots do plano <b>${botLimit.plano.toUpperCase()}</b>.<br><br>Exclua bots inativos para liberar espaço.`,
+              icon: 'warning',
+              background: '#151515', color: '#fff', confirmButtonColor: '#c333ff'
+            });
+            return;
+          }
+          navigate('/bots/new');
+        }}>
           <Plus size={20} /> Criar Novo Bot
         </Button>
       </div>
