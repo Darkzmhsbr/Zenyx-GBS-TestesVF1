@@ -13,7 +13,9 @@ import './Header.css';
 export function Header({ onToggleMenu }) {
   const navigate = useNavigate();
   const { user, logout } = useAuth();
-  const { bots, selectedBot, changeBot } = useBot();
+  
+  // 🔥 CORREÇÃO: Extraindo o refreshBots do useBot
+  const { bots, selectedBot, changeBot, refreshBots } = useBot();
   
   const [isBotMenuOpen, setIsBotMenuOpen] = useState(false);
   const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
@@ -372,6 +374,7 @@ export function Header({ onToggleMenu }) {
         changeBot={changeBot}
         botLimit={botLimit}
         onCreateBot={handleCreateBot}
+        refreshBots={refreshBots} /* 🔥 CORREÇÃO: Propagando a função para o BotSidebar */
       />
     </header>
   );

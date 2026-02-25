@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Bot, X, Search, Check, Plus, Power, GripVertical, Eye } from 'lucide-react';
 import { botService } from '../services/api';
 
-export function BotSidebar({ isOpen, onClose, bots, selectedBot, changeBot, botLimit, onCreateBot }) {
+export function BotSidebar({ isOpen, onClose, bots, selectedBot, changeBot, botLimit, onCreateBot, refreshBots }) {
   const [searchTerm, setSearchTerm] = useState('');
   const [draggedId, setDraggedId] = useState(null);
   const [localBots, setLocalBots] = useState([]);
@@ -32,39 +32,82 @@ export function BotSidebar({ isOpen, onClose, bots, selectedBot, changeBot, botL
     onClose();
   };
 
-  // ============ DRAG AND DROP ============
+  // ==========================================
+  // 🚀 DRAG AND DROP & TOUCH MOBILE
+  // ==========================================
+  
+  // Função centralizada para trocar a ordem visualmente
+  const moveBot = (dragId, targetId) => {
+    setLocalBots(prev => {
+      const dragIdx = prev.findIndex(b => b.id === dragId);
+      const targetIdx = prev.findIndex(b => b.id === targetId);
+      if (dragIdx === -1 || targetIdx === -1) return prev;
+      
+      const newBots = [...prev];
+      const [removed] = newBots.splice(dragIdx, 1);
+      newBots.splice(targetIdx, 0, removed);
+      return newBots;
+    });
+  };
+
   const handleDragStart = (e, botId) => {
     setDraggedId(botId);
-    e.dataTransfer.effectAllowed = 'move';
+    if (e.dataTransfer) {
+      e.dataTransfer.effectAllowed = 'move';
+    }
   };
 
   const handleDragOver = (e, targetId) => {
-    e.preventDefault();
+    if (e.preventDefault) e.preventDefault();
     if (draggedId === targetId) return;
-
-    const newBots = [...localBots];
-    const dragIdx = newBots.findIndex(b => b.id === draggedId);
-    const targetIdx = newBots.findIndex(b => b.id === targetId);
-    
-    if (dragIdx === -1 || targetIdx === -1) return;
-
-    const [removed] = newBots.splice(dragIdx, 1);
-    newBots.splice(targetIdx, 0, removed);
-    setLocalBots(newBots);
+    moveBot(draggedId, targetId);
   };
 
+  // Salvar no backend e ATUALIZAR O FRONTEND
   const handleDragEnd = async () => {
-    setDraggedId(null);
+    const currentDrag = draggedId;
+    setDraggedId(null); // Limpa o estado de drag na hora para a interface
     
+    if (!currentDrag) return;
+
     // Salva nova ordem no backend
     const orderIds = localBots.map(b => b.id);
     try {
       setSavingOrder(true);
       await botService.updateSelectorOrder(orderIds);
+      
+      // 🔥 O SEGREDO DO SALVAMENTO: Atualiza a lista global no Header/Contexto!
+      if (refreshBots) {
+        await refreshBots();
+      }
     } catch (err) {
       console.error('Erro ao salvar ordem:', err);
     } finally {
       setSavingOrder(false);
+    }
+  };
+
+  // --- EVENTOS EXCLUSIVOS PARA CELULAR (TOUCH) ---
+  const handleTouchStart = (e, botId) => {
+    // Evita scroll da tela ao segurar o ícone de arrastar
+    setDraggedId(botId);
+  };
+
+  const handleTouchMove = (e) => {
+    if (!draggedId) return;
+    
+    // Descobre onde o dedo está na tela
+    const touch = e.touches[0];
+    const element = document.elementFromPoint(touch.clientX, touch.clientY);
+    if (!element) return;
+
+    // Acha qual bot está embaixo do dedo no momento
+    const targetItem = element.closest('.bot-sidebar-item');
+    if (targetItem) {
+      const targetId = Number(targetItem.getAttribute('data-id'));
+      if (targetId && targetId !== draggedId) {
+        moveBot(draggedId, targetId);
+      }
     }
   };
 
@@ -155,15 +198,21 @@ export function BotSidebar({ isOpen, onClose, bots, selectedBot, changeBot, botL
             filteredBots.map((bot, index) => (
               <div
                 key={bot.id}
+                data-id={bot.id} /* 🔥 ESSENCIAL PARA O TOUCH DO MOBILE */
                 className={`bot-sidebar-item ${selectedBot?.id === bot.id ? 'selected' : ''} ${draggedId === bot.id ? 'dragging' : ''}`}
                 draggable={!searchTerm}
                 onDragStart={(e) => handleDragStart(e, bot.id)}
                 onDragOver={(e) => handleDragOver(e, bot.id)}
                 onDragEnd={handleDragEnd}
+                onTouchMove={handleTouchMove} /* 🔥 EVENTO DE ARRASTAR NO CELULAR */
+                onTouchEnd={handleDragEnd}    /* 🔥 SALVAR AO SOLTAR NO CELULAR */
               >
                 {/* DRAG HANDLE */}
                 {!searchTerm && (
-                  <div className="bot-sidebar-drag-handle">
+                  <div 
+                    className="bot-sidebar-drag-handle"
+                    onTouchStart={(e) => handleTouchStart(e, bot.id)} /* 🔥 INICIA O ARRASTO NO CELULAR */
+                  >
                     <GripVertical size={14} />
                   </div>
                 )}

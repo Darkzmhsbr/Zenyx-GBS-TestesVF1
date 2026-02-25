@@ -691,6 +691,7 @@
   cursor: grab;
   padding: 2px;
   flex-shrink: 0;
+  touch-action: none; /* 🔥 ESSENCIAL PARA O MOBILE: Evita o scroll de tela ao arrastar o ícone no celular! */
 }
 
 .bot-sidebar-drag-handle:active {
