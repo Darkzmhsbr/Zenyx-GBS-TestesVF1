@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Plus, Send, Settings, Power, MoreVertical, RefreshCcw, Trash2, Copy, X, ArrowRight, ArrowLeft, Check, AlertTriangle } from 'lucide-react';
+import { Plus, Send, Settings, Power, MoreVertical, RefreshCcw, Trash2, Copy, X, ArrowRight, ArrowLeft, Check, AlertTriangle, Eye, TrendingUp, Users, DollarSign, ShoppingCart, Calendar, Zap, BarChart3 } from 'lucide-react';
 import { Button } from '../components/Button';
 import { Card, CardContent } from '../components/Card';
 import { botService } from '../services/api';
@@ -17,6 +17,11 @@ export function Bots() {
 
   // 🆕 Estado do limite de bots
   const [botLimit, setBotLimit] = useState(null);
+
+  // 🆕 MODAL VISÃO GERAL
+  const [overviewModal, setOverviewModal] = useState(false);
+  const [overviewData, setOverviewData] = useState(null);
+  const [overviewLoading, setOverviewLoading] = useState(false);
 
   // 🔁 CLONE MODAL STATE
   const [cloneModal, setCloneModal] = useState(false);
@@ -105,6 +110,40 @@ export function Bots() {
     setCloneStep(1);
     setCloneModal(true);
     setActiveMenu(null);
+  };
+
+  // 🆕 VISÃO GERAL - Abrir modal com métricas avançadas
+  const openOverviewModal = async (bot) => {
+    setActiveMenu(null);
+    setOverviewModal(true);
+    setOverviewLoading(true);
+    setOverviewData(null);
+    
+    try {
+      const data = await botService.getBotOverview(bot.id);
+      setOverviewData(data);
+    } catch (error) {
+      console.error('Erro ao buscar overview:', error);
+      Swal.fire('Erro', 'Não foi possível carregar os dados do bot.', 'error');
+      setOverviewModal(false);
+    } finally {
+      setOverviewLoading(false);
+    }
+  };
+
+  const closeOverviewModal = () => {
+    setOverviewModal(false);
+    setOverviewData(null);
+  };
+
+  // 🆕 Formatadores
+  const formatMoney = (centavos) => {
+    return (centavos / 100).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+  };
+
+  const formatDate = (dateStr) => {
+    if (!dateStr) return '—';
+    return new Date(dateStr).toLocaleDateString('pt-BR');
   };
 
   const closeCloneModal = () => {
@@ -235,6 +274,9 @@ export function Bots() {
                         </button>
                         {activeMenu === bot.id && (
                             <div className="dropdown-menu glass-menu">
+                                <div className="menu-item" onClick={() => openOverviewModal(bot)}>
+                                    <Eye size={14}/> Visão Geral
+                                </div>
                                 <div className="menu-item" onClick={() => navigate(`/bots/config/${bot.id}`)}>
                                     <Settings size={14}/> Configurar
                                 </div>
@@ -258,7 +300,7 @@ export function Bots() {
                     <span className="stat-label">Receita Total</span>
                     <span className="stat-value highlight">
                         R$ {typeof bot.revenue === 'number' 
-                            ? bot.revenue.toLocaleString('pt-BR', { minimumFractionDigits: 2 }) 
+                            ? (bot.revenue / 100).toLocaleString('pt-BR', { minimumFractionDigits: 2 }) 
                             : '0,00'}
                     </span>
                   </div>
@@ -449,6 +491,192 @@ export function Bots() {
               </div>
             )}
 
+          </div>
+        </div>
+      )}
+
+      {/* ============================================================ */}
+      {/* 🆕 MODAL DE VISÃO GERAL (MÉTRICAS AVANÇADAS) */}
+      {/* ============================================================ */}
+      {overviewModal && (
+        <div className="clone-overlay" onClick={closeOverviewModal}>
+          <div className="clone-modal overview-modal" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '600px' }}>
+            
+            {/* HEADER */}
+            <div className="clone-modal-header">
+              <div style={{display:'flex', alignItems:'center', gap: 10}}>
+                <BarChart3 size={22} color="#c333ff"/>
+                <h2>Visão Geral</h2>
+              </div>
+              <button className="clone-close-btn" onClick={closeOverviewModal}><X size={20}/></button>
+            </div>
+
+            {overviewLoading ? (
+              <div style={{ padding: '60px', textAlign: 'center', color: '#888' }}>
+                <RefreshCcw className="spin" size={30} style={{ marginBottom: '15px', opacity: 0.4 }} />
+                <p>Carregando métricas...</p>
+              </div>
+            ) : overviewData && (
+              <div className="clone-body" style={{ padding: '20px' }}>
+                
+                {/* IDENTIDADE DO BOT */}
+                <div style={{
+                  display: 'flex', alignItems: 'center', gap: '15px',
+                  padding: '15px', background: 'rgba(195, 51, 255, 0.05)',
+                  borderRadius: '12px', marginBottom: '20px', border: '1px solid rgba(195, 51, 255, 0.15)'
+                }}>
+                  <div style={{
+                    width: '48px', height: '48px', borderRadius: '50%',
+                    background: 'linear-gradient(135deg, #c333ff, #7b1fa2)',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    color: '#fff', fontSize: '1.2rem', fontWeight: 700
+                  }}>
+                    {overviewData.bot_nome?.charAt(0) || 'B'}
+                  </div>
+                  <div>
+                    <h3 style={{ margin: 0, color: '#fff', fontSize: '1.1rem' }}>{overviewData.bot_nome}</h3>
+                    <span style={{ color: '#888', fontSize: '0.85rem' }}>@{overviewData.bot_username || 'sem_user'}</span>
+                    <div style={{
+                      display: 'inline-flex', alignItems: 'center', gap: '6px', marginLeft: '12px',
+                      padding: '2px 10px', borderRadius: '10px', fontSize: '0.75rem', fontWeight: 700,
+                      background: overviewData.status === 'ativo' ? 'rgba(16,185,129,0.15)' : 'rgba(239,68,68,0.15)',
+                      color: overviewData.status === 'ativo' ? '#10b981' : '#ef4444'
+                    }}>
+                      <span style={{
+                        width: '6px', height: '6px', borderRadius: '50%',
+                        background: overviewData.status === 'ativo' ? '#10b981' : '#ef4444'
+                      }}/>
+                      {overviewData.status === 'ativo' ? 'Online' : 'Parado'}
+                    </div>
+                  </div>
+                </div>
+
+                {/* GRID DE MÉTRICAS PRINCIPAIS */}
+                <div style={{
+                  display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)',
+                  gap: '12px', marginBottom: '20px'
+                }}>
+                  {/* Faturamento Total */}
+                  <div className="overview-metric-card highlight-purple">
+                    <div className="overview-metric-icon"><DollarSign size={18}/></div>
+                    <div>
+                      <span className="overview-metric-label">Faturamento Total</span>
+                      <span className="overview-metric-value">{formatMoney(overviewData.faturamento_total)}</span>
+                    </div>
+                  </div>
+
+                  {/* Faturamento 30 dias */}
+                  <div className="overview-metric-card">
+                    <div className="overview-metric-icon green"><TrendingUp size={18}/></div>
+                    <div>
+                      <span className="overview-metric-label">Últimos 30 dias</span>
+                      <span className="overview-metric-value">{formatMoney(overviewData.faturamento_30d)}</span>
+                    </div>
+                  </div>
+
+                  {/* Leads */}
+                  <div className="overview-metric-card">
+                    <div className="overview-metric-icon blue"><Users size={18}/></div>
+                    <div>
+                      <span className="overview-metric-label">Leads Totais</span>
+                      <span className="overview-metric-value">{overviewData.leads_totais?.toLocaleString('pt-BR')}</span>
+                    </div>
+                  </div>
+
+                  {/* Assinantes Ativos */}
+                  <div className="overview-metric-card">
+                    <div className="overview-metric-icon cyan"><Zap size={18}/></div>
+                    <div>
+                      <span className="overview-metric-label">Assinantes Ativos</span>
+                      <span className="overview-metric-value">{overviewData.assinantes_ativos}</span>
+                    </div>
+                  </div>
+
+                  {/* Total Vendas */}
+                  <div className="overview-metric-card">
+                    <div className="overview-metric-icon orange"><ShoppingCart size={18}/></div>
+                    <div>
+                      <span className="overview-metric-label">Vendas Realizadas</span>
+                      <span className="overview-metric-value">{overviewData.total_vendas}</span>
+                    </div>
+                  </div>
+
+                  {/* Ticket Médio */}
+                  <div className="overview-metric-card">
+                    <div className="overview-metric-icon"><DollarSign size={18}/></div>
+                    <div>
+                      <span className="overview-metric-label">Ticket Médio</span>
+                      <span className="overview-metric-value">{formatMoney(overviewData.ticket_medio)}</span>
+                    </div>
+                  </div>
+
+                  {/* Conversão */}
+                  <div className="overview-metric-card">
+                    <div className="overview-metric-icon green"><TrendingUp size={18}/></div>
+                    <div>
+                      <span className="overview-metric-label">Taxa de Conversão</span>
+                      <span className="overview-metric-value">{overviewData.taxa_conversao}%</span>
+                    </div>
+                  </div>
+
+                  {/* Vendas Hoje */}
+                  <div className="overview-metric-card">
+                    <div className="overview-metric-icon orange"><Calendar size={18}/></div>
+                    <div>
+                      <span className="overview-metric-label">Vendas Hoje</span>
+                      <span className="overview-metric-value">{overviewData.vendas_hoje}</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* PLANO MAIS VENDIDO + DATA CRIAÇÃO */}
+                <div style={{
+                  display: 'grid', gridTemplateColumns: '1fr 1fr',
+                  gap: '12px', marginBottom: '15px'
+                }}>
+                  <div style={{ background: '#111', padding: '14px', borderRadius: '10px', border: '1px solid #222' }}>
+                    <span style={{ color: '#888', fontSize: '0.78rem', display: 'block', marginBottom: '4px' }}>Plano Mais Vendido</span>
+                    {overviewData.plano_mais_vendido ? (
+                      <div>
+                        <strong style={{ color: '#c333ff', fontSize: '0.95rem' }}>{overviewData.plano_mais_vendido.nome}</strong>
+                        <span style={{ color: '#666', fontSize: '0.78rem', marginLeft: '8px' }}>({overviewData.plano_mais_vendido.vendas} vendas)</span>
+                      </div>
+                    ) : (
+                      <strong style={{ color: '#555' }}>Nenhum</strong>
+                    )}
+                  </div>
+                  <div style={{ background: '#111', padding: '14px', borderRadius: '10px', border: '1px solid #222' }}>
+                    <span style={{ color: '#888', fontSize: '0.78rem', display: 'block', marginBottom: '4px' }}>Criado em</span>
+                    <strong style={{ color: '#fff', fontSize: '0.95rem' }}>{formatDate(overviewData.created_at)}</strong>
+                  </div>
+                </div>
+
+                {/* GATEWAYS */}
+                {overviewData.vendas_por_gateway && Object.keys(overviewData.vendas_por_gateway).length > 0 && (
+                  <div style={{ background: '#111', padding: '14px', borderRadius: '10px', border: '1px solid #222' }}>
+                    <span style={{ color: '#888', fontSize: '0.78rem', display: 'block', marginBottom: '10px' }}>Vendas por Gateway</span>
+                    <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
+                      {Object.entries(overviewData.vendas_por_gateway).map(([gw, count]) => (
+                        <div key={gw} style={{
+                          background: '#1a1a2e', padding: '6px 12px', borderRadius: '8px',
+                          fontSize: '0.8rem', color: '#ccc'
+                        }}>
+                          <strong style={{ color: '#c333ff' }}>{count}</strong> via {gw}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* FOOTER */}
+                <div style={{ marginTop: '20px', display: 'flex', gap: '10px', justifyContent: 'flex-end' }}>
+                  <Button variant="outline" onClick={closeOverviewModal}>Fechar</Button>
+                  <Button variant="primary" onClick={() => { closeOverviewModal(); navigate(`/bots/config/${overviewData.bot_id}`); }}>
+                    <Settings size={16}/> Configurar Bot
+                  </Button>
+                </div>
+              </div>
+            )}
           </div>
         </div>
       )}

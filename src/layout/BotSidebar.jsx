@@ -270,7 +270,7 @@ export function BotSidebar({ isOpen, onClose, bots, selectedBot, changeBot, botL
                     </div>
                     <div className="bot-stats-row">
                       <span>Faturamento</span>
-                      <strong>R$ {typeof bot.revenue === 'number' ? bot.revenue.toLocaleString('pt-BR', { minimumFractionDigits: 2 }) : '0,00'}</strong>
+                      <strong>R$ {typeof bot.revenue === 'number' ? (bot.revenue / 100).toLocaleString('pt-BR', { minimumFractionDigits: 2 }) : '0,00'}</strong>
                     </div>
                     <div className="bot-stats-row">
                       <span>Status</span>

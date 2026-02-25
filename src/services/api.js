@@ -171,7 +171,10 @@ export const botService = {
   getBotLimit: async () => (await api.get('/api/admin/bot-limit')).data,
 
   // 🆕 ORDEM DO SELETOR
-  updateSelectorOrder: async (order) => (await api.put('/api/admin/bot-selector-order', { order })).data
+  updateSelectorOrder: async (order) => (await api.put('/api/admin/bot-selector-order', { order })).data,
+
+  // 🆕 MÉTRICAS AVANÇADAS POR BOT (Visão Geral)
+  getBotOverview: async (botId) => (await api.get(`/api/admin/bots/${botId}/overview`)).data
 };
 
 // ============================================================
