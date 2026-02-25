@@ -248,6 +248,17 @@ export function SuperAdmin() {
 
           <button 
             className="action-card"
+            onClick={() => navigate('/superadmin/emojis')}
+          >
+            <div className="action-icon">✨</div>
+            <div className="action-content">
+              <h3>Emojis Premium</h3>
+              <p>Gerenciar catálogo de custom emojis do Telegram</p>
+            </div>
+          </button>
+
+          <button 
+            className="action-card"
             onClick={() => navigate('/dashboard')}
           >
             <div className="action-icon">📊</div>

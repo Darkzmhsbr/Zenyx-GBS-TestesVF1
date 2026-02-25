@@ -1194,4 +1194,143 @@ export const rankingService = {
   }
 };
 
+// ============================================================
+// ✨ SERVIÇO: EMOJIS PREMIUM DO TELEGRAM
+// ============================================================
+export const premiumEmojiService = {
+  
+  // ===================== CATÁLOGO PÚBLICO (PARA O EMOJI PICKER) =====================
+  
+  /** Retorna catálogo completo organizado por pacotes (para o Emoji Picker dos usuários) */
+  getCatalog: async () => {
+    try {
+      const response = await api.get('/api/premium-emojis/catalog');
+      return response.data;
+    } catch (error) {
+      console.error('Erro ao buscar catálogo de emojis premium:', error);
+      return { total_packs: 0, total_emojis: 0, packs: [] };
+    }
+  },
+
+  /** Busca emojis por nome, shortcode ou fallback */
+  search: async (query) => {
+    try {
+      const response = await api.get(`/api/premium-emojis/search?q=${encodeURIComponent(query)}`);
+      return response.data;
+    } catch (error) {
+      console.error('Erro ao buscar emojis premium:', error);
+      return { emojis: [] };
+    }
+  },
+
+  // ===================== SUPER ADMIN - PACOTES =====================
+
+  /** Lista todos os pacotes (Super Admin) */
+  listPacks: async () => {
+    try {
+      const response = await api.get('/api/superadmin/premium-emojis/packs');
+      return response.data;
+    } catch (error) {
+      console.error('Erro ao listar pacotes de emojis:', error);
+      throw error;
+    }
+  },
+
+  /** Cria um novo pacote (Super Admin) */
+  createPack: async (packData) => {
+    try {
+      const response = await api.post('/api/superadmin/premium-emojis/packs', packData);
+      return response.data;
+    } catch (error) {
+      console.error('Erro ao criar pacote:', error);
+      throw error;
+    }
+  },
+
+  /** Atualiza um pacote (Super Admin) */
+  updatePack: async (packId, packData) => {
+    try {
+      const response = await api.put(`/api/superadmin/premium-emojis/packs/${packId}`, packData);
+      return response.data;
+    } catch (error) {
+      console.error('Erro ao atualizar pacote:', error);
+      throw error;
+    }
+  },
+
+  /** Deleta um pacote e todos seus emojis (Super Admin) */
+  deletePack: async (packId) => {
+    try {
+      const response = await api.delete(`/api/superadmin/premium-emojis/packs/${packId}`);
+      return response.data;
+    } catch (error) {
+      console.error('Erro ao deletar pacote:', error);
+      throw error;
+    }
+  },
+
+  // ===================== SUPER ADMIN - EMOJIS =====================
+
+  /** Lista emojis com filtros (Super Admin) */
+  listEmojis: async (filters = {}) => {
+    try {
+      const params = new URLSearchParams();
+      if (filters.pack_id) params.append('pack_id', filters.pack_id);
+      if (filters.search) params.append('search', filters.search);
+      if (filters.page) params.append('page', filters.page);
+      if (filters.per_page) params.append('per_page', filters.per_page);
+      
+      const response = await api.get(`/api/superadmin/premium-emojis?${params.toString()}`);
+      return response.data;
+    } catch (error) {
+      console.error('Erro ao listar emojis premium:', error);
+      throw error;
+    }
+  },
+
+  /** Cadastra um emoji premium (Super Admin) */
+  createEmoji: async (emojiData) => {
+    try {
+      const response = await api.post('/api/superadmin/premium-emojis', emojiData);
+      return response.data;
+    } catch (error) {
+      console.error('Erro ao criar emoji premium:', error);
+      throw error;
+    }
+  },
+
+  /** Cadastra vários emojis de uma vez (Super Admin) */
+  bulkCreateEmojis: async (emojisArray) => {
+    try {
+      const response = await api.post('/api/superadmin/premium-emojis/bulk', { emojis: emojisArray });
+      return response.data;
+    } catch (error) {
+      console.error('Erro ao criar emojis em massa:', error);
+      throw error;
+    }
+  },
+
+  /** Atualiza um emoji premium (Super Admin) */
+  updateEmoji: async (emojiId, emojiData) => {
+    try {
+      const response = await api.put(`/api/superadmin/premium-emojis/${emojiId}`, emojiData);
+      return response.data;
+    } catch (error) {
+      console.error('Erro ao atualizar emoji premium:', error);
+      throw error;
+    }
+  },
+
+  /** Remove um emoji premium (Super Admin) */
+  deleteEmoji: async (emojiId) => {
+    try {
+      const response = await api.delete(`/api/superadmin/premium-emojis/${emojiId}`);
+      return response.data;
+    } catch (error) {
+      console.error('Erro ao deletar emoji premium:', error);
+      throw error;
+    }
+  }
+};
+
 export default api;

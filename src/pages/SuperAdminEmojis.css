@@ -1,0 +1,648 @@
+/* ============================================================
+   ✨ SUPER ADMIN - GERENCIAMENTO DE EMOJIS PREMIUM
+   ============================================================ */
+
+.sa-emojis-container {
+  padding: var(--spacing-xl, 30px);
+  margin-top: var(--header-height, 60px);
+  margin-left: var(--sidebar-width, 260px);
+  color: #fff;
+  animation: saeIn 0.3s ease;
+}
+
+@keyframes saeIn {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* Header */
+.sae-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 25px;
+  gap: 20px;
+}
+
+.sae-header-left h1 {
+  font-size: 1.6rem;
+  margin: 0 0 4px;
+}
+
+.sae-header-left p {
+  color: #888;
+  font-size: 0.9rem;
+  margin: 0;
+}
+
+.sae-header-actions {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+/* Botões genéricos */
+.sae-btn {
+  padding: 9px 16px;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 0.85rem;
+  cursor: pointer;
+  border: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+
+.sae-btn-primary {
+  background: #c333ff;
+  color: #fff;
+}
+.sae-btn-primary:hover {
+  background: #a623db;
+  box-shadow: 0 4px 15px rgba(195, 51, 255, 0.3);
+}
+
+.sae-btn-secondary {
+  background: #222;
+  color: #ccc;
+  border: 1px solid #444;
+}
+.sae-btn-secondary:hover {
+  background: #333;
+  color: #fff;
+}
+
+.sae-btn-danger {
+  background: rgba(239, 68, 68, 0.1);
+  color: #ef4444;
+  border: 1px solid rgba(239, 68, 68, 0.3);
+}
+.sae-btn-danger:hover {
+  background: rgba(239, 68, 68, 0.2);
+}
+
+.sae-btn-back {
+  background: transparent;
+  color: #888;
+  border: 1px solid #333;
+}
+.sae-btn-back:hover {
+  background: #1a1a1a;
+  color: #fff;
+}
+
+.sae-btn-sm {
+  padding: 6px 10px;
+  font-size: 0.78rem;
+}
+
+/* Tabs de navegação */
+.sae-tabs {
+  display: flex;
+  gap: 4px;
+  background: #111;
+  padding: 4px;
+  border-radius: 10px;
+  margin-bottom: 20px;
+  border: 1px solid #222;
+}
+
+.sae-tab {
+  flex: 1;
+  padding: 10px 16px;
+  background: transparent;
+  border: none;
+  color: #888;
+  font-weight: 500;
+  font-size: 0.9rem;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+
+.sae-tab:hover { 
+  background: #1a1a1a; 
+  color: #ccc; 
+}
+
+.sae-tab.active { 
+  background: rgba(195, 51, 255, 0.15); 
+  color: #c9a0ff; 
+  font-weight: 600; 
+}
+
+.sae-tab-badge {
+  background: #333;
+  color: #999;
+  font-size: 0.7rem;
+  padding: 2px 7px;
+  border-radius: 10px;
+}
+
+.sae-tab.active .sae-tab-badge {
+  background: rgba(195, 51, 255, 0.3);
+  color: #c9a0ff;
+}
+
+/* ============================================================
+   SEÇÃO DE PACOTES
+   ============================================================ */
+.sae-packs-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+.sae-pack-card {
+  background: #151515;
+  border: 1px solid #2a2a2a;
+  border-radius: 12px;
+  padding: 18px;
+  transition: all 0.2s;
+  position: relative;
+}
+
+.sae-pack-card:hover {
+  border-color: #444;
+  background: #1a1a1a;
+}
+
+.sae-pack-card.inactive {
+  opacity: 0.5;
+}
+
+.sae-pack-top {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 10px;
+}
+
+.sae-pack-icon {
+  font-size: 2rem;
+  width: 48px;
+  height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(195, 51, 255, 0.08);
+  border-radius: 10px;
+  border: 1px solid rgba(195, 51, 255, 0.15);
+}
+
+.sae-pack-info h3 {
+  margin: 0;
+  font-size: 1rem;
+  color: #fff;
+}
+
+.sae-pack-info p {
+  margin: 2px 0 0;
+  font-size: 0.78rem;
+  color: #666;
+}
+
+.sae-pack-meta {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid #222;
+}
+
+.sae-pack-count {
+  font-size: 0.8rem;
+  color: #888;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.sae-pack-actions {
+  display: flex;
+  gap: 6px;
+}
+
+/* ============================================================
+   SEÇÃO DE EMOJIS (TABELA)
+   ============================================================ */
+.sae-toolbar {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+}
+
+.sae-search-input {
+  flex: 1;
+  min-width: 200px;
+  padding: 9px 14px;
+  background: #111;
+  border: 1px solid #333;
+  color: #fff;
+  border-radius: 8px;
+  font-size: 0.85rem;
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+.sae-search-input:focus {
+  border-color: rgba(195, 51, 255, 0.5);
+}
+
+.sae-filter-select {
+  padding: 9px 14px;
+  background: #111;
+  border: 1px solid #333;
+  color: #ccc;
+  border-radius: 8px;
+  font-size: 0.85rem;
+  outline: none;
+  cursor: pointer;
+}
+
+.sae-emojis-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  background: #111;
+  border-radius: 12px;
+  overflow: hidden;
+  border: 1px solid #222;
+}
+
+.sae-emojis-table thead th {
+  text-align: left;
+  padding: 12px 16px;
+  font-size: 0.75rem;
+  color: #666;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  background: #0d0d0d;
+  border-bottom: 1px solid #222;
+  font-weight: 600;
+}
+
+.sae-emojis-table tbody tr {
+  transition: background 0.15s;
+}
+
+.sae-emojis-table tbody tr:hover {
+  background: rgba(195, 51, 255, 0.04);
+}
+
+.sae-emojis-table tbody td {
+  padding: 10px 16px;
+  border-bottom: 1px solid #1a1a1a;
+  font-size: 0.85rem;
+  vertical-align: middle;
+}
+
+.sae-emoji-cell {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.sae-emoji-big {
+  font-size: 1.6rem;
+  width: 36px;
+  text-align: center;
+}
+
+.sae-emoji-details h4 {
+  margin: 0;
+  font-size: 0.88rem;
+  color: #fff;
+}
+
+.sae-emoji-details span {
+  font-size: 0.75rem;
+  color: #666;
+  font-family: monospace;
+}
+
+.sae-shortcode-badge {
+  background: rgba(195, 51, 255, 0.1);
+  color: #c9a0ff;
+  padding: 3px 8px;
+  border-radius: 6px;
+  font-family: monospace;
+  font-size: 0.78rem;
+  font-weight: 500;
+}
+
+.sae-type-badge {
+  padding: 3px 8px;
+  border-radius: 6px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.sae-type-badge.animated {
+  background: rgba(168, 85, 247, 0.15);
+  color: #a855f7;
+}
+
+.sae-type-badge.static {
+  background: rgba(100, 100, 100, 0.15);
+  color: #888;
+}
+
+.sae-pack-tag {
+  background: #1a1a1a;
+  color: #999;
+  padding: 3px 8px;
+  border-radius: 6px;
+  font-size: 0.75rem;
+}
+
+.sae-status-dot {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  margin-right: 6px;
+}
+
+.sae-status-dot.active { background: #34d399; }
+.sae-status-dot.inactive { background: #666; }
+
+.sae-actions-cell {
+  display: flex;
+  gap: 6px;
+}
+
+/* ============================================================
+   MODAL DE CRIAÇÃO/EDIÇÃO
+   ============================================================ */
+.sae-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.7);
+  z-index: 10000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: saeModalIn 0.2s ease;
+}
+
+@keyframes saeModalIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+.sae-modal {
+  background: #1a1a1a;
+  border: 1px solid #333;
+  border-radius: 16px;
+  width: 520px;
+  max-width: 95vw;
+  max-height: 85vh;
+  overflow-y: auto;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+  animation: saeModalSlide 0.25s ease-out;
+}
+
+@keyframes saeModalSlide {
+  from { transform: translateY(20px) scale(0.97); }
+  to   { transform: translateY(0) scale(1); }
+}
+
+.sae-modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px 24px;
+  border-bottom: 1px solid #222;
+}
+
+.sae-modal-header h3 {
+  margin: 0;
+  font-size: 1.1rem;
+  color: #fff;
+}
+
+.sae-modal-body {
+  padding: 24px;
+}
+
+.sae-modal-footer {
+  padding: 16px 24px;
+  border-top: 1px solid #222;
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+/* Form fields */
+.sae-field {
+  margin-bottom: 16px;
+}
+
+.sae-field label {
+  display: block;
+  font-size: 0.82rem;
+  color: #aaa;
+  margin-bottom: 6px;
+  font-weight: 500;
+}
+
+.sae-field input,
+.sae-field select {
+  width: 100%;
+  padding: 10px 14px;
+  background: #111;
+  border: 1px solid #333;
+  color: #fff;
+  border-radius: 8px;
+  font-size: 0.88rem;
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+.sae-field input:focus,
+.sae-field select:focus {
+  border-color: rgba(195, 51, 255, 0.5);
+}
+
+.sae-field small {
+  display: block;
+  margin-top: 4px;
+  font-size: 0.72rem;
+  color: #555;
+}
+
+.sae-field-row {
+  display: flex;
+  gap: 12px;
+}
+
+.sae-field-row .sae-field {
+  flex: 1;
+}
+
+/* Preview do emoji */
+.sae-emoji-preview {
+  text-align: center;
+  padding: 20px;
+  background: #0d0d0d;
+  border-radius: 10px;
+  margin-bottom: 16px;
+  border: 1px dashed #333;
+}
+
+.sae-emoji-preview-big {
+  font-size: 3rem;
+  margin-bottom: 6px;
+}
+
+.sae-emoji-preview-code {
+  font-family: monospace;
+  font-size: 0.75rem;
+  color: #666;
+  word-break: break-all;
+}
+
+/* Stats cards (topo) */
+.sae-stats {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.sae-stat-card {
+  flex: 1;
+  background: #111;
+  border: 1px solid #222;
+  border-radius: 10px;
+  padding: 16px;
+  text-align: center;
+}
+
+.sae-stat-number {
+  font-size: 1.8rem;
+  font-weight: 700;
+  color: #c333ff;
+  margin: 4px 0;
+}
+
+.sae-stat-label {
+  font-size: 0.78rem;
+  color: #666;
+}
+
+/* Dica / Info box */
+.sae-info-box {
+  background: rgba(195, 51, 255, 0.05);
+  border: 1px solid rgba(195, 51, 255, 0.15);
+  border-radius: 10px;
+  padding: 16px;
+  margin-bottom: 20px;
+  font-size: 0.85rem;
+  color: #aaa;
+  line-height: 1.6;
+}
+
+.sae-info-box strong {
+  color: #c9a0ff;
+}
+
+.sae-info-box code {
+  background: rgba(0, 0, 0, 0.3);
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 0.8rem;
+  color: #c9a0ff;
+}
+
+/* Loading state */
+.sae-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 60px;
+  color: #666;
+  gap: 12px;
+}
+
+.sae-loading .spinner {
+  width: 32px;
+  height: 32px;
+  border: 3px solid rgba(195, 51, 255, 0.15);
+  border-top-color: #c333ff;
+  border-radius: 50%;
+  animation: pepSpin 0.7s linear infinite;
+}
+
+/* Empty state */
+.sae-empty {
+  text-align: center;
+  padding: 50px 20px;
+  color: #555;
+}
+
+.sae-empty-icon {
+  font-size: 3rem;
+  margin-bottom: 12px;
+  opacity: 0.4;
+}
+
+/* ============================================================
+   RESPONSIVIDADE
+   ============================================================ */
+@media (max-width: 768px) {
+  .sa-emojis-container {
+    padding: 15px;
+    margin-left: 0;
+  }
+  
+  .sae-header {
+    flex-direction: column;
+  }
+  
+  .sae-stats {
+    flex-wrap: wrap;
+  }
+  
+  .sae-stat-card {
+    min-width: calc(50% - 8px);
+  }
+  
+  .sae-packs-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .sae-toolbar {
+    flex-direction: column;
+  }
+  
+  .sae-search-input {
+    width: 100%;
+  }
+  
+  .sae-emojis-table {
+    font-size: 0.8rem;
+  }
+  
+  .sae-field-row {
+    flex-direction: column;
+    gap: 0;
+  }
+}

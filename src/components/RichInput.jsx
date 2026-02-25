@@ -1,5 +1,6 @@
 import React, { useRef } from 'react';
 import { Bold, Italic, Underline, Strikethrough, Code, Quote, Link as LinkIcon, EyeOff } from 'lucide-react';
+import { PremiumEmojiPicker } from './PremiumEmojiPicker';
 import './RichInput.css';
 
 export function RichInput({ label, value, onChange, placeholder, rows = 4 }) {
@@ -13,25 +14,46 @@ export function RichInput({ label, value, onChange, placeholder, rows = 4 }) {
     const start = textarea.selectionStart;
     const end = textarea.selectionEnd;
     
-    // Se não tiver nada selecionado, apenas insere as tags onde o cursor está
-    // Mas a melhor UX é envolver o texto selecionado
     const selectedText = value.substring(start, end);
     const beforeText = value.substring(0, start);
     const afterText = value.substring(end);
 
     const newText = `${beforeText}${tagStart}${selectedText}${tagEnd}${afterText}`;
     
-    // Simula evento de change para atualizar o estado do pai
-    // Precisamos manter a estrutura do evento { target: { value: ... } }
     const event = { target: { value: newText } };
     onChange(event);
 
-    // Restaura o foco e ajusta a seleção (opcional, mas bom para UX)
     setTimeout(() => {
       textarea.focus();
-      // Coloca o cursor depois da tag de fechamento ou mantém seleção
       const newCursorPos = end + tagStart.length + tagEnd.length; 
       textarea.setSelectionRange(newCursorPos, newCursorPos);
+    }, 0);
+  };
+
+  // ✨ Insere shortcode de emoji premium na posição do cursor
+  const handleEmojiSelect = (shortcode) => {
+    const textarea = textareaRef.current;
+    if (!textarea) {
+      // Fallback: concatena no final
+      const event = { target: { value: (value || '') + shortcode } };
+      onChange(event);
+      return;
+    }
+
+    const start = textarea.selectionStart;
+    const end = textarea.selectionEnd;
+    const beforeText = (value || '').substring(0, start);
+    const afterText = (value || '').substring(end);
+
+    const newText = `${beforeText}${shortcode}${afterText}`;
+    const event = { target: { value: newText } };
+    onChange(event);
+
+    // Reposiciona cursor após o shortcode inserido
+    setTimeout(() => {
+      textarea.focus();
+      const newPos = start + shortcode.length;
+      textarea.setSelectionRange(newPos, newPos);
     }, 0);
   };
 
@@ -77,6 +99,10 @@ export function RichInput({ label, value, onChange, placeholder, rows = 4 }) {
         <button type="button" className="rich-btn" onClick={addLink} title="Link">
           <LinkIcon size={16} />
         </button>
+
+        {/* ✨ EMOJI PREMIUM PICKER - Integrado direto na toolbar */}
+        <div className="rich-separator"></div>
+        <PremiumEmojiPicker onSelect={handleEmojiSelect} compact={true} />
       </div>
 
       <textarea
@@ -88,7 +114,7 @@ export function RichInput({ label, value, onChange, placeholder, rows = 4 }) {
         rows={rows}
       />
       <div className="rich-helper">
-        * Selecione o texto e clique no ícone para formatar.
+        * Selecione o texto e clique no ícone para formatar. ✨ Use o botão de emoji premium para inserir custom emojis.
       </div>
     </div>
   );
