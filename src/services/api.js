@@ -171,7 +171,7 @@ export const botService = {
   getBotLimit: async () => (await api.get('/api/admin/bot-limit')).data,
 
   // 🆕 ORDEM DO SELETOR
-  updateSelectorOrder: async (order) => (await api.put('/api/admin/bots/selector-order', { order })).data
+  updateSelectorOrder: async (order) => (await api.put('/api/admin/bot-selector-order', { order })).data
 };
 
 // ============================================================
