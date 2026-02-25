@@ -174,7 +174,10 @@ export const botService = {
   updateSelectorOrder: async (order) => (await api.put('/api/admin/bot-selector-order', { order })).data,
 
   // 🆕 MÉTRICAS AVANÇADAS POR BOT (Visão Geral)
-  getBotOverview: async (botId) => (await api.get(`/api/admin/bots/${botId}/overview`)).data
+  getBotOverview: async (botId) => (await api.get(`/api/admin/bots/${botId}/overview`)).data,
+
+  // 🆕 MÉTRICAS GLOBAIS (Visão Geral de todos os bots)
+  getAllBotsOverview: async () => (await api.get('/api/admin/bots-overview')).data
 };
 
 // ============================================================

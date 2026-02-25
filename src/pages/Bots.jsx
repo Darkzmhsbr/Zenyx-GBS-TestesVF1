@@ -18,10 +18,15 @@ export function Bots() {
   // 🆕 Estado do limite de bots
   const [botLimit, setBotLimit] = useState(null);
 
-  // 🆕 MODAL VISÃO GERAL
+  // 🆕 MODAL VISÃO GERAL (POR BOT)
   const [overviewModal, setOverviewModal] = useState(false);
   const [overviewData, setOverviewData] = useState(null);
   const [overviewLoading, setOverviewLoading] = useState(false);
+
+  // 🆕 MODAL VISÃO GERAL GLOBAL (TODOS OS BOTS)
+  const [globalOverviewModal, setGlobalOverviewModal] = useState(false);
+  const [globalOverviewData, setGlobalOverviewData] = useState(null);
+  const [globalOverviewLoading, setGlobalOverviewLoading] = useState(false);
 
   // 🔁 CLONE MODAL STATE
   const [cloneModal, setCloneModal] = useState(false);
@@ -136,6 +141,29 @@ export function Bots() {
     setOverviewData(null);
   };
 
+  // 🆕 VISÃO GERAL GLOBAL - Todos os bots somados
+  const openGlobalOverview = async () => {
+    setGlobalOverviewModal(true);
+    setGlobalOverviewLoading(true);
+    setGlobalOverviewData(null);
+    
+    try {
+      const data = await botService.getAllBotsOverview();
+      setGlobalOverviewData(data);
+    } catch (error) {
+      console.error('Erro ao buscar overview global:', error);
+      Swal.fire('Erro', 'Não foi possível carregar os dados.', 'error');
+      setGlobalOverviewModal(false);
+    } finally {
+      setGlobalOverviewLoading(false);
+    }
+  };
+
+  const closeGlobalOverview = () => {
+    setGlobalOverviewModal(false);
+    setGlobalOverviewData(null);
+  };
+
   // 🆕 Formatadores
   const formatMoney = (centavos) => {
     return (centavos / 100).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
@@ -226,7 +254,11 @@ export function Bots() {
               )}
             </p>
         </div>
-        <Button onClick={() => {
+        <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+          <Button variant="outline" onClick={openGlobalOverview} style={{ borderColor: '#c333ff', color: '#c333ff' }}>
+            <BarChart3 size={18} /> Visão Geral
+          </Button>
+          <Button onClick={() => {
           if (botLimit && !botLimit.can_create) {
             Swal.fire({
               title: 'Limite Atingido',
@@ -240,6 +272,7 @@ export function Bots() {
         }}>
           <Plus size={20} /> Criar Novo Bot
         </Button>
+        </div>
       </div>
 
       {loading ? (
@@ -674,6 +707,212 @@ export function Bots() {
                   <Button variant="primary" onClick={() => { closeOverviewModal(); navigate(`/bots/config/${overviewData.bot_id}`); }}>
                     <Settings size={16}/> Configurar Bot
                   </Button>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* ============================================================ */}
+      {/* 🆕 MODAL VISÃO GERAL GLOBAL (TODOS OS BOTS) */}
+      {/* ============================================================ */}
+      {globalOverviewModal && (
+        <div className="clone-overlay" onClick={closeGlobalOverview}>
+          <div className="clone-modal overview-modal" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '640px' }}>
+            
+            {/* HEADER */}
+            <div className="clone-modal-header">
+              <div style={{display:'flex', alignItems:'center', gap: 10}}>
+                <BarChart3 size={22} color="#c333ff"/>
+                <h2>Visão Geral — Todos os Bots</h2>
+              </div>
+              <button className="clone-close-btn" onClick={closeGlobalOverview}><X size={20}/></button>
+            </div>
+
+            {globalOverviewLoading ? (
+              <div style={{ padding: '60px', textAlign: 'center', color: '#888' }}>
+                <RefreshCcw className="spin" size={30} style={{ marginBottom: '15px', opacity: 0.4 }} />
+                <p>Carregando métricas globais...</p>
+              </div>
+            ) : globalOverviewData && (
+              <div className="clone-body" style={{ padding: '20px' }}>
+                
+                {/* RESUMO DE BOTS */}
+                <div style={{
+                  display: 'flex', gap: '10px', marginBottom: '20px',
+                  padding: '15px', background: 'rgba(195,51,255,0.05)',
+                  borderRadius: '12px', border: '1px solid rgba(195,51,255,0.15)',
+                  justifyContent: 'space-around', textAlign: 'center'
+                }}>
+                  <div>
+                    <span style={{ color: '#888', fontSize: '0.75rem', display: 'block' }}>Total de Bots</span>
+                    <strong style={{ color: '#fff', fontSize: '1.4rem' }}>{globalOverviewData.total_bots}</strong>
+                  </div>
+                  <div style={{ borderLeft: '1px solid #333', paddingLeft: '15px' }}>
+                    <span style={{ color: '#888', fontSize: '0.75rem', display: 'block' }}>Online</span>
+                    <strong style={{ color: '#10b981', fontSize: '1.4rem' }}>{globalOverviewData.bots_ativos}</strong>
+                  </div>
+                  <div style={{ borderLeft: '1px solid #333', paddingLeft: '15px' }}>
+                    <span style={{ color: '#888', fontSize: '0.75rem', display: 'block' }}>Parados</span>
+                    <strong style={{ color: '#ef4444', fontSize: '1.4rem' }}>{globalOverviewData.bots_pausados}</strong>
+                  </div>
+                </div>
+
+                {/* GRID DE MÉTRICAS */}
+                <div style={{
+                  display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)',
+                  gap: '12px', marginBottom: '20px'
+                }}>
+                  <div className="overview-metric-card highlight-purple">
+                    <div className="overview-metric-icon"><DollarSign size={18}/></div>
+                    <div>
+                      <span className="overview-metric-label">Faturamento Total</span>
+                      <span className="overview-metric-value">{formatMoney(globalOverviewData.faturamento_total)}</span>
+                    </div>
+                  </div>
+
+                  <div className="overview-metric-card">
+                    <div className="overview-metric-icon green"><TrendingUp size={18}/></div>
+                    <div>
+                      <span className="overview-metric-label">Últimos 30 dias</span>
+                      <span className="overview-metric-value">{formatMoney(globalOverviewData.faturamento_30d)}</span>
+                    </div>
+                  </div>
+
+                  <div className="overview-metric-card">
+                    <div className="overview-metric-icon blue"><Users size={18}/></div>
+                    <div>
+                      <span className="overview-metric-label">Leads Totais</span>
+                      <span className="overview-metric-value">{globalOverviewData.leads_totais?.toLocaleString('pt-BR')}</span>
+                    </div>
+                  </div>
+
+                  <div className="overview-metric-card">
+                    <div className="overview-metric-icon cyan"><Zap size={18}/></div>
+                    <div>
+                      <span className="overview-metric-label">Assinantes Ativos</span>
+                      <span className="overview-metric-value">{globalOverviewData.assinantes_ativos}</span>
+                    </div>
+                  </div>
+
+                  <div className="overview-metric-card">
+                    <div className="overview-metric-icon orange"><ShoppingCart size={18}/></div>
+                    <div>
+                      <span className="overview-metric-label">Vendas Realizadas</span>
+                      <span className="overview-metric-value">{globalOverviewData.total_vendas}</span>
+                    </div>
+                  </div>
+
+                  <div className="overview-metric-card">
+                    <div className="overview-metric-icon"><DollarSign size={18}/></div>
+                    <div>
+                      <span className="overview-metric-label">Ticket Médio</span>
+                      <span className="overview-metric-value">{formatMoney(globalOverviewData.ticket_medio)}</span>
+                    </div>
+                  </div>
+
+                  <div className="overview-metric-card">
+                    <div className="overview-metric-icon green"><TrendingUp size={18}/></div>
+                    <div>
+                      <span className="overview-metric-label">Taxa de Conversão</span>
+                      <span className="overview-metric-value">{globalOverviewData.taxa_conversao}%</span>
+                    </div>
+                  </div>
+
+                  <div className="overview-metric-card">
+                    <div className="overview-metric-icon orange"><Calendar size={18}/></div>
+                    <div>
+                      <span className="overview-metric-label">Vendas Hoje</span>
+                      <span className="overview-metric-value">{globalOverviewData.vendas_hoje}</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* PLANO MAIS VENDIDO + TOP BOT */}
+                <div style={{
+                  display: 'grid', gridTemplateColumns: '1fr 1fr',
+                  gap: '12px', marginBottom: '15px'
+                }}>
+                  <div style={{ background: '#111', padding: '14px', borderRadius: '10px', border: '1px solid #222' }}>
+                    <span style={{ color: '#888', fontSize: '0.78rem', display: 'block', marginBottom: '4px' }}>Plano Mais Vendido</span>
+                    {globalOverviewData.plano_mais_vendido ? (
+                      <div>
+                        <strong style={{ color: '#c333ff', fontSize: '0.95rem' }}>{globalOverviewData.plano_mais_vendido.nome}</strong>
+                        <span style={{ color: '#666', fontSize: '0.78rem', marginLeft: '8px' }}>({globalOverviewData.plano_mais_vendido.vendas} vendas)</span>
+                      </div>
+                    ) : (
+                      <strong style={{ color: '#555' }}>Nenhum</strong>
+                    )}
+                  </div>
+                  <div style={{ background: '#111', padding: '14px', borderRadius: '10px', border: '1px solid #222' }}>
+                    <span style={{ color: '#888', fontSize: '0.78rem', display: 'block', marginBottom: '4px' }}>Bot Top Faturamento</span>
+                    {globalOverviewData.top_bot ? (
+                      <div>
+                        <strong style={{ color: '#10b981', fontSize: '0.95rem' }}>{globalOverviewData.top_bot.nome}</strong>
+                        <span style={{ color: '#666', fontSize: '0.78rem', marginLeft: '8px' }}>{formatMoney(globalOverviewData.top_bot.faturamento)}</span>
+                      </div>
+                    ) : (
+                      <strong style={{ color: '#555' }}>—</strong>
+                    )}
+                  </div>
+                </div>
+
+                {/* RANKING DOS BOTS */}
+                {globalOverviewData.bots_ranking && globalOverviewData.bots_ranking.length > 0 && (
+                  <div style={{ background: '#111', padding: '14px', borderRadius: '10px', border: '1px solid #222', marginBottom: '15px' }}>
+                    <span style={{ color: '#888', fontSize: '0.78rem', display: 'block', marginBottom: '12px' }}>Ranking dos Bots por Faturamento</span>
+                    {globalOverviewData.bots_ranking.map((bot, idx) => (
+                      <div key={bot.id} style={{
+                        display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+                        padding: '8px 0',
+                        borderBottom: idx < globalOverviewData.bots_ranking.length - 1 ? '1px solid #1a1a2e' : 'none'
+                      }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                          <span style={{
+                            width: '22px', height: '22px', borderRadius: '50%', display: 'flex',
+                            alignItems: 'center', justifyContent: 'center', fontSize: '0.7rem',
+                            fontWeight: 700, flexShrink: 0,
+                            background: idx === 0 ? 'rgba(195,51,255,0.2)' : idx === 1 ? 'rgba(16,185,129,0.15)' : 'rgba(255,255,255,0.05)',
+                            color: idx === 0 ? '#c333ff' : idx === 1 ? '#10b981' : '#666'
+                          }}>
+                            {idx + 1}
+                          </span>
+                          <span style={{ color: '#fff', fontSize: '0.85rem', fontWeight: 600 }}>{bot.nome}</span>
+                          <span style={{
+                            width: '6px', height: '6px', borderRadius: '50%',
+                            background: bot.status === 'ativo' ? '#10b981' : '#555'
+                          }} />
+                        </div>
+                        <div style={{ textAlign: 'right' }}>
+                          <strong style={{ color: '#c333ff', fontSize: '0.85rem' }}>{formatMoney(bot.faturamento)}</strong>
+                          <span style={{ color: '#666', fontSize: '0.72rem', marginLeft: '8px' }}>{bot.vendas} vendas</span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                {/* GATEWAYS */}
+                {globalOverviewData.vendas_por_gateway && Object.keys(globalOverviewData.vendas_por_gateway).length > 0 && (
+                  <div style={{ background: '#111', padding: '14px', borderRadius: '10px', border: '1px solid #222' }}>
+                    <span style={{ color: '#888', fontSize: '0.78rem', display: 'block', marginBottom: '10px' }}>Vendas por Gateway</span>
+                    <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
+                      {Object.entries(globalOverviewData.vendas_por_gateway).map(([gw, count]) => (
+                        <div key={gw} style={{
+                          background: '#1a1a2e', padding: '6px 12px', borderRadius: '8px',
+                          fontSize: '0.8rem', color: '#ccc'
+                        }}>
+                          <strong style={{ color: '#c333ff' }}>{count}</strong> via {gw}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* FOOTER */}
+                <div style={{ marginTop: '20px', display: 'flex', justifyContent: 'flex-end' }}>
+                  <Button variant="outline" onClick={closeGlobalOverview}>Fechar</Button>
                 </div>
               </div>
             )}
