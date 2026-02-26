@@ -80,3 +80,18 @@
   text-align: right;
   margin-top: 4px;
 }
+/* ✨ Aviso Premium - aparece em TODAS as páginas com RichInput */
+.rich-premium-notice {
+  margin-top: 6px;
+  padding: 8px 12px;
+  background: rgba(245, 158, 11, 0.06);
+  border: 1px solid rgba(245, 158, 11, 0.15);
+  border-radius: 8px;
+  font-size: 0.75rem;
+  color: #999;
+  line-height: 1.5;
+}
+
+.rich-premium-notice strong {
+  color: #f59e0b;
+}

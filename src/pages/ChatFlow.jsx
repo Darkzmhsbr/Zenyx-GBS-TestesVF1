@@ -1,12 +1,29 @@
 import React, { useEffect, useState } from 'react';
 import Swal from 'sweetalert2';
 import { Save, MessageSquare, ArrowDown, Zap, Image as ImageIcon, Video, Plus, Trash2, Edit, Clock, Layout, Globe, Smartphone, ShoppingBag, Link as LinkIcon, CreditCard, ArrowUp, ChevronDown, ChevronUp } from 'lucide-react';
-import { flowService } from '../services/api'; 
+import { flowService, premiumEmojiService } from '../services/api'; 
 import { useBot } from '../context/BotContext'; 
 import { Button } from '../components/Button';
 import { Card, CardContent } from '../components/Card';
 import { Input } from '../components/Input';
 import { RichInput } from '../components/RichInput';
+
+/**
+ * ✨ Converte shortcodes de emojis premium para o fallback visual no preview.
+ * Ex: ":newsemoji_7: Texto" → "🚫 Texto"
+ * Busca no catálogo cacheado ou usa regex para remover shortcodes desconhecidos.
+ */
+function convertShortcodesToFallback(text, emojiCatalog) {
+  if (!text) return text;
+  return text.replace(/:([a-zA-Z0-9_]+):/g, (match, code) => {
+    // Busca no catálogo se disponível
+    if (emojiCatalog && emojiCatalog.length > 0) {
+      const found = emojiCatalog.find(e => e.shortcode === match || e.shortcode === `:${code}:`);
+      if (found) return found.fallback;
+    }
+    return match; // Mantém o shortcode se não encontrar
+  });
+}
 import { MediaUploader } from '../components/MediaUploader'; // 🔥 NOVO COMPONENTE DE UPLOAD
 import './ChatFlow.css';
 
@@ -101,6 +118,20 @@ export function ChatFlow() {
     mostrar_botao: true,
     delay_seconds: 0 
   });
+
+  // ✨ Catálogo de emojis premium para preview
+  const [emojiCatalog, setEmojiCatalog] = useState([]);
+
+  // Carrega catálogo de emojis premium para o preview do iPhone
+  useEffect(() => {
+    (async () => {
+      try {
+        const data = await premiumEmojiService.getCatalog();
+        const allEmojis = (data.packs || []).flatMap(p => p.emojis || []);
+        setEmojiCatalog(allEmojis);
+      } catch (e) { /* silencioso */ }
+    })();
+  }, []);
 
 
   // 🔊 HELPER: Detecta se a URL é um áudio OGG
@@ -498,8 +529,8 @@ export function ChatFlow() {
                                 </div>
                             )}
 
-                            {/* 🔥 ATUALIZAÇÃO: HTML FORMATADO */}
-                            <div dangerouslySetInnerHTML={{__html: flow.msg_boas_vindas || 'Olá! Bem-vindo(a)!'}} />
+                            {/* 🔥 ATUALIZAÇÃO: HTML FORMATADO + ✨ EMOJIS PREMIUM CONVERTIDOS */}
+                            <div dangerouslySetInnerHTML={{__html: convertShortcodesToFallback(flow.msg_boas_vindas || 'Olá! Bem-vindo(a)!', emojiCatalog)}} />
                         </div>
                         
                         {/* PREVIEW DOS BOTÕES DA MENSAGEM 1 */}
@@ -822,7 +853,7 @@ export function ChatFlow() {
                                             <button className="icon-btn danger" onClick={() => handleDeleteStep(step.id)}><Trash2 size={18} color="#ef4444"/></button>
                                         </div>
                                     </div>
-                                    <div className="preview-box"><p>{step.msg_texto ? step.msg_texto.substring(0, 100) : '(Mídia)'}</p></div>
+                                    <div className="preview-box"><p>{step.msg_texto ? convertShortcodesToFallback(step.msg_texto.substring(0, 100), emojiCatalog) : '(Mídia)'}</p></div>
                                 </CardContent>
                             </Card>
                             <div className="connector-line"></div><div className="connector-arrow"><ArrowDown size={24} color="#444" /></div>

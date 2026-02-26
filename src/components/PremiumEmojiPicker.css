@@ -372,3 +372,22 @@
     font-size: 1.3rem;
   }
 }
+/* ✨ Badge numérico para emojis duplicados (mesmo fallback) */
+.pep-dup-badge {
+  position: absolute;
+  bottom: 1px;
+  right: 1px;
+  background: #c333ff;
+  color: #fff;
+  font-size: 0.5rem;
+  font-weight: 700;
+  width: 13px;
+  height: 13px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+  pointer-events: none;
+  box-shadow: 0 0 4px rgba(0,0,0,0.5);
+}

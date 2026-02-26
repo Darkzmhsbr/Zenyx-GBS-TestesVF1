@@ -203,22 +203,32 @@ export function PremiumEmojiPicker({ onSelect, disabled = false, position = 'top
                     </div>
                   )}
                   <div className="pep-grid">
-                    {pack.emojis.map(emoji => (
-                      <button
-                        key={emoji.id}
-                        className="pep-emoji-item"
-                        onClick={() => handleEmojiClick(emoji)}
-                        title={`${emoji.name} (${emoji.shortcode})`}
-                      >
-                        {emoji.fallback}
-                        {emoji.emoji_type === 'animated' && (
-                          <span className="pep-animated-dot" />
-                        )}
-                        <span className="pep-tooltip">
-                          {emoji.name}<br/>{emoji.shortcode}
-                        </span>
-                      </button>
-                    ))}
+                    {pack.emojis.map((emoji, idx) => {
+                      // ✨ Detecta se existem emojis duplicados (mesmo fallback) no pack
+                      const duplicates = pack.emojis.filter(e => e.fallback === emoji.fallback);
+                      const hasDuplicate = duplicates.length > 1;
+                      const dupIndex = hasDuplicate ? duplicates.indexOf(emoji) + 1 : 0;
+                      
+                      return (
+                        <button
+                          key={emoji.id}
+                          className="pep-emoji-item"
+                          onClick={() => handleEmojiClick(emoji)}
+                          title={`${emoji.name} (${emoji.shortcode})`}
+                        >
+                          {emoji.fallback}
+                          {hasDuplicate && (
+                            <span className="pep-dup-badge">{dupIndex}</span>
+                          )}
+                          {emoji.emoji_type === 'animated' && (
+                            <span className="pep-animated-dot" />
+                          )}
+                          <span className="pep-tooltip">
+                            {emoji.name}<br/>{emoji.shortcode}
+                          </span>
+                        </button>
+                      );
+                    })}
                   </div>
                 </React.Fragment>
               ))

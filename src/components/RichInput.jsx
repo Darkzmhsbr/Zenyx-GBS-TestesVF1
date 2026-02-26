@@ -116,6 +116,9 @@ export function RichInput({ label, value, onChange, placeholder, rows = 4 }) {
       <div className="rich-helper">
         * Selecione o texto e clique no ícone para formatar. ✨ Use o botão de emoji premium para inserir custom emojis.
       </div>
+      <div className="rich-premium-notice">
+        ⚠️ <strong>Emojis Premium:</strong> Para que os emojis premium funcionem no Telegram, a conta que <u>criou o bot</u> no @BotFather precisa ter <strong>assinatura Telegram Premium</strong> ativa.
+      </div>
     </div>
   );
 }
