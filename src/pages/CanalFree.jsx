@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useBot } from '../context/BotContext';
-import { canalFreeService } from '../services/api';
+import { canalFreeService, testSendService } from '../services/api';
 import { RefreshCw, Save, AlertCircle, CheckCircle, Info, Unlock, Plus, Trash2, Image, Video, Mic } from 'lucide-react';
+import Swal from 'sweetalert2';
 import { RichInput } from '../components/RichInput'; // Importando componente de texto rico
 import { MediaUploader } from '../components/MediaUploader'; // 🔥 NOVO COMPONENTE DE UPLOAD
 import './CanalFree.css';
@@ -496,8 +497,21 @@ export function CanalFree() {
           </p>
         </div>
 
-        {/* Botão Salvar */}
-        <div className="form-actions">
+        {/* Botão Salvar + Teste */}
+        <div className="form-actions" style={{gap:'10px'}}>
+          <button
+            onClick={async () => {
+              if (!selectedBot || !config.welcome_message) { Swal.fire('Aviso', 'Preencha a mensagem de boas-vindas antes de testar.', 'warning'); return; }
+              try {
+                Swal.fire({ title: '🧪 Enviando teste...', allowOutsideClick: false, didOpen: () => Swal.showLoading(), background: '#151515', color: '#fff' });
+                await testSendService.send(selectedBot.id, { message: config.welcome_message, media_url: config.media_url || null, media_type: config.media_type || null, source: 'canal_free' });
+                Swal.fire({ title: '✅ Teste enviado!', text: 'Verifique o Telegram do admin.', icon: 'success', timer: 2500, showConfirmButton: false, background: '#151515', color: '#fff' });
+              } catch (e) { Swal.fire({ title: 'Erro', text: e.response?.data?.detail || 'Falha ao enviar teste.', icon: 'error', background: '#151515', color: '#fff' }); }
+            }}
+            style={{background:'#333', color:'#fff', border:'1px solid #555', padding:'1rem 1.5rem', borderRadius:'10px', cursor:'pointer', fontWeight:600, display:'flex', alignItems:'center', gap:'0.5rem'}}
+          >
+            🧪 Enviar Teste
+          </button>
           <button
             className="btn-save"
             onClick={handleSave}

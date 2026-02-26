@@ -1344,4 +1344,19 @@ export const premiumEmojiService = {
   }
 };
 
+// =========================================================
+// 🧪 SERVIÇO: ENVIO DE TESTE GENÉRICO
+// =========================================================
+export const testSendService = {
+  /**
+   * Envia uma mensagem de teste para o admin principal do bot.
+   * @param {number} botId - ID do bot
+   * @param {object} data - { message, media_url, media_type, source, buttons }
+   */
+  send: async (botId, data) => {
+    const response = await api.post(`/api/admin/bots/${botId}/send-test-message`, data);
+    return response.data;
+  }
+};
+
 export default api;

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useBot } from '../context/BotContext';
 import { useProgress } from '../context/ProgressContext';
-import { remarketingService, planService } from '../services/api';
+import { remarketingService, planService, testSendService } from '../services/api';
 import { Send, Users, Image, MessageSquare, CheckCircle, AlertTriangle, History, Tag, Clock, RotateCcw, Edit, Play, Trash2, ChevronLeft, ChevronRight, Mic } from 'lucide-react';
 import { Button } from '../components/Button';
 import { Card, CardContent } from '../components/Card';
@@ -53,10 +53,19 @@ export function Remarketing() {
 
   useEffect(() => {
     if (selectedBot) {
+      // 🔥 FIX: Reset estado ao trocar de bot para evitar bug visual
+      setStep(0);
+      setHistory([]);
+      setCurrentPage(1);
       planService.listPlans(selectedBot.id).then(setPlans).catch(console.error);
       carregarHistorico();
     }
-  }, [selectedBot, currentPage]);
+  }, [selectedBot]);
+
+  // Recarrega histórico quando muda de página
+  useEffect(() => {
+    if (selectedBot) carregarHistorico();
+  }, [currentPage]);
 
   // (Polling de progresso agora é gerenciado pelo ProgressContext global)
 
@@ -248,6 +257,23 @@ export function Remarketing() {
       } finally {
         setLoading(false);
       }
+    }
+  };
+
+  // 🧪 ENVIAR TESTE para o admin do bot
+  const handleEnviarTeste = async () => {
+    if (!selectedBot) return;
+    try {
+      Swal.fire({ title: '🧪 Enviando teste...', allowOutsideClick: false, didOpen: () => Swal.showLoading(), background: '#151515', color: '#fff' });
+      await testSendService.send(selectedBot.id, {
+        message: formData.mensagem,
+        media_url: formData.media_url || null,
+        media_type: formData.media_url?.match(/\.(mp4|mov)/i) ? 'video' : formData.media_url?.match(/\.(ogg|mp3|wav)/i) ? 'audio' : 'photo',
+        source: 'remarketing',
+      });
+      Swal.fire({ title: '✅ Teste enviado!', text: 'Verifique o Telegram do admin do bot.', icon: 'success', timer: 2500, showConfirmButton: false, background: '#151515', color: '#fff' });
+    } catch (error) {
+      Swal.fire({ title: 'Erro', text: error.response?.data?.detail || 'Falha ao enviar teste.', icon: 'error', background: '#151515', color: '#fff' });
     }
   };
 
@@ -805,14 +831,24 @@ export function Remarketing() {
               <button className="btn-back" onClick={() => setStep(2)}>
                 Voltar
               </button>
-              <button 
-                className="btn-next" 
-                onClick={handleEnviar}
-                disabled={loading}
-              >
-                {loading ? 'Enviando...' : 'Enviar Agora'}
-                <CheckCircle size={18} />
-              </button>
+              <div style={{display:'flex', gap:'10px'}}>
+                <button 
+                  className="btn-reuse"
+                  onClick={handleEnviarTeste}
+                  disabled={loading}
+                  title="Envia a mensagem para o admin do bot como teste"
+                >
+                  🧪 Enviar Teste
+                </button>
+                <button 
+                  className="btn-next" 
+                  onClick={handleEnviar}
+                  disabled={loading}
+                >
+                  {loading ? 'Enviando...' : 'Enviar Agora'}
+                  <CheckCircle size={18} />
+                </button>
+              </div>
             </div>
           </>
         )}

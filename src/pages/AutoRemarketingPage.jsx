@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useBot } from '../context/BotContext';
-import { remarketingAutoService, planService } from '../services/api';
+import { remarketingAutoService, planService, testSendService } from '../services/api';
 import { RichInput } from '../components/RichInput'; // 🔥 IMPORTAÇÃO DO COMPONENTE RICO
 import { MediaUploader } from '../components/MediaUploader'; // 🔥 NOVO COMPONENTE DE UPLOAD
 import './AutoRemarketingPage.css';
@@ -308,6 +308,19 @@ export function AutoRemarketing() {
           <p>Configure mensagens de remarketing inteligentes</p>
         </div>
         <div className="header-actions">
+           <button className="btn-test-send" onClick={async () => {
+             if (!selectedBot) return;
+             const msg = activeTab === 'disparo' ? disparoConfig.message_text : (alternatingConfig.messages[0] || '');
+             const msgText = typeof msg === 'string' ? msg : msg.content || '';
+             if (!msgText) { Swal.fire('Aviso', 'Preencha a mensagem antes de testar.', 'warning'); return; }
+             try {
+               Swal.fire({ title: '🧪 Enviando teste...', allowOutsideClick: false, didOpen: () => Swal.showLoading(), background: '#151515', color: '#fff' });
+               await testSendService.send(selectedBot.id, { message: msgText, media_url: disparoConfig.media_url || null, source: 'auto_remarketing' });
+               Swal.fire({ title: '✅ Teste enviado!', text: 'Verifique o Telegram do admin.', icon: 'success', timer: 2500, showConfirmButton: false, background: '#151515', color: '#fff' });
+             } catch (e) { Swal.fire({ title: 'Erro', text: e.response?.data?.detail || 'Falha ao enviar teste.', icon: 'error', background: '#151515', color: '#fff' }); }
+           }} style={{background:'#333', color:'#fff', border:'1px solid #555', padding:'10px 16px', borderRadius:'8px', cursor:'pointer', fontWeight:600, display:'flex', alignItems:'center', gap:'6px'}}>
+             🧪 Enviar Teste
+           </button>
            <button className="btn-save-main" onClick={activeTab === 'disparo' ? handleSaveDisparo : handleSaveAlternating} disabled={saving}>
              {saving ? 'Salvando...' : <>{Icons.Save} Salvar Alterações</>}
            </button>
@@ -691,23 +704,22 @@ export function AutoRemarketing() {
                                 {alternatingConfig.messages.map((msg, idx) => (
                                     <div key={idx} className="message-item">
                                         <div className="message-number">{idx + 1}</div>
-                                        <input 
-                                            type="text" 
-                                            className="input-field" 
+                                        <div style={{flex:1}}>
+                                          <RichInput 
+                                            label=""
                                             value={typeof msg === 'string' ? msg : msg.content}
-                                            onChange={e => {
-                                                // Suporte para string simples ou objeto
+                                            onChange={val => {
                                                 if (typeof msg === 'string') {
-                                                    handleEditMessage(idx, e.target.value);
+                                                    handleEditMessage(idx, val);
                                                 } else {
-                                                    const updatedMsg = { ...msg, content: e.target.value };
+                                                    const updatedMsg = { ...msg, content: val };
                                                     const newMsgs = [...alternatingConfig.messages];
                                                     newMsgs[idx] = updatedMsg;
                                                     setAlternatingConfig(prev => ({ ...prev, messages: newMsgs }));
                                                 }
                                             }}
-                                            placeholder={`Mensagem ${idx+1}`}
-                                        />
+                                          />
+                                        </div>
                                         <button onClick={() => handleRemoveMessage(idx)} className="btn-remove">
                                             {Icons.Trash}
                                         </button>

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useBot } from '../context/BotContext';
-import { orderBumpService, groupService } from '../services/api';
+import { orderBumpService, groupService, testSendService } from '../services/api';
 import { ShoppingBag, Save, AlertCircle, Image as ImageIcon, Link as LinkIcon, DollarSign, MessageSquare, Trash2, Layers, Mic } from 'lucide-react';
 import { Button } from '../components/Button';
 import { Card, CardContent } from '../components/Card';
@@ -361,7 +361,17 @@ export function OrderBump() {
           </div>
         </div>
 
-        <div className="action-bar">
+        <div className="action-bar" style={{gap:'10px'}}>
+          <button type="button" onClick={async () => {
+            if (!selectedBot || !formData.msg_texto) { Swal.fire('Aviso', 'Preencha a mensagem antes de testar.', 'warning'); return; }
+            try {
+              Swal.fire({ title: '🧪 Enviando teste...', allowOutsideClick: false, didOpen: () => Swal.showLoading(), background: '#151515', color: '#fff' });
+              await testSendService.send(selectedBot.id, { message: formData.msg_texto, media_url: formData.msg_media || null, source: 'order_bump' });
+              Swal.fire({ title: '✅ Teste enviado!', text: 'Verifique o Telegram do admin.', icon: 'success', timer: 2500, showConfirmButton: false, background: '#151515', color: '#fff' });
+            } catch (e) { Swal.fire({ title: 'Erro', text: e.response?.data?.detail || 'Falha.', icon: 'error', background: '#151515', color: '#fff' }); }
+          }} style={{background:'#333', color:'#fff', border:'1px solid #555', padding:'10px 20px', borderRadius:'8px', cursor:'pointer', fontWeight:600}}>
+            🧪 Enviar Teste
+          </button>
           <Button type="submit" disabled={loading} style={{minWidth: '200px'}}>
             <Save size={18} style={{marginRight:'8px'}}/>
             {loading ? 'Salvando...' : 'Salvar Configurações'}
