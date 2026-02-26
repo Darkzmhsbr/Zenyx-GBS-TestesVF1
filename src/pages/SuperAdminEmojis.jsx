@@ -21,7 +21,7 @@ export function SuperAdminEmojis() {
   
   // Modal
   const [showModal, setShowModal] = useState(false);
-  const [modalType, setModalType] = useState(''); // 'create_pack', 'edit_pack', 'create_emoji', 'edit_emoji'
+  const [modalType, setModalType] = useState(''); // 'create_pack', 'edit_pack', 'create_emoji', 'edit_emoji', 'import_pack'
   const [editingItem, setEditingItem] = useState(null);
   
   // Form Pack
@@ -32,6 +32,10 @@ export function SuperAdminEmojis() {
     emoji_id: '', fallback: '', name: '', shortcode: '',
     pack_id: '', sort_order: 0, emoji_type: 'animated', thumbnail_url: ''
   });
+
+  // Form Import Pack
+  const [importForm, setImportForm] = useState({ pack_link: '', pack_name: '', pack_icon: '📦' });
+  const [importing, setImporting] = useState(false);
 
   // === LOAD DATA ===
   useEffect(() => { loadPacks(); loadEmojis(); }, []);
@@ -213,6 +217,52 @@ export function SuperAdminEmojis() {
     }
   };
 
+  // === IMPORT PACK ===
+  const openImportPack = () => {
+    setImportForm({ pack_link: '', pack_name: '', pack_icon: '📦' });
+    setModalType('import_pack');
+    setShowModal(true);
+  };
+
+  const handleImportPack = async () => {
+    if (!importForm.pack_link.trim()) {
+      return Swal.fire('Atenção', 'Cole o link do pack de emojis.', 'warning');
+    }
+
+    setImporting(true);
+    try {
+      const result = await premiumEmojiService.importPack({
+        pack_link: importForm.pack_link.trim(),
+        pack_name: importForm.pack_name.trim() || null,
+        pack_icon: importForm.pack_icon || '📦',
+        auto_create_pack: true
+      });
+      
+      setShowModal(false);
+      
+      Swal.fire({
+        title: '✅ Pack Importado!',
+        html: `
+          <div style="text-align:left; font-size:0.95rem">
+            <p><strong>${result.pack_title}</strong></p>
+            <p>✨ <b>${result.created}</b> emojis cadastrados</p>
+            ${result.skipped > 0 ? `<p>⏭️ ${result.skipped} já existiam (ignorados)</p>` : ''}
+            <p style="color:#888; font-size:0.85rem; margin-top:8px">Total no pack: ${result.total_in_pack}</p>
+          </div>
+        `,
+        icon: 'success'
+      });
+      
+      loadPacks();
+      loadEmojis();
+    } catch (error) {
+      const detail = error?.response?.data?.detail || 'Falha ao importar pack. Verifique o link.';
+      Swal.fire('Erro', detail, 'error');
+    } finally {
+      setImporting(false);
+    }
+  };
+
   // === STATS ===
   const totalPacks = packs.length;
   const activePacks = packs.filter(p => p.is_active).length;
@@ -233,6 +283,9 @@ export function SuperAdminEmojis() {
         <div className="sae-header-actions">
           <button className="sae-btn sae-btn-secondary" onClick={() => { loadPacks(); loadEmojis(); }}>
             🔄 Atualizar
+          </button>
+          <button className="sae-btn sae-btn-import" onClick={openImportPack}>
+            📦 Importar Pack
           </button>
           {activeTab === 'packs' && (
             <button className="sae-btn sae-btn-primary" onClick={openCreatePack}>
@@ -265,7 +318,11 @@ export function SuperAdminEmojis() {
 
       {/* INFO BOX */}
       <div className="sae-info-box">
-        <strong>💡 Como obter IDs de emojis premium:</strong> Envie ou encaminhe o emoji premium 
+        <strong>📦 Importação rápida:</strong> Use o botão <strong>"Importar Pack"</strong> para importar 
+        packs completos do Telegram automaticamente! Basta colar o link como <code>https://t.me/addemoji/NomeDoPack</code>. 
+        Todos os emojis são cadastrados de uma vez com shortcodes gerados automaticamente.
+        <br /><br />
+        <strong>💡 Cadastro individual:</strong> Para emojis avulsos, envie o emoji premium 
         pelo Telegram para o bot <code>@JsonDumpBot</code>. Ele retorna o JSON com o campo 
         <code>custom_emoji_id</code> — esse é o número que você cola no campo "Emoji ID".
         O dono do bot precisa ter Telegram Premium para que os emojis funcionem no envio.
@@ -368,71 +425,108 @@ export function SuperAdminEmojis() {
               </button>
             </div>
           ) : (
-            <table className="sae-emojis-table">
-              <thead>
-                <tr>
-                  <th>Emoji</th>
-                  <th>Shortcode</th>
-                  <th>Tipo</th>
-                  <th>Pacote</th>
-                  <th>Status</th>
-                  <th>Ações</th>
-                </tr>
-              </thead>
-              <tbody>
-                {emojis.map(emoji => (
-                  <tr key={emoji.id}>
-                    <td>
-                      <div className="sae-emoji-cell">
-                        <div className="sae-emoji-big">{emoji.fallback}</div>
-                        <div className="sae-emoji-details">
-                          <h4>{emoji.name}</h4>
-                          <span>ID: {emoji.emoji_id}</span>
+            <>
+              {/* TABELA DESKTOP */}
+              <table className="sae-emojis-table sae-desktop-only">
+                <thead>
+                  <tr>
+                    <th>Emoji</th>
+                    <th>Shortcode</th>
+                    <th>Tipo</th>
+                    <th>Pacote</th>
+                    <th>Status</th>
+                    <th>Ações</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {emojis.map(emoji => (
+                    <tr key={emoji.id}>
+                      <td>
+                        <div className="sae-emoji-cell">
+                          <div className="sae-emoji-big">{emoji.fallback}</div>
+                          <div className="sae-emoji-details">
+                            <h4>{emoji.name}</h4>
+                            <span>ID: {emoji.emoji_id}</span>
+                          </div>
                         </div>
+                      </td>
+                      <td>
+                        <span className="sae-shortcode-badge">{emoji.shortcode}</span>
+                      </td>
+                      <td>
+                        <span className={`sae-type-badge ${emoji.emoji_type}`}>
+                          {emoji.emoji_type === 'animated' ? '✦ Animado' : '● Estático'}
+                        </span>
+                      </td>
+                      <td>
+                        {emoji.pack_name 
+                          ? <span className="sae-pack-tag">{emoji.pack_name}</span>
+                          : <span style={{ color: '#555' }}>—</span>
+                        }
+                      </td>
+                      <td>
+                        <span className={`sae-status-dot ${emoji.is_active ? 'active' : 'inactive'}`} />
+                        {emoji.is_active ? 'Ativo' : 'Inativo'}
+                      </td>
+                      <td>
+                        <div className="sae-actions-cell">
+                          <button className="sae-btn sae-btn-sm sae-btn-secondary" onClick={() => handleToggleEmojiActive(emoji)} title={emoji.is_active ? 'Desativar' : 'Ativar'}>
+                            {emoji.is_active ? '🔴' : '🟢'}
+                          </button>
+                          <button className="sae-btn sae-btn-sm sae-btn-secondary" onClick={() => openEditEmoji(emoji)} title="Editar">
+                            ✏️
+                          </button>
+                          <button className="sae-btn sae-btn-sm sae-btn-danger" onClick={() => handleDeleteEmoji(emoji)} title="Remover">
+                            🗑️
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+
+              {/* CARDS MOBILE */}
+              <div className="sae-emoji-cards sae-mobile-only">
+                {emojis.map(emoji => (
+                  <div key={emoji.id} className="sae-emoji-card">
+                    <div className="sae-ecard-top">
+                      <div className="sae-ecard-emoji">{emoji.fallback}</div>
+                      <div className="sae-ecard-info">
+                        <h4>{emoji.name}</h4>
+                        <span className="sae-shortcode-badge">{emoji.shortcode}</span>
                       </div>
-                    </td>
-                    <td>
-                      <span className="sae-shortcode-badge">{emoji.shortcode}</span>
-                    </td>
-                    <td>
+                      <span className={`sae-status-dot ${emoji.is_active ? 'active' : 'inactive'}`} style={{ marginLeft: 'auto' }} />
+                    </div>
+                    <div className="sae-ecard-meta">
                       <span className={`sae-type-badge ${emoji.emoji_type}`}>
                         {emoji.emoji_type === 'animated' ? '✦ Animado' : '● Estático'}
                       </span>
-                    </td>
-                    <td>
-                      {emoji.pack_name 
-                        ? <span className="sae-pack-tag">{emoji.pack_name}</span>
-                        : <span style={{ color: '#555' }}>—</span>
-                      }
-                    </td>
-                    <td>
-                      <span className={`sae-status-dot ${emoji.is_active ? 'active' : 'inactive'}`} />
-                      {emoji.is_active ? 'Ativo' : 'Inativo'}
-                    </td>
-                    <td>
-                      <div className="sae-actions-cell">
-                        <button className="sae-btn sae-btn-sm sae-btn-secondary" onClick={() => handleToggleEmojiActive(emoji)} title={emoji.is_active ? 'Desativar' : 'Ativar'}>
-                          {emoji.is_active ? '🔴' : '🟢'}
-                        </button>
-                        <button className="sae-btn sae-btn-sm sae-btn-secondary" onClick={() => openEditEmoji(emoji)} title="Editar">
-                          ✏️
-                        </button>
-                        <button className="sae-btn sae-btn-sm sae-btn-danger" onClick={() => handleDeleteEmoji(emoji)} title="Remover">
-                          🗑️
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
+                      {emoji.pack_name && <span className="sae-pack-tag">{emoji.pack_name}</span>}
+                    </div>
+                    <div className="sae-ecard-id">ID: {emoji.emoji_id}</div>
+                    <div className="sae-ecard-actions">
+                      <button className="sae-btn sae-btn-sm sae-btn-secondary" onClick={() => handleToggleEmojiActive(emoji)}>
+                        {emoji.is_active ? '🔴 Desativar' : '🟢 Ativar'}
+                      </button>
+                      <button className="sae-btn sae-btn-sm sae-btn-secondary" onClick={() => openEditEmoji(emoji)}>
+                        ✏️ Editar
+                      </button>
+                      <button className="sae-btn sae-btn-sm sae-btn-danger" onClick={() => handleDeleteEmoji(emoji)}>
+                        🗑️ Excluir
+                      </button>
+                    </div>
+                  </div>
                 ))}
-              </tbody>
-            </table>
+              </div>
+            </>
           )}
         </div>
       )}
 
       {/* === MODAL === */}
       {showModal && (
-        <div className="sae-modal-overlay" onClick={() => setShowModal(false)}>
+        <div className="sae-modal-overlay" onClick={() => !importing && setShowModal(false)}>
           <div className="sae-modal" onClick={(e) => e.stopPropagation()}>
             
             {/* MODAL: PACOTE */}
@@ -601,6 +695,77 @@ export function SuperAdminEmojis() {
                   <button className="sae-btn sae-btn-secondary" onClick={() => setShowModal(false)}>Cancelar</button>
                   <button className="sae-btn sae-btn-primary" onClick={handleSaveEmoji}>
                     {modalType === 'create_emoji' ? '✅ Cadastrar Emoji' : '💾 Salvar'}
+                  </button>
+                </div>
+              </>
+            )}
+
+            {/* MODAL: IMPORTAR PACK */}
+            {modalType === 'import_pack' && (
+              <>
+                <div className="sae-modal-header">
+                  <h3>📦 Importar Pack do Telegram</h3>
+                  <button className="pep-close-btn" onClick={() => !importing && setShowModal(false)}>✕</button>
+                </div>
+                <div className="sae-modal-body">
+                  <div className="sae-import-info">
+                    <p>Cole o link de um pack de emojis premium do Telegram. Todos os emojis do pack serão importados automaticamente com shortcodes gerados.</p>
+                    <div className="sae-import-example">
+                      <strong>Exemplos de links válidos:</strong>
+                      <code>https://t.me/addemoji/DecorationEmojiPack</code>
+                      <code>https://t.me/addemoji/RestrictedEmoji</code>
+                      <code>DecorationEmojiPack</code>
+                    </div>
+                  </div>
+
+                  <div className="sae-field">
+                    <label>Link do Pack *</label>
+                    <input
+                      type="text"
+                      value={importForm.pack_link}
+                      onChange={(e) => setImportForm({ ...importForm, pack_link: e.target.value })}
+                      placeholder="https://t.me/addemoji/NomeDoPack"
+                      disabled={importing}
+                    />
+                    <small>Cole o link completo ou apenas o nome do pack</small>
+                  </div>
+
+                  <div className="sae-field-row">
+                    <div className="sae-field" style={{ flex: 0.3 }}>
+                      <label>Ícone</label>
+                      <input
+                        type="text"
+                        value={importForm.pack_icon}
+                        onChange={(e) => setImportForm({ ...importForm, pack_icon: e.target.value })}
+                        placeholder="📦"
+                        maxLength={4}
+                        style={{ textAlign: 'center', fontSize: '1.5rem' }}
+                        disabled={importing}
+                      />
+                    </div>
+                    <div className="sae-field" style={{ flex: 1 }}>
+                      <label>Nome do Pacote (opcional)</label>
+                      <input
+                        type="text"
+                        value={importForm.pack_name}
+                        onChange={(e) => setImportForm({ ...importForm, pack_name: e.target.value })}
+                        placeholder="Deixe vazio para usar o nome original do Telegram"
+                        disabled={importing}
+                      />
+                      <small>Se vazio, usa o título do pack no Telegram</small>
+                    </div>
+                  </div>
+                </div>
+                <div className="sae-modal-footer">
+                  <button className="sae-btn sae-btn-secondary" onClick={() => setShowModal(false)} disabled={importing}>
+                    Cancelar
+                  </button>
+                  <button className="sae-btn sae-btn-import" onClick={handleImportPack} disabled={importing}>
+                    {importing ? (
+                      <><span className="sae-btn-spinner" /> Importando...</>
+                    ) : (
+                      '📦 Importar Pack Completo'
+                    )}
                   </button>
                 </div>
               </>

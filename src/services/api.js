@@ -1330,6 +1330,17 @@ export const premiumEmojiService = {
       console.error('Erro ao deletar emoji premium:', error);
       throw error;
     }
+  },
+
+  /** 📦 Importa um pack completo de emojis premium do Telegram (Super Admin) */
+  importPack: async (data) => {
+    try {
+      const response = await api.post('/api/superadmin/premium-emojis/import-pack', data);
+      return response.data;
+    } catch (error) {
+      console.error('Erro ao importar pack:', error);
+      throw error;
+    }
   }
 };
 

@@ -646,3 +646,101 @@
     gap: 0;
   }
 }
+/* ============================================================
+   BOTÃO IMPORTAR PACK
+   ============================================================ */
+.sae-btn-import {
+  background: linear-gradient(135deg, #f59e0b, #d97706);
+  color: #fff;
+  padding: 9px 16px;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 0.85rem;
+  cursor: pointer;
+  border: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+.sae-btn-import:hover {
+  background: linear-gradient(135deg, #d97706, #b45309);
+  box-shadow: 0 4px 15px rgba(245, 158, 11, 0.3);
+}
+.sae-btn-import:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.sae-btn-spinner {
+  display: inline-block;
+  width: 14px;
+  height: 14px;
+  border: 2px solid rgba(255,255,255,0.3);
+  border-top-color: #fff;
+  border-radius: 50%;
+  animation: pepSpin 0.7s linear infinite;
+}
+
+/* ============================================================
+   IMPORT PACK MODAL STYLES
+   ============================================================ */
+.sae-import-info {
+  background: rgba(245, 158, 11, 0.08);
+  border: 1px solid rgba(245, 158, 11, 0.2);
+  border-radius: 10px;
+  padding: 16px;
+  margin-bottom: 20px;
+  font-size: 0.88rem;
+  color: #ccc;
+  line-height: 1.6;
+}
+
+.sae-import-info p { margin: 0 0 10px; }
+
+.sae-import-example { margin-top: 8px; }
+.sae-import-example strong { display: block; color: #f59e0b; font-size: 0.8rem; margin-bottom: 6px; }
+.sae-import-example code { display: block; background: rgba(0,0,0,0.3); padding: 6px 10px; border-radius: 6px; font-size: 0.78rem; color: #f59e0b; margin-bottom: 4px; word-break: break-all; }
+
+/* ============================================================
+   MOBILE: EMOJI CARDS (substituem a tabela)
+   ============================================================ */
+.sae-desktop-only { display: table; }
+.sae-mobile-only  { display: none; }
+
+.sae-emoji-cards { display: flex; flex-direction: column; gap: 10px; }
+
+.sae-emoji-card {
+  background: #151515;
+  border: 1px solid #2a2a2a;
+  border-radius: 12px;
+  padding: 14px;
+}
+
+.sae-ecard-top { display: flex; align-items: center; gap: 12px; margin-bottom: 8px; }
+.sae-ecard-emoji { font-size: 1.8rem; width: 40px; text-align: center; flex-shrink: 0; }
+.sae-ecard-info h4 { margin: 0 0 4px; font-size: 0.9rem; color: #fff; }
+.sae-ecard-meta { display: flex; gap: 8px; margin-bottom: 6px; flex-wrap: wrap; }
+.sae-ecard-id { font-family: monospace; font-size: 0.7rem; color: #555; margin-bottom: 10px; word-break: break-all; }
+
+.sae-ecard-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  padding-top: 10px;
+  border-top: 1px solid #222;
+}
+
+.sae-ecard-actions .sae-btn { flex: 1; justify-content: center; min-width: 80px; }
+
+/* ============================================================
+   RESPONSIVIDADE MOBILE - OVERRIDE
+   ============================================================ */
+@media (max-width: 768px) {
+  .sae-desktop-only { display: none !important; }
+  .sae-mobile-only  { display: flex !important; }
+  
+  .sae-header-actions { width: 100%; justify-content: stretch; }
+  .sae-header-actions .sae-btn { flex: 1; justify-content: center; font-size: 0.78rem; padding: 8px 10px; }
+}
