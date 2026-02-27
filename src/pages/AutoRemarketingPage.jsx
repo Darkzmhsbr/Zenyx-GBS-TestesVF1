@@ -318,11 +318,20 @@ export function AutoRemarketing() {
              }
              try {
                Swal.fire({ title: '🧪 Enviando teste do disparo...', allowOutsideClick: false, didOpen: () => Swal.showLoading(), background: '#151515', color: '#fff' });
+               // Monta botões de planos com valores promo (igual ao envio real)
+               const promoVals = disparoConfig.promo_values || {};
+               const btns = planos.map(p => {
+                 const promo = promoVals[String(p.id)];
+                 const valor = promo ? (promo.value || p.preco_atual) : p.preco_atual;
+                 const texto = promo?.button_text || `🔥 ${p.nome_exibicao} - R$ ${Number(valor).toFixed(2)}`;
+                 return { text: texto, callback_data: `test_remarketing_plano_${p.id}` };
+               });
                await testSendService.send(selectedBot.id, { 
                  message: msg, 
                  media_url: disparoConfig.media_url || null, 
                  audio_url: disparoConfig.audio_url || null,
-                 source: 'auto_remarketing' 
+                 source: 'auto_remarketing',
+                 buttons: btns.length > 0 ? btns : null
                });
                Swal.fire({ title: '✅ Teste enviado!', text: 'Verifique o Telegram do admin.', icon: 'success', timer: 2500, showConfirmButton: false, background: '#151515', color: '#fff' });
              } catch (e) { Swal.fire({ title: 'Erro', text: e.response?.data?.detail || 'Falha ao enviar teste.', icon: 'error', background: '#151515', color: '#fff' }); }
