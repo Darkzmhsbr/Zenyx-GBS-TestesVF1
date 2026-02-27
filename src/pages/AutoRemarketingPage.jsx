@@ -307,18 +307,18 @@ export function AutoRemarketing() {
           <h1>{Icons.Rocket} Disparo Automático</h1>
           <p>Configure mensagens de remarketing inteligentes</p>
         </div>
-        <div className="header-actions">
-           <button className="btn-test-send" onClick={async () => {
+        <div className="header-actions" style={{display:'flex', gap:'10px'}}>
+           <button onClick={async () => {
              if (!selectedBot) return;
-             const msg = activeTab === 'disparo' ? disparoConfig.message_text : (alternatingConfig.messages[0] || '');
-             const msgText = typeof msg === 'string' ? msg : msg.content || '';
-             if (!msgText) { Swal.fire('Aviso', 'Preencha a mensagem antes de testar.', 'warning'); return; }
+             const msg = activeTab === 'disparo' ? disparoConfig.message_text : 
+               (alternatingConfig.messages[0] ? (typeof alternatingConfig.messages[0] === 'string' ? alternatingConfig.messages[0] : alternatingConfig.messages[0].content) : '');
+             if (!msg?.trim()) { Swal.fire({title:'Aviso', text:'Preencha a mensagem antes de testar.', icon:'warning', background:'#151515', color:'#fff'}); return; }
              try {
                Swal.fire({ title: '🧪 Enviando teste...', allowOutsideClick: false, didOpen: () => Swal.showLoading(), background: '#151515', color: '#fff' });
-               await testSendService.send(selectedBot.id, { message: msgText, media_url: disparoConfig.media_url || null, source: 'auto_remarketing' });
+               await testSendService.send(selectedBot.id, { message: msg, media_url: disparoConfig.media_url || null, source: 'auto_remarketing' });
                Swal.fire({ title: '✅ Teste enviado!', text: 'Verifique o Telegram do admin.', icon: 'success', timer: 2500, showConfirmButton: false, background: '#151515', color: '#fff' });
-             } catch (e) { Swal.fire({ title: 'Erro', text: e.response?.data?.detail || 'Falha ao enviar teste.', icon: 'error', background: '#151515', color: '#fff' }); }
-           }} style={{background:'#333', color:'#fff', border:'1px solid #555', padding:'10px 16px', borderRadius:'8px', cursor:'pointer', fontWeight:600, display:'flex', alignItems:'center', gap:'6px'}}>
+             } catch (e) { Swal.fire({ title: 'Erro', text: e.response?.data?.detail || 'Falha.', icon: 'error', background: '#151515', color: '#fff' }); }
+           }} style={{background:'#333', color:'#fff', border:'1px solid #555', padding:'10px 16px', borderRadius:'8px', cursor:'pointer', fontWeight:600, fontSize:'0.9rem'}}>
              🧪 Enviar Teste
            </button>
            <button className="btn-save-main" onClick={activeTab === 'disparo' ? handleSaveDisparo : handleSaveAlternating} disabled={saving}>

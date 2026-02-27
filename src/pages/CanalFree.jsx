@@ -498,17 +498,30 @@ export function CanalFree() {
         </div>
 
         {/* Botão Salvar + Teste */}
-        <div className="form-actions" style={{gap:'10px'}}>
+        <div className="form-actions" style={{gap:'12px'}}>
           <button
             onClick={async () => {
-              if (!selectedBot || !config.welcome_message) { Swal.fire('Aviso', 'Preencha a mensagem de boas-vindas antes de testar.', 'warning'); return; }
+              if (!selectedBot) return;
+              if (!config.message_text?.trim() && !config.audio_url) { 
+                Swal.fire({title:'Aviso', text:'Preencha a mensagem de boas-vindas ou defina um áudio antes de testar.', icon:'warning', background:'#151515', color:'#fff'}); 
+                return; 
+              }
               try {
                 Swal.fire({ title: '🧪 Enviando teste...', allowOutsideClick: false, didOpen: () => Swal.showLoading(), background: '#151515', color: '#fff' });
-                await testSendService.send(selectedBot.id, { message: config.welcome_message, media_url: config.media_url || null, media_type: config.media_type || null, source: 'canal_free' });
-                Swal.fire({ title: '✅ Teste enviado!', text: 'Verifique o Telegram do admin.', icon: 'success', timer: 2500, showConfirmButton: false, background: '#151515', color: '#fff' });
+                // Monta botões customizados (se existirem)
+                const btns = (config.buttons || []).map(b => ({ text: b.text, url: b.url }));
+                await testSendService.send(selectedBot.id, { 
+                  message: config.message_text || '', 
+                  media_url: config.media_url || null, 
+                  media_type: config.media_type || null, 
+                  audio_url: config.audio_url || null,
+                  source: 'canal_free',
+                  buttons: btns.length > 0 ? btns : null
+                });
+                Swal.fire({ title: '✅ Teste enviado!', text: 'Verifique o Telegram do admin do bot.', icon: 'success', timer: 2500, showConfirmButton: false, background: '#151515', color: '#fff' });
               } catch (e) { Swal.fire({ title: 'Erro', text: e.response?.data?.detail || 'Falha ao enviar teste.', icon: 'error', background: '#151515', color: '#fff' }); }
             }}
-            style={{background:'#333', color:'#fff', border:'1px solid #555', padding:'1rem 1.5rem', borderRadius:'10px', cursor:'pointer', fontWeight:600, display:'flex', alignItems:'center', gap:'0.5rem'}}
+            style={{background:'#333', color:'#fff', border:'1px solid #555', padding:'1rem 1.5rem', borderRadius:'10px', cursor:'pointer', fontWeight:600, display:'flex', alignItems:'center', gap:'0.5rem', fontSize:'0.95rem'}}
           >
             🧪 Enviar Teste
           </button>

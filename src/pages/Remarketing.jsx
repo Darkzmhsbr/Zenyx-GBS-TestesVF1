@@ -53,7 +53,7 @@ export function Remarketing() {
 
   useEffect(() => {
     if (selectedBot) {
-      // 🔥 FIX: Reset estado ao trocar de bot para evitar bug visual
+      // 🔥 FIX: Reset estado ao trocar de bot
       setStep(0);
       setHistory([]);
       setCurrentPage(1);
@@ -260,17 +260,36 @@ export function Remarketing() {
     }
   };
 
-  // 🧪 ENVIAR TESTE para o admin do bot
+  // 🧪 ENVIAR TESTE COMPLETO (com mídia, botões, oferta)
   const handleEnviarTeste = async () => {
     if (!selectedBot) return;
+    if (!formData.mensagem?.trim()) {
+      Swal.fire({title:'Aviso', text:'Preencha a mensagem antes de testar.', icon:'warning', background:'#151515', color:'#fff'});
+      return;
+    }
     try {
       Swal.fire({ title: '🧪 Enviando teste...', allowOutsideClick: false, didOpen: () => Swal.showLoading(), background: '#151515', color: '#fff' });
+      
+      const mediaUrl = formData.media_url || null;
+      let mediaType = null;
+      if (mediaUrl) {
+        const lower = mediaUrl.toLowerCase();
+        if (lower.match(/\.(mp4|mov)/)) mediaType = 'video';
+        else if (lower.match(/\.(ogg|mp3|wav)/)) mediaType = 'audio';
+        else mediaType = 'photo';
+      }
+      
       await testSendService.send(selectedBot.id, {
         message: formData.mensagem,
-        media_url: formData.media_url || null,
-        media_type: formData.media_url?.match(/\.(mp4|mov)/i) ? 'video' : formData.media_url?.match(/\.(ogg|mp3|wav)/i) ? 'audio' : 'photo',
+        media_url: mediaUrl,
+        media_type: mediaType,
         source: 'remarketing',
+        incluir_oferta: formData.incluir_oferta || false,
+        plano_oferta_id: formData.plano_oferta_id ? parseInt(formData.plano_oferta_id) : null,
+        preco_custom: formData.preco_custom ? parseFloat(formData.preco_custom) : null,
+        price_mode: formData.price_mode || 'original',
       });
+      
       Swal.fire({ title: '✅ Teste enviado!', text: 'Verifique o Telegram do admin do bot.', icon: 'success', timer: 2500, showConfirmButton: false, background: '#151515', color: '#fff' });
     } catch (error) {
       Swal.fire({ title: 'Erro', text: error.response?.data?.detail || 'Falha ao enviar teste.', icon: 'error', background: '#151515', color: '#fff' });
@@ -836,7 +855,7 @@ export function Remarketing() {
                   className="btn-reuse"
                   onClick={handleEnviarTeste}
                   disabled={loading}
-                  title="Envia a mensagem para o admin do bot como teste"
+                  title="Envia tudo (mídia + texto + oferta) para o admin do bot"
                 >
                   🧪 Enviar Teste
                 </button>

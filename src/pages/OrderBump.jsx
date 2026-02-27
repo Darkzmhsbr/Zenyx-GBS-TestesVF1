@@ -363,10 +363,12 @@ export function OrderBump() {
 
         <div className="action-bar" style={{gap:'10px'}}>
           <button type="button" onClick={async () => {
-            if (!selectedBot || !formData.msg_texto) { Swal.fire('Aviso', 'Preencha a mensagem antes de testar.', 'warning'); return; }
+            if (!selectedBot || !formData.msg_texto?.trim()) { Swal.fire({title:'Aviso', text:'Preencha a mensagem antes de testar.', icon:'warning', background:'#151515', color:'#fff'}); return; }
             try {
               Swal.fire({ title: '🧪 Enviando teste...', allowOutsideClick: false, didOpen: () => Swal.showLoading(), background: '#151515', color: '#fff' });
-              await testSendService.send(selectedBot.id, { message: formData.msg_texto, media_url: formData.msg_media || null, source: 'order_bump' });
+              // Monta botões de aceitar/recusar simulados
+              const btns = [{text: formData.btn_aceitar || '✅ Quero!', callback_data: 'test_bump_accept'}, {text: formData.btn_recusar || '❌ Não', callback_data: 'test_bump_decline'}];
+              await testSendService.send(selectedBot.id, { message: formData.msg_texto, media_url: formData.msg_media || null, source: 'order_bump', buttons: btns });
               Swal.fire({ title: '✅ Teste enviado!', text: 'Verifique o Telegram do admin.', icon: 'success', timer: 2500, showConfirmButton: false, background: '#151515', color: '#fff' });
             } catch (e) { Swal.fire({ title: 'Erro', text: e.response?.data?.detail || 'Falha.', icon: 'error', background: '#151515', color: '#fff' }); }
           }} style={{background:'#333', color:'#fff', border:'1px solid #555', padding:'10px 20px', borderRadius:'8px', cursor:'pointer', fontWeight:600}}>

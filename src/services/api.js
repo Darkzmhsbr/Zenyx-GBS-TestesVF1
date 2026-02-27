@@ -1349,9 +1349,9 @@ export const premiumEmojiService = {
 // =========================================================
 export const testSendService = {
   /**
-   * Envia uma mensagem de teste para o admin principal do bot.
+   * Envia uma mensagem de teste completa para o admin principal do bot.
    * @param {number} botId - ID do bot
-   * @param {object} data - { message, media_url, media_type, source, buttons }
+   * @param {object} data - { message, media_url, media_type, audio_url, source, buttons, incluir_oferta, plano_oferta_id, preco_custom, price_mode }
    */
   send: async (botId, data) => {
     const response = await api.post(`/api/admin/bots/${botId}/send-test-message`, data);
