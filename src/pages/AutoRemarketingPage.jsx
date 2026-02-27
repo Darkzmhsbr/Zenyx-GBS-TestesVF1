@@ -318,13 +318,18 @@ export function AutoRemarketing() {
              }
              try {
                Swal.fire({ title: '🧪 Enviando teste do disparo...', allowOutsideClick: false, didOpen: () => Swal.showLoading(), background: '#151515', color: '#fff' });
-               // Monta botões de planos com valores promo (igual ao envio real)
+               // Monta botões APENAS dos planos ATIVADOS (que estão no promo_values)
                const promoVals = disparoConfig.promo_values || {};
-               const btns = planos.map(p => {
-                 const promo = promoVals[String(p.id)];
-                 const valor = promo ? (promo.value || p.preco_atual) : p.preco_atual;
-                 const texto = promo?.button_text || `🔥 ${p.nome_exibicao} - R$ ${Number(valor).toFixed(2)}`;
-                 return { text: texto, callback_data: `test_remarketing_plano_${p.id}` };
+               const btns = [];
+               Object.keys(promoVals).forEach(planoId => {
+                 const plano = planos.find(p => String(p.id) === String(planoId));
+                 if (!plano) return;
+                 const promo = promoVals[planoId];
+                 const valor = promo?.value || plano.preco_atual || 0;
+                 const txt = promo?.button_text && promo.button_text.trim() 
+                   ? promo.button_text 
+                   : `🔥 ${plano.nome_exibicao} - R$ ${Number(valor).toFixed(2)}`;
+                 btns.push({ text: txt, callback_data: `test_remarketing_plano_${planoId}` });
                });
                await testSendService.send(selectedBot.id, { 
                  message: msg, 
