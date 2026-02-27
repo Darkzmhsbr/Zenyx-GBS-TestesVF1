@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { useBot } from '../context/BotContext';
 import { remarketingAutoService, planService, testSendService } from '../services/api';
-import { RichInput } from '../components/RichInput'; // 🔥 IMPORTAÇÃO DO COMPONENTE RICO
-import { MediaUploader } from '../components/MediaUploader'; // 🔥 NOVO COMPONENTE DE UPLOAD
+import { RichInput } from '../components/RichInput';
+import { MediaUploader } from '../components/MediaUploader';
+import Swal from 'sweetalert2';
 import './AutoRemarketingPage.css';
 
 // Ícones (Unicode)
@@ -310,14 +311,21 @@ export function AutoRemarketing() {
         <div className="header-actions" style={{display:'flex', gap:'10px'}}>
            <button onClick={async () => {
              if (!selectedBot) return;
-             const msg = activeTab === 'disparo' ? disparoConfig.message_text : 
-               (alternatingConfig.messages[0] ? (typeof alternatingConfig.messages[0] === 'string' ? alternatingConfig.messages[0] : alternatingConfig.messages[0].content) : '');
-             if (!msg?.trim()) { Swal.fire({title:'Aviso', text:'Preencha a mensagem antes de testar.', icon:'warning', background:'#151515', color:'#fff'}); return; }
+             const msg = disparoConfig.message_text || '';
+             if (!msg.trim() && !disparoConfig.media_url && !disparoConfig.audio_url) { 
+               Swal.fire({title:'Aviso', text:'Preencha a mensagem, mídia ou áudio do disparo antes de testar.', icon:'warning', background:'#151515', color:'#fff'}); 
+               return; 
+             }
              try {
-               Swal.fire({ title: '🧪 Enviando teste...', allowOutsideClick: false, didOpen: () => Swal.showLoading(), background: '#151515', color: '#fff' });
-               await testSendService.send(selectedBot.id, { message: msg, media_url: disparoConfig.media_url || null, source: 'auto_remarketing' });
+               Swal.fire({ title: '🧪 Enviando teste do disparo...', allowOutsideClick: false, didOpen: () => Swal.showLoading(), background: '#151515', color: '#fff' });
+               await testSendService.send(selectedBot.id, { 
+                 message: msg, 
+                 media_url: disparoConfig.media_url || null, 
+                 audio_url: disparoConfig.audio_url || null,
+                 source: 'auto_remarketing' 
+               });
                Swal.fire({ title: '✅ Teste enviado!', text: 'Verifique o Telegram do admin.', icon: 'success', timer: 2500, showConfirmButton: false, background: '#151515', color: '#fff' });
-             } catch (e) { Swal.fire({ title: 'Erro', text: e.response?.data?.detail || 'Falha.', icon: 'error', background: '#151515', color: '#fff' }); }
+             } catch (e) { Swal.fire({ title: 'Erro', text: e.response?.data?.detail || 'Falha ao enviar teste.', icon: 'error', background: '#151515', color: '#fff' }); }
            }} style={{background:'#333', color:'#fff', border:'1px solid #555', padding:'10px 16px', borderRadius:'8px', cursor:'pointer', fontWeight:600, fontSize:'0.9rem'}}>
              🧪 Enviar Teste
            </button>
