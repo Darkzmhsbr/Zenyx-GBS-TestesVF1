@@ -12,8 +12,23 @@ import './Remarketing.css';
 
 export function Remarketing() {
   const { selectedBot } = useBot();
+  const [mode, setMode] = useState('menu'); // 'menu' | 'custom' | 'scheduled' | 'history'
   const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);
+
+  // 📅 Estados da Campanha Periódica
+  const [schedStep, setSchedStep] = useState(1);
+  const [schedData, setSchedData] = useState({
+    target: 'todos',
+    days: 7,
+    time: '10:00',
+    sameContent: true,
+    message: '',
+    media_url: '',
+    plano_id: null,
+    promo_price: '',
+  });
+  const [scheduledCampaigns, setScheduledCampaigns] = useState([]);
   const [plans, setPlans] = useState([]);
   const [history, setHistory] = useState([]);
   
@@ -53,8 +68,9 @@ export function Remarketing() {
 
   useEffect(() => {
     if (selectedBot) {
-      // 🔥 FIX: Reset estado ao trocar de bot - volta para o wizard (step 1), não histórico
+      setMode('menu');
       setStep(1);
+      setSchedStep(1);
       setHistory([]);
       setCurrentPage(1);
       planService.listPlans(selectedBot.id).then(setPlans).catch(console.error);
@@ -186,7 +202,7 @@ export function Remarketing() {
         expiration_mode: config.expiration_mode || 'none',
         expiration_value: config.expiration_value || ''
       });
-      setStep(1);
+      setMode("custom"); setStep(1);
       window.scrollTo(0, 0);
     } catch (error) {
       console.error("Erro ao reusar campanha:", error);
@@ -359,7 +375,7 @@ export function Remarketing() {
           expiration_mode: 'none',
           expiration_value: ''
         });
-        setStep(1);
+        setMode("menu"); setStep(1);
       } else {
         Swal.fire({
           title: 'Campanha Iniciada!',
@@ -398,7 +414,7 @@ export function Remarketing() {
   // ============================================================
   // RENDER - HISTÓRICO
   // ============================================================
-  if (step === 0) {
+  if (mode === 'history') {
     return (
       <div className="remarketing-container">
         <div className="wizard-container">
@@ -408,10 +424,10 @@ export function Remarketing() {
           </h2>
 
           <Button 
-            onClick={() => setStep(1)} 
+            onClick={() => setMode('menu')} 
             style={{ marginBottom: '20px' }}
           >
-            Nova Campanha <Send size={16} />
+            ← Voltar ao Menu
           </Button>
 
           <div className="history-list">
@@ -527,7 +543,336 @@ export function Remarketing() {
   }
 
   // ============================================================
-  // RENDER - WIZARD (STEPS 1-3)
+  // RENDER - MENU PRINCIPAL
+  // ============================================================
+  if (mode === 'menu') {
+    return (
+      <div className="remarketing-container">
+        <div className="wizard-container">
+          <h2 className="wizard-title">
+            <Send size={28} style={{ verticalAlign: 'middle', marginRight: '10px' }} />
+            Remarketing
+          </h2>
+          <p style={{ textAlign: 'center', color: '#888', marginBottom: '30px' }}>
+            Escolha o tipo de campanha que deseja criar
+          </p>
+
+          <div className="remarketing-menu-grid">
+            {/* CAMPANHA PERSONALIZADA */}
+            <div
+              className="option-card"
+              onClick={() => { setMode('custom'); setStep(1); }}
+              style={{ padding: '30px 20px', cursor: 'pointer' }}
+            >
+              <div className="option-icon">🎯</div>
+              <h3 style={{ margin: '10px 0 8px', fontSize: '1.1rem' }}>Campanha Personalizada</h3>
+              <p style={{ color: '#888', fontSize: '0.85rem', lineHeight: 1.5 }}>
+                Disparo único e imediato. Configure público, mensagem, mídia e oferta para enviar agora.
+              </p>
+            </div>
+
+            {/* CAMPANHA PERIÓDICA */}
+            <div
+              className="option-card"
+              onClick={() => { setMode('scheduled'); setSchedStep(1); }}
+              style={{ padding: '30px 20px', cursor: 'pointer' }}
+            >
+              <div className="option-icon">📅</div>
+              <h3 style={{ margin: '10px 0 8px', fontSize: '1.1rem' }}>Campanha Periódica</h3>
+              <p style={{ color: '#888', fontSize: '0.85rem', lineHeight: 1.5 }}>
+                Agendamento automático. Defina dias, horário e conteúdo para disparos recorrentes.
+              </p>
+            </div>
+          </div>
+
+          {/* VER HISTÓRICO */}
+          <Button
+            onClick={() => setMode('history')}
+            variant="outline"
+            style={{ width: '100%', justifyContent: 'center', gap: '8px' }}
+          >
+            <History size={18} /> Ver Histórico de Campanhas
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
+  // ============================================================
+  // RENDER - CAMPANHA PERIÓDICA (4 PASSOS)
+  // ============================================================
+  if (mode === 'scheduled') {
+    const schedTargetOptions = [
+      { id: 'todos', icon: '👥', title: 'Todos', desc: 'Toda a base de leads' },
+      { id: 'nao_compradores', icon: '🎯', title: 'Não compradores', desc: 'Leads que nunca compraram' },
+      { id: 'topo', icon: '🔵', title: 'Topo de Funil', desc: 'Novos leads' },
+      { id: 'meio', icon: '🟡', title: 'Meio de Funil', desc: 'Leads engajados' },
+      { id: 'fundo', icon: '🟢', title: 'Fundo de Funil', desc: 'Quase compraram' },
+      { id: 'expirados', icon: '🔴', title: 'Expirados', desc: 'Assinatura vencida' },
+    ];
+
+    const handleSchedSubmit = async () => {
+      if (!selectedBot) return;
+      setLoading(true);
+      try {
+        const payload = {
+          bot_id: selectedBot.id,
+          target: schedData.target,
+          schedule_days: parseInt(schedData.days) || 7,
+          schedule_time: schedData.time || '10:00',
+          use_same_content: schedData.sameContent,
+          message: schedData.message,
+          media_url: schedData.media_url,
+          plano_id: schedData.plano_id ? parseInt(schedData.plano_id) : null,
+          promo_price: schedData.promo_price ? parseFloat(String(schedData.promo_price).replace(',', '.')) : null,
+        };
+
+        const res = await remarketingService.createScheduled(payload);
+        
+        Swal.fire({
+          title: '📅 Campanha Agendada!',
+          html: `<p>Sua campanha periódica foi criada com sucesso.</p><p><strong>${schedData.days} dias</strong> de disparos às <strong>${schedData.time}</strong></p>`,
+          icon: 'success',
+          background: '#151515',
+          color: '#fff',
+          confirmButtonColor: '#c333ff',
+        });
+        setMode('menu');
+      } catch (err) {
+        Swal.fire({ title: 'Erro', text: err?.response?.data?.detail || 'Falha ao agendar.', icon: 'error', background: '#151515', color: '#fff' });
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    return (
+      <div className="remarketing-container">
+        <div className="wizard-container">
+          <h2 className="wizard-title">
+            <Clock size={28} style={{ verticalAlign: 'middle', marginRight: '10px' }} />
+            Campanha Periódica
+          </h2>
+
+          <div className="wizard-step-indicator">
+            Passo {schedStep} de 4
+          </div>
+
+          {/* PASSO 1: PÚBLICO ALVO */}
+          {schedStep === 1 && (
+            <>
+              <h3 style={{ marginBottom: '20px' }}>Quem vai receber os disparos?</h3>
+              <div className="wizard-options-grid">
+                {schedTargetOptions.map(opt => (
+                  <div
+                    key={opt.id}
+                    className={`option-card ${schedData.target === opt.id ? 'selected' : ''}`}
+                    onClick={() => setSchedData({...schedData, target: opt.id})}
+                  >
+                    <div className="option-icon">{opt.icon}</div>
+                    <h4>{opt.title}</h4>
+                    <small style={{color: '#888'}}>{opt.desc}</small>
+                  </div>
+                ))}
+              </div>
+              <div className="wizard-actions">
+                <button className="btn-back" onClick={() => setMode('menu')}>
+                  <ChevronLeft size={18} /> Voltar
+                </button>
+                <button className="btn-next" onClick={() => setSchedStep(2)}>
+                  Próximo <ChevronRight size={18} />
+                </button>
+              </div>
+            </>
+          )}
+
+          {/* PASSO 2: CONFIGURAÇÃO DO AGENDAMENTO */}
+          {schedStep === 2 && (
+            <>
+              <h3 style={{ marginBottom: '20px' }}>Configure o agendamento</h3>
+              
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px', marginBottom: '20px' }}>
+                <div className="form-group">
+                  <label>📆 Quantidade de dias</label>
+                  <input
+                    type="number"
+                    className="input-field"
+                    min="1"
+                    max="365"
+                    value={schedData.days}
+                    onChange={e => setSchedData({...schedData, days: e.target.value})}
+                    placeholder="Ex: 7"
+                  />
+                  <small style={{color:'#666', marginTop:'4px', display:'block'}}>
+                    A campanha será disparada uma vez por dia durante {schedData.days || 0} dia(s)
+                  </small>
+                </div>
+                <div className="form-group">
+                  <label>⏰ Horário de disparo (Brasília)</label>
+                  <input
+                    type="time"
+                    className="input-field"
+                    value={schedData.time}
+                    onChange={e => setSchedData({...schedData, time: e.target.value})}
+                  />
+                  <small style={{color:'#666', marginTop:'4px', display:'block'}}>
+                    O disparo acontecerá neste horário todos os dias
+                  </small>
+                </div>
+              </div>
+
+              <div style={{ background: '#151515', padding: '15px', borderRadius: '10px', border: '1px solid #333', marginBottom: '20px' }}>
+                <label className="checkbox-label">
+                  <input
+                    type="checkbox"
+                    checked={schedData.sameContent}
+                    onChange={e => setSchedData({...schedData, sameContent: e.target.checked})}
+                  />
+                  Usar o mesmo conteúdo para todos os dias
+                </label>
+                <p style={{ color: '#888', fontSize: '0.8rem', margin: '8px 0 0 30px' }}>
+                  {schedData.sameContent 
+                    ? '✅ A mesma mensagem, mídia e oferta será enviada todos os dias.'
+                    : '⚠️ Conteúdo diferente por dia será suportado em breve. Por enquanto, use o mesmo conteúdo.'}
+                </p>
+              </div>
+
+              <div className="wizard-actions">
+                <button className="btn-back" onClick={() => setSchedStep(1)}>
+                  <ChevronLeft size={18} /> Voltar
+                </button>
+                <button className="btn-next" onClick={() => setSchedStep(3)}>
+                  Próximo <ChevronRight size={18} />
+                </button>
+              </div>
+            </>
+          )}
+
+          {/* PASSO 3: CONTEÚDO DA CAMPANHA */}
+          {schedStep === 3 && (
+            <>
+              <h3 style={{ marginBottom: '20px' }}>Conteúdo da campanha</h3>
+
+              <div className="form-group">
+                <label>💬 Mensagem</label>
+                <RichInput
+                  value={schedData.message}
+                  onChange={val => setSchedData({...schedData, message: val})}
+                  placeholder="Digite a mensagem que será enviada..."
+                  maxLength={4096}
+                />
+              </div>
+
+              <div className="form-group">
+                <label>🖼️ Mídia (URL da imagem/vídeo)</label>
+                <MediaUploader
+                  botId={selectedBot?.id}
+                  value={schedData.media_url}
+                  onChange={url => setSchedData({...schedData, media_url: url})}
+                />
+              </div>
+
+              <div className="offer-section">
+                <label className="checkbox-label" style={{ marginBottom: '15px' }}>
+                  <input
+                    type="checkbox"
+                    checked={!!schedData.plano_id}
+                    onChange={e => {
+                      if (!e.target.checked) setSchedData({...schedData, plano_id: null, promo_price: ''});
+                    }}
+                  />
+                  🏷️ Incluir oferta com plano
+                </label>
+
+                {schedData.plano_id !== null && (
+                  <div className="offer-details-box">
+                    <div className="form-group">
+                      <label>Plano</label>
+                      <select
+                        className="input-field"
+                        value={schedData.plano_id || ''}
+                        onChange={e => setSchedData({...schedData, plano_id: e.target.value})}
+                      >
+                        <option value="">Selecione um plano</option>
+                        {plans.map(p => (
+                          <option key={p.id} value={p.id}>
+                            {p.nome} — R$ {(p.preco / 100).toFixed(2)}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                    <div className="form-group">
+                      <label>Preço promocional (R$)</label>
+                      <input
+                        type="text"
+                        className="input-field"
+                        placeholder="Ex: 9.90"
+                        value={schedData.promo_price}
+                        onChange={e => setSchedData({...schedData, promo_price: e.target.value})}
+                      />
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              <div className="wizard-actions" style={{ marginTop: '25px' }}>
+                <button className="btn-back" onClick={() => setSchedStep(2)}>
+                  <ChevronLeft size={18} /> Voltar
+                </button>
+                <button className="btn-next" onClick={() => setSchedStep(4)}>
+                  Revisar <ChevronRight size={18} />
+                </button>
+              </div>
+            </>
+          )}
+
+          {/* PASSO 4: REVISÃO E CONFIRMAÇÃO */}
+          {schedStep === 4 && (
+            <>
+              <h3 style={{ marginBottom: '20px' }}>Revisão da Campanha Periódica</h3>
+
+              <div className="review-box">
+                <p><strong>👥 Público:</strong> {schedTargetOptions.find(o => o.id === schedData.target)?.title || schedData.target}</p>
+                <p><strong>📆 Duração:</strong> {schedData.days} dia(s)</p>
+                <p><strong>⏰ Horário:</strong> {schedData.time} (Brasília)</p>
+                <p><strong>📝 Conteúdo:</strong> {schedData.sameContent ? 'Mesmo para todos os dias' : 'Diferente por dia'}</p>
+                {schedData.plano_id && (
+                  <p><strong>🏷️ Oferta:</strong> Plano #{schedData.plano_id} por R$ {schedData.promo_price || 'original'}</p>
+                )}
+                {schedData.message && (
+                  <div className="msg-quote">
+                    {schedData.message.substring(0, 200)}{schedData.message.length > 200 ? '...' : ''}
+                  </div>
+                )}
+              </div>
+
+              <div style={{ background: 'rgba(195,51,255,0.08)', padding: '15px', borderRadius: '10px', border: '1px solid rgba(195,51,255,0.3)', marginBottom: '20px' }}>
+                <p style={{ color: '#c333ff', margin: 0, fontSize: '0.9rem' }}>
+                  📅 A campanha será disparada <strong>todos os dias às {schedData.time}</strong> durante <strong>{schedData.days} dia(s)</strong>. 
+                  Leads que comprarem durante o período serão automaticamente removidos dos próximos disparos.
+                </p>
+              </div>
+
+              <div className="wizard-actions">
+                <button className="btn-back" onClick={() => setSchedStep(3)}>
+                  <ChevronLeft size={18} /> Voltar
+                </button>
+                <button 
+                  className="btn-next" 
+                  onClick={handleSchedSubmit}
+                  disabled={loading}
+                >
+                  {loading ? 'Agendando...' : '📅 Agendar Campanha'}
+                </button>
+              </div>
+            </>
+          )}
+        </div>
+      </div>
+    );
+  }
+
+  // ============================================================
+  // RENDER - WIZARD PERSONALIZADO (STEPS 1-3)
   // ============================================================
   return (
     <div className="remarketing-container">
@@ -560,7 +905,7 @@ export function Remarketing() {
               ))}
             </div>
             <div className="wizard-actions">
-              <button className="btn-back" onClick={() => setStep(0)}>
+              <button className="btn-back" onClick={() => setMode("menu")}>
                 <History size={18} /> Ver Histórico
               </button>
               <button className="btn-next" onClick={() => setStep(2)}>

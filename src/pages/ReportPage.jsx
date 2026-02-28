@@ -255,6 +255,21 @@ export function ReportPage() {
               <span>Sua denúncia é <strong>confidencial</strong>. Seu nome e dados pessoais não serão expostos ao denunciado em nenhuma circunstância.</span>
             </div>
 
+            <div style={{
+              background: 'rgba(245, 158, 11, 0.08)',
+              border: '1px solid rgba(245, 158, 11, 0.25)',
+              borderRadius: '10px',
+              padding: '14px 18px',
+              marginBottom: '24px',
+              fontSize: '0.85rem',
+              color: '#f59e0b',
+              lineHeight: 1.7,
+            }}>
+              <strong>⚠️ Escopo das Denúncias:</strong><br/>
+              Este canal é destinado exclusivamente para relatar <strong>conteúdo ilegal, abusivo ou fraudulento</strong> praticado por bots da plataforma (ex: golpes, exploração, spam, ameaças).<br/><br/>
+              <strong>💰 Sobre reembolsos:</strong> Questões relacionadas a reembolso <strong>não são tratadas por este canal</strong>, pois não temos controle sobre as transações financeiras realizadas entre compradores e vendedores. Para solicitar um reembolso, entre em contato diretamente com o responsável pelo bot ou com a sua instituição financeira (banco ou aplicativo de pagamento utilizado na compra). Sua instituição poderá intermediar a solicitação junto ao meio de pagamento utilizado pelo vendedor.
+            </div>
+
             <form onSubmit={handleSubmit}>
               <div style={styles.formGroup}>
                 <label style={styles.label}>

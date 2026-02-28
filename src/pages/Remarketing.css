@@ -390,3 +390,32 @@
   animation-duration: 0.3s;
   animation-fill-mode: both;
 }
+/* MENU DE ESCOLHA DE CAMPANHA */
+.remarketing-menu-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+  margin-bottom: 25px;
+}
+
+@media (max-width: 600px) {
+  .remarketing-menu-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.remarketing-menu-grid .option-card {
+  padding: 30px 20px;
+}
+
+.remarketing-menu-grid .option-card h3 {
+  margin: 10px 0 8px;
+  font-size: 1.1rem;
+}
+
+.remarketing-menu-grid .option-card p {
+  color: #888;
+  font-size: 0.85rem;
+  line-height: 1.5;
+  margin: 0;
+}

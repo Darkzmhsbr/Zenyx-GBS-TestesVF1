@@ -339,6 +339,23 @@ export const remarketingService = {
 // 🔥 NOVO: Buscar progresso de campanha em tempo real
   getProgress: async (campaignId) => {
     return (await api.get(`/api/admin/remarketing/progress/${campaignId}`)).data;
+  },
+
+  // 📅 CAMPANHA PERIÓDICA
+  createScheduled: async (data) => {
+    return (await api.post('/api/admin/remarketing/schedule', data)).data;
+  },
+
+  getScheduled: async (botId) => {
+    return (await api.get(`/api/admin/remarketing/scheduled/${botId}`)).data;
+  },
+
+  toggleScheduled: async (campaignId) => {
+    return (await api.put(`/api/admin/remarketing/scheduled/${campaignId}/toggle`)).data;
+  },
+
+  deleteScheduled: async (campaignId) => {
+    return (await api.delete(`/api/admin/remarketing/scheduled/${campaignId}`)).data;
   }
 };
 
