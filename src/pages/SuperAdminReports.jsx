@@ -34,12 +34,7 @@ export function SuperAdminReports() {
   const loadReports = async () => {
     setLoading(true);
     try {
-      const params = new URLSearchParams();
-      if (statusFilter) params.append('status', statusFilter);
-      params.append('page', page);
-      params.append('per_page', 20);
-      
-      const res = await superAdminService.getReports(statusFilter, page);
+      const res = await superAdminService.getReports(statusFilter || null, page, 20);
       setReports(res.reports || []);
       setTotalPages(res.pages || 1);
     } catch (err) {
@@ -49,12 +44,75 @@ export function SuperAdminReports() {
     }
   };
 
+  // 🔥 NOVA FUNÇÃO: TESTAR/APLICAR AÇÕES E PUNIÇÕES RÁPIDAS NA LINHA
+  const handleQuickAction = async (report, actionType) => {
+    let title = '';
+    let text = '';
+    let confirmText = '';
+    
+    if (actionType === 'strike') {
+      title = 'Aplicar Strike ⚠️';
+      text = `O usuário @${report.owner_username || 'Desconhecido'} receberá 1 strike. Com 3 strikes, a conta é banida automaticamente. Deseja prosseguir?`;
+      confirmText = 'Sim, aplicar Strike';
+    } else if (actionType === 'pause_bots') {
+      title = 'Pausar Bots ⏸️';
+      text = `Os bots do usuário @${report.owner_username || 'Desconhecido'} ficarão pausados por 7 dias. Deseja prosseguir?`;
+      confirmText = 'Sim, pausar';
+    } else if (actionType === 'ban_account') {
+      title = 'Banir Conta 🚫';
+      text = `A conta do usuário @${report.owner_username || 'Desconhecido'} será banida permanentemente. Essa ação é irreversível!`;
+      confirmText = 'Sim, Banir!';
+    }
+
+    const result = await Swal.fire({
+      title,
+      text,
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#ef4444',
+      cancelButtonColor: '#2a2a4a',
+      confirmButtonText: confirmText,
+      cancelButtonText: 'Cancelar',
+      background: '#151515',
+      color: '#fff'
+    });
+
+    if (result.isConfirmed) {
+      try {
+        await superAdminService.resolveReport(report.id, {
+          status: 'resolved',
+          action: actionType,
+          resolution: `Punição rápida aplicada pelo administrador: ${actionType}`
+        });
+        Swal.fire({
+          title: 'Aplicado!', 
+          text: 'A punição foi registrada e aplicada com sucesso.', 
+          icon: 'success',
+          background: '#151515',
+          color: '#fff',
+          timer: 2000,
+          showConfirmButton: false
+        });
+        loadReports();
+      } catch (error) {
+        Swal.fire({
+          title: 'Erro', 
+          text: error.response?.data?.detail || 'Não foi possível aplicar a punição.', 
+          icon: 'error',
+          background: '#151515',
+          color: '#fff'
+        });
+      }
+    }
+  };
+
   const handleResolve = async (report) => {
     const { value: formValues } = await Swal.fire({
       title: `🚨 Resolver Denúncia #${report.id}`,
       html: `
         <div style="text-align:left; color:#ccc; font-size:0.9rem;">
           <p><strong>Bot:</strong> @${report.bot_username}</p>
+          <p><strong>Dono do Bot:</strong> @${report.owner_username || 'Desconhecido'}</p>
           <p><strong>Motivo:</strong> ${REASON_LABELS[report.reason] || report.reason}</p>
           ${report.description ? `<p><strong>Descrição:</strong> ${report.description}</p>` : ''}
           <hr style="border-color:#333; margin:12px 0"/>
@@ -126,6 +184,33 @@ export function SuperAdminReports() {
     }
   };
 
+  const viewDetails = (report) => {
+    Swal.fire({
+      title: `Detalhes da Denúncia #${report.id}`,
+      html: `
+        <div style="text-align: left; font-size: 0.9rem; line-height: 1.6; color: #ccc;">
+          <p><strong>Bot Denunciado:</strong> @${report.bot_username}</p>
+          <p><strong>Dono do Bot:</strong> <span style="color: #c333ff;">@${report.owner_username || 'Desconhecido'}</span></p>
+          <p><strong>Motivo:</strong> ${REASON_LABELS[report.reason] || report.reason}</p>
+          <p><strong>Denunciante:</strong> ${report.reporter_name || 'Anônimo'} (IP: ${report.ip_address || 'N/A'})</p>
+          <p><strong>Data:</strong> ${formatDate(report.created_at)}</p>
+          <hr style="border-color:#333; margin:12px 0"/>
+          <p><strong>Descrição:</strong><br/> ${report.description || 'Nenhuma descrição fornecida.'}</p>
+          ${report.evidence_url ? `<p style="margin-top:10px;"><strong>Evidência URL:</strong><br/><a href="${report.evidence_url}" target="_blank" style="color:#3b82f6; word-break: break-all;">${report.evidence_url}</a></p>` : ''}
+          ${report.resolution ? `
+            <hr style="border-color:#333; margin:12px 0"/>
+            <p><strong>Ação Tomada:</strong> ${report.action_taken || 'Nenhuma'}</p>
+            <p><strong>Resolução:</strong> ${report.resolution}</p>
+          ` : ''}
+        </div>
+      `,
+      background: '#151515',
+      color: '#fff',
+      confirmButtonColor: '#c333ff',
+      confirmButtonText: 'Fechar'
+    });
+  };
+
   const formatDate = (d) => {
     if (!d) return '-';
     let dateStr = String(d);
@@ -174,12 +259,12 @@ export function SuperAdminReports() {
                 <tr>
                   <th>#</th>
                   <th>Data</th>
+                  <th>Usuário (Dono)</th>
                   <th>Bot</th>
                   <th>Motivo</th>
                   <th>Denunciante</th>
                   <th>Status</th>
-                  <th>Ação</th>
-                  <th>Ações</th>
+                  <th>Ações / Punições (Testes)</th>
                 </tr>
               </thead>
               <tbody>
@@ -189,7 +274,14 @@ export function SuperAdminReports() {
                     <tr key={r.id}>
                       <td><strong>#{r.id}</strong></td>
                       <td className="user-date">{formatDate(r.created_at)}</td>
-                      <td><strong>@{r.bot_username}</strong></td>
+                      <td style={{fontWeight: 'bold', color: '#c333ff'}}>
+                        {r.owner_username ? `@${r.owner_username}` : 'Desconhecido'}
+                      </td>
+                      <td>
+                        <a href={`https://t.me/${r.bot_username}`} target="_blank" rel="noreferrer" style={{color: '#3b82f6', textDecoration: 'none'}}>
+                          @{r.bot_username}
+                        </a>
+                      </td>
                       <td>{REASON_LABELS[r.reason] || r.reason}</td>
                       <td>{r.reporter_name || <span style={{color:'#666', fontStyle:'italic'}}>Anônimo</span>}</td>
                       <td>
@@ -197,15 +289,21 @@ export function SuperAdminReports() {
                           {st.label}
                         </span>
                       </td>
-                      <td style={{fontSize:'0.85rem', color:'#aaa'}}>{r.action_taken || '-'}</td>
-                      <td className="user-actions">
-                        {r.status === 'pending' && (
+                      <td className="user-actions" style={{gap: '6px', flexWrap: 'wrap', minWidth: '320px'}}>
+                        {r.status === 'pending' ? (
                           <>
-                            <button className="btn-action view" title="Resolver" onClick={() => handleResolve(r)}>⚖️</button>
-                            <button className="btn-action delete" title="Descartar" onClick={() => handleDismiss(r)}>🗑️</button>
+                            <button className="btn-action view" title="Detalhes" onClick={() => viewDetails(r)}>👁️ Detalhes</button>
+                            <button className="btn-action" style={{background: '#f59e0b', color:'#000'}} title="Aplicar Strike" onClick={() => handleQuickAction(r, 'strike')}>⚠️ Strike</button>
+                            <button className="btn-action" style={{background: '#3b82f6', color:'#fff'}} title="Pausar Bots" onClick={() => handleQuickAction(r, 'pause_bots')}>⏸️ Pausar</button>
+                            <button className="btn-action" style={{background: '#ef4444', color:'#fff'}} title="Banir Conta" onClick={() => handleQuickAction(r, 'ban_account')}>🚫 Banir</button>
+                            <button className="btn-action delete" title="Descartar" onClick={() => handleDismiss(r)}>🗑️ Ignorar</button>
                           </>
+                        ) : (
+                          <div style={{display:'flex', gap:'10px', alignItems:'center'}}>
+                            <span style={{fontSize:'0.85rem', color:'#aaa'}}>{r.action_taken === 'none' ? 'Sem Punição' : r.action_taken}</span>
+                            <button className="btn-action view" style={{padding:'4px 8px', fontSize:'0.8rem'}} onClick={() => viewDetails(r)}>👁️ Detalhes</button>
+                          </div>
                         )}
-                        {r.status === 'resolved' && <span style={{fontSize:'0.8rem', color:'#10b981'}}>✅</span>}
                       </td>
                     </tr>
                   );
