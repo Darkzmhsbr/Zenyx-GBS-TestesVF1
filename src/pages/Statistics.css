@@ -442,3 +442,19 @@
   border-radius: 4px;
   animation: pulse 1.5s ease-in-out infinite;
 }
+/* 4-COLUMN PEAKS GRID */
+.stats-peaks-4col {
+  grid-template-columns: repeat(4, 1fr) !important;
+}
+
+@media (max-width: 1200px) {
+  .stats-peaks-4col {
+    grid-template-columns: repeat(2, 1fr) !important;
+  }
+}
+
+@media (max-width: 600px) {
+  .stats-peaks-4col {
+    grid-template-columns: 1fr !important;
+  }
+}
