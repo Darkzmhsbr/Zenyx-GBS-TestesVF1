@@ -362,7 +362,7 @@ export function Statistics() {
           <div className="st-chart st-chart-full">
             <div className="st-chart-hd"><Clock size={18} color="#06b6d4"/><span>Vendas por Hora</span><span className="st-tag" style={{color:'#06b6d4'}}>FREQUÊNCIA TEMPORAL</span></div>
             <div className="st-chart-bd">{loading?<div className="st-chart-sk">{Array.from({length:12}).map((_,i)=><div key={i} className="sk-bar" style={{height:`${30+Math.random()*60}%`}}/>)}</div>:(
-              <ResponsiveContainer width="100%" height={260}><BarChart data={data?.chart_horas||[]}><CartesianGrid strokeDasharray="3 3" stroke="#222" vertical={false}/><XAxis dataKey="hour" axisLine={false} tickLine={false} tick={{fill:'#666',fontSize:10}} interval={1}/><YAxis axisLine={false} tickLine={false} tick={{fill:'#666',fontSize:11}}/><Tooltip content={<CountTip/>}/><Bar dataKey="count" fill="#06b6d4" radius={[3,3,0,0]} maxBarSize={18}/></BarChart></ResponsiveContainer>
+              <ResponsiveContainer width="100%" height={260}><BarChart data={data?.chart_horas||[]}><CartesianGrid strokeDasharray="3 3" stroke="#222" vertical={false}/><XAxis dataKey="hour" axisLine={false} tickLine={false} tick={{fill:'#666',fontSize:10}} interval={1}/><YAxis axisLine={false} tickLine={false} tick={{fill:'#666',fontSize:11}}/><Tooltip content={<CountTip/>}/><Bar dataKey="count" name="Vendas" fill="#06b6d4" radius={[3,3,0,0]} maxBarSize={18}/></BarChart></ResponsiveContainer>
             )}</div>
           </div>
           <div className="st-hora-cards">
@@ -383,7 +383,7 @@ export function Statistics() {
           <div className="st-chart" style={{flex:2}}>
             <div className="st-chart-hd"><Calendar size={18} color="#f59e0b"/><span>Vendas por Dia da Semana</span><span className="st-tag" style={{color:'#f59e0b'}}>ANÁLISE SEMANAL</span></div>
             <div className="st-chart-bd">{loading?<div className="st-chart-sk">{[50,70,60,80,90,40,30].map((h,i)=><div key={i} className="sk-bar" style={{height:`${h}%`}}/>)}</div>:(
-              <ResponsiveContainer width="100%" height={260}><BarChart data={data?.chart_semana||[]}><CartesianGrid strokeDasharray="3 3" stroke="#222" vertical={false}/><XAxis dataKey="day_short" axisLine={false} tickLine={false} tick={{fill:'#666',fontSize:11}}/><YAxis axisLine={false} tickLine={false} tick={{fill:'#666',fontSize:11}}/><Tooltip content={<CountTip/>}/><Bar dataKey="count" fill="#f59e0b" radius={[4,4,0,0]} maxBarSize={40}/></BarChart></ResponsiveContainer>
+              <ResponsiveContainer width="100%" height={260}><BarChart data={data?.chart_semana||[]}><CartesianGrid strokeDasharray="3 3" stroke="#222" vertical={false}/><XAxis dataKey="day_short" axisLine={false} tickLine={false} tick={{fill:'#666',fontSize:11}}/><YAxis axisLine={false} tickLine={false} tick={{fill:'#666',fontSize:11}}/><Tooltip content={<CountTip/>}/><Bar dataKey="count" name="Vendas" fill="#f59e0b" radius={[4,4,0,0]} maxBarSize={40}/></BarChart></ResponsiveContainer>
             )}</div>
           </div>
 
@@ -594,7 +594,7 @@ export function Statistics() {
       </section>
 
       {/* ============================================================ */}
-      {/* RANKINGS 4x2                                                 */}
+      {/* RANKINGS 4x2                                               */}
       {/* ============================================================ */}
       <section className="st-sec">
         <h2 className="st-sec-t">PICOS DE DESEMPENHO</h2>
@@ -622,7 +622,7 @@ export function Statistics() {
       </section>
 
       {/* ============================================================ */}
-      {/* GRÁFICOS — Receita + Donut                                   */}
+      {/* GRÁFICOS — Receita + Donut                                 */}
       {/* ============================================================ */}
       <section className="st-sec">
         <h2 className="st-sec-t">GRÁFICOS</h2>
@@ -641,7 +641,7 @@ export function Statistics() {
       </section>
 
       {/* ============================================================ */}
-      {/* DIÁRIO DE MUDANÇAS                                           */}
+      {/* DIÁRIO DE MUDANÇAS                                         */}
       {/* ============================================================ */}
       <section className="st-sec">
         <h2 className="st-sec-t">DIÁRIO DE MUDANÇAS</h2>
