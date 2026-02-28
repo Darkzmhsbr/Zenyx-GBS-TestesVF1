@@ -1217,6 +1217,24 @@ export const statisticsService = {
 };
 
 // ============================================================
+// 📓 DIÁRIO DE MUDANÇAS
+// ============================================================
+export const changelogService = {
+  list: async () => {
+    const response = await api.get('/api/admin/changelog');
+    return response.data;
+  },
+  create: async (data) => {
+    const response = await api.post('/api/admin/changelog', data);
+    return response.data;
+  },
+  delete: async (id) => {
+    const response = await api.delete(`/api/admin/changelog/${id}`);
+    return response.data;
+  }
+};
+
+// ============================================================
 // 🏆 NOVO SERVIÇO: RANKING
 // ============================================================
 export const rankingService = {
