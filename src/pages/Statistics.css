@@ -1,357 +1,460 @@
-/* ====================================================
-   📊 STATISTICS - CSS COMPLETO (V17 EXPANDIDO)
-   ==================================================== */
+/* ============================================================
+   📊 STATISTICS PAGE - ZENYX VIPS
+   ============================================================ */
 
 .statistics-container {
-  padding: 20px 28px 40px;
-  max-width: 1400px;
-  margin: 0 auto;
+  padding: 30px;
+  margin-top: 70px;
+  margin-left: 260px;
+  min-height: calc(100vh - 70px);
+  background: #080808;
 }
 
-/* ========== ANIMATIONS ========== */
-@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
-@keyframes pulse { 0%,100% { opacity: 0.4; } 50% { opacity: 0.8; } }
-.spin { animation: spin 1s linear infinite; }
-.sk-pulse {
-  display: inline-block; width: 80px; height: 22px;
-  background: linear-gradient(90deg, #1a1a2e 25%, #252545 50%, #1a1a2e 75%);
-  background-size: 200% 100%; animation: pulse 1.5s ease-in-out infinite;
+@media (max-width: 768px) {
+  .statistics-container {
+    margin-left: 0;
+    padding: 20px 15px;
+  }
+}
+
+/* --- HEADER --- */
+.stats-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 30px;
+  flex-wrap: wrap;
+  gap: 15px;
+}
+
+.stats-title {
+  font-size: 1.8rem;
+  font-weight: 700;
+  color: #fff;
+  margin: 0;
+}
+
+.stats-subtitle {
+  color: #888;
+  font-size: 0.95rem;
+  margin: 4px 0 0;
+}
+
+.stats-header-right {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.stats-toggle-label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: #aaa;
+  font-size: 0.85rem;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.stats-bot-select {
+  background: #151515;
+  border: 1px solid #333;
+  color: #fff;
+  padding: 8px 12px;
   border-radius: 6px;
+  font-size: 0.85rem;
+  max-width: 180px;
 }
 
-/* ========== HEADER ========== */
-.st-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 28px; flex-wrap: wrap; gap: 16px; }
-.st-title { font-size: 1.6rem; font-weight: 700; color: #fff; margin: 0; }
-.st-sub { color: #888; font-size: 0.9rem; margin: 4px 0 0; }
-.st-header-right { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
-.st-toggle { display: flex; align-items: center; gap: 6px; color: #aaa; font-size: 0.85rem; cursor: pointer; }
-.st-toggle input { width: 16px; height: 16px; accent-color: #c333ff; }
-.st-select {
-  background: #1a1a2e; border: 1px solid #333; color: #fff; padding: 8px 12px;
-  border-radius: 8px; font-size: 0.85rem; outline: none;
-}
-.st-period-wrap { position: relative; }
-.st-period-btn {
-  display: flex; align-items: center; gap: 6px; background: #1a1a2e;
-  border: 1px solid #333; color: #ccc; padding: 8px 14px; border-radius: 8px;
-  font-size: 0.85rem; cursor: pointer; transition: 0.2s;
-}
-.st-period-btn:hover { border-color: #c333ff; }
-.st-period-menu {
-  position: absolute; top: 44px; right: 0; background: #1a1a2e; border: 1px solid #333;
-  border-radius: 10px; overflow: hidden; z-index: 100; min-width: 180px;
-  box-shadow: 0 8px 20px rgba(0,0,0,0.5);
-}
-.st-period-opt {
-  display: block; width: 100%; padding: 10px 16px; background: none; border: none;
-  color: #aaa; font-size: 0.85rem; cursor: pointer; text-align: left; transition: 0.15s;
-}
-.st-period-opt:hover { background: #252545; color: #fff; }
-.st-period-opt.active { background: rgba(195,51,255,0.15); color: #c333ff; }
-.st-refresh {
-  width: 38px; height: 38px; display: flex; align-items: center; justify-content: center;
-  background: #1a1a2e; border: 1px solid #333; border-radius: 8px; color: #aaa; cursor: pointer; transition: 0.2s;
-}
-.st-refresh:hover { border-color: #c333ff; color: #c333ff; }
-
-/* ========== SECTIONS ========== */
-.st-section { margin-bottom: 28px; }
-.st-section-title {
-  font-size: 0.75rem; font-weight: 700; color: #555; letter-spacing: 1.5px;
-  text-transform: uppercase; margin: 0 0 14px;
+.stats-period-wrapper {
+  position: relative;
 }
 
-/* ========== GRIDS ========== */
-.st-grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
-.st-grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
-.st-grid-chart { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
-
-@media (max-width: 1100px) {
-  .st-grid-4 { grid-template-columns: repeat(2, 1fr); }
-  .st-grid-chart { grid-template-columns: 1fr; }
-}
-@media (max-width: 700px) {
-  .st-grid-4, .st-grid-3 { grid-template-columns: 1fr; }
-  .statistics-container { padding: 16px; }
-}
-
-/* ========== METRIC CARDS (Métricas Principais) ========== */
-.st-metric-card {
-  background: #12121e; border: 1px solid #1e1e35; border-radius: 14px;
-  padding: 18px 20px; display: flex; align-items: center; gap: 14px; transition: 0.25s;
-}
-.st-metric-card:hover { border-color: #333; transform: translateY(-2px); }
-.st-metric-icon {
-  width: 48px; height: 48px; border-radius: 12px; display: flex;
-  align-items: center; justify-content: center; flex-shrink: 0;
-}
-.st-metric-info { display: flex; flex-direction: column; min-width: 0; }
-.st-metric-label { font-size: 0.78rem; color: #888; margin-bottom: 2px; }
-.st-metric-value { font-size: 1.3rem; font-weight: 700; color: #fff; }
-.st-metric-sub { font-size: 0.75rem; color: #555; margin-top: 2px; }
-
-/* ========== SALES CARDS (Resumo Vendas) ========== */
-.st-sale-card {
-  background: #12121e; border: 1px solid #1e1e35; border-radius: 14px;
-  padding: 18px 20px; display: flex; align-items: center; gap: 14px; transition: 0.25s;
-}
-.st-sale-card:hover { border-color: #333; }
-.st-sale-icon {
-  width: 48px; height: 48px; border-radius: 12px; display: flex;
-  align-items: center; justify-content: center; flex-shrink: 0;
-}
-.st-sale-label { display: block; font-size: 0.78rem; color: #888; }
-.st-sale-value { display: block; font-size: 1.5rem; font-weight: 700; color: #fff; }
-.st-sale-sub { display: block; font-size: 0.75rem; color: #555; }
-
-/* ========== TAXA CARDS (8 Taxas com barra) ========== */
-.st-taxa-card {
-  background: #12121e; border: 1px solid #1e1e35; border-radius: 14px;
-  padding: 18px 20px; transition: 0.25s;
-}
-.st-taxa-card:hover { border-color: #333; }
-.st-taxa-header { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
-.st-taxa-icon {
-  width: 38px; height: 38px; border-radius: 10px; display: flex;
-  align-items: center; justify-content: center; flex-shrink: 0;
-}
-.st-taxa-title { font-size: 0.9rem; font-weight: 600; color: #fff; }
-.st-taxa-value { font-size: 1.8rem; font-weight: 700; color: #fff; margin-bottom: 4px; }
-.st-taxa-sub { font-size: 0.75rem; color: #666; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 12px; }
-.st-taxa-bar {
-  width: 100%; height: 6px; background: #1e1e35; border-radius: 3px; overflow: hidden;
-}
-.st-taxa-fill {
-  height: 100%; border-radius: 3px; transition: width 0.8s ease;
+.stats-period-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: #151515;
+  border: 1px solid #333;
+  color: #ccc;
+  padding: 8px 14px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.85rem;
+  white-space: nowrap;
+  transition: border-color 0.2s;
 }
 
-/* ========== BIG CARDS (LTV, Vendas/Usr, Tempo Retorno) ========== */
-.st-big-card {
-  background: #12121e; border: 1px solid #1e1e35; border-radius: 14px;
-  padding: 20px; display: flex; flex-direction: column; justify-content: space-between;
-  min-height: 180px; transition: 0.25s;
-}
-.st-big-card:hover { border-color: #333; }
-.st-big-header {
-  display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
-}
-.st-big-header span:first-of-type { font-size: 0.9rem; font-weight: 600; color: #fff; }
-.st-big-tag { font-size: 0.65rem; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; }
-.st-big-value {
-  font-size: 2.2rem; font-weight: 700; text-align: center;
-  margin: auto 0; padding: 10px 0;
-}
-.st-big-sub {
-  font-size: 0.75rem; color: #666; text-align: center; text-transform: uppercase;
-  letter-spacing: 1px;
+.stats-period-btn:hover {
+  border-color: #c333ff;
 }
 
-/* ========== CONTADORES SCROLLÁVEL ========== */
-.st-contadores-card {
-  background: #12121e; border: 1px solid #1e1e35; border-radius: 14px;
-  padding: 20px; display: flex; flex-direction: column; min-height: 180px; transition: 0.25s;
-}
-.st-contadores-card:hover { border-color: #333; }
-.st-contadores-scroll {
-  flex: 1; overflow-y: auto; margin-top: 12px; max-height: 200px;
-  scrollbar-width: thin; scrollbar-color: #333 transparent;
-}
-.st-contadores-scroll::-webkit-scrollbar { width: 4px; }
-.st-contadores-scroll::-webkit-scrollbar-track { background: transparent; }
-.st-contadores-scroll::-webkit-scrollbar-thumb { background: #444; border-radius: 2px; }
-.st-contador-row {
-  display: flex; align-items: center; gap: 10px; padding: 8px 4px;
-  border-bottom: 1px solid #1a1a2e;
-}
-.st-contador-row:last-child { border-bottom: none; }
-.st-contador-icon { font-size: 1rem; flex-shrink: 0; }
-.st-contador-label { flex: 1; font-size: 0.85rem; color: #ccc; }
-.st-contador-value { font-size: 0.95rem; font-weight: 700; min-width: 30px; text-align: right; }
-
-/* ========== TEMPO MÉDIO /START → PAGAMENTO ========== */
-.st-tempo-card {
-  background: #12121e; border: 1px solid #1e1e35; border-radius: 14px;
-  padding: 20px; grid-column: span 4;
-}
-@media (max-width: 1100px) { .st-tempo-card { grid-column: span 2; } }
-@media (max-width: 700px) { .st-tempo-card { grid-column: span 1; } }
-.st-tempo-header { display: flex; align-items: center; gap: 8px; margin-bottom: 16px; flex-wrap: wrap; }
-.st-tempo-header span:first-of-type { font-size: 0.95rem; font-weight: 600; color: #fff; }
-.st-tempo-values {
-  display: flex; justify-content: center; gap: 40px; padding: 16px 0;
-}
-.st-tempo-unit { text-align: center; }
-.st-tempo-num { display: block; font-size: 2.5rem; font-weight: 700; color: #fff; }
-.st-tempo-label { display: block; font-size: 0.7rem; color: #666; letter-spacing: 1.5px; text-transform: uppercase; margin-top: 4px; }
-.st-tempo-dataset {
-  text-align: center; font-size: 0.75rem; color: #555; letter-spacing: 1px;
-  text-transform: uppercase; padding-top: 8px; border-top: 1px solid #1e1e35;
+.stats-period-menu {
+  position: absolute;
+  top: 110%;
+  right: 0;
+  background: #151515;
+  border: 1px solid #333;
+  border-radius: 8px;
+  overflow: hidden;
+  z-index: 50;
+  min-width: 180px;
+  box-shadow: 0 8px 25px rgba(0,0,0,0.5);
 }
 
-/* ========== CHARTS ========== */
-.st-chart-card {
-  background: #12121e; border: 1px solid #1e1e35; border-radius: 14px;
-  padding: 20px; overflow: hidden;
+.stats-period-option {
+  display: block;
+  width: 100%;
+  text-align: left;
+  padding: 10px 16px;
+  background: none;
+  border: none;
+  color: #ccc;
+  cursor: pointer;
+  font-size: 0.85rem;
+  transition: background 0.15s;
 }
-.st-chart-head {
-  display: flex; align-items: center; gap: 8px; margin-bottom: 16px;
-}
-.st-chart-head span { font-size: 0.9rem; font-weight: 600; color: #ccc; }
-.st-chart-body { width: 100%; }
-.st-chart-sk {
-  display: flex; align-items: flex-end; gap: 6px; height: 200px; padding: 20px 0;
-}
-.sk-bar {
-  flex: 1; background: linear-gradient(180deg, #252545, #1a1a2e);
-  border-radius: 4px 4px 0 0; animation: pulse 1.5s ease-in-out infinite;
-}
-.sk-donut {
-  width: 200px; height: 200px; border-radius: 50%;
-  border: 30px solid #1e1e35; animation: pulse 1.5s ease-in-out infinite;
-}
-.st-tooltip {
-  background: #1a1a2e; border: 1px solid #333; border-radius: 8px;
-  padding: 10px 14px; box-shadow: 0 4px 12px rgba(0,0,0,0.5);
-}
-.st-tip-label { color: #888; font-size: 0.8rem; margin: 0; }
-.st-tip-value { color: #fff; font-size: 1rem; font-weight: bold; margin: 4px 0 0; }
 
-/* ========== CALENDÁRIO ========== */
-.st-calendario-card {
-  background: #12121e; border: 1px solid #1e1e35; border-radius: 14px;
+.stats-period-option:hover {
+  background: #222;
+}
+
+.stats-period-option.active {
+  background: rgba(195, 51, 255, 0.15);
+  color: #c333ff;
+}
+
+.stats-refresh-btn {
+  background: #151515;
+  border: 1px solid #333;
+  color: #ccc;
+  padding: 8px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+}
+
+.stats-refresh-btn:hover {
+  border-color: #c333ff;
+  color: #c333ff;
+}
+
+.spin {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+/* --- SECTIONS --- */
+.stats-section {
+  margin-bottom: 35px;
+}
+
+.stats-section-title {
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: #666;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  margin: 0 0 15px 0;
+}
+
+/* --- MÉTRICAS PRINCIPAIS (4 Cards) --- */
+.stats-metrics-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 15px;
+}
+
+@media (max-width: 1024px) {
+  .stats-metrics-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 480px) {
+  .stats-metrics-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.stats-metric-card {
+  background: #111;
+  border: 1px solid #1e1e1e;
+  border-radius: 12px;
+  padding: 20px;
+  display: flex;
+  align-items: flex-start;
+  gap: 15px;
+  transition: border-color 0.2s;
+}
+
+.stats-metric-card:hover {
+  border-color: #333;
+}
+
+.stats-metric-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.stats-metric-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.stats-metric-label {
+  color: #888;
+  font-size: 0.85rem;
+  font-weight: 500;
+}
+
+.stats-metric-value {
+  color: #fff;
+  font-size: 1.5rem;
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+.stats-metric-sub {
+  color: #555;
+  font-size: 0.8rem;
+}
+
+/* --- RESUMO DE VENDAS (3 Cards) --- */
+.stats-sales-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 15px;
+}
+
+@media (max-width: 768px) {
+  .stats-sales-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.stats-sales-card {
+  background: #111;
+  border: 1px solid #1e1e1e;
+  border-radius: 12px;
+  padding: 20px;
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  transition: border-color 0.2s;
+}
+
+.stats-sales-card:hover {
+  border-color: #333;
+}
+
+.stats-sales-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.stats-sales-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.stats-sales-label {
+  color: #888;
+  font-size: 0.85rem;
+}
+
+.stats-sales-value {
+  color: #fff;
+  font-size: 1.6rem;
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+.stats-sales-sub {
+  color: #555;
+  font-size: 0.8rem;
+  margin-top: 2px;
+}
+
+/* --- GRÁFICOS --- */
+.stats-charts-grid {
+  display: grid;
+  grid-template-columns: 1.5fr 1fr;
+  gap: 15px;
+}
+
+@media (max-width: 900px) {
+  .stats-charts-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.stats-chart-card {
+  background: #111;
+  border: 1px solid #1e1e1e;
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.stats-chart-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 18px 20px;
+  border-bottom: 1px solid #1a1a1a;
+  color: #ccc;
+  font-size: 0.95rem;
+  font-weight: 600;
+}
+
+.stats-chart-body {
+  padding: 15px 10px;
+  min-height: 280px;
+}
+
+.stats-chart-skeleton {
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  gap: 12px;
+  height: 250px;
   padding: 20px;
 }
-.st-cal-header {
-  display: flex; align-items: center; gap: 8px; margin-bottom: 4px; flex-wrap: wrap;
-}
-.st-cal-header span:first-of-type { font-size: 0.95rem; font-weight: 600; color: #fff; }
-.st-cal-hint { font-size: 0.78rem; color: #555; margin-bottom: 16px; }
-.st-cal-grid {
-  display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px;
-  max-width: 500px;
-}
-.st-cal-weekday {
-  text-align: center; font-size: 0.7rem; font-weight: 700; color: #555;
-  padding: 6px 0; text-transform: uppercase; letter-spacing: 0.5px;
-}
-.st-cal-empty { aspect-ratio: 1; }
-.st-cal-day {
-  aspect-ratio: 1; display: flex; flex-direction: column; align-items: center;
-  justify-content: center; border-radius: 8px; background: #0d0d1a;
-  border: 1px solid transparent; cursor: default; position: relative; transition: 0.2s;
-  min-height: 42px;
-}
-.st-cal-day:hover { border-color: #333; }
-.st-cal-day.today { border-color: #c333ff; background: rgba(195,51,255,0.08); }
-.st-cal-day.has-sales { background: rgba(16,185,129,0.08); border-color: rgba(16,185,129,0.3); }
-.st-cal-day.today.has-sales { border-color: #c333ff; background: rgba(195,51,255,0.12); }
-.st-cal-num { font-size: 0.8rem; color: #aaa; font-weight: 500; }
-.st-cal-day.today .st-cal-num { color: #c333ff; font-weight: 700; }
-.st-cal-dot {
-  font-size: 0.6rem; color: #10b981; font-weight: 700;
-  background: rgba(16,185,129,0.2); border-radius: 4px; padding: 1px 4px; margin-top: 2px;
+
+.skeleton-bar {
+  width: 30px;
+  background: linear-gradient(180deg, #222 0%, #1a1a1a 100%);
+  border-radius: 4px 4px 0 0;
+  animation: pulse 1.5s ease-in-out infinite;
 }
 
-/* ========== PEAK CARDS (Rankings) ========== */
-.st-peak-card {
-  background: #12121e; border: 1px solid #1e1e35; border-radius: 14px;
-  padding: 18px 20px; transition: 0.25s;
+.skeleton-donut {
+  width: 180px;
+  height: 180px;
+  border-radius: 50%;
+  border: 20px solid #222;
+  animation: pulse 1.5s ease-in-out infinite;
 }
-.st-peak-card:hover { border-color: #333; }
-.st-peak-head {
-  display: flex; align-items: center; gap: 8px; margin-bottom: 14px; flex-wrap: wrap;
-}
-.st-peak-head span:first-of-type { font-size: 0.9rem; font-weight: 600; color: #fff; }
-.st-peak-body { min-height: 120px; }
-.st-peak-empty { color: #444; text-align: center; padding: 30px 0; font-size: 0.85rem; }
-.st-peak-list { display: flex; flex-direction: column; gap: 0; }
-.st-peak-item {
-  display: flex; align-items: center; gap: 10px; padding: 8px 0;
-  border-bottom: 1px solid #1a1a2e;
-}
-.st-peak-item:last-child { border-bottom: none; }
-.st-peak-rank {
-  font-size: 0.8rem; font-weight: 700; color: #c333ff;
-  min-width: 28px; text-align: center;
-}
-.st-peak-name { flex: 1; font-size: 0.85rem; color: #ccc; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.st-peak-count { font-size: 0.8rem; color: #888; white-space: nowrap; }
 
-/* ========== DIÁRIO DE MUDANÇAS ========== */
-.st-diario-card {
-  background: #12121e; border: 1px solid #1e1e35; border-radius: 14px;
-  padding: 20px; max-width: 800px;
+@keyframes pulse {
+  0%, 100% { opacity: 0.5; }
+  50% { opacity: 1; }
 }
-.st-diario-header {
-  display: flex; align-items: center; gap: 8px; margin-bottom: 16px; flex-wrap: wrap;
-}
-.st-diario-header span:first-of-type { font-size: 0.95rem; font-weight: 600; color: #fff; }
-.st-diario-add {
-  display: flex; align-items: center; justify-content: center; gap: 6px;
-  width: 100%; padding: 12px; background: #0d0d1a; border: 1px dashed #333;
-  border-radius: 10px; color: #888; font-size: 0.85rem; cursor: pointer; transition: 0.2s;
-}
-.st-diario-add:hover { border-color: #c333ff; color: #c333ff; }
 
-/* Formulário */
-.st-diario-form {
-  background: #0d0d1a; border: 1px solid #222; border-radius: 12px;
-  padding: 16px; margin-bottom: 16px;
+/* --- PICOS DE DESEMPENHO --- */
+.stats-peaks-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 15px;
 }
-.st-diario-form-row {
-  display: flex; gap: 10px; margin-bottom: 10px;
-}
-.st-diario-input, .st-diario-select {
-  background: #12121e; border: 1px solid #333; color: #fff; padding: 10px 12px;
-  border-radius: 8px; font-size: 0.85rem; outline: none;
-}
-.st-diario-input { flex: 1; }
-.st-diario-select { min-width: 120px; }
-.st-diario-input:focus, .st-diario-select:focus { border-color: #c333ff; }
-.st-diario-textarea {
-  width: 100%; background: #12121e; border: 1px solid #333; color: #fff;
-  padding: 10px 12px; border-radius: 8px; font-size: 0.85rem; outline: none;
-  resize: vertical; font-family: inherit; margin-bottom: 10px; box-sizing: border-box;
-}
-.st-diario-textarea:focus { border-color: #c333ff; }
-.st-diario-textarea::placeholder { color: #444; }
-.st-diario-form-actions {
-  display: flex; justify-content: flex-end; gap: 10px;
-}
-.st-diario-cancel {
-  padding: 8px 18px; background: none; border: none; color: #888;
-  font-size: 0.85rem; cursor: pointer;
-}
-.st-diario-cancel:hover { color: #fff; }
-.st-diario-save {
-  padding: 8px 24px; background: #1e3a5f; border: 1px solid #2563eb;
-  color: #fff; border-radius: 8px; font-size: 0.85rem; cursor: pointer; transition: 0.2s;
-}
-.st-diario-save:hover { background: #2563eb; }
-.st-diario-save:disabled { opacity: 0.5; cursor: not-allowed; }
 
-/* Lista de notas */
-.st-diario-list { margin-top: 16px; }
-.st-diario-empty {
-  text-align: center; padding: 30px 0; color: #333;
+@media (max-width: 900px) {
+  .stats-peaks-grid {
+    grid-template-columns: 1fr;
+  }
 }
-.st-diario-empty p { color: #555; margin: 8px 0 4px; font-size: 0.9rem; }
-.st-diario-empty small { color: #444; font-size: 0.8rem; }
-.st-diario-item {
-  display: flex; align-items: center; gap: 12px; padding: 12px 0;
-  border-bottom: 1px solid #1a1a2e;
+
+.stats-peak-card {
+  background: #111;
+  border: 1px solid #1e1e1e;
+  border-radius: 12px;
+  overflow: hidden;
 }
-.st-diario-item:last-child { border-bottom: none; }
-.st-diario-item-left {
-  display: flex; flex-direction: column; gap: 2px; min-width: 90px; flex-shrink: 0;
+
+.stats-peak-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 16px 20px;
+  color: #ccc;
+  font-size: 0.9rem;
+  font-weight: 600;
+  border-bottom: 1px solid #1a1a1a;
 }
-.st-diario-date { font-size: 0.8rem; color: #888; }
-.st-diario-cat {
-  font-size: 0.65rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;
+
+.stats-peak-body {
+  padding: 10px 0;
 }
-.st-diario-item-content { flex: 1; font-size: 0.85rem; color: #ccc; line-height: 1.4; }
-.st-diario-del {
-  background: none; border: none; color: #444; cursor: pointer; padding: 4px;
-  border-radius: 4px; transition: 0.2s; flex-shrink: 0;
+
+.stats-peak-list {
+  display: flex;
+  flex-direction: column;
 }
-.st-diario-del:hover { color: #ef4444; background: rgba(239,68,68,0.1); }
+
+.stats-peak-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 20px;
+  transition: background 0.15s;
+}
+
+.stats-peak-item:hover {
+  background: rgba(255,255,255,0.02);
+}
+
+.stats-peak-rank {
+  color: #c333ff;
+  font-weight: 700;
+  font-size: 0.85rem;
+  min-width: 28px;
+}
+
+.stats-peak-name {
+  flex: 1;
+  color: #ddd;
+  font-size: 0.9rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.stats-peak-count {
+  color: #888;
+  font-size: 0.8rem;
+  white-space: nowrap;
+}
+
+/* --- SKELETON --- */
+.skeleton-pulse {
+  display: inline-block;
+  width: 80px;
+  height: 24px;
+  background: #222;
+  border-radius: 4px;
+  animation: pulse 1.5s ease-in-out infinite;
+}
+/* 4-COLUMN PEAKS GRID */
+.stats-peaks-4col {
+  grid-template-columns: repeat(4, 1fr) !important;
+}
+
+@media (max-width: 1200px) {
+  .stats-peaks-4col {
+    grid-template-columns: repeat(2, 1fr) !important;
+  }
+}
+
+@media (max-width: 600px) {
+  .stats-peaks-4col {
+    grid-template-columns: 1fr !important;
+  }
+}
