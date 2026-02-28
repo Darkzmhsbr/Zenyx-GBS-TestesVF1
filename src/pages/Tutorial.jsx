@@ -431,6 +431,298 @@ export function Tutorial() {
           </div>
         </div>
       )
+    },
+    // ============================================================
+    // 🆕 NOVAS ETAPAS DO MEGA TUTORIAL
+    // ============================================================
+    {
+      icon: CreditCard,
+      title: "Etapa 8 – Integrações de Pagamento",
+      content: (
+        <div className="tut-content-inner">
+          <h4 className="tut-subtitle">Configurando Gateways de Pagamento</h4>
+          <p className="tut-text">A plataforma suporta múltiplos gateways para processar pagamentos via PIX:</p>
+          <ol className="tut-numbered-list">
+            <li><strong>Acesse "Integrações"</strong> no menu lateral.</li>
+            <li><strong>PushinPay:</strong> Cole seu token API na aba PushinPay. Obtenha em <code>pushinpay.com.br</code>.</li>
+            <li><strong>WiinPay:</strong> Cole sua API Key na aba WiinPay (gateway alternativo).</li>
+            <li><strong>Gateway Principal:</strong> Escolha qual gateway será o principal para receber pagamentos.</li>
+            <li><strong>Contingência:</strong> Configure um gateway secundário que assume automaticamente se o principal falhar.</li>
+            <li><strong>Webhook:</strong> Copie a URL do webhook exibida e cole no painel do gateway para receber confirmações de pagamento.</li>
+          </ol>
+          <div className="tut-rule-card">
+            <AlertTriangle size={20} />
+            <div>
+              <h5>Importante</h5>
+              <p>Sem um gateway configurado, os bots não conseguirão gerar PIX. Configure pelo menos um antes de ativar seus bots.</p>
+            </div>
+          </div>
+        </div>
+      )
+    },
+    {
+      icon: Zap,
+      title: "Etapa 9 – Remarketing",
+      content: (
+        <div className="tut-content-inner">
+          <h4 className="tut-subtitle">Campanhas de Remarketing Manual</h4>
+          <p className="tut-text">O remarketing permite enviar ofertas segmentadas para seus contatos:</p>
+          <ol className="tut-numbered-list">
+            <li><strong>Acesse "Remarketing"</strong> no menu lateral.</li>
+            <li><strong>Passo 1 – Público:</strong> Escolha quem vai receber: Todos, Topo (frios), Meio (quentes), Fundo (clientes) ou Expirados.</li>
+            <li><strong>Passo 2 – Conteúdo:</strong> Adicione uma mídia (foto, vídeo ou áudio) e escreva a legenda/texto da campanha.</li>
+            <li><strong>Passo 3 – Oferta:</strong> Vincule um plano existente. Escolha usar o preço original ou defina um valor promocional.</li>
+            <li><strong>Enviar:</strong> Clique em "Enviar Agora" para disparar imediatamente para o público selecionado.</li>
+            <li><strong>Histórico:</strong> Todas as campanhas ficam salvas. Você pode reutilizar, testar ou deletar a qualquer momento.</li>
+          </ol>
+          <div className="tut-checkout-box">
+            <Info size={20} />
+            <div>
+              <h5>Dica de Ouro</h5>
+              <p>Use o botão "Enviar Teste" para visualizar exatamente como a campanha ficará antes de enviar para todos.</p>
+            </div>
+          </div>
+        </div>
+      )
+    },
+    {
+      icon: Clock,
+      title: "Etapa 10 – Auto Remarketing (Disparo Automático)",
+      content: (
+        <div className="tut-content-inner">
+          <h4 className="tut-subtitle">Disparos Automáticos Inteligentes</h4>
+          <p className="tut-text">O auto remarketing envia ofertas automaticamente para quem visitou o bot mas não comprou:</p>
+          <ol className="tut-numbered-list">
+            <li><strong>Acesse "Extras → Disparo Automático"</strong> no menu lateral.</li>
+            <li><strong>Aba Disparo:</strong> Configure a mensagem principal com texto, mídia e áudio.</li>
+            <li><strong>Tempo de espera:</strong> Defina quantos segundos após o /start o disparo será enviado (ex: 120 = 2 minutos).</li>
+            <li><strong>Planos com desconto:</strong> Ative os planos que deseja oferecer e defina valores promocionais e textos customizados para os botões.</li>
+            <li><strong>Auto-destruição:</strong> Ative para que a mensagem se apague automaticamente após um tempo (cria urgência).</li>
+            <li><strong>Aba Alternante:</strong> Configure mensagens que se alternam automaticamente (a mensagem muda de tempos em tempos).</li>
+          </ol>
+          <div className="tut-rule-card">
+            <AlertTriangle size={20} />
+            <div>
+              <h5>Atenção</h5>
+              <p>O disparo automático NÃO é enviado para quem já pagou. Apenas para leads que ainda não converteram.</p>
+            </div>
+          </div>
+        </div>
+      )
+    },
+    {
+      icon: Share2,
+      title: "Etapa 11 – Canal Free (Isca Digital)",
+      content: (
+        <div className="tut-content-inner">
+          <h4 className="tut-subtitle">Capturando Leads com Canal Grátis</h4>
+          <p className="tut-text">O Canal Free é sua isca digital — um canal/grupo aberto que captura leads automaticamente:</p>
+          <ol className="tut-numbered-list">
+            <li><strong>Acesse "Extras → Canal Free"</strong> no menu lateral.</li>
+            <li><strong>Adicione o bot como admin</strong> no seu canal/grupo grátis (com permissão de aprovar membros).</li>
+            <li><strong>Configure o ID do canal</strong> e a mensagem de boas-vindas que será enviada via bot no privado.</li>
+            <li><strong>Botões personalizados:</strong> Adicione botões com links para redirecionar os leads (ex: link de pagamento, grupo VIP, etc).</li>
+            <li><strong>Áudio de boas-vindas:</strong> Opcionalmente envie um áudio junto com a mensagem.</li>
+          </ol>
+          <div className="tut-checkout-box">
+            <Info size={20} />
+            <div>
+              <h5>Estratégia</h5>
+              <p>Divulgue o link do canal grátis nas redes sociais. Quando alguém entrar, o bot captura como lead e envia a oferta automaticamente.</p>
+            </div>
+          </div>
+        </div>
+      )
+    },
+    {
+      icon: ShoppingBag,
+      title: "Etapa 12 – Order Bump, Upsell e Downsell",
+      content: (
+        <div className="tut-content-inner">
+          <h4 className="tut-subtitle">Maximizando o Ticket Médio</h4>
+          <p className="tut-text">Aumente seu faturamento com ofertas complementares:</p>
+          
+          <h4 className="tut-subtitle" style={{marginTop: '16px'}}>Order Bump</h4>
+          <ol className="tut-numbered-list">
+            <li>Acesse <strong>"Planos e Ofertas → Order Bump"</strong>.</li>
+            <li>Configure um produto/bônus extra que aparece <strong>durante o checkout</strong>.</li>
+            <li>O cliente pode aceitar ou recusar antes de pagar.</li>
+            <li>Se aceitar, o bônus é entregue junto com o plano principal.</li>
+          </ol>
+          
+          <h4 className="tut-subtitle" style={{marginTop: '16px'}}>Upsell</h4>
+          <ol className="tut-numbered-list">
+            <li>Acesse <strong>"Planos e Ofertas → Upsell"</strong>.</li>
+            <li>Configure uma oferta premium que aparece <strong>após a compra</strong>.</li>
+            <li>Defina o tempo de delay (ex: 2 minutos após o pagamento).</li>
+            <li>Ideal para oferecer upgrade ou produto complementar de maior valor.</li>
+          </ol>
+          
+          <h4 className="tut-subtitle" style={{marginTop: '16px'}}>Downsell</h4>
+          <ol className="tut-numbered-list">
+            <li>Acesse <strong>"Planos e Ofertas → Downsell"</strong>.</li>
+            <li>Configure uma oferta mais barata para quem <strong>recusou o upsell</strong>.</li>
+            <li>Última chance de converter com um preço menor.</li>
+          </ol>
+        </div>
+      )
+    },
+    {
+      icon: Target,
+      title: "Etapa 13 – Rastreamento (Tracking)",
+      content: (
+        <div className="tut-content-inner">
+          <h4 className="tut-subtitle">Links Rastreáveis para Campanhas</h4>
+          <p className="tut-text">Saiba exatamente de onde vêm suas vendas:</p>
+          <ol className="tut-numbered-list">
+            <li><strong>Acesse "Rastreamento"</strong> no menu lateral.</li>
+            <li><strong>Crie uma pasta</strong> para organizar seus links (ex: "Instagram", "TikTok", "YouTube").</li>
+            <li><strong>Gere links rastreáveis</strong> dentro de cada pasta vinculados ao seu bot.</li>
+            <li><strong>Compartilhe o link</strong> nas suas campanhas de marketing.</li>
+            <li><strong>Acompanhe:</strong> Cliques, leads gerados, vendas e faturamento por link.</li>
+          </ol>
+          <div className="tut-checkout-box">
+            <Info size={20} />
+            <div>
+              <h5>Exemplo Prático</h5>
+              <p>Crie um link para Instagram e outro para TikTok. Após 1 semana, compare qual rede trouxe mais vendas e concentre seus esforços.</p>
+            </div>
+          </div>
+        </div>
+      )
+    },
+    {
+      icon: UserCheck,
+      title: "Etapa 14 – Administradores (Multi-Admin)",
+      content: (
+        <div className="tut-content-inner">
+          <h4 className="tut-subtitle">Gerenciando Equipe</h4>
+          <p className="tut-text">Adicione administradores extras para ajudar a gerenciar seus bots:</p>
+          <ol className="tut-numbered-list">
+            <li><strong>Acesse "Extras → Administradores"</strong> no menu lateral.</li>
+            <li><strong>Adicione admins</strong> pelo Telegram ID ou username.</li>
+            <li><strong>Defina permissões:</strong> Cada admin pode ter acesso limitado a funções específicas.</li>
+            <li><strong>Notificações:</strong> Os admins recebem notificações de vendas no Telegram.</li>
+          </ol>
+          <div className="tut-rule-card">
+            <AlertTriangle size={20} />
+            <div>
+              <h5>Segurança</h5>
+              <p>Apenas o admin principal (você) pode excluir bots, alterar tokens e gerenciar integrações de pagamento.</p>
+            </div>
+          </div>
+        </div>
+      )
+    },
+    {
+      icon: Smartphone,
+      title: "Etapa 15 – Mini App (Loja no Telegram)",
+      content: (
+        <div className="tut-content-inner">
+          <h4 className="tut-subtitle">Sua Loja Dentro do Telegram</h4>
+          <p className="tut-text">Crie uma vitrine profissional que abre dentro do Telegram como um Web App:</p>
+          <ol className="tut-numbered-list">
+            <li><strong>Ative o modo Mini App</strong> na configuração do Flow Chat (Etapa 7).</li>
+            <li><strong>Configure a loja:</strong> Logo, cores, vídeo hero, título e subtítulo.</li>
+            <li><strong>Crie categorias:</strong> Organize seus conteúdos por categorias com capas, descrições e previews.</li>
+            <li><strong>Personalização total:</strong> Cores de fundo, imagens de modelo, banners desktop e mobile.</li>
+            <li><strong>Checkout integrado:</strong> O cliente compra sem sair do Telegram.</li>
+          </ol>
+          <div className="tut-checkout-box">
+            <Info size={20} />
+            <div>
+              <h5>Quando Usar</h5>
+              <p>A Mini App é ideal para quem tem múltiplas categorias de conteúdo ou quer uma experiência de compra mais visual e imersiva.</p>
+            </div>
+          </div>
+        </div>
+      )
+    },
+    {
+      icon: Gem,
+      title: "Etapa 16 – Emojis Premium do Telegram",
+      content: (
+        <div className="tut-content-inner">
+          <h4 className="tut-subtitle">Usando Emojis Animados Premium</h4>
+          <p className="tut-text">Destaque suas mensagens com emojis premium animados do Telegram:</p>
+          <ol className="tut-numbered-list">
+            <li>Em qualquer campo de texto da plataforma (Flow Chat, Remarketing, Canal Free, etc), clique no <strong>ícone de emoji ✨</strong> ao lado do campo.</li>
+            <li><strong>Navegue pelas categorias</strong> (Populares, Corações, Estrelas, etc).</li>
+            <li><strong>Clique no emoji desejado</strong> para inserir o shortcode automaticamente.</li>
+            <li>Ao enviar a mensagem, o emoji será convertido automaticamente para o <strong>formato premium animado</strong> do Telegram.</li>
+          </ol>
+          <div className="tut-rule-card">
+            <AlertTriangle size={20} />
+            <div>
+              <h5>Requisito</h5>
+              <p>Emojis premium só aparecem para usuários do Telegram que possuem a versão mais recente do app. Em versões antigas, será exibido o emoji padrão como fallback.</p>
+            </div>
+          </div>
+        </div>
+      )
+    },
+    {
+      icon: Rocket,
+      title: "Etapa 17 – Grupos e Canais VIP",
+      content: (
+        <div className="tut-content-inner">
+          <h4 className="tut-subtitle">Gerenciando seus Canais e Grupos</h4>
+          <p className="tut-text">Organize todos os canais e grupos vinculados ao seu bot:</p>
+          <ol className="tut-numbered-list">
+            <li><strong>Acesse "Extras → Grupos e Canais"</strong> no menu lateral.</li>
+            <li><strong>Vincule seus canais VIP:</strong> Adicione o ID de cada canal/grupo que seus planos dão acesso.</li>
+            <li><strong>Canal por plano:</strong> Na página de "Planos e Ofertas", defina um canal específico para cada plano (Semanal vai para canal X, Mensal para canal Y, etc).</li>
+            <li><strong>Expiração automática:</strong> Quando o plano vence, o usuário é automaticamente removido do canal correto.</li>
+          </ol>
+          <div className="tut-checkout-box">
+            <Info size={20} />
+            <div>
+              <h5>Dica Importante</h5>
+              <p>Certifique-se de que o bot está como <strong>administrador</strong> em todos os canais/grupos VIP com permissão de convidar e banir membros.</p>
+            </div>
+          </div>
+        </div>
+      )
+    },
+    {
+      icon: Settings,
+      title: "Etapa 18 – Configuração Guiada (Setup Wizard)",
+      content: (
+        <div className="tut-content-inner">
+          <h4 className="tut-subtitle">Configuração Rápida em Minutos</h4>
+          <p className="tut-text">Se você é novo na plataforma, use o Setup Wizard para configurar tudo de forma guiada:</p>
+          <ol className="tut-numbered-list">
+            <li><strong>Acesse "Extras → Configuração Guiada"</strong> no menu lateral.</li>
+            <li>O wizard vai te guiar passo a passo: criar bot, configurar token, definir planos, configurar pagamento.</li>
+            <li>Cada etapa tem validação em tempo real — você vê na hora se está correto.</li>
+            <li>Ao final, seu bot estará 100% funcional e pronto para receber pagamentos.</li>
+          </ol>
+        </div>
+      )
+    },
+    {
+      icon: ShieldCheck,
+      title: "Etapa 19 – Boas Práticas e Segurança",
+      content: (
+        <div className="tut-content-inner">
+          <h4 className="tut-subtitle">Proteja Seu Negócio</h4>
+          <ol className="tut-numbered-list">
+            <li><strong>Proteção de Conteúdo:</strong> Ative "Proteger Conteúdo" nas configurações do bot para impedir que usuários encaminhem, copiem ou salvem as mídias.</li>
+            <li><strong>Gateway de Contingência:</strong> Configure dois gateways para que se um cair, o outro assuma automaticamente.</li>
+            <li><strong>Suporte:</strong> Configure o @username de suporte para que clientes possam entrar em contato facilmente.</li>
+            <li><strong>Testes:</strong> Sempre use o botão "Enviar Teste" antes de disparar campanhas para todo o público.</li>
+            <li><strong>Backup:</strong> Exporte regularmente seus dados de contatos e vendas pela página de Contatos.</li>
+            <li><strong>Denúncias:</strong> Caso identifique uso indevido de algum bot na plataforma, use o comando /denunciar no bot ou acesse zenyxvips.com/denunciar.</li>
+          </ol>
+          <div className="tut-rule-card">
+            <AlertTriangle size={20} />
+            <div>
+              <h5>Tolerância Zero</h5>
+              <p>A plataforma possui sistema de strikes. Conteúdo ilegal resulta em banimento imediato da conta e de todos os bots vinculados. Pratique o uso responsável.</p>
+            </div>
+          </div>
+        </div>
+      )
     }
   ];
 

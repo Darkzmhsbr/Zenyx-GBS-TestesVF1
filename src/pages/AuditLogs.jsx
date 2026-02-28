@@ -80,7 +80,12 @@ export function AuditLogs() {
 
   const formatDate = (isoDate) => {
     if (!isoDate) return '-';
-    const date = new Date(isoDate);
+    // 🔥 FIX FUSO: Backend salva em horário de Brasília sem timezone info
+    let dateStr = String(isoDate);
+    if (!dateStr.includes('Z') && !dateStr.includes('+') && !dateStr.match(/-\d{2}:\d{2}$/)) {
+      dateStr = dateStr + '-03:00';
+    }
+    const date = new Date(dateStr);
     return date.toLocaleString('pt-BR', {
       day: '2-digit',
       month: '2-digit',

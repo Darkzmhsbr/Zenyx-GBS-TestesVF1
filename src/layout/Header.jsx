@@ -156,12 +156,22 @@ export function Header({ onToggleMenu }) {
   };
 
   const formatTime = (dateString) => {
-    const date = new Date(dateString);
+    if (!dateString) return '';
+    // O backend salva timestamps em horário de Brasília (sem timezone info)
+    // Força interpretação como UTC-3 (America/Sao_Paulo)
+    let dateStr = String(dateString);
+    // Se não tem timezone info, adiciona -03:00 (Brasília)
+    if (!dateStr.includes('Z') && !dateStr.includes('+') && !dateStr.match(/\-\d{2}:\d{2}$/)) {
+      dateStr = dateStr + '-03:00';
+    }
+    const date = new Date(dateStr);
     const now = new Date();
     const diff = Math.floor((now - date) / 1000);
+    if (diff < 0) return 'Agora'; // Proteção contra clock skew
     if (diff < 60) return 'Agora';
     if (diff < 3600) return `Há ${Math.floor(diff / 60)} min`;
     if (diff < 86400) return `Há ${Math.floor(diff / 3600)} h`;
+    if (diff < 172800) return 'Ontem';
     return date.toLocaleDateString('pt-BR');
   };
 

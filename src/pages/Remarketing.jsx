@@ -53,8 +53,8 @@ export function Remarketing() {
 
   useEffect(() => {
     if (selectedBot) {
-      // 🔥 FIX: Reset estado ao trocar de bot
-      setStep(0);
+      // 🔥 FIX: Reset estado ao trocar de bot - volta para o wizard (step 1), não histórico
+      setStep(1);
       setHistory([]);
       setCurrentPage(1);
       planService.listPlans(selectedBot.id).then(setPlans).catch(console.error);
@@ -433,7 +433,12 @@ export function Remarketing() {
                 let dataFormatada = 'Data desconhecida';
                 if (item.data) {
                     try {
-                        const dateObj = new Date(item.data);
+                        // 🔥 FIX FUSO: Backend salva em horário de Brasília sem timezone info
+                        let dateStr = String(item.data);
+                        if (!dateStr.includes('Z') && !dateStr.includes('+') && !dateStr.match(/\-\d{2}:\d{2}$/)) {
+                            dateStr = dateStr + '-03:00';
+                        }
+                        const dateObj = new Date(dateStr);
                         if (!isNaN(dateObj.getTime())) {
                             dataFormatada = dateObj.toLocaleString('pt-BR', {
                                 day: '2-digit', month: '2-digit', year: 'numeric',

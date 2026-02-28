@@ -14,6 +14,7 @@ import { LandingPage } from './pages/LandingPage';
 import { Terms } from './pages/Terms';
 import { Privacy } from './pages/Privacy';
 import { Refund } from './pages/Refund';
+import { ReportPage } from './pages/ReportPage';
 
 // Páginas Principais
 import { Dashboard } from './pages/Dashboard';
@@ -37,6 +38,7 @@ import { SuperAdminUsers } from './pages/SuperAdminUsers';
 import { SuperAdminBots } from './pages/SuperAdminBots';
 import { GlobalConfig } from './pages/GlobalConfig';
 import { SuperAdminEmojis } from './pages/SuperAdminEmojis';
+import { SuperAdminReports } from './pages/SuperAdminReports';
 import { Tutorial } from './pages/Tutorial';
 
 // 🆕 NOVA PÁGINA: Disparo Automático (Renomeada para evitar conflito)
@@ -137,6 +139,7 @@ function App() {
             <Route path="/termos" element={<Terms />} />
             <Route path="/privacidade" element={<Privacy />} />
             <Route path="/reembolso" element={<Refund />} />
+            <Route path="/denunciar" element={<ReportPage />} />
 
             {/* Autenticação */}
             <Route path="/login" element={<Login />} />
@@ -185,6 +188,7 @@ function App() {
               <Route path="/superadmin/users" element={<SuperAdminUsers />} />
               <Route path="/superadmin/bots" element={<SuperAdminBots />} />
               <Route path="/superadmin/emojis" element={<SuperAdminEmojis />} />
+              <Route path="/superadmin/reports" element={<SuperAdminReports />} />
               
               <Route path="/config" element={<GlobalConfig />} />
               

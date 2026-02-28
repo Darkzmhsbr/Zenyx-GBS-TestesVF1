@@ -259,6 +259,17 @@ export function SuperAdmin() {
 
           <button 
             className="action-card"
+            onClick={() => navigate('/superadmin/reports')}
+          >
+            <div className="action-icon">🚨</div>
+            <div className="action-content">
+              <h3>Denúncias</h3>
+              <p>Gerenciar denúncias e aplicar punições</p>
+            </div>
+          </button>
+
+          <button 
+            className="action-card"
             onClick={() => navigate('/dashboard')}
           >
             <div className="action-icon">📊</div>

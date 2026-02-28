@@ -1048,6 +1048,26 @@ export const superAdminService = {
       console.error("Erro ao deletar bot forçado:", error);
       throw error;
     }
+  },
+
+  // 🚨 DENÚNCIAS
+  getReports: async (status = '', page = 1) => {
+    try {
+      const params = new URLSearchParams();
+      if (status) params.append('status', status);
+      params.append('page', page);
+      params.append('per_page', 20);
+      const response = await api.get(`/api/superadmin/reports?${params.toString()}`);
+      return response.data;
+    } catch (error) {
+      console.error("Erro ao buscar denúncias:", error);
+      return { reports: [], total: 0, page: 1, pages: 1 };
+    }
+  },
+
+  resolveReport: async (reportId, data) => {
+    const response = await api.put(`/api/superadmin/reports/${reportId}/resolve`, data);
+    return response.data;
   }
 };
 // ============================================================

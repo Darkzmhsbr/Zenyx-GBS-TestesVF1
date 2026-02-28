@@ -27,7 +27,32 @@ export function AuthProvider({ children }) {
         // 🛡️ Sincroniza o status do bot ao recarregar a página
         authService.getMe().then(response => {
           setHasBot(response.has_bots || false);
-        }).catch(err => console.error("Erro ao validar status do bot:", err));
+          
+          // 🔥 FIX: Atualiza dados do usuário com info fresca do backend
+          // Isso previne "sessão fantasma" onde dados locais ficam desatualizados
+          if (response.id && response.username) {
+            const freshUser = {
+              ...userData,
+              id: response.id,
+              username: response.username,
+              name: response.name || response.username,
+              is_superuser: response.is_superuser || false
+            };
+            setUser(freshUser);
+            localStorage.setItem('zenyx_admin_user', JSON.stringify(freshUser));
+          }
+        }).catch(err => {
+          console.error("Erro ao validar sessão:", err);
+          // 🔥 FIX: Se getMe falha com erro de rede (não 401), 
+          // mantém sessão para não deslogar por instabilidade
+          // O interceptor de 401 no api.js já cuida de token expirado
+          if (err?.response?.status === 401 || err?.response?.status === 403) {
+            console.warn("🔒 Sessão expirada, fazendo logout...");
+            localStorage.removeItem('zenyx_token');
+            localStorage.removeItem('zenyx_admin_user');
+            setUser(null);
+          }
+        });
 
       } catch (error) {
         console.error("Erro ao carregar usuário:", error);
@@ -60,7 +85,7 @@ export function AuthProvider({ children }) {
       });
 
       // 🚀 CAPTURA has_bots vindo do backend
-      const { access_token, user_id, username: userName, has_bots } = response.data;
+      const { access_token, user_id, username: userName, has_bots, is_superuser } = response.data;
 
       // Salva o token JWT
       localStorage.setItem('zenyx_token', access_token);
@@ -70,8 +95,9 @@ export function AuthProvider({ children }) {
         id: user_id,
         username: userName,
         name: userName,
-        role: 'admin', // Por enquanto todos são admin
-        allowed_bots: [] // FASE 2: Vai filtrar por owner_id
+        role: 'admin',
+        is_superuser: is_superuser || false,
+        allowed_bots: []
       };
 
       // Salva dados do usuário
