@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useMemo } from 'react';
+import React, { useEffect, useState, useMemo, useCallback } from 'react';
 import { useBot } from '../context/BotContext';
 import { useAuth } from '../context/AuthContext';
 import { statisticsService, botService, changelogService } from '../services/api';
@@ -6,11 +6,15 @@ import {
   DollarSign, Users, TrendingUp, Star, Clock, Calendar, BarChart3, PieChart,
   ChevronDown, ChevronLeft, ChevronRight, RefreshCw, Award, Zap, ShoppingBag,
   Target, Repeat, UserCheck, Timer, ArrowUpRight, ArrowDownRight,
-  FileText, Plus, Trash2, X, Link2, Megaphone, CreditCard
+  FileText, Plus, Trash2, X, Link2, Megaphone, CreditCard,
+  Activity, Flame, TrendingDown, Eye, Gauge, ArrowUp, ArrowDown,
+  Wallet, Layers, Filter, LayoutGrid, GitBranch
 } from 'lucide-react';
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
-  PieChart as RechartsPie, Pie, Cell, Legend, AreaChart, Area
+  PieChart as RechartsPie, Pie, Cell, Legend, AreaChart, Area,
+  LineChart, Line, RadarChart, Radar, PolarGrid, PolarAngleAxis, PolarRadiusAxis,
+  ComposedChart
 } from 'recharts';
 import './Statistics.css';
 
@@ -37,6 +41,9 @@ export function Statistics() {
   const [diaryNotes, setDiaryNotes] = useState([]);
   const [diarySaving, setDiarySaving] = useState(false);
 
+  // Heatmap toggle
+  const [heatmapView, setHeatmapView] = useState('vendas'); // 'vendas' ou 'receita'
+
   useEffect(() => { loadBots(); loadDiary(); }, []);
   useEffect(() => { loadStats(); }, [selectedBot, period, isGlobalView]);
 
@@ -56,15 +63,20 @@ export function Statistics() {
   const fN = (v) => new Intl.NumberFormat('pt-BR').format(v||0);
   const periodLabels = { '7d': '7 dias', '30d': '30 dias', '90d': '90 dias', 'all': 'Todo período' };
   const COLORS = ['#c333ff', '#444', '#1a1a2e'];
+  const COLORS_PIE = ['#10b981', '#f59e0b', '#ef4444', '#3b82f6', '#c333ff', '#06b6d4'];
   const Sk = () => <span className="sk-pulse" />;
 
   const MoneyTip = ({ active, payload, label }) => {
     if (!active || !payload?.length) return null;
-    return <div className="st-tip"><p className="st-tip-l">{label}</p><p className="st-tip-v">R$ {(payload[0].value||0).toFixed(2)}</p></div>;
+    return <div className="st-tip"><p className="st-tip-l">{label}</p>{payload.map((p,i)=><p key={i} className="st-tip-v" style={{color:p.color||'#fff'}}>R$ {(p.value||0).toFixed(2)}</p>)}</div>;
   };
   const CountTip = ({ active, payload, label }) => {
     if (!active || !payload?.length) return null;
-    return <div className="st-tip"><p className="st-tip-l">{label}</p><p className="st-tip-v">{payload[0].value} vendas</p></div>;
+    return <div className="st-tip"><p className="st-tip-l">{label}</p>{payload.map((p,i)=><p key={i} className="st-tip-v" style={{color:p.color||'#fff'}}>{p.value} {p.name||'vendas'}</p>)}</div>;
+  };
+  const GenericTip = ({ active, payload, label }) => {
+    if (!active || !payload?.length) return null;
+    return <div className="st-tip"><p className="st-tip-l">{label}</p>{payload.map((p,i)=><p key={i} className="st-tip-v" style={{color:p.color||p.fill||'#fff'}}>{p.name}: {p.value}</p>)}</div>;
   };
 
   const m = data?.metricas || {};
@@ -72,6 +84,12 @@ export function Statistics() {
   const cnt = data?.contadores_usuarios || {};
   const tm = data?.tempo_medio || {};
   const cal = data?.calendario || [];
+  const crescimento = data?.crescimento || {};
+  const funil = data?.funil_visual || {};
+  const gatewayData = data?.receita_por_gateway || {};
+  const origemData = data?.vendas_por_origem || [];
+  const heatmap = data?.heatmap_semanal || [];
+  const projecao = data?.projecao_mensal || {};
 
   // ============ CALENDÁRIO INTERATIVO ============
   const mesesNomes = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
@@ -79,20 +97,25 @@ export function Statistics() {
 
   const calendarData = useMemo(() => {
     const daysInMonth = new Date(calYear, calMonth + 1, 0).getDate();
-    const firstDayWeekday = new Date(calYear, calMonth, 1).getDay(); // 0=Sun
+    const firstDayWeekday = new Date(calYear, calMonth, 1).getDay();
     const today = new Date();
     const isCurrentMonth = calMonth === today.getMonth() && calYear === today.getFullYear();
     
     const days = [];
-    // Empty cells for offset
     for (let i = 0; i < firstDayWeekday; i++) days.push({ empty: true });
+    
+    // Find max vendas for intensity calculation
+    const maxVendas = Math.max(1, ...cal.map(c => c.vendas || 0));
     
     for (let d = 1; d <= daysInMonth; d++) {
       const calDay = cal.find(c => c.day === d);
+      const vendas = isCurrentMonth && calDay ? calDay.vendas : 0;
+      const receita = isCurrentMonth && calDay ? calDay.receita : 0;
       days.push({
         day: d,
-        vendas: isCurrentMonth && calDay ? calDay.vendas : 0,
-        receita: isCurrentMonth && calDay ? calDay.receita : 0,
+        vendas,
+        receita,
+        intensity: vendas / maxVendas, // 0 to 1 for heatmap coloring
         isToday: isCurrentMonth && d === today.getDate(),
         selected: selectedCalDay === d && isCurrentMonth,
       });
@@ -125,6 +148,32 @@ export function Statistics() {
     return best;
   }, [data]);
 
+  // Calendar totals
+  const calTotals = useMemo(() => {
+    const totalV = cal.reduce((s, d) => s + (d.vendas || 0), 0);
+    const totalR = cal.reduce((s, d) => s + (d.receita || 0), 0);
+    const bestDay = cal.length > 0 ? cal.reduce((a, b) => (b.vendas > a.vendas ? b : a), cal[0]) : null;
+    return { vendas: totalV, receita: totalR, bestDay };
+  }, [cal]);
+
+  // Funil data for chart
+  const funilChartData = useMemo(() => {
+    if (!funil.starts && !funil.leads && !funil.checkouts && !funil.vendas) return [];
+    return [
+      { name: '/start', value: funil.starts || 0, fill: '#3b82f6' },
+      { name: 'Leads', value: funil.leads || 0, fill: '#06b6d4' },
+      { name: 'Checkouts', value: funil.checkouts || 0, fill: '#f59e0b' },
+      { name: 'Vendas', value: funil.vendas || 0, fill: '#10b981' },
+    ];
+  }, [funil]);
+
+  // Heatmap processed data
+  const heatmapProcessed = useMemo(() => {
+    if (!heatmap.length) return [];
+    const maxVal = Math.max(1, ...heatmap.map(h => h.count || 0));
+    return heatmap.map(h => ({ ...h, intensity: (h.count || 0) / maxVal }));
+  }, [heatmap]);
+
   const catColors = { geral:'#06b6d4', upsell:'#ef4444', downsell:'#f59e0b', fluxo:'#10b981', preco:'#c333ff', remarketing:'#8b5cf6', plano:'#ec4899' };
   const contadorItems = [
     { icon: '👥', label: 'Total Compradores', value: cnt.total_compradores, color: '#fff' },
@@ -135,12 +184,24 @@ export function Statistics() {
     { icon: '📣', label: 'Remarketing', value: cnt.remarketing, color: '#8b5cf6' },
   ];
 
+  // === GROWTH INDICATOR ===
+  const GrowthBadge = ({ value }) => {
+    if (value === undefined || value === null) return null;
+    const isPositive = value >= 0;
+    return (
+      <span className={`st-growth ${isPositive ? 'up' : 'down'}`}>
+        {isPositive ? <ArrowUp size={12}/> : <ArrowDown size={12}/>}
+        {Math.abs(value).toFixed(1)}%
+      </span>
+    );
+  };
+
   const TaxaCard = ({ icon, color, title, value, sub }) => (
     <div className="st-taxa">
       <div className="st-taxa-hd"><div className="st-taxa-ic" style={{background:`${color}22`,color}}>{icon}</div><span>{title}</span></div>
-      <div className="st-taxa-val">{loading ? <Sk/> : `${value}%`}</div>
+      <div className="st-taxa-val">{loading ? <Sk/> : `${(value||0).toFixed(1)}%`}</div>
       <div className="st-taxa-sub">{sub}</div>
-      <div className="st-taxa-bar"><div className="st-taxa-fill" style={{width:`${Math.min(value,100)}%`,background:color}}/></div>
+      <div className="st-taxa-bar"><div className="st-taxa-fill" style={{width:`${Math.min(value||0,100)}%`,background:color}}/></div>
     </div>
   );
 
@@ -156,6 +217,17 @@ export function Statistics() {
       </div>
     </div>
   );
+
+  // === HEATMAP CELL COMPONENT ===
+  const HeatCell = ({ value, max }) => {
+    const intensity = max > 0 ? value / max : 0;
+    const alpha = Math.max(0.05, intensity);
+    return (
+      <div className="st-heat-cell" style={{ background: `rgba(195, 51, 255, ${alpha})`, color: intensity > 0.5 ? '#fff' : '#888' }}>
+        {value > 0 ? value : '·'}
+      </div>
+    );
+  };
 
   return (
     <div className="statistics-container">
@@ -180,92 +252,110 @@ export function Statistics() {
         </div>
       </div>
 
-      {/* MÉTRICAS PRINCIPAIS */}
+      {/* ============================================================ */}
+      {/* MÉTRICAS PRINCIPAIS — com indicadores de crescimento         */}
+      {/* ============================================================ */}
       <section className="st-sec">
         <h2 className="st-sec-t">MÉTRICAS PRINCIPAIS</h2>
         <div className="g4">
           {[
-            {ic:<DollarSign size={22}/>,bg:'rgba(16,185,129,0.15)',cl:'#10b981',lb:'Receita Total',vl:fmt(m.receita_total),sb:`${fN(m.total_vendas)} vendas`},
-            {ic:<BarChart3 size={22}/>,bg:'rgba(59,130,246,0.15)',cl:'#3b82f6',lb:'Ticket Médio',vl:fmt(m.ticket_medio),sb:'Valor médio por venda'},
-            {ic:<Users size={22}/>,bg:'rgba(195,51,255,0.15)',cl:'#c333ff',lb:'VIPs Ativos',vl:fN(m.total_usuarios),sb:`${fN(m.total_leads)} leads`},
-            {ic:<Star size={22}/>,bg:'rgba(245,158,11,0.15)',cl:'#f59e0b',lb:'LTV Médio',vl:fmt(m.ltv_medio),sb:'Gasto médio por cliente'},
+            {ic:<DollarSign size={22}/>,bg:'rgba(16,185,129,0.15)',cl:'#10b981',lb:'Receita Total',vl:fmt(m.receita_total),sb:`${fN(m.total_vendas)} vendas`,grow:crescimento.receita},
+            {ic:<BarChart3 size={22}/>,bg:'rgba(59,130,246,0.15)',cl:'#3b82f6',lb:'Ticket Médio',vl:fmt(m.ticket_medio),sb:'Valor médio por venda',grow:crescimento.ticket_medio},
+            {ic:<Users size={22}/>,bg:'rgba(195,51,255,0.15)',cl:'#c333ff',lb:'VIPs Ativos',vl:fN(m.total_usuarios),sb:`${fN(m.total_leads)} leads`,grow:crescimento.vips},
+            {ic:<Star size={22}/>,bg:'rgba(245,158,11,0.15)',cl:'#f59e0b',lb:'LTV Médio',vl:fmt(m.ltv_medio),sb:'Gasto médio por cliente',grow:crescimento.ltv},
           ].map((c,i)=>(
-            <div key={i} className="st-mc"><div className="st-mc-ic" style={{background:c.bg,color:c.cl}}>{c.ic}</div><div className="st-mc-inf"><span className="st-mc-lb">{c.lb}</span><span className="st-mc-vl">{loading?<Sk/>:c.vl}</span><span className="st-mc-sb">{c.sb}</span></div></div>
+            <div key={i} className="st-mc"><div className="st-mc-ic" style={{background:c.bg,color:c.cl}}>{c.ic}</div><div className="st-mc-inf"><span className="st-mc-lb">{c.lb} {!loading && <GrowthBadge value={c.grow}/>}</span><span className="st-mc-vl">{loading?<Sk/>:c.vl}</span><span className="st-mc-sb">{c.sb}</span></div></div>
           ))}
         </div>
       </section>
 
-      {/* RESUMO VENDAS */}
+      {/* ============================================================ */}
+      {/* PROJEÇÃO + RESUMO VENDAS + TAXA APROVAÇÃO                   */}
+      {/* ============================================================ */}
       <section className="st-sec">
-        <h2 className="st-sec-t">RESUMO DE VENDAS</h2>
-        <div className="g3">
-          {[
-            {ic:<Clock size={22}/>,bg:'rgba(245,158,11,0.15)',cl:'#f59e0b',lb:'Pendentes',vl:fN(m.total_pendentes),sb:fmt(m.receita_pendentes)},
-            {ic:<ShoppingBag size={22}/>,bg:'rgba(16,185,129,0.15)',cl:'#10b981',lb:'Confirmadas',vl:fN(m.total_vendas),sb:fmt(m.receita_total)},
-            {ic:<Target size={22}/>,bg:'rgba(195,51,255,0.15)',cl:'#c333ff',lb:'Conversão',vl:`${(m.taxa_conversao||0).toFixed(1)}%`,sb:`${fN(m.total_leads)} leads → ${fN(m.total_vendas)} vendas`,vc:'#c333ff'},
-          ].map((c,i)=>(
-            <div key={i} className="st-sc"><div className="st-sc-ic" style={{background:c.bg,color:c.cl}}>{c.ic}</div><div><span className="st-sc-lb">{c.lb}</span><span className="st-sc-vl" style={c.vc?{color:c.vc}:{}}>{loading?'-':c.vl}</span><span className="st-sc-sb">{loading?'':c.sb}</span></div></div>
-          ))}
-        </div>
-      </section>
-
-      {/* 8 TAXAS */}
-      <section className="st-sec">
-        <h2 className="st-sec-t">TAXAS DETALHADAS</h2>
+        <h2 className="st-sec-t">RESUMO DE VENDAS & PROJEÇÃO</h2>
         <div className="g4">
-          <TaxaCard icon={<ArrowUpRight size={20}/>} color="#ef4444" title="Taxa Upsell" value={adv.taxa_upsell||0} sub={`${adv.upsell_vendas||0} DE ${m.total_vendas||0} VENDAS`}/>
-          <TaxaCard icon={<ArrowDownRight size={20}/>} color="#f59e0b" title="Taxa Downsell" value={adv.taxa_downsell||0} sub={`${adv.downsell_vendas||0} DE ${m.total_pendentes||0} RECUSAS`}/>
-          <TaxaCard icon={<Zap size={20}/>} color="#8b5cf6" title="Taxa OrderBump" value={adv.taxa_orderbump||0} sub={`${adv.orderbump_vendas||0} DE ${m.total_geradas||0} CHECKOUTS`}/>
-          <TaxaCard icon={<Repeat size={20}/>} color="#06b6d4" title="Taxa Recuperação" value={adv.taxa_recuperacao||0} sub={`${adv.remarketing_vendas||0} DE ${m.total_pendentes||0} PENDENTES`}/>
-          <TaxaCard icon={<Repeat size={20}/>} color="#10b981" title="Taxa Recorrência" value={adv.taxa_recorrencia||0} sub={`${adv.recorrentes||0} DE ${adv.total_compradores||0} COMPRADORES`}/>
-          <TaxaCard icon={<UserCheck size={20}/>} color="#3b82f6" title="Taxa Retenção" value={adv.taxa_retencao||0} sub={`${cnt.vips_ativos||0} VIPS DE ${adv.total_compradores||0} COMPRADORES`}/>
-          <TaxaCard icon={<TrendingUp size={20}/>} color="#ec4899" title="Taxa Upgrade" value={adv.taxa_upgrade||0} sub={`${adv.upsell_vendas||0} UPSELLS DE ${adv.total_compradores||0} COMPRADORES`}/>
-          <TaxaCard icon={<X size={20}/>} color="#ef4444" title="Taxa Abandono" value={adv.taxa_abandono||0} sub={`${adv.expirados_unicos||0} EX-VIPS DE ${adv.total_compradores||0} COMPRADORES`}/>
+          <div className="st-sc">
+            <div className="st-sc-ic" style={{background:'rgba(245,158,11,0.15)',color:'#f59e0b'}}><Clock size={22}/></div>
+            <div><span className="st-sc-lb">Pendentes</span><span className="st-sc-vl">{loading?'-':fN(m.total_pendentes)}</span><span className="st-sc-sb">{loading?'':fmt(m.receita_pendentes)}</span></div>
+          </div>
+          <div className="st-sc">
+            <div className="st-sc-ic" style={{background:'rgba(16,185,129,0.15)',color:'#10b981'}}><ShoppingBag size={22}/></div>
+            <div><span className="st-sc-lb">Confirmadas</span><span className="st-sc-vl">{loading?'-':fN(m.total_vendas)}</span><span className="st-sc-sb">{loading?'':fmt(m.receita_total)}</span></div>
+          </div>
+          <div className="st-sc">
+            <div className="st-sc-ic" style={{background:'rgba(195,51,255,0.15)',color:'#c333ff'}}><Target size={22}/></div>
+            <div><span className="st-sc-lb">Conversão</span><span className="st-sc-vl" style={{color:'#c333ff'}}>{loading?'-':`${(m.taxa_conversao||0).toFixed(1)}%`}</span><span className="st-sc-sb">{loading?'':`${fN(m.total_leads)} leads → ${fN(m.total_vendas)} vendas`}</span></div>
+          </div>
+          {/* 🆕 PROJEÇÃO MENSAL */}
+          <div className="st-sc st-sc-proj">
+            <div className="st-sc-ic" style={{background:'rgba(6,182,212,0.15)',color:'#06b6d4'}}><Gauge size={22}/></div>
+            <div>
+              <span className="st-sc-lb">Projeção Mensal</span>
+              <span className="st-sc-vl" style={{color:'#06b6d4'}}>{loading?'-':fmt(projecao.receita_projetada)}</span>
+              <span className="st-sc-sb">{loading?'':`~${fN(projecao.vendas_projetadas)} vendas estimadas`}</span>
+            </div>
+          </div>
         </div>
       </section>
 
-      {/* LTV + VENDAS/USR + RETORNO + CONTADORES */}
+      {/* ============================================================ */}
+      {/* 🆕 FUNIL VISUAL: /start → lead → checkout → venda           */}
+      {/* ============================================================ */}
       <section className="st-sec">
-        <h2 className="st-sec-t">INDICADORES AVANÇADOS</h2>
-        <div className="g4">
-          <div className="st-big"><div className="st-big-hd"><DollarSign size={20} color="#10b981"/> <span>LTV Médio</span><span className="st-tag" style={{color:'#10b981'}}>LIFETIME VALUE</span></div><div className="st-big-val" style={{color:'#10b981'}}>{loading?<Sk/>:fmt(m.ltv_medio)}</div><div className="st-big-sub">GASTO MÉDIO POR CLIENTE</div></div>
-          <div className="st-big"><div className="st-big-hd"><ShoppingBag size={20} color="#8b5cf6"/> <span>Vendas por Usuário</span><span className="st-tag" style={{color:'#8b5cf6'}}>MÉDIA</span></div><div className="st-big-val" style={{color:'#f59e0b'}}>{loading?<Sk/>:`${adv.vendas_por_usuario||0}x`}</div><div className="st-big-sub">COMPRAS POR CLIENTE</div></div>
-          <div className="st-big"><div className="st-big-hd"><Timer size={20} color="#06b6d4"/> <span>Tempo Médio Retorno</span><span className="st-tag" style={{color:'#06b6d4'}}>ENTRE COMPRAS</span></div><div className="st-big-val" style={{color:'#c333ff'}}>{loading?<Sk/>:adv.avg_retorno_dias||0}</div><div className="st-big-sub">DIAS PARA RECOMPRA</div></div>
-          <div className="st-contadores"><div className="st-big-hd"><UserCheck size={20} color="#06b6d4"/> <span>Contadores de Usuários</span><span className="st-tag" style={{color:'#06b6d4'}}>POR TIPO</span></div>
-            <div className="st-cnt-scroll">{contadorItems.map((it,i)=>(<div key={i} className="st-cnt-row"><span className="st-cnt-ic">{it.icon}</span><span className="st-cnt-lb">{it.label}</span><span className="st-cnt-vl" style={{color:it.color}}>{loading?'-':fN(it.value)}</span></div>))}</div>
+        <h2 className="st-sec-t">FUNIL DE CONVERSÃO</h2>
+        <div className="st-funil-wrap">
+          <div className="st-funil-chart">
+            <div className="st-chart-hd"><GitBranch size={18} color="#3b82f6"/><span>Funil Completo</span><span className="st-tag" style={{color:'#3b82f6'}}>JORNADA DO LEAD</span></div>
+            {loading ? <div className="st-chart-sk">{[90,70,50,30].map((h,i)=><div key={i} className="sk-bar" style={{height:`${h}%`}}/>)}</div> : (
+              <div className="st-funil-bars">
+                {funilChartData.map((item, idx) => {
+                  const maxVal = Math.max(1, ...funilChartData.map(f => f.value));
+                  const pct = (item.value / maxVal) * 100;
+                  const convRate = idx > 0 && funilChartData[idx-1].value > 0 
+                    ? ((item.value / funilChartData[idx-1].value) * 100).toFixed(1)
+                    : null;
+                  return (
+                    <div key={idx} className="st-funil-step">
+                      <div className="st-funil-label">
+                        <span className="st-funil-name">{item.name}</span>
+                        <span className="st-funil-val" style={{color: item.fill}}>{fN(item.value)}</span>
+                      </div>
+                      <div className="st-funil-bar-bg">
+                        <div className="st-funil-bar-fill" style={{width:`${pct}%`, background: item.fill}}/>
+                      </div>
+                      {convRate && <span className="st-funil-conv">↓ {convRate}% conversão</span>}
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+          {/* Funil summary cards */}
+          <div className="st-funil-cards">
+            <div className="st-funil-kpi">
+              <span className="st-funil-kpi-lb">% Viraram /starts</span>
+              <span className="st-funil-kpi-vl" style={{color:'#3b82f6'}}>{loading?'-':`${(funil.taxa_start_lead||0).toFixed(1)}%`}</span>
+            </div>
+            <div className="st-funil-kpi">
+              <span className="st-funil-kpi-lb">% Leads Viram Vendas</span>
+              <span className="st-funil-kpi-vl" style={{color:'#06b6d4'}}>{loading?'-':`${(funil.taxa_lead_venda||0).toFixed(1)}%`}</span>
+            </div>
+            <div className="st-funil-kpi">
+              <span className="st-funil-kpi-lb">Ticket Médio</span>
+              <span className="st-funil-kpi-vl" style={{color:'#f59e0b'}}>{loading?'-':fmt(m.ticket_medio)}</span>
+            </div>
+            <div className="st-funil-kpi">
+              <span className="st-funil-kpi-lb">% de Aprovação</span>
+              <span className="st-funil-kpi-vl" style={{color:'#10b981'}}>{loading?'-':`${(funil.taxa_aprovacao||0).toFixed(1)}%`}</span>
+            </div>
           </div>
         </div>
       </section>
 
-      {/* TEMPO MÉDIO /START → PAGAMENTO */}
-      <section className="st-sec">
-        <div className="g4">
-          <div className="st-tempo">
-            <div className="st-big-hd"><Clock size={20} color="#06b6d4"/> <span>Tempo Médio</span><span className="st-tag" style={{color:'#06b6d4'}}>/START → PAGAMENTO</span></div>
-            <div className="st-tempo-vals"><div className="st-tempo-u"><span className="st-tempo-n">{tm.horas||0}</span><span className="st-tempo-lb">HORAS</span></div><div className="st-tempo-u"><span className="st-tempo-n">{tm.minutos||0}</span><span className="st-tempo-lb">MINUTOS</span></div><div className="st-tempo-u"><span className="st-tempo-n">{tm.segundos||0}</span><span className="st-tempo-lb">SEGUNDOS</span></div></div>
-            <div className="st-tempo-ds">DATASET: {tm.dataset||0} PAGAMENTOS</div>
-          </div>
-        </div>
-      </section>
-
-      {/* GRÁFICOS — Receita + Donut */}
-      <section className="st-sec">
-        <h2 className="st-sec-t">GRÁFICOS</h2>
-        <div className="g2">
-          <div className="st-chart"><div className="st-chart-hd"><TrendingUp size={18} color="#c333ff"/><span>Receita no Período</span></div>
-            <div className="st-chart-bd">{loading?<div className="st-chart-sk">{[60,80,45,70,55,90,65].map((h,i)=><div key={i} className="sk-bar" style={{height:`${h}%`}}/>)}</div>:(
-              <ResponsiveContainer width="100%" height={280}><AreaChart data={data?.chart_receita||[]}><defs><linearGradient id="sg" x1="0" y1="0" x2="0" y2="1"><stop offset="5%" stopColor="#c333ff" stopOpacity={0.3}/><stop offset="95%" stopColor="#c333ff" stopOpacity={0}/></linearGradient></defs><CartesianGrid strokeDasharray="3 3" stroke="#222" vertical={false}/><XAxis dataKey="date" axisLine={false} tickLine={false} tick={{fill:'#666',fontSize:11}}/><YAxis axisLine={false} tickLine={false} tick={{fill:'#666',fontSize:11}} tickFormatter={v=>`R$${v}`}/><Tooltip content={<MoneyTip/>}/><Area type="monotone" dataKey="value" stroke="#c333ff" strokeWidth={2.5} fill="url(#sg)"/></AreaChart></ResponsiveContainer>
-            )}</div>
-          </div>
-          <div className="st-chart"><div className="st-chart-hd"><PieChart size={18} color="#c333ff"/><span>Conversão</span></div>
-            <div className="st-chart-bd" style={{display:'flex',alignItems:'center',justifyContent:'center'}}>{loading?<div className="sk-donut"/>:(
-              <ResponsiveContainer width="100%" height={280}><RechartsPie><Pie data={[{name:'Convertidas',value:data?.donut_conversao?.convertidas||0},{name:'Pendentes',value:data?.donut_conversao?.pendentes||0},{name:'Perdidas',value:data?.donut_conversao?.perdidas||0}]} cx="50%" cy="50%" innerRadius={70} outerRadius={100} paddingAngle={3} dataKey="value" stroke="none">{COLORS.map((c,i)=><Cell key={i} fill={c}/>)}</Pie><Legend verticalAlign="bottom" iconType="circle" iconSize={10} formatter={v=><span style={{color:'#ccc',fontSize:'0.85rem'}}>{v}</span>}/><Tooltip contentStyle={{background:'#1a1a2e',border:'1px solid #333',borderRadius:8,color:'#fff'}} itemStyle={{color:'#fff'}}/></RechartsPie></ResponsiveContainer>
-            )}</div>
-          </div>
-        </div>
-      </section>
-
-      {/* VENDAS POR HORA — Full width com cards resumo */}
+      {/* ============================================================ */}
+      {/* VENDAS POR HORA — Full width com cards resumo               */}
+      {/* ============================================================ */}
       <section className="st-sec">
         <h2 className="st-sec-t">VENDAS POR HORA</h2>
         <div className="st-hora-wrap">
@@ -284,7 +374,9 @@ export function Statistics() {
         </div>
       </section>
 
-      {/* VENDAS POR DIA DA SEMANA + CALENDÁRIO */}
+      {/* ============================================================ */}
+      {/* VENDAS POR DIA DA SEMANA + CALENDÁRIO MODERNO               */}
+      {/* ============================================================ */}
       <section className="st-sec">
         <h2 className="st-sec-t">VENDAS POR DIA DA SEMANA</h2>
         <div className="st-semana-row">
@@ -295,41 +387,215 @@ export function Statistics() {
             )}</div>
           </div>
 
-          {/* CALENDÁRIO INTERATIVO */}
-          <div className="st-cal" style={{flex:1}}>
-            <div className="st-cal-hd">
-              <Calendar size={20} color="#c333ff"/>
-              <span>Calendário</span>
-              <span className="st-tag" style={{color:'#c333ff'}}>{mesesNomes[calMonth]?.toUpperCase()} {calYear}</span>
+          {/* CALENDÁRIO MODERNO */}
+          <div className="st-cal-modern" style={{flex:1}}>
+            <div className="st-cal-top">
+              <div className="st-cal-hd-modern">
+                <Calendar size={20} color="#c333ff"/>
+                <div className="st-cal-title-wrap">
+                  <span className="st-cal-title">Calendário</span>
+                  <span className="st-cal-subtitle">{mesesNomes[calMonth]?.toUpperCase()} {calYear}</span>
+                </div>
+              </div>
+              <div className="st-cal-nav-modern">
+                <button className="st-cal-arrow-modern" onClick={prevMonth}><ChevronLeft size={16}/></button>
+                <span className="st-cal-month-modern">{mesesNomes[calMonth]} {calYear}</span>
+                <button className="st-cal-arrow-modern" onClick={nextMonth}><ChevronRight size={16}/></button>
+              </div>
             </div>
-            <div className="st-cal-nav">
-              <button className="st-cal-arrow" onClick={prevMonth}><ChevronLeft size={18}/></button>
-              <span className="st-cal-month">{mesesNomes[calMonth]} {calYear}</span>
-              <button className="st-cal-arrow" onClick={nextMonth}><ChevronRight size={18}/></button>
-            </div>
-            <div className="st-cal-hint">Selecione uma data<br/>Clique para ver detalhes</div>
-            <div className="st-cal-grid">
-              {diasSemana.map((d,i) => <div key={i} className="st-cal-wd">{d}</div>)}
-              {calendarData.map((d,i) => d.empty ? <div key={`e${i}`} className="st-cal-empty"/> : (
-                <div key={d.day} className={`st-cal-day ${d.isToday?'today':''} ${d.vendas>0?'has':''} ${d.selected?'sel':''}`}
+
+            <div className="st-cal-grid-modern">
+              {diasSemana.map((d,i) => <div key={i} className="st-cal-wd-modern">{d}</div>)}
+              {calendarData.map((d,i) => d.empty ? <div key={`e${i}`} className="st-cal-empty-modern"/> : (
+                <div key={d.day}
+                  className={`st-cal-day-modern ${d.isToday?'today':''} ${d.vendas>0?'has':''} ${d.selected?'sel':''}`}
+                  style={d.vendas > 0 ? {'--heat': d.intensity} : {}}
                   onClick={() => setSelectedCalDay(d.day === selectedCalDay ? null : d.day)}>
-                  <span className="st-cal-n">{d.day}</span>
-                  {d.vendas > 0 && <span className="st-cal-dot">{d.vendas}</span>}
+                  <span className="st-cal-n-modern">{d.day}</span>
+                  {d.vendas > 0 && <span className="st-cal-badge">{d.vendas}</span>}
                 </div>
               ))}
             </div>
-            {selectedDayInfo && (
-              <div className="st-cal-detail">
-                <strong>Dia {selectedDayInfo.day}</strong>
-                <span>{selectedDayInfo.vendas} venda{selectedDayInfo.vendas !== 1 ? 's' : ''}</span>
-                <span>{fmt(selectedDayInfo.receita)}</span>
+
+            {/* Calendar detail or summary */}
+            {selectedDayInfo ? (
+              <div className="st-cal-detail-modern">
+                <div className="st-cal-detail-hd">
+                  <strong>Dia {selectedDayInfo.day}</strong>
+                  <button className="st-cal-detail-close" onClick={()=>setSelectedCalDay(null)}><X size={14}/></button>
+                </div>
+                <div className="st-cal-detail-stats">
+                  <div><span className="st-cal-d-lb">Vendas</span><span className="st-cal-d-vl" style={{color:'#10b981'}}>{selectedDayInfo.vendas}</span></div>
+                  <div><span className="st-cal-d-lb">Receita</span><span className="st-cal-d-vl" style={{color:'#f59e0b'}}>{fmt(selectedDayInfo.receita)}</span></div>
+                </div>
+              </div>
+            ) : (
+              <div className="st-cal-summary">
+                <div className="st-cal-sum-row">
+                  <span>Total do mês</span>
+                  <strong style={{color:'#10b981'}}>{fN(calTotals.vendas)} vendas</strong>
+                </div>
+                <div className="st-cal-sum-row">
+                  <span>Receita do mês</span>
+                  <strong style={{color:'#f59e0b'}}>{fmt(calTotals.receita)}</strong>
+                </div>
+                {calTotals.bestDay && calTotals.bestDay.vendas > 0 && (
+                  <div className="st-cal-sum-row">
+                    <span>Melhor dia</span>
+                    <strong style={{color:'#c333ff'}}>Dia {calTotals.bestDay.day} ({calTotals.bestDay.vendas}v)</strong>
+                  </div>
+                )}
               </div>
             )}
           </div>
         </div>
       </section>
 
-      {/* RANKINGS 4x2 */}
+      {/* ============================================================ */}
+      {/* 🆕 HEATMAP SEMANAL (DIA x HORA)                             */}
+      {/* ============================================================ */}
+      <section className="st-sec">
+        <h2 className="st-sec-t">MAPA DE CALOR — DIA DA SEMANA × HORA</h2>
+        <div className="st-chart">
+          <div className="st-chart-hd"><Flame size={18} color="#ef4444"/><span>Heatmap de Vendas</span><span className="st-tag" style={{color:'#ef4444'}}>QUANDO SEUS CLIENTES COMPRAM</span></div>
+          {loading ? <div className="st-chart-sk" style={{height:160}}/> : (
+            <div className="st-heatmap-wrap">
+              <div className="st-heatmap-labels">
+                {['Seg','Ter','Qua','Qui','Sex','Sáb','Dom'].map((d,i)=>(
+                  <div key={i} className="st-heat-label">{d}</div>
+                ))}
+              </div>
+              <div className="st-heatmap-grid">
+                <div className="st-heat-hours">
+                  {Array.from({length:24}).map((_,h)=>(
+                    <span key={h} className="st-heat-hour">{h}h</span>
+                  ))}
+                </div>
+                {[0,1,2,3,4,5,6].map(day => {
+                  const dayData = heatmapProcessed.filter(h => h.weekday === day);
+                  const maxVal = Math.max(1, ...heatmapProcessed.map(h => h.count));
+                  return (
+                    <div key={day} className="st-heat-row">
+                      {Array.from({length:24}).map((_,hour)=>{
+                        const cell = dayData.find(h => h.hour === hour);
+                        const val = cell ? cell.count : 0;
+                        return <HeatCell key={hour} value={val} max={maxVal}/>;
+                      })}
+                    </div>
+                  );
+                })}
+              </div>
+              <div className="st-heat-legend">
+                <span>Menos</span>
+                <div className="st-heat-legend-bar"/>
+                <span>Mais</span>
+              </div>
+            </div>
+          )}
+        </div>
+      </section>
+
+      {/* ============================================================ */}
+      {/* 🆕 VENDAS POR ORIGEM + RECEITA POR GATEWAY                  */}
+      {/* ============================================================ */}
+      <section className="st-sec">
+        <h2 className="st-sec-t">DISTRIBUIÇÃO DE VENDAS</h2>
+        <div className="g2">
+          {/* Vendas por Origem */}
+          <div className="st-chart">
+            <div className="st-chart-hd"><Layers size={18} color="#8b5cf6"/><span>Vendas por Origem</span><span className="st-tag" style={{color:'#8b5cf6'}}>DE ONDE VÊM AS VENDAS</span></div>
+            <div className="st-chart-bd" style={{display:'flex',alignItems:'center',justifyContent:'center'}}>
+              {loading?<div className="sk-donut"/>:(
+                origemData.length > 0 ? (
+                  <ResponsiveContainer width="100%" height={280}>
+                    <RechartsPie>
+                      <Pie data={origemData} cx="50%" cy="50%" innerRadius={60} outerRadius={95} paddingAngle={3} dataKey="value" stroke="none">
+                        {origemData.map((_, i) => <Cell key={i} fill={COLORS_PIE[i % COLORS_PIE.length]}/>)}
+                      </Pie>
+                      <Legend verticalAlign="bottom" iconType="circle" iconSize={10} formatter={v=><span style={{color:'#ccc',fontSize:'0.8rem'}}>{v}</span>}/>
+                      <Tooltip content={<GenericTip/>}/>
+                    </RechartsPie>
+                  </ResponsiveContainer>
+                ) : <p style={{color:'#555',fontSize:'.85rem'}}>Sem dados de origem</p>
+              )}
+            </div>
+          </div>
+
+          {/* Receita por Gateway */}
+          <div className="st-chart">
+            <div className="st-chart-hd"><Wallet size={18} color="#10b981"/><span>Receita por Gateway</span><span className="st-tag" style={{color:'#10b981'}}>PROCESSADORES DE PAGAMENTO</span></div>
+            <div className="st-gateway-cards">
+              {loading ? <Sk/> : (
+                <>
+                  {(gatewayData.items || []).map((gw, i) => (
+                    <div key={i} className="st-gw-card">
+                      <div className="st-gw-hd">
+                        <span className="st-gw-name">{gw.name}</span>
+                        <span className="st-gw-pct" style={{color: COLORS_PIE[i % COLORS_PIE.length]}}>{gw.pct}%</span>
+                      </div>
+                      <div className="st-gw-bar-bg"><div className="st-gw-bar-fill" style={{width:`${gw.pct}%`, background: COLORS_PIE[i % COLORS_PIE.length]}}/></div>
+                      <div className="st-gw-info">
+                        <span>{fN(gw.count)} vendas</span>
+                        <span>{fmt(gw.receita)}</span>
+                      </div>
+                    </div>
+                  ))}
+                  {(!gatewayData.items || gatewayData.items.length === 0) && <p style={{color:'#555',fontSize:'.85rem',textAlign:'center',padding:20}}>Sem dados de gateway</p>}
+                </>
+              )}
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ============================================================ */}
+      {/* 8 TAXAS                                                      */}
+      {/* ============================================================ */}
+      <section className="st-sec">
+        <h2 className="st-sec-t">TAXAS DETALHADAS</h2>
+        <div className="g4">
+          <TaxaCard icon={<ArrowUpRight size={20}/>} color="#ef4444" title="Taxa Upsell" value={adv.taxa_upsell||0} sub={`${adv.upsell_vendas||0} DE ${m.total_vendas||0} VENDAS`}/>
+          <TaxaCard icon={<ArrowDownRight size={20}/>} color="#f59e0b" title="Taxa Downsell" value={adv.taxa_downsell||0} sub={`${adv.downsell_vendas||0} DE ${m.total_pendentes||0} RECUSAS`}/>
+          <TaxaCard icon={<Zap size={20}/>} color="#8b5cf6" title="Taxa OrderBump" value={adv.taxa_orderbump||0} sub={`${adv.orderbump_vendas||0} DE ${m.total_geradas||0} CHECKOUTS`}/>
+          <TaxaCard icon={<Repeat size={20}/>} color="#06b6d4" title="Taxa Recuperação" value={adv.taxa_recuperacao||0} sub={`${adv.remarketing_vendas||0} DE ${m.total_pendentes||0} PENDENTES`}/>
+          <TaxaCard icon={<Repeat size={20}/>} color="#10b981" title="Taxa Recorrência" value={adv.taxa_recorrencia||0} sub={`${adv.recorrentes||0} DE ${adv.total_compradores||0} COMPRADORES`}/>
+          <TaxaCard icon={<UserCheck size={20}/>} color="#3b82f6" title="Taxa Retenção" value={adv.taxa_retencao||0} sub={`${cnt.vips_ativos||0} VIPS DE ${adv.total_compradores||0} COMPRADORES`}/>
+          <TaxaCard icon={<TrendingUp size={20}/>} color="#ec4899" title="Taxa Upgrade" value={adv.taxa_upgrade||0} sub={`${adv.upsell_vendas||0} UPSELLS DE ${adv.total_compradores||0} COMPRADORES`}/>
+          <TaxaCard icon={<X size={20}/>} color="#ef4444" title="Taxa Abandono" value={adv.taxa_abandono||0} sub={`${adv.expirados_unicos||0} EX-VIPS DE ${adv.total_compradores||0} COMPRADORES`}/>
+        </div>
+      </section>
+
+      {/* ============================================================ */}
+      {/* LTV + VENDAS/USR + RETORNO + CONTADORES                     */}
+      {/* ============================================================ */}
+      <section className="st-sec">
+        <h2 className="st-sec-t">INDICADORES AVANÇADOS</h2>
+        <div className="g4">
+          <div className="st-big"><div className="st-big-hd"><DollarSign size={20} color="#10b981"/> <span>LTV Médio</span><span className="st-tag" style={{color:'#10b981'}}>LIFETIME VALUE</span></div><div className="st-big-val" style={{color:'#10b981'}}>{loading?<Sk/>:fmt(m.ltv_medio)}</div><div className="st-big-sub">GASTO MÉDIO POR CLIENTE</div></div>
+          <div className="st-big"><div className="st-big-hd"><ShoppingBag size={20} color="#8b5cf6"/> <span>Vendas por Usuário</span><span className="st-tag" style={{color:'#8b5cf6'}}>MÉDIA</span></div><div className="st-big-val" style={{color:'#f59e0b'}}>{loading?<Sk/>:`${adv.vendas_por_usuario||0}x`}</div><div className="st-big-sub">COMPRAS POR CLIENTE</div></div>
+          <div className="st-big"><div className="st-big-hd"><Timer size={20} color="#06b6d4"/> <span>Tempo Médio Retorno</span><span className="st-tag" style={{color:'#06b6d4'}}>ENTRE COMPRAS</span></div><div className="st-big-val" style={{color:'#c333ff'}}>{loading?<Sk/>:adv.avg_retorno_dias||0}</div><div className="st-big-sub">DIAS PARA RECOMPRA</div></div>
+          <div className="st-contadores"><div className="st-big-hd"><UserCheck size={20} color="#06b6d4"/> <span>Contadores de Usuários</span><span className="st-tag" style={{color:'#06b6d4'}}>POR TIPO</span></div>
+            <div className="st-cnt-scroll">{contadorItems.map((it,i)=>(<div key={i} className="st-cnt-row"><span className="st-cnt-ic">{it.icon}</span><span className="st-cnt-lb">{it.label}</span><span className="st-cnt-vl" style={{color:it.color}}>{loading?'-':fN(it.value)}</span></div>))}</div>
+          </div>
+        </div>
+      </section>
+
+      {/* ============================================================ */}
+      {/* TEMPO MÉDIO /START → PAGAMENTO                              */}
+      {/* ============================================================ */}
+      <section className="st-sec">
+        <div className="g4">
+          <div className="st-tempo">
+            <div className="st-big-hd"><Clock size={20} color="#06b6d4"/> <span>Tempo Médio</span><span className="st-tag" style={{color:'#06b6d4'}}>/START → PAGAMENTO</span></div>
+            <div className="st-tempo-vals"><div className="st-tempo-u"><span className="st-tempo-n">{tm.horas||0}</span><span className="st-tempo-lb">HORAS</span></div><div className="st-tempo-u"><span className="st-tempo-n">{tm.minutos||0}</span><span className="st-tempo-lb">MINUTOS</span></div><div className="st-tempo-u"><span className="st-tempo-n">{tm.segundos||0}</span><span className="st-tempo-lb">SEGUNDOS</span></div></div>
+            <div className="st-tempo-ds">DATASET: {tm.dataset||0} PAGAMENTOS</div>
+          </div>
+        </div>
+      </section>
+
+      {/* ============================================================ */}
+      {/* RANKINGS 4x2                                                 */}
+      {/* ============================================================ */}
       <section className="st-sec">
         <h2 className="st-sec-t">PICOS DE DESEMPENHO</h2>
         <div className="g4">
@@ -355,7 +621,28 @@ export function Statistics() {
         </div>
       </section>
 
-      {/* DIÁRIO DE MUDANÇAS */}
+      {/* ============================================================ */}
+      {/* GRÁFICOS — Receita + Donut                                   */}
+      {/* ============================================================ */}
+      <section className="st-sec">
+        <h2 className="st-sec-t">GRÁFICOS</h2>
+        <div className="g2">
+          <div className="st-chart"><div className="st-chart-hd"><TrendingUp size={18} color="#c333ff"/><span>Receita no Período</span></div>
+            <div className="st-chart-bd">{loading?<div className="st-chart-sk">{[60,80,45,70,55,90,65].map((h,i)=><div key={i} className="sk-bar" style={{height:`${h}%`}}/>)}</div>:(
+              <ResponsiveContainer width="100%" height={280}><AreaChart data={data?.chart_receita||[]}><defs><linearGradient id="sg" x1="0" y1="0" x2="0" y2="1"><stop offset="5%" stopColor="#c333ff" stopOpacity={0.3}/><stop offset="95%" stopColor="#c333ff" stopOpacity={0}/></linearGradient></defs><CartesianGrid strokeDasharray="3 3" stroke="#222" vertical={false}/><XAxis dataKey="date" axisLine={false} tickLine={false} tick={{fill:'#666',fontSize:11}}/><YAxis axisLine={false} tickLine={false} tick={{fill:'#666',fontSize:11}} tickFormatter={v=>`R$${v}`}/><Tooltip content={<MoneyTip/>}/><Area type="monotone" dataKey="value" stroke="#c333ff" strokeWidth={2.5} fill="url(#sg)"/></AreaChart></ResponsiveContainer>
+            )}</div>
+          </div>
+          <div className="st-chart"><div className="st-chart-hd"><PieChart size={18} color="#c333ff"/><span>Conversão</span></div>
+            <div className="st-chart-bd" style={{display:'flex',alignItems:'center',justifyContent:'center'}}>{loading?<div className="sk-donut"/>:(
+              <ResponsiveContainer width="100%" height={280}><RechartsPie><Pie data={[{name:'Convertidas',value:data?.donut_conversao?.convertidas||0},{name:'Pendentes',value:data?.donut_conversao?.pendentes||0},{name:'Perdidas',value:data?.donut_conversao?.perdidas||0}]} cx="50%" cy="50%" innerRadius={70} outerRadius={100} paddingAngle={3} dataKey="value" stroke="none">{COLORS.map((c,i)=><Cell key={i} fill={c}/>)}</Pie><Legend verticalAlign="bottom" iconType="circle" iconSize={10} formatter={v=><span style={{color:'#ccc',fontSize:'0.85rem'}}>{v}</span>}/><Tooltip contentStyle={{background:'#1a1a2e',border:'1px solid #333',borderRadius:8,color:'#fff'}} itemStyle={{color:'#fff'}}/></RechartsPie></ResponsiveContainer>
+            )}</div>
+          </div>
+        </div>
+      </section>
+
+      {/* ============================================================ */}
+      {/* DIÁRIO DE MUDANÇAS                                           */}
+      {/* ============================================================ */}
       <section className="st-sec">
         <h2 className="st-sec-t">DIÁRIO DE MUDANÇAS</h2>
         <div className="st-diary">
