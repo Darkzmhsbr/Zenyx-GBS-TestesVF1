@@ -187,6 +187,7 @@ export function SuperAdminReports() {
   };
 
   const viewDetails = (report) => {
+    const ACTION_NAMES = { strike: '⚠️ Strike', pause_bots: '⏸️ Pausa de Bots', ban_account: '🚫 Banimento', warning: '⚠️ Aviso', none: 'Nenhuma' };
     Swal.fire({
       title: `👁️ Detalhes: Denúncia #${report.id}`,
       html: `
@@ -201,7 +202,7 @@ export function SuperAdminReports() {
           ${report.evidence_url ? `<p style="margin-top:10px;"><strong>Evidência URL:</strong><br/><a href="${report.evidence_url}" target="_blank" style="color:#3b82f6; word-break: break-all;">${report.evidence_url}</a></p>` : ''}
           ${report.resolution ? `
             <hr style="border-color:#333; margin:12px 0"/>
-            <p><strong>Ação Tomada:</strong> <span style="color:#10b981;">${report.action_taken || 'Nenhuma'}</span></p>
+            <p><strong>Ação Tomada:</strong> <span style="color:#10b981;">${ACTION_NAMES[report.action_taken] || report.action_taken || 'Nenhuma'}</span></p>
             <p><strong>Resolução Admin:</strong> ${report.resolution}</p>
           ` : ''}
         </div>
@@ -211,6 +212,68 @@ export function SuperAdminReports() {
       confirmButtonColor: '#c333ff',
       confirmButtonText: 'Fechar'
     });
+  };
+
+  // 🔄 REVERTER PUNIÇÃO APLICADA
+  const handleRevert = async (report) => {
+    const ACTION_NAMES = { strike: '⚠️ Strike', pause_bots: '⏸️ Pausa de Bots', ban_account: '🚫 Banimento', warning: '⚠️ Aviso' };
+    const actionLabel = ACTION_NAMES[report.action_taken] || report.action_taken || 'Desconhecida';
+
+    const { value: reason } = await Swal.fire({
+      title: '🔄 Reverter Punição',
+      html: `
+        <div style="text-align:left; color:#ccc; font-size:0.9rem;">
+          <p><strong>Usuário:</strong> <span style="color:#c333ff;">@${report.owner_username || 'Desconhecido'}</span></p>
+          <p><strong>Punição aplicada:</strong> <span style="color:#ef4444;">${actionLabel}</span></p>
+          <hr style="border-color:#333; margin:12px 0"/>
+          <p style="font-size:0.85rem; color:#aaa;">Isso irá:</p>
+          <ul style="color:#aaa; font-size:0.82rem; padding-left:18px; margin:6px 0;">
+            <li>Remover ban (se houver)</li>
+            <li>Remover pausa dos bots</li>
+            <li>Reativar todos os bots pausados</li>
+            <li>Decrementar contador de strikes</li>
+            <li>Marcar denúncia como "Descartada"</li>
+          </ul>
+          <hr style="border-color:#333; margin:12px 0"/>
+          <label style="display:block; margin-bottom:4px; font-weight:600;">Motivo da reversão:</label>
+          <textarea id="swal-revert-reason" rows="2" placeholder="Ex: Teste concluído, falso positivo..." style="width:100%; padding:8px; background:#1b1730; color:#fff; border:1px solid #444; border-radius:6px; resize:vertical;"></textarea>
+        </div>
+      `,
+      showCancelButton: true,
+      confirmButtonText: '🔄 Confirmar Reversão',
+      cancelButtonText: 'Cancelar',
+      confirmButtonColor: '#f59e0b',
+      background: '#151515',
+      color: '#fff',
+      width: '480px',
+      preConfirm: () => document.getElementById('swal-revert-reason').value || 'Sem motivo'
+    });
+
+    if (!reason && reason !== '') return;
+
+    try {
+      const res = await superAdminService.revertReport(report.id, reason);
+      Swal.fire({
+        title: '✅ Punição Revertida!',
+        html: `<div style="text-align:left; color:#ccc; font-size:0.85rem;">
+          ${(res.details || []).map(d => `<p style="margin:3px 0;">✓ ${d}</p>`).join('')}
+          <p style="margin-top:10px; color:#10b981;"><strong>Conta restaurada:</strong> @${res.user || '?'}</p>
+        </div>`,
+        icon: 'success',
+        background: '#151515',
+        color: '#fff',
+        confirmButtonColor: '#c333ff'
+      });
+      loadReports();
+    } catch (err) {
+      Swal.fire({
+        title: 'Erro ao Reverter',
+        text: err.response?.data?.detail || 'Falha ao reverter punição.',
+        icon: 'error',
+        background: '#151515',
+        color: '#fff'
+      });
+    }
   };
 
   const formatDate = (d) => {
@@ -340,6 +403,20 @@ export function SuperAdminReports() {
                                 {r.action_taken === 'none' ? 'Sem Punição' : r.action_taken}
                               </span>
                             </div>
+                            {/* 🔄 BOTÃO REVERTER — só se teve punição real e não foi já revertido */}
+                            {r.status === 'resolved' && r.action_taken && r.action_taken !== 'none' && !String(r.action_taken).startsWith('revertido') && (
+                              <div className="action-row" style={{background:'rgba(245,158,11,0.06)', borderColor:'rgba(245,158,11,0.2)'}}>
+                                <span className="action-label" style={{color:'#f59e0b'}}>Reverter</span>
+                                <button className="btn-mini-icon" style={{background:'rgba(245,158,11,0.2)', color:'#f59e0b'}} title="Reverter punição e restaurar conta/bots" onClick={() => handleRevert(r)}>🔄</button>
+                                <span style={{fontSize:'0.7rem', color:'#f59e0b80', marginLeft:'4px'}}>Desfazer tudo</span>
+                              </div>
+                            )}
+                            {/* Indicador de revertido */}
+                            {String(r.action_taken || '').startsWith('revertido') && (
+                              <div className="action-row" style={{background:'rgba(16,185,129,0.06)', borderColor:'rgba(16,185,129,0.2)'}}>
+                                <span style={{fontSize:'0.75rem', color:'#10b981'}}>✅ Punição já revertida</span>
+                              </div>
+                            )}
                           </div>
                         )}
                       </td>

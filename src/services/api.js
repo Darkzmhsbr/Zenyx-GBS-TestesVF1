@@ -1085,6 +1085,10 @@ export const superAdminService = {
   resolveReport: async (reportId, data) => {
     const response = await api.put(`/api/superadmin/reports/${reportId}/resolve`, data);
     return response.data;
+  },
+  revertReport: async (reportId, reason) => {
+    const response = await api.put(`/api/superadmin/reports/${reportId}/revert`, { reason });
+    return response.data;
   }
 };
 // ============================================================
@@ -1189,13 +1193,11 @@ export const groupService = {
 // 📊 SERVIÇO DE ESTATÍSTICAS AVANÇADAS
 // ============================================================
 export const statisticsService = {
-  getStats: async (botId = null, period = '30d', calMonth = null, calYear = null) => {
+  getStats: async (botId = null, period = '30d') => {
     try {
       const params = new URLSearchParams();
       if (botId) params.append('bot_id', botId);
       if (period) params.append('period', period);
-      if (calMonth) params.append('cal_month', calMonth);
-      if (calYear) params.append('cal_year', calYear);
       
       const queryString = params.toString();
       const url = queryString ? `/api/admin/statistics?${queryString}` : '/api/admin/statistics';
