@@ -45,11 +45,11 @@ export function Statistics() {
   const [heatmapView, setHeatmapView] = useState('vendas'); // 'vendas' ou 'receita'
 
   useEffect(() => { loadBots(); loadDiary(); }, []);
-  useEffect(() => { loadStats(); }, [selectedBot, period, isGlobalView]);
+  useEffect(() => { loadStats(); }, [selectedBot, period, isGlobalView, calMonth, calYear]);
 
   const loadBots = async () => { try { setUserBots(await botService.listBots() || []); } catch(e) {} };
   const loadStats = async () => {
-    try { setLoading(true); setData(await statisticsService.getStats(isGlobalView ? null : selectedBot?.id, period)); } catch(e) {} finally { setLoading(false); }
+    try { setLoading(true); setData(await statisticsService.getStats(isGlobalView ? null : selectedBot?.id, period, calMonth + 1, calYear)); } catch(e) {} finally { setLoading(false); }
   };
   const loadDiary = async () => { try { setDiaryNotes(await changelogService.list()); } catch(e) {} };
   const saveDiary = async () => {
@@ -100,27 +100,24 @@ export function Statistics() {
     const firstDayWeekday = new Date(calYear, calMonth, 1).getDay();
     const today = new Date();
     const isCurrentMonth = calMonth === today.getMonth() && calYear === today.getFullYear();
-    const isPastMonth = (calYear < today.getFullYear()) || (calYear === today.getFullYear() && calMonth < today.getMonth());
     
     const days = [];
     for (let i = 0; i < firstDayWeekday; i++) days.push({ empty: true });
     
-    // Find max vendas for intensity calculation
     const maxVendas = Math.max(1, ...cal.map(c => c.vendas || 0));
     
     for (let d = 1; d <= daysInMonth; d++) {
       const calDay = cal.find(c => c.day === d);
-      const isFutureDay = isCurrentMonth && d > today.getDate();
-      // 🔒 Só mostra dados para o mês corrente e dias que já passaram
-      const vendas = (isCurrentMonth && !isFutureDay && calDay) ? calDay.vendas : 0;
-      const receita = (isCurrentMonth && !isFutureDay && calDay) ? calDay.receita : 0;
+      const isFuture = calDay?.is_future || (isCurrentMonth && d > today.getDate());
+      const vendas = (!isFuture && calDay) ? (calDay.vendas || 0) : 0;
+      const receita = (!isFuture && calDay) ? (calDay.receita || 0) : 0;
       days.push({
         day: d,
         vendas,
         receita,
         intensity: vendas / maxVendas,
         isToday: isCurrentMonth && d === today.getDate(),
-        isFuture: isFutureDay && !isPastMonth,
+        isFuture,
         selected: selectedCalDay === d,
       });
     }
@@ -133,7 +130,6 @@ export function Statistics() {
     setSelectedCalDay(null);
   };
   const nextMonth = () => {
-    // 🔒 Bloqueia navegação para meses futuros
     const today = new Date();
     const nextM = calMonth === 11 ? 0 : calMonth + 1;
     const nextY = calMonth === 11 ? calYear + 1 : calYear;
@@ -145,14 +141,10 @@ export function Statistics() {
 
   const selectedDayInfo = useMemo(() => {
     if (!selectedCalDay) return null;
-    const today = new Date();
-    const isCurrentMonth = calMonth === today.getMonth() && calYear === today.getFullYear();
-    // 🔒 Não mostra dados para dias futuros
-    if (isCurrentMonth && selectedCalDay > today.getDate()) return { day: selectedCalDay, vendas: 0, receita: 0 };
-    if (!isCurrentMonth) return { day: selectedCalDay, vendas: 0, receita: 0 };
     const d = cal.find(c => c.day === selectedCalDay);
+    if (d?.is_future) return { day: selectedCalDay, vendas: 0, receita: 0 };
     return d || { day: selectedCalDay, vendas: 0, receita: 0 };
-  }, [selectedCalDay, cal, calMonth, calYear]);
+  }, [selectedCalDay, cal]);
 
   // Best hour from chart_horas
   const bestHour = useMemo(() => {
@@ -414,7 +406,7 @@ export function Statistics() {
               <div className="st-cal-nav-modern">
                 <button className="st-cal-arrow-modern" onClick={prevMonth}><ChevronLeft size={16}/></button>
                 <span className="st-cal-month-modern">{mesesNomes[calMonth]} {calYear}</span>
-                <button className="st-cal-arrow-modern" onClick={nextMonth} disabled={(() => { const t=new Date(); const nM=calMonth===11?0:calMonth+1; const nY=calMonth===11?calYear+1:calYear; return nY>t.getFullYear()||(nY===t.getFullYear()&&nM>t.getMonth()); })()} style={(() => { const t=new Date(); const nM=calMonth===11?0:calMonth+1; const nY=calMonth===11?calYear+1:calYear; return (nY>t.getFullYear()||(nY===t.getFullYear()&&nM>t.getMonth())) ? {opacity:0.3,cursor:'not-allowed'} : {}; })()}><ChevronRight size={16}/></button>
+                <button className="st-cal-arrow-modern" onClick={nextMonth} style={(() => { const t=new Date(); const nM=calMonth===11?0:calMonth+1; const nY=calMonth===11?calYear+1:calYear; return (nY>t.getFullYear()||(nY===t.getFullYear()&&nM>t.getMonth())) ? {opacity:0.3,cursor:'not-allowed'} : {}; })()}><ChevronRight size={16}/></button>
               </div>
             </div>
 
@@ -474,22 +466,22 @@ export function Statistics() {
           <div className="st-chart-hd"><Flame size={18} color="#ef4444"/><span>Heatmap de Vendas</span><span className="st-tag" style={{color:'#ef4444'}}>QUANDO SEUS CLIENTES COMPRAM</span></div>
           {loading ? <div className="st-chart-sk" style={{height:160}}/> : (
             <div className="st-heatmap-wrap">
-              <div className="st-heatmap-labels">
-                {['Seg','Ter','Qua','Qui','Sex','Sáb','Dom'].map((d,i)=>(
-                  <div key={i} className="st-heat-label">{d}</div>
-                ))}
-              </div>
               <div className="st-heatmap-grid">
-                <div className="st-heat-hours">
+                {/* Header row: empty corner + 24 hour labels */}
+                <div className="st-heat-header-row">
+                  <span className="st-heat-day-label"></span>
                   {Array.from({length:24}).map((_,h)=>(
                     <span key={h} className="st-heat-hour">{h}h</span>
                   ))}
                 </div>
+                {/* Data rows: day label + 24 cells */}
                 {[0,1,2,3,4,5,6].map(day => {
+                  const dayNames = ['Seg','Ter','Qua','Qui','Sex','Sáb','Dom'];
                   const dayData = heatmapProcessed.filter(h => h.weekday === day);
                   const maxVal = Math.max(1, ...heatmapProcessed.map(h => h.count));
                   return (
                     <div key={day} className="st-heat-row">
+                      <span className="st-heat-day-label">{dayNames[day]}</span>
                       {Array.from({length:24}).map((_,hour)=>{
                         const cell = dayData.find(h => h.hour === hour);
                         const val = cell ? cell.count : 0;
@@ -616,7 +608,7 @@ export function Statistics() {
           <RankCard icon={<Zap size={18} color="#10b981"/>} title="Top 5 Bots" tag="MAIS VENDIDOS" tagColor="#10b981" items={data?.top_bots} empty="Nenhum bot disponível"/>
           <RankCard icon={<Award size={18} color="#c333ff"/>} title="Top 5 Planos" tag="MAIS VENDIDOS" tagColor="#c333ff" items={data?.top_planos} empty="Nenhum plano disponível"/>
           <RankCard icon={<Calendar size={18} color="#f59e0b"/>} title="Top 7 Dias" tag="MAIS VENDIDOS" tagColor="#f59e0b" items={data?.top_dias} nameKey="day" empty="Nenhum dia disponível"/>
-          <RankCard icon={<CreditCard size={18} color="#3b82f6"/>} title="Top 5 Tickets" tag="MAIOR VALOR" tagColor="#3b82f6" items={data?.top_planos?.map(p => ({...p, count: undefined, name: p.name, revenue: p.revenue ? `R$ ${(p.revenue/100).toFixed(2)}` : `${p.count} vendas`}))} empty="Nenhum ticket disponível"/>
+          <RankCard icon={<CreditCard size={18} color="#3b82f6"/>} title="Top 5 Tickets" tag="MAIS VENDIDOS" tagColor="#3b82f6" items={data?.top_planos} empty="Nenhum ticket disponível"/>
           <RankCard icon={<Link2 size={18} color="#ec4899"/>} title="Top Códigos de Venda" tag="MAIS RECEITA" tagColor="#ec4899" items={data?.top_tracking} nameKey="name" empty="Nenhum código disponível"/>
           <RankCard icon={<Megaphone size={18} color="#8b5cf6"/>} title="Top Campanhas" tag="TRÁFEGO PAGO" tagColor="#8b5cf6" items={data?.top_campanhas} nameKey="name" empty="Nenhuma campanha com vendas"/>
           <RankCard icon={<Clock size={18} color="#06b6d4"/>} title="Top Horários" tag="MAIS VENDIDOS" tagColor="#06b6d4" items={data?.top_horas} nameKey="hour" empty="Nenhum horário disponível"/>
