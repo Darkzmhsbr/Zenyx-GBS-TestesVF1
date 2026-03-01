@@ -158,7 +158,7 @@ export function Statistics() {
   const calTotals = useMemo(() => {
     const totalV = cal.reduce((s, d) => s + (d.vendas || 0), 0);
     const totalR = cal.reduce((s, d) => s + (d.receita || 0), 0);
-    const bestDay = cal.length > 0 ? cal.reduce((a, b) => (b.vendas > a.vendas ? b : a), cal[0]) : null;
+    const bestDay = cal.length > 0 ? cal.reduce((a, b) => (b.receita > a.receita ? b : a), cal[0]) : null;
     return { vendas: totalV, receita: totalR, bestDay };
   }, [cal]);
 
