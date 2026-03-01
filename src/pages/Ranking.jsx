@@ -7,6 +7,7 @@ export function Ranking() {
   const dataAtual = new Date();
   const [mesSelecionado, setMesSelecionado] = useState(dataAtual.getMonth() + 1);
   const [anoSelecionado, setAnoSelecionado] = useState(dataAtual.getFullYear());
+  const [modoTodos, setModoTodos] = useState(false); // 🆕 "Todos os Tempos"
   
   const [rankingData, setRankingData] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -25,7 +26,9 @@ export function Ranking() {
   const carregarRanking = async () => {
     setLoading(true);
     try {
-      const response = await rankingService.getTopVendedores(mesSelecionado, anoSelecionado);
+      const mes = modoTodos ? 0 : mesSelecionado;
+      const ano = modoTodos ? 0 : anoSelecionado;
+      const response = await rankingService.getTopVendedores(mes, ano);
       if (response.status === 'success') {
         setRankingData(response.ranking);
       } else {
@@ -41,7 +44,7 @@ export function Ranking() {
 
   useEffect(() => {
     carregarRanking();
-  }, [mesSelecionado, anoSelecionado]);
+  }, [mesSelecionado, anoSelecionado, modoTodos]);
 
   const formatarDinheiro = (valor) => {
     return new Intl.NumberFormat('pt-BR', {
@@ -112,50 +115,69 @@ export function Ranking() {
           </div>
           <div>
             <h1>Ranking de Vendas</h1>
-            <p>Os maiores faturamentos da plataforma neste período.</p>
+            <p>{modoTodos ? 'Ranking geral de todos os tempos da plataforma.' : 'Os maiores faturamentos da plataforma neste período.'}</p>
           </div>
         </div>
 
         {/* 🔥 FILTROS COM ESTRUTURA BLINDADA CONTRA SOBREPOSIÇÃO */}
-        <div className="ranking-filters" style={{ display: 'flex', gap: '15px' }}>
+        <div className="ranking-filters" style={{ display: 'flex', gap: '15px', alignItems: 'center' }}>
           
-          <div style={{ 
-            display: 'flex', alignItems: 'center', backgroundColor: '#161616', 
-            border: '1px solid #333', borderRadius: '8px', padding: '0 12px', height: '42px'
-          }}>
-            <Calendar size={18} color="#a3a3a3" style={{ marginRight: '8px', flexShrink: 0 }} />
-            <select 
-              value={mesSelecionado} 
-              onChange={(e) => setMesSelecionado(Number(e.target.value))}
-              style={{ 
-                background: 'transparent', border: 'none', color: '#fff', fontSize: '0.95rem',
-                outline: 'none', cursor: 'pointer', width: '100%', minWidth: '110px'
-              }}
-            >
-              {meses.map((m) => (
-                <option key={m.valor} value={m.valor} style={{ background: '#1a1a1a' }}>{m.nome}</option>
-              ))}
-            </select>
-          </div>
+          {/* 🆕 BOTÃO: TODOS OS TEMPOS */}
+          <button 
+            onClick={() => setModoTodos(!modoTodos)}
+            style={{
+              display: 'flex', alignItems: 'center', gap: '6px',
+              backgroundColor: modoTodos ? 'rgba(195,51,255,0.15)' : '#161616',
+              border: modoTodos ? '1px solid rgba(195,51,255,0.5)' : '1px solid #333',
+              borderRadius: '8px', padding: '0 16px', height: '42px',
+              color: modoTodos ? '#c333ff' : '#a3a3a3', fontSize: '0.9rem', fontWeight: 600,
+              cursor: 'pointer', transition: '0.2s', whiteSpace: 'nowrap'
+            }}
+          >
+            <Trophy size={16} /> {modoTodos ? '✓ Todos os Tempos' : 'Todos os Tempos'}
+          </button>
 
-          <div style={{ 
-            display: 'flex', alignItems: 'center', backgroundColor: '#161616', 
-            border: '1px solid #333', borderRadius: '8px', padding: '0 12px', height: '42px'
-          }}>
-            <Calendar size={18} color="#a3a3a3" style={{ marginRight: '8px', flexShrink: 0 }} />
-            <select 
-              value={anoSelecionado} 
-              onChange={(e) => setAnoSelecionado(Number(e.target.value))}
-              style={{ 
-                background: 'transparent', border: 'none', color: '#fff', fontSize: '0.95rem',
-                outline: 'none', cursor: 'pointer', width: '100%', minWidth: '70px'
-              }}
-            >
-              {anos.map((a) => (
-                <option key={a} value={a} style={{ background: '#1a1a1a' }}>{a}</option>
-              ))}
-            </select>
-          </div>
+          {!modoTodos && (
+            <>
+              <div style={{ 
+                display: 'flex', alignItems: 'center', backgroundColor: '#161616', 
+                border: '1px solid #333', borderRadius: '8px', padding: '0 12px', height: '42px'
+              }}>
+                <Calendar size={18} color="#a3a3a3" style={{ marginRight: '8px', flexShrink: 0 }} />
+                <select 
+                  value={mesSelecionado} 
+                  onChange={(e) => setMesSelecionado(Number(e.target.value))}
+                  style={{ 
+                    background: 'transparent', border: 'none', color: '#fff', fontSize: '0.95rem',
+                    outline: 'none', cursor: 'pointer', width: '100%', minWidth: '110px'
+                  }}
+                >
+                  {meses.map((m) => (
+                    <option key={m.valor} value={m.valor} style={{ background: '#1a1a1a' }}>{m.nome}</option>
+                  ))}
+                </select>
+              </div>
+
+              <div style={{ 
+                display: 'flex', alignItems: 'center', backgroundColor: '#161616', 
+                border: '1px solid #333', borderRadius: '8px', padding: '0 12px', height: '42px'
+              }}>
+                <Calendar size={18} color="#a3a3a3" style={{ marginRight: '8px', flexShrink: 0 }} />
+                <select 
+                  value={anoSelecionado} 
+                  onChange={(e) => setAnoSelecionado(Number(e.target.value))}
+                  style={{ 
+                    background: 'transparent', border: 'none', color: '#fff', fontSize: '0.95rem',
+                    outline: 'none', cursor: 'pointer', width: '100%', minWidth: '70px'
+                  }}
+                >
+                  {anos.map((a) => (
+                    <option key={a} value={a} style={{ background: '#1a1a1a' }}>{a}</option>
+                  ))}
+                </select>
+              </div>
+            </>
+          )}
         </div>
       </div>
 
@@ -222,7 +244,7 @@ export function Ranking() {
           <div className="ranking-empty">
             <Trophy size={48} className="empty-icon" />
             <h3>Nenhuma venda registrada</h3>
-            <p>Ainda não há dados de vendas aprovadas para {meses.find(m => m.valor === mesSelecionado)?.nome} de {anoSelecionado}.</p>
+            <p>Ainda não há dados de vendas aprovadas {modoTodos ? 'na plataforma' : `para ${meses.find(m => m.valor === mesSelecionado)?.nome} de ${anoSelecionado}`}.</p>
           </div>
         </div>
       )}
