@@ -81,13 +81,13 @@ export function LandingPage() {
       {/* 8. Gateways de Pagamento Disponíveis */}
       <GatewaysSection />
       
-      {/* 9. FAQ com efeito Reveal Glow (Para matar objeções finais) */}
+      {/* 9. FAQ com efeito Reveal Glow */}
       <FAQSection />
       
-      {/* 10. Chamada Final de Ação (CTA Banner) */}
+      {/* 9. Chamada Final de Ação (CTA Banner) */}
       <CTASection />
       
-      {/* 11. Rodapé Limpo e 100% Responsivo */}
+      {/* 10. Rodapé Limpo e 100% Responsivo */}
       <Footer />
       
     </div>

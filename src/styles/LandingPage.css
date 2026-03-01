@@ -1328,18 +1328,22 @@
   color: var(--neon-magenta);
 }
 
+.cc-item.active .cc-chevron, .cc-item.open .cc-chevron {
+  transform: rotate(180deg);
+  color: var(--neon-magenta);
+}
+
 .cc-content, .cc-body {
   max-height: 0;
   overflow: hidden;
   transition: max-height 0.5s cubic-bezier(0.2, 0.8, 0.2, 1);
 }
 
-.cc-item.active .cc-content, .cc-item.open .cc-body, .cc-item.active .cc-body {
+.cc-item.active .cc-content,
+.cc-item.active .cc-body,
+.cc-item.open .cc-content,
+.cc-item.open .cc-body {
   max-height: 600px;
-}
-
-.cc-item.active .cc-chevron, .cc-item.open .cc-chevron {
-  transform: rotate(180deg);
 }
 
 .cc-inner, .cc-content-padding {
@@ -1541,13 +1545,11 @@
    💳 SEÇÃO: GATEWAYS DISPONÍVEIS
    ============================================================ */
 .gw-grid {
-  display: flex;
-  justify-content: center;
-  gap: 2rem;
-  flex-wrap: wrap;
-  max-width: 900px;
-  margin: 0 auto;
-  padding-top: 1rem;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1.5rem;
+  max-width: 800px;
+  margin: 2rem auto 0;
 }
 
 .gw-card {
@@ -1555,12 +1557,11 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 14px;
-  padding: 2rem 1.8rem 1.5rem;
+  gap: 12px;
+  padding: 2rem 1.2rem 1.5rem;
   background: rgba(15, 10, 30, 0.6);
-  border: 1px solid var(--border-subtle);
+  border: 1px solid var(--border-subtle, rgba(255,255,255,0.08));
   border-radius: 20px;
-  width: 180px;
   text-align: center;
   transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
   backdrop-filter: blur(12px);
@@ -1568,60 +1569,50 @@
 }
 
 .gw-card:hover {
-  border-color: var(--gw-color, var(--neon-magenta));
-  transform: translateY(-8px);
-  box-shadow: 
-    0 20px 40px rgba(0, 0, 0, 0.3),
-    0 0 30px color-mix(in srgb, var(--gw-color, #c333ff) 20%, transparent);
+  border-color: var(--gw-color, var(--neon-magenta, #c333ff));
+  transform: translateY(-6px);
+  box-shadow: 0 16px 32px rgba(0, 0, 0, 0.3);
 }
 
 .gw-card.gw-coming {
-  opacity: 0.5;
-  filter: grayscale(0.5);
+  opacity: 0.45;
+  filter: grayscale(0.4);
 }
-
 .gw-card.gw-coming:hover {
-  opacity: 0.7;
-  transform: translateY(-4px);
+  opacity: 0.65;
+  transform: translateY(-3px);
 }
 
-/* Glow ring behind logo */
 .gw-glow {
   position: absolute;
-  top: 16px;
-  width: 80px;
-  height: 80px;
+  top: 10px;
+  width: 70px;
+  height: 70px;
   border-radius: 50%;
-  background: radial-gradient(circle, color-mix(in srgb, var(--gw-color, #c333ff) 15%, transparent), transparent 70%);
-  filter: blur(20px);
+  background: radial-gradient(circle, rgba(195,51,255,0.12), transparent 70%);
+  filter: blur(18px);
   pointer-events: none;
   opacity: 0;
   transition: opacity 0.4s;
 }
+.gw-card:hover .gw-glow { opacity: 1; }
 
-.gw-card:hover .gw-glow {
-  opacity: 1;
-}
-
-/* Logo container */
 .gw-logo-wrap {
-  width: 72px;
-  height: 72px;
-  border-radius: 16px;
+  width: 64px;
+  height: 64px;
+  border-radius: 14px;
   background: rgba(255, 255, 255, 0.04);
   border: 1px solid rgba(255, 255, 255, 0.08);
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 10px;
-  transition: all 0.4s;
+  padding: 8px;
+  transition: all 0.3s;
   position: relative;
   z-index: 2;
 }
-
 .gw-card:hover .gw-logo-wrap {
-  border-color: color-mix(in srgb, var(--gw-color, #c333ff) 40%, transparent);
-  background: rgba(255, 255, 255, 0.06);
+  border-color: rgba(195,51,255,0.3);
   transform: scale(1.05);
 }
 
@@ -1629,55 +1620,52 @@
   width: 100%;
   height: 100%;
   object-fit: contain;
-  border-radius: 8px;
+  border-radius: 6px;
 }
 
-/* Gateway name */
 .gw-name {
-  font-family: var(--font-display);
-  font-size: 1rem;
+  font-family: var(--font-display, inherit);
+  font-size: 0.95rem;
   font-weight: 700;
-  color: var(--text-main);
-  letter-spacing: 0.02em;
+  color: var(--text-main, #fff);
 }
 
-/* Status badge */
 .gw-status {
-  font-size: 0.72rem;
+  font-size: 0.68rem;
   font-weight: 600;
   letter-spacing: 0.5px;
   text-transform: uppercase;
-  padding: 4px 12px;
+  padding: 3px 10px;
   border-radius: 20px;
 }
 
 .gw-active {
   color: #10b981;
   background: rgba(16, 185, 129, 0.1);
-  border: 1px solid rgba(16, 185, 129, 0.2);
+  border: 1px solid rgba(16, 185, 129, 0.25);
 }
 
 .gw-soon {
   color: #f59e0b;
   background: rgba(245, 158, 11, 0.1);
-  border: 1px solid rgba(245, 158, 11, 0.2);
+  border: 1px solid rgba(245, 158, 11, 0.25);
 }
 
-/* Mobile */
-@media (max-width: 600px) {
+@media (max-width: 768px) {
   .gw-grid {
+    grid-template-columns: repeat(2, 1fr);
     gap: 1rem;
+    max-width: 100%;
   }
-  .gw-card {
-    width: calc(50% - 0.5rem);
-    padding: 1.5rem 1rem 1.2rem;
-  }
-  .gw-logo-wrap {
-    width: 56px;
-    height: 56px;
-    padding: 8px;
-  }
-  .gw-name {
-    font-size: 0.85rem;
-  }
+  .gw-card { padding: 1.5rem 0.8rem 1.2rem; }
+  .gw-logo-wrap { width: 52px; height: 52px; }
+  .gw-name { font-size: 0.85rem; }
+}
+
+@media (max-width: 400px) {
+  .gw-grid { gap: 0.75rem; }
+  .gw-card { padding: 1.2rem 0.5rem 1rem; border-radius: 14px; }
+  .gw-logo-wrap { width: 44px; height: 44px; padding: 6px; }
+  .gw-name { font-size: 0.78rem; }
+  .gw-status { font-size: 0.6rem; padding: 2px 8px; }
 }
