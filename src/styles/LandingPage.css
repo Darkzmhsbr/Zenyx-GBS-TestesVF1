@@ -1317,6 +1317,12 @@
   color: var(--text-muted);
 }
 
+.cc-chevron {
+  transition: transform 0.4s ease;
+  color: var(--text-muted);
+  flex-shrink: 0;
+}
+
 .cc-item.active .cc-icon, .cc-item.open .cc-icon {
   transform: rotate(-180deg);
   color: var(--neon-magenta);
@@ -1325,7 +1331,15 @@
 .cc-content, .cc-body {
   max-height: 0;
   overflow: hidden;
-  transition: max-height 0.4s cubic-bezier(0.2, 0.8, 0.2, 1);
+  transition: max-height 0.5s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.cc-item.active .cc-content, .cc-item.open .cc-body, .cc-item.active .cc-body {
+  max-height: 600px;
+}
+
+.cc-item.active .cc-chevron, .cc-item.open .cc-chevron {
+  transform: rotate(180deg);
 }
 
 .cc-inner, .cc-content-padding {
@@ -1522,4 +1536,148 @@
   .cc-btn { padding: 1.2rem 1.2rem; font-size: 1.1rem; }
   .cc-content-padding { padding: 0 1.2rem 1.5rem 1.2rem; }
   .cc-title-inside { font-size: 1.2rem; }
+}
+/* ============================================================
+   💳 SEÇÃO: GATEWAYS DISPONÍVEIS
+   ============================================================ */
+.gw-grid {
+  display: flex;
+  justify-content: center;
+  gap: 2rem;
+  flex-wrap: wrap;
+  max-width: 900px;
+  margin: 0 auto;
+  padding-top: 1rem;
+}
+
+.gw-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+  padding: 2rem 1.8rem 1.5rem;
+  background: rgba(15, 10, 30, 0.6);
+  border: 1px solid var(--border-subtle);
+  border-radius: 20px;
+  width: 180px;
+  text-align: center;
+  transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  backdrop-filter: blur(12px);
+  cursor: default;
+}
+
+.gw-card:hover {
+  border-color: var(--gw-color, var(--neon-magenta));
+  transform: translateY(-8px);
+  box-shadow: 
+    0 20px 40px rgba(0, 0, 0, 0.3),
+    0 0 30px color-mix(in srgb, var(--gw-color, #c333ff) 20%, transparent);
+}
+
+.gw-card.gw-coming {
+  opacity: 0.5;
+  filter: grayscale(0.5);
+}
+
+.gw-card.gw-coming:hover {
+  opacity: 0.7;
+  transform: translateY(-4px);
+}
+
+/* Glow ring behind logo */
+.gw-glow {
+  position: absolute;
+  top: 16px;
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  background: radial-gradient(circle, color-mix(in srgb, var(--gw-color, #c333ff) 15%, transparent), transparent 70%);
+  filter: blur(20px);
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.4s;
+}
+
+.gw-card:hover .gw-glow {
+  opacity: 1;
+}
+
+/* Logo container */
+.gw-logo-wrap {
+  width: 72px;
+  height: 72px;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 10px;
+  transition: all 0.4s;
+  position: relative;
+  z-index: 2;
+}
+
+.gw-card:hover .gw-logo-wrap {
+  border-color: color-mix(in srgb, var(--gw-color, #c333ff) 40%, transparent);
+  background: rgba(255, 255, 255, 0.06);
+  transform: scale(1.05);
+}
+
+.gw-logo-img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  border-radius: 8px;
+}
+
+/* Gateway name */
+.gw-name {
+  font-family: var(--font-display);
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--text-main);
+  letter-spacing: 0.02em;
+}
+
+/* Status badge */
+.gw-status {
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  padding: 4px 12px;
+  border-radius: 20px;
+}
+
+.gw-active {
+  color: #10b981;
+  background: rgba(16, 185, 129, 0.1);
+  border: 1px solid rgba(16, 185, 129, 0.2);
+}
+
+.gw-soon {
+  color: #f59e0b;
+  background: rgba(245, 158, 11, 0.1);
+  border: 1px solid rgba(245, 158, 11, 0.2);
+}
+
+/* Mobile */
+@media (max-width: 600px) {
+  .gw-grid {
+    gap: 1rem;
+  }
+  .gw-card {
+    width: calc(50% - 0.5rem);
+    padding: 1.5rem 1rem 1.2rem;
+  }
+  .gw-logo-wrap {
+    width: 56px;
+    height: 56px;
+    padding: 8px;
+  }
+  .gw-name {
+    font-size: 0.85rem;
+  }
 }

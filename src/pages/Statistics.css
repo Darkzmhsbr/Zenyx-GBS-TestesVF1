@@ -37,7 +37,7 @@
 .st-tag { font-size:.65rem; font-weight:700; letter-spacing:1px; text-transform:uppercase; }
 
 @media(max-width:1100px){ .g4{grid-template-columns:repeat(2,1fr)} .g2{grid-template-columns:1fr} .st-semana-row{flex-direction:column} }
-@media(max-width:700px){ .g4,.g3{grid-template-columns:1fr} .statistics-container{padding:16px;margin-left:0;margin-top:60px} .st-chart{padding:14px} .st-rank-name{font-size:.8rem} .st-rank-cnt{font-size:.72rem} }
+@media(max-width:700px){ .g4,.g3{grid-template-columns:1fr} .statistics-container{padding:12px;margin-left:0;margin-top:60px} .st-chart{padding:12px} .st-rank{padding:14px 12px} .st-rank-row{gap:6px} .st-rank-name{font-size:.78rem} .st-rank-cnt{font-size:.72rem} .st-rank-pos{min-width:22px;font-size:.75rem} }
 
 /* ============================================================ */
 /* GROWTH BADGE                                                  */
@@ -319,15 +319,15 @@
 /* ============================================================ */
 /* RANK CARDS                                                    */
 /* ============================================================ */
-.st-rank { background:#12121e; border:1px solid #1e1e35; border-radius:14px; padding:18px 20px; transition:.25s; }
+.st-rank { background:#12121e; border:1px solid #1e1e35; border-radius:14px; padding:18px 20px; transition:.25s; overflow:visible; }
 .st-rank:hover { border-color:#333; }
 .st-rank-hd { display:flex; align-items:center; gap:8px; margin-bottom:14px; flex-wrap:wrap; }
 .st-rank-title { font-size:.9rem; font-weight:600; color:#fff; }
 .st-rank-tag { font-size:.65rem; font-weight:700; letter-spacing:1px; text-transform:uppercase; }
-.st-rank-body { min-height:100px; }
+.st-rank-body { min-height:100px; overflow:visible; }
 .st-rank-empty { color:#444; text-align:center; padding:20px 0; font-size:.85rem; }
-.st-rank-list { display:flex; flex-direction:column; }
-.st-rank-row { display:flex; align-items:center; gap:10px; padding:7px 0; border-bottom:1px solid #1a1a2e; }
+.st-rank-list { display:flex; flex-direction:column; overflow:visible; }
+.st-rank-row { display:flex; align-items:center; gap:10px; padding:7px 0; border-bottom:1px solid #1a1a2e; overflow:visible; }
 .st-rank-row:last-child { border-bottom:none; }
 .st-rank-pos { font-size:.8rem; font-weight:700; color:#c333ff; min-width:26px; flex-shrink:0; text-align:center; }
 .st-rank-name { flex:1; font-size:.85rem; color:#ccc; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; min-width:0; }

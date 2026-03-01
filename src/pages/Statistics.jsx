@@ -217,7 +217,7 @@ export function Statistics() {
       <div className="st-rank-body">
         {loading ? <p className="st-rank-empty">Carregando...</p> : (items||[]).length === 0 ? <p className="st-rank-empty">{empty}</p> : (
           <div className="st-rank-list">{(items||[]).slice(0,5).map((it,j) => (
-            <div key={j} className="st-rank-row"><span className="st-rank-pos">{j+1}º</span><span className="st-rank-name">{it[nameKey]}</span><span className="st-rank-cnt">{it.count || it.revenue || 0}{it.count !== undefined ? ' vendas' : ''}</span></div>
+            <div key={j} className="st-rank-row"><span className="st-rank-pos">{j+1}º</span><span className="st-rank-name">{it[nameKey]}</span><span className="st-rank-cnt">{it.count ?? it.revenue ?? 0} {it.count !== undefined ? 'vendas' : ''}</span></div>
           ))}</div>
         )}
       </div>

@@ -16,6 +16,7 @@ import '../styles/LandingPage.css';
 // NOVO COMPONENTE: Vitrine (Criaremos nos próximos arquivos)
 // ============================================================
 import { VitrineSection } from '../components/landing/VitrineSection'; 
+import { GatewaysSection } from '../components/landing/GatewaysSection'; 
 
 export function LandingPage() {
   useEffect(() => {
@@ -77,13 +78,16 @@ export function LandingPage() {
       {/* 7. Command Center: Acordeão Sleek Magenta */}
       <TutorialsSection />
       
-      {/* 8. FAQ com efeito Reveal Glow (Para matar objeções finais) */}
+      {/* 8. Gateways de Pagamento Disponíveis */}
+      <GatewaysSection />
+      
+      {/* 9. FAQ com efeito Reveal Glow (Para matar objeções finais) */}
       <FAQSection />
       
-      {/* 9. Chamada Final de Ação (CTA Banner) */}
+      {/* 10. Chamada Final de Ação (CTA Banner) */}
       <CTASection />
       
-      {/* 10. Rodapé Limpo e 100% Responsivo */}
+      {/* 11. Rodapé Limpo e 100% Responsivo */}
       <Footer />
       
     </div>
