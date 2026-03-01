@@ -193,12 +193,15 @@ export function BotConfig() {
     try {
       await botService.updateBot(id, config);
       Swal.fire({
-        title: 'Sucesso',
+        title: '✅ Salvo!',
         text: 'Configurações gerais salvas!',
         icon: 'success',
-        timer: 1500,
+        timer: 2000,
         showConfirmButton: false,
-        background: '#151515', color: '#fff'
+        background: '#151515', color: '#fff',
+        toast: true,
+        position: 'top-end',
+        customClass: { popup: 'swal-toast-zenyx' }
       });
     } catch (error) {
       Swal.fire('Erro', 'Falha ao salvar config geral', 'error');
@@ -210,12 +213,15 @@ export function BotConfig() {
       try {
           await miniappService.saveConfig(id, miniAppConfig);
           Swal.fire({
-            title: 'Loja Atualizada',
+            title: '✅ Loja Atualizada!',
             text: 'Configurações visuais salvas!',
             icon: 'success',
-            timer: 1500,
+            timer: 2000,
             showConfirmButton: false,
-            background: '#151515', color: '#fff'
+            background: '#151515', color: '#fff',
+            toast: true,
+            position: 'top-end',
+            customClass: { popup: 'swal-toast-zenyx' }
           });
       } catch (error) {
           Swal.fire('Erro', 'Falha ao salvar loja', 'error');

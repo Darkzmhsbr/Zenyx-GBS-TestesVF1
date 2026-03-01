@@ -100,6 +100,7 @@ export function Statistics() {
     const firstDayWeekday = new Date(calYear, calMonth, 1).getDay();
     const today = new Date();
     const isCurrentMonth = calMonth === today.getMonth() && calYear === today.getFullYear();
+    const isPastMonth = (calYear < today.getFullYear()) || (calYear === today.getFullYear() && calMonth < today.getMonth());
     
     const days = [];
     for (let i = 0; i < firstDayWeekday; i++) days.push({ empty: true });
@@ -109,15 +110,18 @@ export function Statistics() {
     
     for (let d = 1; d <= daysInMonth; d++) {
       const calDay = cal.find(c => c.day === d);
-      const vendas = isCurrentMonth && calDay ? calDay.vendas : 0;
-      const receita = isCurrentMonth && calDay ? calDay.receita : 0;
+      const isFutureDay = isCurrentMonth && d > today.getDate();
+      // 🔒 Só mostra dados para o mês corrente e dias que já passaram
+      const vendas = (isCurrentMonth && !isFutureDay && calDay) ? calDay.vendas : 0;
+      const receita = (isCurrentMonth && !isFutureDay && calDay) ? calDay.receita : 0;
       days.push({
         day: d,
         vendas,
         receita,
-        intensity: vendas / maxVendas, // 0 to 1 for heatmap coloring
+        intensity: vendas / maxVendas,
         isToday: isCurrentMonth && d === today.getDate(),
-        selected: selectedCalDay === d && isCurrentMonth,
+        isFuture: isFutureDay && !isPastMonth,
+        selected: selectedCalDay === d,
       });
     }
     return days;
@@ -129,6 +133,11 @@ export function Statistics() {
     setSelectedCalDay(null);
   };
   const nextMonth = () => {
+    // 🔒 Bloqueia navegação para meses futuros
+    const today = new Date();
+    const nextM = calMonth === 11 ? 0 : calMonth + 1;
+    const nextY = calMonth === 11 ? calYear + 1 : calYear;
+    if (nextY > today.getFullYear() || (nextY === today.getFullYear() && nextM > today.getMonth())) return;
     if (calMonth === 11) { setCalMonth(0); setCalYear(calYear + 1); }
     else setCalMonth(calMonth + 1);
     setSelectedCalDay(null);
@@ -136,9 +145,14 @@ export function Statistics() {
 
   const selectedDayInfo = useMemo(() => {
     if (!selectedCalDay) return null;
+    const today = new Date();
+    const isCurrentMonth = calMonth === today.getMonth() && calYear === today.getFullYear();
+    // 🔒 Não mostra dados para dias futuros
+    if (isCurrentMonth && selectedCalDay > today.getDate()) return { day: selectedCalDay, vendas: 0, receita: 0 };
+    if (!isCurrentMonth) return { day: selectedCalDay, vendas: 0, receita: 0 };
     const d = cal.find(c => c.day === selectedCalDay);
     return d || { day: selectedCalDay, vendas: 0, receita: 0 };
-  }, [selectedCalDay, cal]);
+  }, [selectedCalDay, cal, calMonth, calYear]);
 
   // Best hour from chart_horas
   const bestHour = useMemo(() => {
@@ -400,7 +414,7 @@ export function Statistics() {
               <div className="st-cal-nav-modern">
                 <button className="st-cal-arrow-modern" onClick={prevMonth}><ChevronLeft size={16}/></button>
                 <span className="st-cal-month-modern">{mesesNomes[calMonth]} {calYear}</span>
-                <button className="st-cal-arrow-modern" onClick={nextMonth}><ChevronRight size={16}/></button>
+                <button className="st-cal-arrow-modern" onClick={nextMonth} disabled={(() => { const t=new Date(); const nM=calMonth===11?0:calMonth+1; const nY=calMonth===11?calYear+1:calYear; return nY>t.getFullYear()||(nY===t.getFullYear()&&nM>t.getMonth()); })()} style={(() => { const t=new Date(); const nM=calMonth===11?0:calMonth+1; const nY=calMonth===11?calYear+1:calYear; return (nY>t.getFullYear()||(nY===t.getFullYear()&&nM>t.getMonth())) ? {opacity:0.3,cursor:'not-allowed'} : {}; })()}><ChevronRight size={16}/></button>
               </div>
             </div>
 
@@ -408,9 +422,9 @@ export function Statistics() {
               {diasSemana.map((d,i) => <div key={i} className="st-cal-wd-modern">{d}</div>)}
               {calendarData.map((d,i) => d.empty ? <div key={`e${i}`} className="st-cal-empty-modern"/> : (
                 <div key={d.day}
-                  className={`st-cal-day-modern ${d.isToday?'today':''} ${d.vendas>0?'has':''} ${d.selected?'sel':''}`}
+                  className={`st-cal-day-modern ${d.isToday?'today':''} ${d.vendas>0?'has':''} ${d.selected?'sel':''} ${d.isFuture?'future':''}`}
                   style={d.vendas > 0 ? {'--heat': d.intensity} : {}}
-                  onClick={() => setSelectedCalDay(d.day === selectedCalDay ? null : d.day)}>
+                  onClick={() => !d.isFuture && setSelectedCalDay(d.day === selectedCalDay ? null : d.day)}>
                   <span className="st-cal-n-modern">{d.day}</span>
                   {d.vendas > 0 && <span className="st-cal-badge">{d.vendas}</span>}
                 </div>
@@ -602,7 +616,7 @@ export function Statistics() {
           <RankCard icon={<Zap size={18} color="#10b981"/>} title="Top 5 Bots" tag="MAIS VENDIDOS" tagColor="#10b981" items={data?.top_bots} empty="Nenhum bot disponível"/>
           <RankCard icon={<Award size={18} color="#c333ff"/>} title="Top 5 Planos" tag="MAIS VENDIDOS" tagColor="#c333ff" items={data?.top_planos} empty="Nenhum plano disponível"/>
           <RankCard icon={<Calendar size={18} color="#f59e0b"/>} title="Top 7 Dias" tag="MAIS VENDIDOS" tagColor="#f59e0b" items={data?.top_dias} nameKey="day" empty="Nenhum dia disponível"/>
-          <RankCard icon={<CreditCard size={18} color="#3b82f6"/>} title="Top 5 Tickets" tag="MAIS VENDIDOS" tagColor="#3b82f6" items={data?.top_planos} empty="Nenhum ticket disponível"/>
+          <RankCard icon={<CreditCard size={18} color="#3b82f6"/>} title="Top 5 Tickets" tag="MAIOR VALOR" tagColor="#3b82f6" items={data?.top_planos?.map(p => ({...p, count: undefined, name: p.name, revenue: p.revenue ? `R$ ${(p.revenue/100).toFixed(2)}` : `${p.count} vendas`}))} empty="Nenhum ticket disponível"/>
           <RankCard icon={<Link2 size={18} color="#ec4899"/>} title="Top Códigos de Venda" tag="MAIS RECEITA" tagColor="#ec4899" items={data?.top_tracking} nameKey="name" empty="Nenhum código disponível"/>
           <RankCard icon={<Megaphone size={18} color="#8b5cf6"/>} title="Top Campanhas" tag="TRÁFEGO PAGO" tagColor="#8b5cf6" items={data?.top_campanhas} nameKey="name" empty="Nenhuma campanha com vendas"/>
           <RankCard icon={<Clock size={18} color="#06b6d4"/>} title="Top Horários" tag="MAIS VENDIDOS" tagColor="#06b6d4" items={data?.top_horas} nameKey="hour" empty="Nenhum horário disponível"/>
