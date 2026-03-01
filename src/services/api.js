@@ -1193,11 +1193,13 @@ export const groupService = {
 // 📊 SERVIÇO DE ESTATÍSTICAS AVANÇADAS
 // ============================================================
 export const statisticsService = {
-  getStats: async (botId = null, period = '30d') => {
+  getStats: async (botId = null, period = '30d', calMonth = null, calYear = null) => {
     try {
       const params = new URLSearchParams();
       if (botId) params.append('bot_id', botId);
       if (period) params.append('period', period);
+      if (calMonth) params.append('cal_month', calMonth);
+      if (calYear) params.append('cal_year', calYear);
       
       const queryString = params.toString();
       const url = queryString ? `/api/admin/statistics?${queryString}` : '/api/admin/statistics';
