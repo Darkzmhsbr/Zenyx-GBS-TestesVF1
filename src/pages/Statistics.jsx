@@ -610,7 +610,7 @@ export function Statistics() {
           <RankCard icon={<Calendar size={18} color="#f59e0b"/>} title="Top 7 Dias" tag="MAIS VENDIDOS" tagColor="#f59e0b" items={data?.top_dias} nameKey="day" empty="Nenhum dia disponível"/>
           <RankCard icon={<CreditCard size={18} color="#3b82f6"/>} title="Top 5 Tickets" tag="MAIS VENDIDOS" tagColor="#3b82f6" items={data?.top_planos} empty="Nenhum ticket disponível"/>
           <RankCard icon={<Link2 size={18} color="#ec4899"/>} title="Top Códigos de Venda" tag="MAIS RECEITA" tagColor="#ec4899" items={data?.top_tracking} nameKey="name" empty="Nenhum código disponível"/>
-          <RankCard icon={<Megaphone size={18} color="#8b5cf6"/>} title="Top Campanhas" tag="TRÁFEGO PAGO" tagColor="#8b5cf6" items={data?.top_campanhas} nameKey="name" empty="Nenhuma campanha com vendas"/>
+          <RankCard icon={<Megaphone size={18} color="#8b5cf6"/>} title="Top Campanhas" tag="REMARKETING" tagColor="#8b5cf6" items={data?.top_campanhas} nameKey="name" empty="Nenhuma campanha com vendas"/>
           <RankCard icon={<Clock size={18} color="#06b6d4"/>} title="Top Horários" tag="MAIS VENDIDOS" tagColor="#06b6d4" items={data?.top_horas} nameKey="hour" empty="Nenhum horário disponível"/>
           {/* Tempo Médio /Start → Pagamento como card */}
           <div className="st-rank">

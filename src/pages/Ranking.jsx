@@ -141,7 +141,8 @@ export function Ranking() {
             <>
               <div style={{ 
                 display: 'flex', alignItems: 'center', backgroundColor: '#161616', 
-                border: '1px solid #333', borderRadius: '8px', padding: '0 12px', height: '42px'
+                border: '1px solid #333', borderRadius: '8px', padding: '0 12px', height: '42px',
+                flex: '1 1 0', minWidth: 0
               }}>
                 <Calendar size={18} color="#a3a3a3" style={{ marginRight: '8px', flexShrink: 0 }} />
                 <select 
@@ -149,7 +150,7 @@ export function Ranking() {
                   onChange={(e) => setMesSelecionado(Number(e.target.value))}
                   style={{ 
                     background: 'transparent', border: 'none', color: '#fff', fontSize: '0.95rem',
-                    outline: 'none', cursor: 'pointer', width: '100%', minWidth: '110px'
+                    outline: 'none', cursor: 'pointer', width: '100%', minWidth: 0
                   }}
                 >
                   {meses.map((m) => (
@@ -160,7 +161,8 @@ export function Ranking() {
 
               <div style={{ 
                 display: 'flex', alignItems: 'center', backgroundColor: '#161616', 
-                border: '1px solid #333', borderRadius: '8px', padding: '0 12px', height: '42px'
+                border: '1px solid #333', borderRadius: '8px', padding: '0 12px', height: '42px',
+                flex: '1 1 0', minWidth: 0
               }}>
                 <Calendar size={18} color="#a3a3a3" style={{ marginRight: '8px', flexShrink: 0 }} />
                 <select 
@@ -168,7 +170,7 @@ export function Ranking() {
                   onChange={(e) => setAnoSelecionado(Number(e.target.value))}
                   style={{ 
                     background: 'transparent', border: 'none', color: '#fff', fontSize: '0.95rem',
-                    outline: 'none', cursor: 'pointer', width: '100%', minWidth: '70px'
+                    outline: 'none', cursor: 'pointer', width: '100%', minWidth: 0
                   }}
                 >
                   {anos.map((a) => (

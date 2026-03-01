@@ -37,7 +37,7 @@
 .st-tag { font-size:.65rem; font-weight:700; letter-spacing:1px; text-transform:uppercase; }
 
 @media(max-width:1100px){ .g4{grid-template-columns:repeat(2,1fr)} .g2{grid-template-columns:1fr} .st-semana-row{flex-direction:column} }
-@media(max-width:700px){ .g4,.g3{grid-template-columns:1fr} .statistics-container{padding:16px;margin-left:0;margin-top:60px} }
+@media(max-width:700px){ .g4,.g3{grid-template-columns:1fr} .statistics-container{padding:16px;margin-left:0;margin-top:60px} .st-chart{padding:14px} .st-rank-name{font-size:.8rem} .st-rank-cnt{font-size:.72rem} }
 
 /* ============================================================ */
 /* GROWTH BADGE                                                  */
@@ -152,7 +152,7 @@
 /* ============================================================ */
 /* CHARTS                                                        */
 /* ============================================================ */
-.st-chart { background:#12121e; border:1px solid #1e1e35; border-radius:14px; padding:20px; overflow:hidden; transition:.25s; }
+.st-chart { background:#12121e; border:1px solid #1e1e35; border-radius:14px; padding:20px; overflow:hidden; overflow-y:visible; transition:.25s; }
 .st-chart:hover { border-color:#282840; }
 .st-chart-full { width:100%; }
 .st-chart-hd { display:flex; align-items:center; gap:8px; margin-bottom:16px; flex-wrap:wrap; }
@@ -329,9 +329,9 @@
 .st-rank-list { display:flex; flex-direction:column; }
 .st-rank-row { display:flex; align-items:center; gap:10px; padding:7px 0; border-bottom:1px solid #1a1a2e; }
 .st-rank-row:last-child { border-bottom:none; }
-.st-rank-pos { font-size:.8rem; font-weight:700; color:#c333ff; min-width:26px; text-align:center; }
-.st-rank-name { flex:1; font-size:.85rem; color:#ccc; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
-.st-rank-cnt { font-size:.78rem; color:#888; white-space:nowrap; }
+.st-rank-pos { font-size:.8rem; font-weight:700; color:#c333ff; min-width:26px; flex-shrink:0; text-align:center; }
+.st-rank-name { flex:1; font-size:.85rem; color:#ccc; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; min-width:0; }
+.st-rank-cnt { font-size:.78rem; color:#888; white-space:nowrap; flex-shrink:0; text-align:right; }
 
 /* ============================================================ */
 /* DIÁRIO DE MUDANÇAS                                            */

@@ -426,20 +426,11 @@
     gap: 16px;
   }
 
-  /* Filtros no Mobile: Organizados lado a lado ocupando 100% */
+  /* Filtros no Mobile: Wrap para caber na tela */
   .ranking-filters {
     width: 100%;
-    flex-direction: row;
-    gap: 12px;
-  }
-
-  .filter-group {
-    flex: 1; /* Divide o espaço igual para os dois */
-    width: 100%;
-  }
-
-  .ranking-select {
-    padding-left: 36px !important; /* Diminui um pouco o padding interno no mobile */
+    flex-wrap: wrap !important;
+    gap: 8px !important;
   }
 
   .podium-container {
