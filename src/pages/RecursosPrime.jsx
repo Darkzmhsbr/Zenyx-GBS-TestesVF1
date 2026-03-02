@@ -2,13 +2,13 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { 
   Crown, Lock, TrendingUp, Copy, Repeat, Brain, Search, Zap, Shield,
   ChevronRight, Star, Trophy, Sparkles, CheckCircle, X, AlertTriangle,
-  ArrowRight, BarChart3, Target, Clock
+  ArrowRight, BarChart3, Target, Clock, MessageSquare, Send, Play
 } from 'lucide-react';
 import { recursosPrimeService, botService, dashboardService } from '../services/api';
 import { useBot } from '../context/BotContext';
 import './RecursosPrime.css';
 
-const ICON_MAP = { TrendingUp, Copy, Repeat, Brain, Search, Zap, Shield };
+const ICON_MAP = { TrendingUp, Copy, Repeat, Brain, Search, Zap, Shield, MessageSquare };
 
 // ═══════════════════════════════════════════════
 // 📈 MODAL: PROJEÇÃO DE RECEITA
@@ -309,6 +309,131 @@ function ClonadorFunil({ onClose }) {
 }
 
 // ═══════════════════════════════════════════════
+// 🎯 MODAL: REVISÃO DE COPY
+// ═══════════════════════════════════════════════
+function RevisaoCopy({ onClose }) {
+  const { bots, selectedBot } = useBot();
+  const [botId, setBotId] = useState(selectedBot?.id || '');
+  const [tipo, setTipo] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [resultado, setResultado] = useState(null);
+  const [error, setError] = useState('');
+
+  const tipos = [
+    { id: 'flow', label: 'Flow Chat', desc: 'Fluxo de boas-vindas + steps extras', icon: '💬', cor: '#3b82f6' },
+    { id: 'completo', label: 'Fluxo Completo', desc: 'Flow → Order Bump → Upsell → Downsell', icon: '🔄', cor: '#c333ff' },
+    { id: 'orderbump', label: 'Order Bump', desc: 'Oferta adicional após pagamento', icon: '🎁', cor: '#22c55e' },
+    { id: 'upsell', label: 'Upsell', desc: 'Oferta de upgrade premium', icon: '⬆️', cor: '#f59e0b' },
+    { id: 'downsell', label: 'Downsell', desc: 'Oferta alternativa de menor valor', icon: '⬇️', cor: '#ef4444' },
+    { id: 'canalfree', label: 'Canal Free', desc: 'Mensagem de boas-vindas do canal gratuito', icon: '📢', cor: '#06b6d4' },
+    { id: 'remarketing', label: 'Remarketing', desc: 'Mensagens automáticas + alternadas', icon: '📤', cor: '#8b5cf6' },
+  ];
+
+  const handleSimular = async () => {
+    if (!botId || !tipo) { setError('Selecione o bot e o tipo de simulação'); return; }
+    setError(''); setResultado(null);
+    try {
+      setLoading(true);
+      const res = await recursosPrimeService.simularCopy(parseInt(botId), tipo);
+      setResultado(res);
+    } catch (e) {
+      setError(e.response?.data?.detail || 'Erro ao simular');
+    } finally { setLoading(false); }
+  };
+
+  return (
+    <div className="rp-modal-overlay" onClick={onClose}>
+      <div className="rp-modal rp-modal-lg" onClick={e => e.stopPropagation()}>
+        <div className="rp-modal-header">
+          <div className="rp-modal-header-left">
+            <div className="rp-modal-icon" style={{ background: 'rgba(249,115,22,0.12)', color: '#f97316' }}>
+              <MessageSquare size={24} />
+            </div>
+            <div>
+              <h2>Revisão de Copy</h2>
+              <p>Simule fluxos no Telegram e veja o que seus clientes recebem</p>
+            </div>
+          </div>
+          <button className="rp-modal-close" onClick={onClose}><X size={20} /></button>
+        </div>
+
+        <div className="rp-modal-body">
+          {resultado ? (
+            <div className="clone-result">
+              <div className="clone-result-icon"><CheckCircle size={48} /></div>
+              <h3>Simulação enviada!</h3>
+              <p style={{color:'#a3a3a3', marginBottom: 12}}>
+                {resultado.mensagens_enviadas} mensagens foram enviadas para o admin do bot no Telegram.
+              </p>
+              <p style={{color:'#888', fontSize:'0.85rem'}}>Abra o Telegram e confira a preview completa.</p>
+              <div style={{display:'flex', gap:10, marginTop:20, justifyContent:'center'}}>
+                <button className="rp-btn-secondary" onClick={() => { setResultado(null); setTipo(''); }}>
+                  Nova simulação
+                </button>
+                <button className="rp-btn-primary" onClick={onClose}>Fechar</button>
+              </div>
+            </div>
+          ) : (
+            <>
+              {/* Bot Select */}
+              <div className="rc-bot-select">
+                <label>Bot para simulação</label>
+                <select value={botId} onChange={e => setBotId(e.target.value)}>
+                  <option value="">Selecionar bot...</option>
+                  {bots.map(b => <option key={b.id} value={b.id}>{b.nome}</option>)}
+                </select>
+              </div>
+
+              {/* Tipo de simulação */}
+              <div className="rc-tipos">
+                <label>O que deseja simular?</label>
+                <div className="rc-tipos-grid">
+                  {tipos.map(t => (
+                    <div 
+                      key={t.id}
+                      className={`rc-tipo-card ${tipo === t.id ? 'active' : ''}`}
+                      onClick={() => setTipo(t.id)}
+                      style={{ '--tipo-cor': t.cor }}
+                    >
+                      <span className="rc-tipo-icon">{t.icon}</span>
+                      <div className="rc-tipo-info">
+                        <span className="rc-tipo-label">{t.label}</span>
+                        <span className="rc-tipo-desc">{t.desc}</span>
+                      </div>
+                      {tipo === t.id && <CheckCircle size={18} style={{color: t.cor, flexShrink:0}} />}
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Info */}
+              <div className="rc-info">
+                <Send size={16} />
+                <span>As mensagens serão enviadas para o <strong>admin principal</strong> do bot selecionado via Telegram. Você verá exatamente o que seus clientes veriam.</span>
+              </div>
+
+              {error && <div className="clone-error">{error}</div>}
+
+              <button 
+                className="rp-btn-primary full"
+                onClick={handleSimular}
+                disabled={loading || !botId || !tipo}
+              >
+                {loading ? (
+                  <><div className="rp-spinner-sm" /> Enviando simulação...</>
+                ) : (
+                  <><Play size={18} /> Simular no Telegram</>
+                )}
+              </button>
+            </>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ═══════════════════════════════════════════════
 // 🏠 PÁGINA PRINCIPAL
 // ═══════════════════════════════════════════════
 export function RecursosPrime() {
@@ -340,6 +465,7 @@ export function RecursosPrime() {
     }
     
     switch (recurso.id) {
+      case 'revisao_copy': setActiveModal('revisao_copy'); break;
       case 'projecao_receita': setActiveModal('projecao'); break;
       case 'clonador_funil': setActiveModal('clonador'); break;
       default: 
@@ -369,6 +495,9 @@ export function RecursosPrime() {
       )}
 
       {/* Modais */}
+      {activeModal === 'revisao_copy' && (
+        <RevisaoCopy onClose={() => setActiveModal(null)} />
+      )}
       {activeModal === 'projecao' && (
         <ProjecaoReceita onClose={() => setActiveModal(null)} faturamentoTotal={data.faturamento_total_reais} />
       )}
