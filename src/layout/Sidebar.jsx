@@ -373,6 +373,17 @@ export function Sidebar({ isOpen, onClose }) {
             <span>Ranking de Vendas</span>
           </Link>
 
+          {/* 🏆 RECURSOS PRIME */}
+          <Link 
+            to={hasBot ? "/recursos-prime" : "#"} 
+            className={`nav-item prime-item ${isActive('/recursos-prime')} ${!hasBot ? 'locked-nav' : ''}`} 
+            onClick={(e) => !hasBot ? e.preventDefault() : onClose()}
+            style={!hasBot ? { opacity: 0.5, cursor: 'not-allowed' } : {}}
+          >
+            <Crown size={20} />
+            <span>Recursos Prime</span>
+          </Link>
+
           {/* =========================================================
               💰 WIDGET DE FATURAMENTO / NÍVEL (ENTRE RANKING E INTEGRAÇÕES)
               ========================================================= */}

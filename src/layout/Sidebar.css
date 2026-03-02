@@ -370,3 +370,20 @@
   border-right-color: #ffc107;
   color: #ffc107 !important;
 }
+/* ============================================================
+   🏆 RECURSOS PRIME (DESTAQUE SIDEBAR)
+   ============================================================ */
+.nav-item.prime-item {
+  color: #c333ff !important;
+}
+
+.nav-item.prime-item:hover {
+  background: rgba(195, 51, 255, 0.1);
+  color: #d966ff !important;
+}
+
+.nav-item.prime-item.active {
+  background: rgba(195, 51, 255, 0.15);
+  border-right-color: #c333ff;
+  color: #c333ff !important;
+}

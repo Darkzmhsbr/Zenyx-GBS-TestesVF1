@@ -56,6 +56,9 @@ import { Ranking } from './pages/Ranking';
 // 📊 NOVA PÁGINA: Estatísticas Avançadas
 import { Statistics } from './pages/Statistics';
 
+// 🏆 NOVA PÁGINA: Recursos Prime
+import { RecursosPrime } from './pages/RecursosPrime';
+
 // 🆕 NOVA PÁGINA: Configuração Guiada (Setup Wizard)
 import { SetupWizard } from './pages/SetupWizard';
 
@@ -162,6 +165,9 @@ function App() {
               
               {/* 🏆 NOVA ROTA: Ranking */}
               <Route path="/ranking" element={<Ranking />} />
+
+              {/* 🏆 NOVA ROTA: Recursos Prime */}
+              <Route path="/recursos-prime" element={<RecursosPrime />} />
 
               <Route path="/bots" element={<Bots />} />
               <Route path="/bots/new" element={<NewBot />} />
