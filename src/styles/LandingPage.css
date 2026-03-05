@@ -1509,9 +1509,26 @@
   .circuit-wrapper::before { left: 20px; }
   .circuit-line, .circuit-glow { left: 20px; }
   .circuit-step { flex-direction: row !important; justify-content: flex-end; align-items: flex-start; }
-  .t-node { left: 20px; transform: translateX(-50%); top: 0; }
-  .c-content { width: calc(100% - 50px); margin-left: auto; padding: 1.5rem; }
+  .t-node { left: 20px; transform: translateX(-50%); top: 0; position: absolute; }
+  .c-content { width: calc(100% - 60px); margin-left: auto; padding: 1.5rem; }
   .c-content::before { display: none; }
+
+  /* 🔧 FIX: Section headers empilham no mobile (992px) */
+  .section-header {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    padding: 0 1rem;
+  }
+  
+  /* 🔧 FIX: Navbar sempre com fundo sólido no mobile */
+  .navbar, .landing-navbar {
+    background: rgba(3, 0, 8, 0.95) !important;
+    backdrop-filter: blur(20px) !important;
+    -webkit-backdrop-filter: blur(20px) !important;
+    border-bottom: 1px solid rgba(217, 70, 239, 0.15);
+  }
 
   /* Bento Grid Mobile */
   .bento-grid { grid-template-columns: 1fr; }
@@ -1535,6 +1552,69 @@
   .section { padding: 5rem 0; }
   .section-title { font-size: 2.2rem; }
   .grid-symmetrical, .features-grid, .faq-list { grid-template-columns: 1fr; }
+  
+  /* 🔧 FIX: Section headers (divisórias) empilham verticalmente no mobile */
+  .section-header {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    padding: 0 1rem;
+    margin-bottom: 3rem;
+  }
+  
+  .section-header .pill {
+    margin-bottom: 1rem;
+    font-size: 0.75rem;
+    padding: 5px 14px;
+    white-space: nowrap;
+  }
+  
+  .section-header .section-title {
+    font-size: 1.8rem;
+    margin-bottom: 0.8rem;
+    line-height: 1.15;
+  }
+  
+  .section-header .section-desc {
+    font-size: 0.9rem;
+    max-width: 100%;
+    line-height: 1.6;
+  }
+  
+  /* 🔧 FIX: Ícones cortados no canto esquerdo - overflow fix */
+  .circuit-wrapper {
+    overflow: visible;
+    padding-left: 0;
+  }
+  
+  .circuit-step .t-node {
+    left: 20px !important;
+    flex-shrink: 0;
+  }
+  
+  .circuit-step .c-content {
+    overflow: hidden;
+    word-wrap: break-word;
+  }
+  
+  /* 🔧 FIX: Container não corta conteúdo no mobile */
+  .container, .section-container {
+    padding: 0 1.25rem;
+    overflow: visible;
+  }
+  
+  .landing-page {
+    overflow-x: hidden;
+  }
+  
+  /* 🔧 FIX: Navbar destaque/background no mobile */
+  .navbar {
+    background: rgba(3, 0, 8, 0.95) !important;
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border-bottom: 1px solid rgba(217, 70, 239, 0.2);
+  }
   
   /* Ajustes do Acordeão Command Center para Mobile */
   .cc-btn { padding: 1.2rem 1.2rem; font-size: 1.1rem; }
