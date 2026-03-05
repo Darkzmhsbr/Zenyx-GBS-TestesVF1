@@ -672,8 +672,11 @@ function RevisaoCopy({ onClose }) {
               <div className="clone-result-icon"><CheckCircle size={48} /></div>
               <h3>Simulação enviada!</h3>
               <p style={{color:'#a3a3a3', marginBottom: 12}}>
-                {resultado.mensagens_enviadas} mensagens foram enviadas para o admin do bot no Telegram.
+                {resultado.mensagens_enviadas} etapas preparadas para o admin do bot no Telegram.
               </p>
+              {resultado.interativa && (
+                <p style={{color:'#38bdf8', fontSize:'0.85rem', marginBottom: 8}}>🎮 Simulação interativa! Clique nos botões embutidos no Telegram para avançar entre as etapas.</p>
+              )}
               {resultado.personalizada && (
                 <p style={{color:'#f97316', fontSize:'0.85rem', marginBottom: 8}}>🎨 Copy personalizada enviada com sucesso!</p>
               )}
