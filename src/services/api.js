@@ -1432,8 +1432,12 @@ export const recursosPrimeService = {
     const response = await api.post('/api/admin/recursos-prime/clonar-funil', data);
     return response.data;
   },
-  simularCopy: async (botId, tipo) => {
-    const response = await api.post(`/api/admin/recursos-prime/simular-copy/${botId}`, { tipo });
+  simularCopy: async (botId, payload) => {
+    const response = await api.post(`/api/admin/recursos-prime/simular-copy/${botId}`, payload);
+    return response.data;
+  },
+  getCopyData: async (botId, tipo) => {
+    const response = await api.get(`/api/admin/recursos-prime/get-copy-data/${botId}/${tipo}`);
     return response.data;
   }
 };

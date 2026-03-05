@@ -309,15 +309,18 @@ function ClonadorFunil({ onClose }) {
 }
 
 // ═══════════════════════════════════════════════
-// 🎯 MODAL: REVISÃO DE COPY
+// 🎯 MODAL: REVISÃO DE COPY (COM PERSONALIZAÇÃO COMPLETA)
 // ═══════════════════════════════════════════════
 function RevisaoCopy({ onClose }) {
   const { bots, selectedBot } = useBot();
   const [botId, setBotId] = useState(selectedBot?.id || '');
   const [tipo, setTipo] = useState('');
   const [loading, setLoading] = useState(false);
+  const [loadingData, setLoadingData] = useState(false);
   const [resultado, setResultado] = useState(null);
   const [error, setError] = useState('');
+  const [editMode, setEditMode] = useState(false);
+  const [copyData, setCopyData] = useState(null);
 
   const tipos = [
     { id: 'flow', label: 'Flow Chat', desc: 'Fluxo de boas-vindas + steps extras', icon: '💬', cor: '#3b82f6' },
@@ -329,16 +332,293 @@ function RevisaoCopy({ onClose }) {
     { id: 'remarketing', label: 'Remarketing', desc: 'Mensagens automáticas + alternadas', icon: '📤', cor: '#8b5cf6' },
   ];
 
+  // Carrega os dados atuais da copy quando seleciona tipo
+  const handleSelectTipo = async (tipoId) => {
+    setTipo(tipoId);
+    setCopyData(null);
+    setEditMode(false);
+    setError('');
+    
+    if (!botId) return;
+    
+    try {
+      setLoadingData(true);
+      const res = await recursosPrimeService.getCopyData(parseInt(botId), tipoId);
+      setCopyData(res);
+      setEditMode(true);
+    } catch (e) {
+      const msg = e.response?.data?.detail || 'Erro ao carregar dados da copy';
+      setError(msg);
+    } finally {
+      setLoadingData(false);
+    }
+  };
+
+  // Atualiza campo no copyData
+  const updateField = (field, value) => {
+    setCopyData(prev => ({ ...prev, [field]: value }));
+  };
+
+  // Atualiza um step extra (flow)
+  const updateStep = (index, field, value) => {
+    setCopyData(prev => {
+      const steps = [...(prev.steps || [])];
+      steps[index] = { ...steps[index], [field]: value };
+      return { ...prev, steps };
+    });
+  };
+
   const handleSimular = async () => {
     if (!botId || !tipo) { setError('Selecione o bot e o tipo de simulação'); return; }
     setError(''); setResultado(null);
     try {
       setLoading(true);
-      const res = await recursosPrimeService.simularCopy(parseInt(botId), tipo);
+      const payload = { tipo, custom_data: editMode ? copyData : null };
+      const res = await recursosPrimeService.simularCopy(parseInt(botId), payload);
       setResultado(res);
     } catch (e) {
       setError(e.response?.data?.detail || 'Erro ao simular');
     } finally { setLoading(false); }
+  };
+
+  // Renderiza os campos de edição conforme o tipo selecionado
+  const renderEditFields = () => {
+    if (!copyData || !editMode) return null;
+
+    switch (tipo) {
+      case 'flow':
+        return (
+          <div className="rc-edit-section">
+            <h4 className="rc-edit-title">📝 Mensagem de Boas-Vindas</h4>
+            <textarea
+              className="rc-edit-textarea"
+              value={copyData.msg_boas_vindas || ''}
+              onChange={e => updateField('msg_boas_vindas', e.target.value)}
+              placeholder="Texto de boas-vindas..."
+              rows={5}
+            />
+            <div className="rc-edit-row">
+              <div className="rc-edit-field">
+                <label>Mídia (URL)</label>
+                <input
+                  className="rc-edit-input"
+                  value={copyData.media_url || ''}
+                  onChange={e => updateField('media_url', e.target.value)}
+                  placeholder="https://..."
+                />
+              </div>
+              <div className="rc-edit-field">
+                <label>Texto do Botão</label>
+                <input
+                  className="rc-edit-input"
+                  value={copyData.btn_text_1 || ''}
+                  onChange={e => updateField('btn_text_1', e.target.value)}
+                  placeholder="📋 Ver Planos"
+                />
+              </div>
+            </div>
+
+            {/* Steps Extras */}
+            {copyData.steps && copyData.steps.length > 0 && (
+              <>
+                <h4 className="rc-edit-title" style={{marginTop: '1.5rem'}}>📨 Passos Extras ({copyData.steps.length})</h4>
+                {copyData.steps.map((step, i) => (
+                  <div key={i} className="rc-edit-step">
+                    <span className="rc-edit-step-label">Passo Extra {i + 1}</span>
+                    <textarea
+                      className="rc-edit-textarea"
+                      value={step.msg_texto || ''}
+                      onChange={e => updateStep(i, 'msg_texto', e.target.value)}
+                      placeholder={`Texto do passo ${i + 1}...`}
+                      rows={3}
+                    />
+                    <div className="rc-edit-row">
+                      <div className="rc-edit-field">
+                        <label>Mídia</label>
+                        <input
+                          className="rc-edit-input"
+                          value={step.msg_media || ''}
+                          onChange={e => updateStep(i, 'msg_media', e.target.value)}
+                          placeholder="https://..."
+                        />
+                      </div>
+                      <div className="rc-edit-field">
+                        <label>Texto do Botão</label>
+                        <input
+                          className="rc-edit-input"
+                          value={step.btn_texto || ''}
+                          onChange={e => updateStep(i, 'btn_texto', e.target.value)}
+                          placeholder="Próximo ▶️"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </>
+            )}
+
+            {/* Mensagem de Oferta Final */}
+            {copyData.msg_2_texto && (
+              <>
+                <h4 className="rc-edit-title" style={{marginTop: '1.5rem'}}>🛒 Mensagem de Oferta & Checkout</h4>
+                <textarea
+                  className="rc-edit-textarea"
+                  value={copyData.msg_2_texto || ''}
+                  onChange={e => updateField('msg_2_texto', e.target.value)}
+                  placeholder="Texto da oferta final..."
+                  rows={4}
+                />
+              </>
+            )}
+
+            {/* Mensagem PIX Personalizada */}
+            {copyData.msg_pix !== undefined && (
+              <>
+                <h4 className="rc-edit-title" style={{marginTop: '1.5rem'}}>💳 Mensagem do PIX</h4>
+                <textarea
+                  className="rc-edit-textarea"
+                  value={copyData.msg_pix || ''}
+                  onChange={e => updateField('msg_pix', e.target.value)}
+                  placeholder="Texto da mensagem de PIX..."
+                  rows={3}
+                />
+              </>
+            )}
+          </div>
+        );
+      
+      case 'orderbump':
+        return (
+          <div className="rc-edit-section">
+            <h4 className="rc-edit-title">🎁 Mensagem do Order Bump</h4>
+            <textarea
+              className="rc-edit-textarea"
+              value={copyData.msg_texto || ''}
+              onChange={e => updateField('msg_texto', e.target.value)}
+              placeholder="Texto do Order Bump..."
+              rows={5}
+            />
+            <div className="rc-edit-row">
+              <div className="rc-edit-field">
+                <label>Mídia (URL)</label>
+                <input className="rc-edit-input" value={copyData.msg_media || ''} onChange={e => updateField('msg_media', e.target.value)} placeholder="https://..." />
+              </div>
+              <div className="rc-edit-field">
+                <label>Áudio (URL)</label>
+                <input className="rc-edit-input" value={copyData.audio_url || ''} onChange={e => updateField('audio_url', e.target.value)} placeholder="https://..." />
+              </div>
+            </div>
+            <div className="rc-edit-row">
+              <div className="rc-edit-field">
+                <label>Botão Aceitar</label>
+                <input className="rc-edit-input" value={copyData.btn_aceitar || ''} onChange={e => updateField('btn_aceitar', e.target.value)} placeholder="✅ SIM" />
+              </div>
+              <div className="rc-edit-field">
+                <label>Botão Recusar</label>
+                <input className="rc-edit-input" value={copyData.btn_recusar || ''} onChange={e => updateField('btn_recusar', e.target.value)} placeholder="❌ NÃO" />
+              </div>
+            </div>
+          </div>
+        );
+      
+      case 'upsell':
+      case 'downsell':
+        const tipoLabel = tipo === 'upsell' ? 'Upsell' : 'Downsell';
+        const tipoIcon = tipo === 'upsell' ? '⬆️' : '⬇️';
+        return (
+          <div className="rc-edit-section">
+            <h4 className="rc-edit-title">{tipoIcon} Mensagem do {tipoLabel}</h4>
+            <textarea
+              className="rc-edit-textarea"
+              value={copyData.msg_texto || ''}
+              onChange={e => updateField('msg_texto', e.target.value)}
+              placeholder={`Texto do ${tipoLabel}...`}
+              rows={5}
+            />
+            <div className="rc-edit-row">
+              <div className="rc-edit-field">
+                <label>Mídia (URL)</label>
+                <input className="rc-edit-input" value={copyData.msg_media || ''} onChange={e => updateField('msg_media', e.target.value)} placeholder="https://..." />
+              </div>
+              <div className="rc-edit-field">
+                <label>Áudio (URL)</label>
+                <input className="rc-edit-input" value={copyData.audio_url || ''} onChange={e => updateField('audio_url', e.target.value)} placeholder="https://..." />
+              </div>
+            </div>
+            <div className="rc-edit-row">
+              <div className="rc-edit-field">
+                <label>Botão Aceitar</label>
+                <input className="rc-edit-input" value={copyData.btn_aceitar || ''} onChange={e => updateField('btn_aceitar', e.target.value)} placeholder="✅ QUERO" />
+              </div>
+              <div className="rc-edit-field">
+                <label>Botão Recusar</label>
+                <input className="rc-edit-input" value={copyData.btn_recusar || ''} onChange={e => updateField('btn_recusar', e.target.value)} placeholder="❌ Não quero" />
+              </div>
+            </div>
+          </div>
+        );
+      
+      case 'canalfree':
+        return (
+          <div className="rc-edit-section">
+            <h4 className="rc-edit-title">📢 Mensagem do Canal Free</h4>
+            <textarea
+              className="rc-edit-textarea"
+              value={copyData.message_text || ''}
+              onChange={e => updateField('message_text', e.target.value)}
+              placeholder="Texto da mensagem de boas-vindas..."
+              rows={5}
+            />
+            <div className="rc-edit-row">
+              <div className="rc-edit-field">
+                <label>Mídia (URL)</label>
+                <input className="rc-edit-input" value={copyData.media_url || ''} onChange={e => updateField('media_url', e.target.value)} placeholder="https://..." />
+              </div>
+              <div className="rc-edit-field">
+                <label>Áudio (URL)</label>
+                <input className="rc-edit-input" value={copyData.audio_url || ''} onChange={e => updateField('audio_url', e.target.value)} placeholder="https://..." />
+              </div>
+            </div>
+          </div>
+        );
+      
+      case 'remarketing':
+        return (
+          <div className="rc-edit-section">
+            <h4 className="rc-edit-title">📤 Mensagem Principal do Remarketing</h4>
+            <textarea
+              className="rc-edit-textarea"
+              value={copyData.message_text || ''}
+              onChange={e => updateField('message_text', e.target.value)}
+              placeholder="Texto do remarketing..."
+              rows={5}
+            />
+            <div className="rc-edit-row">
+              <div className="rc-edit-field">
+                <label>Mídia (URL)</label>
+                <input className="rc-edit-input" value={copyData.media_url || ''} onChange={e => updateField('media_url', e.target.value)} placeholder="https://..." />
+              </div>
+              <div className="rc-edit-field">
+                <label>Áudio (URL)</label>
+                <input className="rc-edit-input" value={copyData.audio_url || ''} onChange={e => updateField('audio_url', e.target.value)} placeholder="https://..." />
+              </div>
+            </div>
+          </div>
+        );
+      
+      case 'completo':
+        return (
+          <div className="rc-edit-section">
+            <div className="rc-edit-info-box">
+              <Zap size={16} />
+              <span>O fluxo completo enviará todas as etapas em sequência: <strong>Flow → Order Bump → Upsell → Downsell</strong>. Para personalizar cada uma individualmente, selecione-as separadamente.</span>
+            </div>
+          </div>
+        );
+
+      default:
+        return null;
+    }
   };
 
   return (
@@ -351,13 +631,13 @@ function RevisaoCopy({ onClose }) {
             </div>
             <div>
               <h2>Revisão de Copy</h2>
-              <p>Simule fluxos no Telegram e veja o que seus clientes recebem</p>
+              <p>Personalize e simule fluxos antes de enviar ao Telegram</p>
             </div>
           </div>
           <button className="rp-modal-close" onClick={onClose}><X size={20} /></button>
         </div>
 
-        <div className="rp-modal-body">
+        <div className="rp-modal-body" style={{ maxHeight: '70vh', overflowY: 'auto' }}>
           {resultado ? (
             <div className="clone-result">
               <div className="clone-result-icon"><CheckCircle size={48} /></div>
@@ -367,7 +647,7 @@ function RevisaoCopy({ onClose }) {
               </p>
               <p style={{color:'#888', fontSize:'0.85rem'}}>Abra o Telegram e confira a preview completa.</p>
               <div style={{display:'flex', gap:10, marginTop:20, justifyContent:'center'}}>
-                <button className="rp-btn-secondary" onClick={() => { setResultado(null); setTipo(''); }}>
+                <button className="rp-btn-secondary" onClick={() => { setResultado(null); setTipo(''); setCopyData(null); setEditMode(false); }}>
                   Nova simulação
                 </button>
                 <button className="rp-btn-primary" onClick={onClose}>Fechar</button>
@@ -378,7 +658,7 @@ function RevisaoCopy({ onClose }) {
               {/* Bot Select */}
               <div className="rc-bot-select">
                 <label>Bot para simulação</label>
-                <select value={botId} onChange={e => setBotId(e.target.value)}>
+                <select value={botId} onChange={e => { setBotId(e.target.value); setTipo(''); setCopyData(null); setEditMode(false); }}>
                   <option value="">Selecionar bot...</option>
                   {bots.map(b => <option key={b.id} value={b.id}>{b.nome}</option>)}
                 </select>
@@ -392,7 +672,7 @@ function RevisaoCopy({ onClose }) {
                     <div 
                       key={t.id}
                       className={`rc-tipo-card ${tipo === t.id ? 'active' : ''}`}
-                      onClick={() => setTipo(t.id)}
+                      onClick={() => handleSelectTipo(t.id)}
                       style={{ '--tipo-cor': t.cor }}
                     >
                       <span className="rc-tipo-icon">{t.icon}</span>
@@ -406,10 +686,21 @@ function RevisaoCopy({ onClose }) {
                 </div>
               </div>
 
+              {/* Loading dos dados */}
+              {loadingData && (
+                <div style={{textAlign:'center', padding:'2rem', color:'#888'}}>
+                  <div className="rp-spinner" style={{margin:'0 auto 1rem'}} />
+                  <p>Carregando copy configurada...</p>
+                </div>
+              )}
+
+              {/* Campos de Edição Personalizada */}
+              {editMode && copyData && !loadingData && renderEditFields()}
+
               {/* Info */}
               <div className="rc-info">
                 <Send size={16} />
-                <span>As mensagens serão enviadas para o <strong>admin principal</strong> do bot selecionado via Telegram. Você verá exatamente o que seus clientes veriam.</span>
+                <span>As mensagens {editMode ? <strong>personalizadas</strong> : ''} serão enviadas para o <strong>admin principal</strong> do bot via Telegram.</span>
               </div>
 
               {error && <div className="clone-error">{error}</div>}
@@ -422,7 +713,7 @@ function RevisaoCopy({ onClose }) {
                 {loading ? (
                   <><div className="rp-spinner-sm" /> Enviando simulação...</>
                 ) : (
-                  <><Play size={18} /> Simular no Telegram</>
+                  <><Play size={18} /> {editMode ? 'Simular Copy Personalizada' : 'Simular no Telegram'}</>
                 )}
               </button>
             </>

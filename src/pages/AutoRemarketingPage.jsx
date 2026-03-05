@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useBot } from '../context/BotContext';
-import { remarketingAutoService, planService, testSendService } from '../services/api';
+import { remarketingAutoService, planService, testSendService, premiumEmojiService } from '../services/api';
 import { RichInput } from '../components/RichInput';
 import { MediaUploader } from '../components/MediaUploader';
 import Swal from 'sweetalert2';
@@ -25,6 +25,19 @@ const Icons = {
   Bomb: '💣',
   Stop: '🛑'
 };
+
+// ✨ Converte shortcodes de emojis premium para o fallback visual no preview.
+function convertShortcodesToFallback(text, emojiCatalog) {
+    if (!text) return text;
+    return text.replace(/:([a-zA-Z0-9_]+):/g, (match, code) => {
+      if (emojiCatalog && emojiCatalog.length > 0) {
+        const found = emojiCatalog.find(e => e.shortcode === match || e.shortcode === `:${code}:`);
+        if (found) return found.fallback || found.emoji || match;
+      }
+      return match;
+    });
+}
+
 
 // Objetos padrão para evitar erros de inicialização
 const DEFAULT_DISPARO = {
@@ -56,6 +69,20 @@ const DEFAULT_ALTERNATING = {
 
 export function AutoRemarketing() {
   const { selectedBot } = useBot();
+  
+  // ✨ Catálogo de emojis premium para preview do iPhone
+  const [emojiCatalog, setEmojiCatalog] = useState([]);
+  
+  useEffect(() => {
+    async function loadEmojiCatalog() {
+      try {
+        const data = await premiumEmojiService.getCatalog();
+        const allEmojis = (data.packs || []).flatMap(p => p.emojis || []);
+        setEmojiCatalog(allEmojis);
+      } catch(e) { console.error('Emoji catalog error:', e); }
+    }
+    loadEmojiCatalog();
+  }, []);
   
   // Estados Inicializados com Defaults Seguros
   const [disparoConfig, setDisparoConfig] = useState(DEFAULT_DISPARO);
@@ -666,7 +693,7 @@ export function AutoRemarketing() {
                               </div>
                           )}
 
-                          <div className="msg-text" dangerouslySetInnerHTML={{ __html: disparoConfig.message_text || 'Configure a mensagem...' }}></div>
+                          <div className="msg-text" dangerouslySetInnerHTML={{ __html: convertShortcodesToFallback(disparoConfig.message_text || 'Configure a mensagem...', emojiCatalog) }}></div>
                           <div className="msg-time">10:05</div>
                           
                           {/* Botão Fake */}

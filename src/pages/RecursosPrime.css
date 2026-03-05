@@ -334,3 +334,139 @@
 @media (max-width: 768px) {
   .rp-modal-lg { max-width: 95%; }
 }
+/* ============================================================
+   🎯 REVISÃO DE COPY - CAMPOS DE EDIÇÃO PERSONALIZADA
+   ============================================================ */
+
+.rc-edit-section {
+  margin: 1.5rem 0;
+  padding: 1.5rem;
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 12px;
+}
+
+.rc-edit-title {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #fff;
+  margin-bottom: 1rem;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.rc-edit-textarea {
+  width: 100%;
+  min-height: 100px;
+  padding: 12px 14px;
+  background: #0f0f0f;
+  border: 1px solid #333;
+  border-radius: 8px;
+  color: #fff;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.85rem;
+  line-height: 1.6;
+  resize: vertical;
+  transition: border-color 0.2s;
+  margin-bottom: 0.75rem;
+}
+
+.rc-edit-textarea:focus {
+  outline: none;
+  border-color: #c333ff;
+  box-shadow: 0 0 0 3px rgba(195, 51, 255, 0.1);
+}
+
+.rc-edit-textarea::placeholder {
+  color: #555;
+}
+
+.rc-edit-input {
+  width: 100%;
+  padding: 10px 12px;
+  background: #0f0f0f;
+  border: 1px solid #333;
+  border-radius: 8px;
+  color: #fff;
+  font-size: 0.9rem;
+  transition: border-color 0.2s;
+}
+
+.rc-edit-input:focus {
+  outline: none;
+  border-color: #c333ff;
+  box-shadow: 0 0 0 3px rgba(195, 51, 255, 0.1);
+}
+
+.rc-edit-input::placeholder {
+  color: #555;
+}
+
+.rc-edit-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.75rem;
+  margin-bottom: 0.75rem;
+}
+
+.rc-edit-field label {
+  display: block;
+  font-size: 0.8rem;
+  color: #888;
+  margin-bottom: 0.4rem;
+  font-weight: 500;
+}
+
+.rc-edit-step {
+  margin-bottom: 1rem;
+  padding: 1rem;
+  background: rgba(195, 51, 255, 0.03);
+  border: 1px solid rgba(195, 51, 255, 0.1);
+  border-radius: 8px;
+}
+
+.rc-edit-step-label {
+  display: block;
+  font-size: 0.8rem;
+  color: #c333ff;
+  font-weight: 700;
+  margin-bottom: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.rc-edit-info-box {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 1rem;
+  background: rgba(56, 189, 248, 0.08);
+  border: 1px solid rgba(56, 189, 248, 0.2);
+  border-radius: 8px;
+  color: #38bdf8;
+  font-size: 0.85rem;
+  line-height: 1.6;
+}
+
+.rc-edit-info-box strong {
+  color: #fff;
+}
+
+@media (max-width: 768px) {
+  .rc-edit-row {
+    grid-template-columns: 1fr;
+  }
+  
+  .rc-edit-section {
+    padding: 1rem;
+  }
+  
+  .rc-edit-textarea {
+    font-size: 16px; /* Evita zoom no iOS */
+  }
+  
+  .rc-edit-input {
+    font-size: 16px;
+  }
+}
