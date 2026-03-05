@@ -79,6 +79,43 @@
   margin-bottom: 20px;
 }
 
+/* 👇 NOVAS CLASSES PARA OS CARDS DAS GATEWAYS 👇 */
+.gateways-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+  margin-bottom: 25px;
+}
+
+.gateway-box {
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 12px;
+  padding: 20px;
+  transition: all 0.2s ease;
+}
+
+.gateway-box:hover {
+  border-color: rgba(255, 255, 255, 0.15);
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.gateway-box h4 {
+  margin: 0 0 15px 0;
+  color: #fff;
+  font-size: 1.05rem;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+  padding-bottom: 10px;
+}
+
+.gateway-box .form-group:last-child {
+  margin-bottom: 0;
+}
+/* 👆 ========================================== 👆 */
+
 .form-group {
   margin-bottom: 15px;
 }
@@ -234,5 +271,6 @@ input:checked + .slider:before { transform: translateX(24px); }
 
 @media (max-width: 768px) {
   .form-row { grid-template-columns: 1fr; }
+  .gateways-grid { grid-template-columns: 1fr; }
   .type-selector { flex-wrap: wrap; }
 }
