@@ -13,16 +13,14 @@ export function GlobalConfig() {
   
   // Estados do Financeiro
   const [config, setConfig] = useState({
-    default_fee: 60, // 60 centavos
+    default_fee: 60,
     master_pushin_pay_id: '',
     master_wiinpay_user_id: '',
     master_syncpay_client_id: '',
-    // 👇 NOVAS INTEGRAÇÕES (CONTAS MESTRAS PARA SPLIT) 👇
     master_paradise_account_id: '',
     master_paradise_secret_key: '',
     master_omegapay_client_id: '',
     master_omegapay_client_secret: '',
-    // 👆 ============================================== 👆
     maintenance_mode: false
   });
 
@@ -30,7 +28,7 @@ export function GlobalConfig() {
   const [broadcast, setBroadcast] = useState({
     title: '',
     message: '',
-    type: 'info' // info, success, warning, alert
+    type: 'info' 
   });
 
   useEffect(() => {
@@ -46,12 +44,10 @@ export function GlobalConfig() {
           master_pushin_pay_id: data.master_pushin_pay_id || '',
           master_wiinpay_user_id: data.master_wiinpay_user_id || '',
           master_syncpay_client_id: data.master_syncpay_client_id || '',
-          // 👇 CARREGANDO AS NOVAS CHAVES 👇
           master_paradise_account_id: data.master_paradise_account_id || '',
           master_paradise_secret_key: data.master_paradise_secret_key || '',
           master_omegapay_client_id: data.master_omegapay_client_id || '',
           master_omegapay_client_secret: data.master_omegapay_client_secret || '',
-          // 👆 ========================== 👆
           maintenance_mode: data.maintenance_mode || false
         });
       }
@@ -60,7 +56,6 @@ export function GlobalConfig() {
     }
   };
 
-  // --- SALVAR CONFIGURAÇÕES GERAIS ---
   const handleSaveConfig = async () => {
     setLoading(true);
     try {
@@ -73,7 +68,6 @@ export function GlobalConfig() {
     }
   };
 
-  // --- ENVIAR NOTIFICAÇÃO EM MASSA (BROADCAST) ---
   const handleSendBroadcast = async () => {
     if (!broadcast.title || !broadcast.message) {
       return Swal.fire('Atenção', 'Preencha título e mensagem.', 'warning');
@@ -91,11 +85,7 @@ export function GlobalConfig() {
     if (result.isConfirmed) {
       setLoading(true);
       try {
-        // Precisamos criar essa função no backend ou usar um endpoint específico
-        // Por enquanto, vamos simular ou usar um endpoint genérico se houver
-        // Supondo que exista um endpoint no superAdminService para isso:
         await superAdminService.sendBroadcast(broadcast);
-        
         Swal.fire('Enviado!', 'Notificação enviada para todos os usuários.', 'success');
         setBroadcast({ title: '', message: '', type: 'info' });
       } catch (error) {
@@ -114,7 +104,6 @@ export function GlobalConfig() {
         <p>Definições mestras do sistema Zenyx</p>
       </div>
 
-      {/* NAVEGAÇÃO POR ABAS */}
       <div className="config-tabs">
         <button 
           className={`tab-btn ${activeTab === 'financial' ? 'active' : ''}`}
@@ -141,8 +130,9 @@ export function GlobalConfig() {
                 <p>Configuração do Split de Pagamento Global</p>
               </div>
               
-              <div className="form-row">
-                <div className="form-group">
+              {/* TAXA SEPARADA PARA NÃO ESPREMER */}
+              <div className="form-row" style={{ gridTemplateColumns: '1fr', marginBottom: '30px' }}>
+                <div className="form-group" style={{ maxWidth: '400px' }}>
                   <label>Taxa Padrão por Venda (Centavos)</label>
                   <input 
                     type="number" 
@@ -151,85 +141,96 @@ export function GlobalConfig() {
                   />
                   <small>Valor cobrado de <strong>novos usuários</strong> por padrão (Ex: 60 = R$ 0,60).</small>
                 </div>
+              </div>
 
-                <div className="form-group">
-                  <label>Pushin Pay ID (Conta Mestra)</label>
-                  <input 
-                    type="text" 
-                    placeholder="Ex: MASTER_KEY_123..."
-                    value={config.master_pushin_pay_id}
-                    onChange={(e) => setConfig({...config, master_pushin_pay_id: e.target.value})}
-                  />
-                  <small>Para onde vai o lucro das taxas (Split PushinPay).</small>
+              {/* GRID DOS CARDS DE GATEWAY */}
+              <div className="gateways-grid">
+                
+                <div className="gateway-box">
+                  <h4 style={{ color: '#00e676' }}>PushinPay</h4>
+                  <div className="form-group">
+                    <label>Pushin Pay ID (Conta Mestra)</label>
+                    <input 
+                      type="text" 
+                      placeholder="Ex: MASTER_KEY_123..."
+                      value={config.master_pushin_pay_id}
+                      onChange={(e) => setConfig({...config, master_pushin_pay_id: e.target.value})}
+                    />
+                    <small>Para onde vai o lucro das taxas (Split).</small>
+                  </div>
                 </div>
 
-                <div className="form-group">
-                  <label>WiinPay User ID (Conta Mestra)</label>
-                  <input 
-                    type="text" 
-                    placeholder="Ex: cmllismb726j1od0kzd76mzau..."
-                    value={config.master_wiinpay_user_id}
-                    onChange={(e) => setConfig({...config, master_wiinpay_user_id: e.target.value})}
-                  />
-                  <small>Para onde vai o lucro das taxas (Split WiinPay).</small>
+                <div className="gateway-box">
+                  <h4 style={{ color: '#a855f7' }}>WiinPay</h4>
+                  <div className="form-group">
+                    <label>WiinPay User ID (Conta Mestra)</label>
+                    <input 
+                      type="text" 
+                      placeholder="Ex: cmllismb726j1od..."
+                      value={config.master_wiinpay_user_id}
+                      onChange={(e) => setConfig({...config, master_wiinpay_user_id: e.target.value})}
+                    />
+                    <small>Para onde vai o lucro das taxas (Split).</small>
+                  </div>
                 </div>
 
-                <div className="form-group">
-                  <label>Sync Pay Client ID (Conta Mestra)</label>
-                  <input 
-                    type="text" 
-                    placeholder="Ex: 5ee78200-8b99-4936..."
-                    value={config.master_syncpay_client_id}
-                    onChange={(e) => setConfig({...config, master_syncpay_client_id: e.target.value})}
-                  />
-                  <small>Para onde vai o lucro das taxas (Split Sync Pay).</small>
+                <div className="gateway-box">
+                  <h4 style={{ color: '#3b82f6' }}>Sync Pay</h4>
+                  <div className="form-group">
+                    <label>Sync Pay Client ID (Conta Mestra)</label>
+                    <input 
+                      type="text" 
+                      placeholder="Ex: 5ee78200-8b99-4936..."
+                      value={config.master_syncpay_client_id}
+                      onChange={(e) => setConfig({...config, master_syncpay_client_id: e.target.value})}
+                    />
+                    <small>Para onde vai o lucro das taxas (Split).</small>
+                  </div>
                 </div>
 
-                {/* 👇 NOVAS INTEGRAÇÕES 👇 */}
-                <div className="form-group">
-                  <label>Paradise Account ID (Split da Paradise)</label>
-                  <input 
-                    type="text" 
-                    placeholder="Ex: 6225"
-                    value={config.master_paradise_account_id}
-                    onChange={(e) => setConfig({...config, master_paradise_account_id: e.target.value})}
-                  />
-                  <small>ID numérico da conta Mestra na Paradise.</small>
+                <div className="gateway-box">
+                  <h4 style={{ color: '#facc15' }}>Paradise</h4>
+                  <div className="form-group">
+                    <label>Account ID (Split da Paradise)</label>
+                    <input 
+                      type="text" 
+                      placeholder="Ex: 6225"
+                      value={config.master_paradise_account_id}
+                      onChange={(e) => setConfig({...config, master_paradise_account_id: e.target.value})}
+                    />
+                  </div>
+                  <div className="form-group">
+                    <label>Secret Key (Chave Mestra)</label>
+                    <input 
+                      type="password" 
+                      placeholder="Ex: sk_a8d689..."
+                      value={config.master_paradise_secret_key}
+                      onChange={(e) => setConfig({...config, master_paradise_secret_key: e.target.value})}
+                    />
+                  </div>
                 </div>
 
-                <div className="form-group">
-                  <label>Paradise Secret Key (Chave Mestra)</label>
-                  <input 
-                    type="text" 
-                    placeholder="Ex: sk_a8d689..."
-                    value={config.master_paradise_secret_key}
-                    onChange={(e) => setConfig({...config, master_paradise_secret_key: e.target.value})}
-                  />
-                  <small>Sua Secret Key Mestra da Paradise.</small>
+                <div className="gateway-box">
+                  <h4 style={{ color: '#0ea5e9' }}>OmegaPay</h4>
+                  <div className="form-group">
+                    <label>Client ID (Chave Pública Mestra)</label>
+                    <input 
+                      type="text" 
+                      placeholder="Ex: luisdedeus2512_..."
+                      value={config.master_omegapay_client_id}
+                      onChange={(e) => setConfig({...config, master_omegapay_client_id: e.target.value})}
+                    />
+                  </div>
+                  <div className="form-group">
+                    <label>Client Secret (Chave Privada Mestra)</label>
+                    <input 
+                      type="password" 
+                      placeholder="Ex: nrbqx75vle..."
+                      value={config.master_omegapay_client_secret}
+                      onChange={(e) => setConfig({...config, master_omegapay_client_secret: e.target.value})}
+                    />
+                  </div>
                 </div>
-
-                <div className="form-group">
-                  <label>OmegaPay Client ID (Chave Pública Mestra)</label>
-                  <input 
-                    type="text" 
-                    placeholder="Ex: luisdedeus2512_w9..."
-                    value={config.master_omegapay_client_id}
-                    onChange={(e) => setConfig({...config, master_omegapay_client_id: e.target.value})}
-                  />
-                  <small>Sua Chave Pública Mestra da OmegaPay.</small>
-                </div>
-
-                <div className="form-group">
-                  <label>OmegaPay Client Secret (Chave Privada Mestra)</label>
-                  <input 
-                    type="text" 
-                    placeholder="Ex: nrbqx75vle..."
-                    value={config.master_omegapay_client_secret}
-                    onChange={(e) => setConfig({...config, master_omegapay_client_secret: e.target.value})}
-                  />
-                  <small>Sua Chave Privada Mestra da OmegaPay.</small>
-                </div>
-                {/* 👆 ==================== 👆 */}
 
               </div>
 
