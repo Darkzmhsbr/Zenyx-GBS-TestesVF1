@@ -582,7 +582,7 @@ export const integrationService = {
   },
 
   // =========================================================
-  // 🔄 SYNC PAY (NOVO)
+  // 🔄 SYNC PAY
   // =========================================================
   getSyncPayStatus: async (botId) => {
     if (!botId) return { status: 'desconectado' };
@@ -617,6 +617,80 @@ export const integrationService = {
       return response.data;
     } catch (error) {
       console.error("Erro ao atualizar credenciais Sync Pay:", error);
+      throw error;
+    }
+  },
+
+  // =========================================================
+  // 🌴 PARADISE PAGAMENTOS (NOVO)
+  // =========================================================
+  getParadiseStatus: async (botId) => {
+    if (!botId) return { status: 'desconectado' };
+    try {
+      const response = await api.get(`/api/admin/integrations/paradise/${botId}`);
+      return response.data;
+    } catch (error) {
+      console.error("Erro ao buscar status Paradise:", error);
+      return { status: 'desconectado' };
+    }
+  },
+
+  saveParadiseToken: async (botId, apiKey) => {
+    try {
+      const response = await api.post(`/api/admin/integrations/paradise/${botId}`, { api_key: apiKey });
+      return response.data;
+    } catch (error) {
+      console.error("Erro ao salvar credenciais Paradise:", error);
+      throw error;
+    }
+  },
+
+  updateParadiseToken: async (botId, apiKey) => {
+    try {
+      const response = await api.post(`/api/admin/integrations/paradise/${botId}`, { api_key: apiKey });
+      return response.data;
+    } catch (error) {
+      console.error("Erro ao atualizar credenciais Paradise:", error);
+      throw error;
+    }
+  },
+
+  // =========================================================
+  // 🔵 OMEGAPAY (NOVO)
+  // =========================================================
+  getOmegaPayStatus: async (botId) => {
+    if (!botId) return { status: 'desconectado' };
+    try {
+      const response = await api.get(`/api/admin/integrations/omegapay/${botId}`);
+      return response.data;
+    } catch (error) {
+      console.error("Erro ao buscar status OmegaPay:", error);
+      return { status: 'desconectado' };
+    }
+  },
+
+  saveOmegaPayToken: async (botId, clientId, clientSecret) => {
+    try {
+      const response = await api.post(`/api/admin/integrations/omegapay/${botId}`, { 
+        client_id: clientId, 
+        client_secret: clientSecret 
+      });
+      return response.data;
+    } catch (error) {
+      console.error("Erro ao salvar credenciais OmegaPay:", error);
+      throw error;
+    }
+  },
+
+  updateOmegaPayToken: async (botId, clientId, clientSecret) => {
+    try {
+      const response = await api.post(`/api/admin/integrations/omegapay/${botId}`, { 
+        client_id: clientId, 
+        client_secret: clientSecret 
+      });
+      return response.data;
+    } catch (error) {
+      console.error("Erro ao atualizar credenciais OmegaPay:", error);
       throw error;
     }
   },

@@ -19,18 +19,22 @@ import { useBot } from '../context/BotContext';
 import { Button } from '../components/Button';
 import './Dashboard.css';
 
+// Registra o idioma para o DatePicker
 registerLocale('pt-BR', ptBR);
 
 export function Dashboard() {
   const navigate = useNavigate();
   const { selectedBot } = useBot();
   const { onboarding } = useAuth();
+  
+  // Estados da página
   const [loading, setLoading] = useState(true);
   const [showWelcomeBanner, setShowWelcomeBanner] = useState(false);
   const [isGlobalView, setIsGlobalView] = useState(false);
   const [dateRange, setDateRange] = useState([
     new Date(new Date().setDate(new Date().getDate() - 30)), new Date()
   ]);
+  
   const [startDate, endDate] = dateRange;
   const [metrics, setMetrics] = useState({
     total_revenue: 0, active_users: 0, sales_today: 0, leads_mes: 0,
@@ -39,58 +43,95 @@ export function Dashboard() {
   });
   const [prevMetrics, setPrevMetrics] = useState(null);
 
+  // Controle do Welcome Banner
   useEffect(() => {
     const seen = localStorage.getItem('zenyx_welcome_shown');
-    if (onboarding?.completed && !seen) { setShowWelcomeBanner(true); localStorage.setItem('zenyx_welcome_shown', 'true'); }
+    if (onboarding?.completed && !seen) { 
+      setShowWelcomeBanner(true); 
+      localStorage.setItem('zenyx_welcome_shown', 'true'); 
+    }
   }, [onboarding]);
 
-  useEffect(() => { carregarDados(); }, [selectedBot, endDate, isGlobalView]);
+  // Gatilho de carregamento de dados
+  useEffect(() => { 
+    carregarDados(); 
+  }, [selectedBot, endDate, isGlobalView]);
 
+  // Função principal de fetch
   const carregarDados = async () => {
     if (!startDate || !endDate) return;
     try {
       setLoading(true);
+      // Mestre Código Fácil: A lógica dinâmica do Backend já traz dados de todas as gateways!
       const botId = isGlobalView ? null : (selectedBot ? selectedBot.id : null);
       const data = await dashboardService.getStats(botId, startDate, endDate);
+      
       if (!data.chart_data) data.chart_data = [];
       setMetrics(data);
-      // Previous period
+      
+      // Cálculo do período anterior para comparações (Growth)
       const diffDays = Math.ceil((endDate - startDate) / (1000 * 60 * 60 * 24));
       const prevEnd = new Date(startDate); prevEnd.setDate(prevEnd.getDate() - 1);
       const prevStart = new Date(prevEnd); prevStart.setDate(prevStart.getDate() - diffDays);
-      try { const prev = await dashboardService.getStats(botId, prevStart, prevEnd); setPrevMetrics(prev); } catch { setPrevMetrics(null); }
-    } catch (e) { console.error("Erro:", e); } finally { setLoading(false); }
+      
+      try { 
+        const prev = await dashboardService.getStats(botId, prevStart, prevEnd); 
+        setPrevMetrics(prev); 
+      } catch { 
+        setPrevMetrics(null); 
+      }
+    } catch (e) { 
+      console.error("Erro ao carregar Dashboard:", e); 
+    } finally { 
+      setLoading(false); 
+    }
   };
 
+  // Funções de formatação
   const formatMoney = (v) => new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format((v || 0) / 100);
   const formatNumber = (v) => new Intl.NumberFormat('pt-BR').format(v || 0);
-  const calcChange = (cur, prev) => { if (!prev || prev === 0) return cur > 0 ? 100 : 0; return ((cur - prev) / prev * 100).toFixed(1); };
+  const calcChange = (cur, prev) => { 
+    if (!prev || prev === 0) return cur > 0 ? 100 : 0; 
+    return ((cur - prev) / prev * 100).toFixed(1); 
+  };
 
+  // Cálculos analíticos (Memoizados para performance)
   const analytics = useMemo(() => {
     const data = metrics.chart_data || [];
     if (!data.length) return { bestDay: null, avgDaily: 0, trend: 'stable', weekData: [] };
+    
     const values = data.map(d => d.value || 0);
     const maxVal = Math.max(...values);
     const bestDay = data.find(d => (d.value || 0) === maxVal);
     const avgDaily = values.reduce((a, b) => a + b, 0) / values.length;
+    
     const first7 = values.slice(0, 7), last7 = values.slice(-7);
     const avgFirst = first7.reduce((a, b) => a + b, 0) / first7.length;
     const avgLast = last7.reduce((a, b) => a + b, 0) / last7.length;
     const trend = avgLast > avgFirst * 1.1 ? 'up' : avgLast < avgFirst * 0.9 ? 'down' : 'stable';
+    
     const dayNames = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
     const weekAccum = Array(7).fill(0), weekCount = Array(7).fill(0);
+    
     data.forEach(d => {
       if (d.name) {
         const [dd, mm] = d.name.split('/');
         const date = new Date(new Date().getFullYear(), parseInt(mm) - 1, parseInt(dd));
         const dow = date.getDay();
-        weekAccum[dow] += d.value || 0; weekCount[dow]++;
+        weekAccum[dow] += d.value || 0; 
+        weekCount[dow]++;
       }
     });
-    const weekData = dayNames.map((name, i) => ({ name, value: weekCount[i] > 0 ? Math.round(weekAccum[i] / weekCount[i]) : 0 }));
+    
+    const weekData = dayNames.map((name, i) => ({ 
+      name, 
+      value: weekCount[i] > 0 ? Math.round(weekAccum[i] / weekCount[i]) : 0 
+    }));
+    
     return { bestDay, avgDaily, trend, weekData };
   }, [metrics.chart_data]);
 
+  // Tooltip customizado do gráfico Recharts
   const CustomTooltip = ({ active, payload, label }) => {
     if (active && payload?.length) return (
       <div className="chart-tooltip">
@@ -101,13 +142,19 @@ export function Dashboard() {
     return null;
   };
 
-  const getGreeting = () => { const h = new Date().getHours(); return h < 12 ? 'Bom dia' : h < 18 ? 'Boa tarde' : 'Boa noite'; };
+  const getGreeting = () => { 
+    const h = new Date().getHours(); 
+    return h < 12 ? 'Bom dia' : h < 18 ? 'Boa tarde' : 'Boa noite'; 
+  };
+
+  // Variações em relação ao período anterior
   const revenueChange = prevMetrics ? calcChange(metrics.total_revenue, prevMetrics.total_revenue) : null;
   const leadsChange = prevMetrics ? calcChange(metrics.leads_mes, prevMetrics.leads_mes) : null;
   const transChange = prevMetrics ? calcChange(metrics.total_transacoes, prevMetrics.total_transacoes) : null;
 
   return (
     <div className="dashboard-container">
+      {/* BANNER DE BOAS VINDAS */}
       {showWelcomeBanner && (
         <div className="welcome-banner">
           <div className="welcome-banner-content">
@@ -131,7 +178,7 @@ export function Dashboard() {
         </div>
       )}
 
-      {/* HEADER */}
+      {/* HEADER DO DASHBOARD */}
       <header className="dashboard-header">
         <div className="dashboard-header-left">
           <div className="dashboard-title-group">

@@ -16,7 +16,13 @@ export function GlobalConfig() {
     default_fee: 60, // 60 centavos
     master_pushin_pay_id: '',
     master_wiinpay_user_id: '',
-    master_syncpay_client_id: '', // 🆕 NOVO: Conta Mestra da Sync Pay
+    master_syncpay_client_id: '',
+    // 👇 NOVAS INTEGRAÇÕES (CONTAS MESTRAS PARA SPLIT) 👇
+    master_paradise_account_id: '',
+    master_paradise_secret_key: '',
+    master_omegapay_client_id: '',
+    master_omegapay_client_secret: '',
+    // 👆 ============================================== 👆
     maintenance_mode: false
   });
 
@@ -39,7 +45,13 @@ export function GlobalConfig() {
           default_fee: data.default_fee || 60,
           master_pushin_pay_id: data.master_pushin_pay_id || '',
           master_wiinpay_user_id: data.master_wiinpay_user_id || '',
-          master_syncpay_client_id: data.master_syncpay_client_id || '', // 🆕 NOVO
+          master_syncpay_client_id: data.master_syncpay_client_id || '',
+          // 👇 CARREGANDO AS NOVAS CHAVES 👇
+          master_paradise_account_id: data.master_paradise_account_id || '',
+          master_paradise_secret_key: data.master_paradise_secret_key || '',
+          master_omegapay_client_id: data.master_omegapay_client_id || '',
+          master_omegapay_client_secret: data.master_omegapay_client_secret || '',
+          // 👆 ========================== 👆
           maintenance_mode: data.maintenance_mode || false
         });
       }
@@ -162,7 +174,6 @@ export function GlobalConfig() {
                   <small>Para onde vai o lucro das taxas (Split WiinPay).</small>
                 </div>
 
-                {/* 🆕 NOVO CAMPO: SYNC PAY MASTER ID */}
                 <div className="form-group">
                   <label>Sync Pay Client ID (Conta Mestra)</label>
                   <input 
@@ -173,6 +184,52 @@ export function GlobalConfig() {
                   />
                   <small>Para onde vai o lucro das taxas (Split Sync Pay).</small>
                 </div>
+
+                {/* 👇 NOVAS INTEGRAÇÕES 👇 */}
+                <div className="form-group">
+                  <label>Paradise Account ID (Split da Paradise)</label>
+                  <input 
+                    type="text" 
+                    placeholder="Ex: 6225"
+                    value={config.master_paradise_account_id}
+                    onChange={(e) => setConfig({...config, master_paradise_account_id: e.target.value})}
+                  />
+                  <small>ID numérico da conta Mestra na Paradise.</small>
+                </div>
+
+                <div className="form-group">
+                  <label>Paradise Secret Key (Chave Mestra)</label>
+                  <input 
+                    type="text" 
+                    placeholder="Ex: sk_a8d689..."
+                    value={config.master_paradise_secret_key}
+                    onChange={(e) => setConfig({...config, master_paradise_secret_key: e.target.value})}
+                  />
+                  <small>Sua Secret Key Mestra da Paradise.</small>
+                </div>
+
+                <div className="form-group">
+                  <label>OmegaPay Client ID (Chave Pública Mestra)</label>
+                  <input 
+                    type="text" 
+                    placeholder="Ex: luisdedeus2512_w9..."
+                    value={config.master_omegapay_client_id}
+                    onChange={(e) => setConfig({...config, master_omegapay_client_id: e.target.value})}
+                  />
+                  <small>Sua Chave Pública Mestra da OmegaPay.</small>
+                </div>
+
+                <div className="form-group">
+                  <label>OmegaPay Client Secret (Chave Privada Mestra)</label>
+                  <input 
+                    type="text" 
+                    placeholder="Ex: nrbqx75vle..."
+                    value={config.master_omegapay_client_secret}
+                    onChange={(e) => setConfig({...config, master_omegapay_client_secret: e.target.value})}
+                  />
+                  <small>Sua Chave Privada Mestra da OmegaPay.</small>
+                </div>
+                {/* 👆 ==================== 👆 */}
 
               </div>
 

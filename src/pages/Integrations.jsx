@@ -55,6 +55,37 @@ const GATEWAYS_INFO = {
     tokenPlaceholder2: 'Ex: a490fcdb-78dd...',
     disponivel: true
   },
+  // 👇 NOVAS INTEGRAÇÕES AQUI 👇
+  paradise: {
+    id: 'paradise',
+    nome: 'Paradise',
+    descricao: 'Pagamento via PIX',
+    cor: '#facc15', // Dourado
+    corGradient: 'linear-gradient(135deg, #facc15, #ca8a04)',
+    logo: 'https://f005.backblazeb2.com/file/Bot-TikTok/zenyx/paradise-logo.png',
+    taxaInfo: 'Taxa Personalizada',
+    site: 'https://paradisepags.com',
+    tokenLabel: 'Secret Key (Chave Secreta)',
+    tokenPlaceholder: 'Ex: sk_a8d689ceac0b...',
+    disponivel: true
+  },
+  omegapay: {
+    id: 'omegapay',
+    nome: 'OmegaPay',
+    descricao: 'Pagamento via PIX',
+    cor: '#0ea5e9', // Azul ciano
+    corGradient: 'linear-gradient(135deg, #0ea5e9, #0369a1)',
+    logo: 'https://f005.backblazeb2.com/file/Bot-TikTok/zenyx/omegapay-logo.png',
+    taxaInfo: 'Taxa Personalizada',
+    site: 'https://omegapay.com.br',
+    // OmegaPay também usa duas chaves
+    tokenLabel: 'Client ID (Chave Pública)',
+    tokenPlaceholder: 'Ex: luisdedeus2512_...',
+    tokenLabel2: 'Client Secret (Chave Privada)',
+    tokenPlaceholder2: 'Ex: nrbqx75vleydalbv...',
+    disponivel: true
+  },
+  // 👆 ======================= 👆
   mercadopago: {
     id: 'mercadopago',
     nome: 'Mercado Pago',
@@ -82,9 +113,9 @@ export function Integrations() {
   const [modalOpen, setModalOpen] = useState(false);
   const [modalGateway, setModalGateway] = useState(null);
   
-  // 🆕 Estados para lidar com campos únicos ou duplos (Sync Pay)
-  const [modalToken, setModalToken] = useState(''); // Usado para Pushin e Wiin
-  const [modalClientSecret, setModalClientSecret] = useState(''); // Usado só na Sync Pay
+  // 🆕 Estados para lidar com campos únicos ou duplos
+  const [modalToken, setModalToken] = useState(''); 
+  const [modalClientSecret, setModalClientSecret] = useState(''); 
   
   const [showToken, setShowToken] = useState(false);
   const [showSecret, setShowSecret] = useState(false);
@@ -107,14 +138,16 @@ export function Integrations() {
       setGatewayConfig(config);
     } catch (error) {
       console.error("Erro ao carregar config de gateways:", error);
-      // Fallback: monta config padrão
+      // Fallback: monta config padrão incluindo as novas
       setGatewayConfig({
         bot_id: selectedBot.id,
         gateway_principal: 'pushinpay',
         gateway_fallback: null,
         pushinpay: { ativo: false, configurado: false, token_mask: '' },
         wiinpay: { ativo: false, configurado: false, token_mask: '' },
-        syncpay: { ativo: false, configurado: false, token_mask: '' }
+        syncpay: { ativo: false, configurado: false, token_mask: '' },
+        paradise: { ativo: false, configurado: false, token_mask: '' },
+        omegapay: { ativo: false, configurado: false, token_mask: '' }
       });
     } finally {
       setLoading(false);
@@ -132,12 +165,16 @@ export function Integrations() {
     ativos: [
       gatewayConfig?.pushinpay?.ativo,
       gatewayConfig?.wiinpay?.ativo,
-      gatewayConfig?.syncpay?.ativo
+      gatewayConfig?.syncpay?.ativo,
+      gatewayConfig?.paradise?.ativo,
+      gatewayConfig?.omegapay?.ativo
     ].filter(Boolean).length,
     configurados: [
       gatewayConfig?.pushinpay?.configurado,
       gatewayConfig?.wiinpay?.configurado,
-      gatewayConfig?.syncpay?.configurado
+      gatewayConfig?.syncpay?.configurado,
+      gatewayConfig?.paradise?.configurado,
+      gatewayConfig?.omegapay?.configurado
     ].filter(Boolean).length,
     disponiveis: Object.values(GATEWAYS_INFO).filter(g => g.disponivel).length
   };
@@ -163,8 +200,8 @@ export function Integrations() {
     const token = modalToken.trim();
     const secret = modalClientSecret.trim();
     
-    // Validação para Sync Pay (exige 2 campos)
-    if (modalGateway === 'syncpay') {
+    // Validação para Gateways que exigem 2 campos (Sync Pay e OmegaPay)
+    if (modalGateway === 'syncpay' || modalGateway === 'omegapay') {
       if (!token || token.length < 10 || !secret || secret.length < 10) {
         return Swal.fire({
           title: 'Credenciais inválidas',
@@ -176,11 +213,11 @@ export function Integrations() {
         });
       }
     } else {
-      // Validação básica de tamanho para outras gateways
+      // Validação básica de tamanho para as de 1 campo
       if (!token || token.length < 20) {
         return Swal.fire({
           title: 'Token inválido',
-          text: 'O token deve ter pelo menos 20 caracteres.',
+          text: 'A credencial inserida parece estar incorreta ou muito curta.',
           icon: 'warning',
           background: '#0d0b14',
           color: '#e2e8f0',
@@ -220,6 +257,18 @@ export function Integrations() {
           await integrationService.updateSyncPayToken(selectedBot.id, token, secret);
         } else {
           await integrationService.saveSyncPayToken(selectedBot.id, token, secret);
+        }
+      } else if (modalGateway === 'paradise') {
+        if (modalMode === 'edit') {
+          await integrationService.updateParadiseToken(selectedBot.id, token);
+        } else {
+          await integrationService.saveParadiseToken(selectedBot.id, token);
+        }
+      } else if (modalGateway === 'omegapay') {
+        if (modalMode === 'edit') {
+          await integrationService.updateOmegaPayToken(selectedBot.id, token, secret);
+        } else {
+          await integrationService.saveOmegaPayToken(selectedBot.id, token, secret);
         }
       }
 
@@ -287,6 +336,8 @@ export function Integrations() {
       if (gwId === 'pushinpay') payload.pushinpay_ativo = ativar;
       if (gwId === 'wiinpay') payload.wiinpay_ativo = ativar;
       if (gwId === 'syncpay') payload.syncpay_ativo = ativar;
+      if (gwId === 'paradise') payload.paradise_ativo = ativar;
+      if (gwId === 'omegapay') payload.omegapay_ativo = ativar;
       
       await integrationService.updateGatewayConfig(selectedBot.id, payload);
       await carregarConfig();
@@ -562,7 +613,7 @@ export function Integrations() {
               <label className="gw-modal__label">
                 {GATEWAYS_INFO[modalGateway].tokenLabel}
               </label>
-              <div className="gw-modal__input-wrap" style={{ marginBottom: modalGateway === 'syncpay' ? '15px' : '0' }}>
+              <div className="gw-modal__input-wrap" style={{ marginBottom: (modalGateway === 'syncpay' || modalGateway === 'omegapay') ? '15px' : '0' }}>
                 <input
                   type={showToken ? 'text' : 'password'}
                   className="gw-modal__input"
@@ -576,8 +627,8 @@ export function Integrations() {
                 </button>
               </div>
 
-              {/* CAMPO 2 (Somente Sync Pay) */}
-              {modalGateway === 'syncpay' && (
+              {/* CAMPO 2 (Somente Sync Pay e OmegaPay) */}
+              {(modalGateway === 'syncpay' || modalGateway === 'omegapay') && (
                 <>
                   <label className="gw-modal__label">
                     {GATEWAYS_INFO[modalGateway].tokenLabel2}
@@ -609,7 +660,13 @@ export function Integrations() {
                   ? 'Gere seu token em pushinpay.com.br → Painel → Configurações → API.'
                   : modalGateway === 'syncpay'
                   ? 'Gere suas chaves em syncpay.com.br → API → Cadastrar API.'
-                  : 'Gere sua API Key em wiinpay.com.br → Painel → Integrações → API Key.'
+                  : modalGateway === 'wiinpay'
+                  ? 'Gere sua API Key em wiinpay.com.br → Painel → Integrações → API Key.'
+                  : modalGateway === 'paradise'
+                  ? 'Gere sua Secret Key no painel da Paradise → Configurações e API.'
+                  : modalGateway === 'omegapay'
+                  ? 'Gere suas chaves no painel da OmegaPay.'
+                  : ''
                 }
               </p>
             </div>
@@ -663,6 +720,8 @@ export function Integrations() {
                     <option value="pushinpay">PushinPay</option>
                     <option value="wiinpay">WiinPay</option>
                     <option value="syncpay">Sync Pay</option>
+                    <option value="paradise">Paradise</option>
+                    <option value="omegapay">OmegaPay</option>
                   </select>
                 </div>
 
@@ -682,6 +741,8 @@ export function Integrations() {
                     <option value="pushinpay">PushinPay</option>
                     <option value="wiinpay">WiinPay</option>
                     <option value="syncpay">Sync Pay</option>
+                    <option value="paradise">Paradise</option>
+                    <option value="omegapay">OmegaPay</option>
                   </select>
                 </div>
               </div>

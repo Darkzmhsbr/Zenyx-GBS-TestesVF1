@@ -45,10 +45,17 @@ export function SetupWizard() {
         detected.push(0);
       }
 
-      // Etapa 1 (Gateway): Verifica se tem gateway configurada e ativa
+      // Etapa 1 (Gateway): Verifica se tem ALGUMA gateway configurada e ativa
       try {
         const gwConfig = await integrationService.getGatewayConfig(selectedBot.id);
-        const temGatewayAtiva = gwConfig?.pushinpay?.ativo || gwConfig?.wiinpay?.ativo;
+        // 👇 [ATUALIZADO] AGORA VERIFICA TODAS AS 5 GATEWAYS 👇
+        const temGatewayAtiva = 
+          gwConfig?.pushinpay?.ativo || 
+          gwConfig?.wiinpay?.ativo || 
+          gwConfig?.syncpay?.ativo || 
+          gwConfig?.paradise?.ativo || 
+          gwConfig?.omegapay?.ativo;
+          
         if (temGatewayAtiva) {
           detected.push(1);
         }
