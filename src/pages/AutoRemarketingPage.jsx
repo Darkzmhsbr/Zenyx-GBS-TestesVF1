@@ -7,6 +7,29 @@ import Swal from 'sweetalert2';
 import './AutoRemarketingPage.css';
 
 // Ícones (Unicode)
+
+// 📅 Substitui variáveis de data dinâmicas pela data atual (para preview)
+function replaceDateVarsPreview(text) {
+  if (!text || !text.includes('{')) return text;
+  const now = new Date();
+  const dd = String(now.getDate()).padStart(2, '0');
+  const mm = String(now.getMonth() + 1).padStart(2, '0');
+  const aaaa = String(now.getFullYear());
+  const aa = aaaa.slice(-2);
+  const meses = ['janeiro','fevereiro','março','abril','maio','junho','julho','agosto','setembro','outubro','novembro','dezembro'];
+  const dias = ['domingo','segunda-feira','terça-feira','quarta-feira','quinta-feira','sexta-feira','sábado'];
+  
+  return text
+    .replace(/\{DD\/MM\/AAAA\}/g, `${dd}/${mm}/${aaaa}`)
+    .replace(/\{DD\/MM\/AA\}/g, `${dd}/${mm}/${aa}`)
+    .replace(/\{DD\}/g, dd)
+    .replace(/\{MM\}/g, mm)
+    .replace(/\{AAAA\}/g, aaaa)
+    .replace(/\{AA\}/g, aa)
+    .replace(/\{MES\}/g, meses[now.getMonth()])
+    .replace(/\{DIA_SEMANA\}/g, dias[now.getDay()]);
+}
+
 const Icons = {
   Save: '💾',
   Rocket: '🚀',
@@ -516,6 +539,8 @@ export function AutoRemarketing() {
                   />
                   <small style={{color:'#666', display:'block', marginTop:'5px'}}>
                     Use: <code>{'{first_name}'}</code>, <code>{'{plano_original}'}</code>, <code>{'{valor_original}'}</code>
+                    <br/>
+                    📅 Datas dinâmicas: <code>{'{DD/MM/AAAA}'}</code>, <code>{'{DD/MM/AA}'}</code>, <code>{'{DD}'}</code>, <code>{'{MM}'}</code>, <code>{'{AAAA}'}</code>, <code>{'{MES}'}</code>, <code>{'{DIA_SEMANA}'}</code>
                   </small>
                 </div>
               </div>
@@ -693,7 +718,7 @@ export function AutoRemarketing() {
                               </div>
                           )}
 
-                          <div className="msg-text" dangerouslySetInnerHTML={{ __html: convertShortcodesToFallback(disparoConfig.message_text || 'Configure a mensagem...', emojiCatalog) }}></div>
+                          <div className="msg-text" dangerouslySetInnerHTML={{ __html: replaceDateVarsPreview(convertShortcodesToFallback(disparoConfig.message_text || 'Configure a mensagem...', emojiCatalog)) }}></div>
                           <div className="msg-time">10:05</div>
                           
                           {/* Botão Fake */}
