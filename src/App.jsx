@@ -59,6 +59,9 @@ import { Statistics } from './pages/Statistics';
 // 🏆 NOVA PÁGINA: Recursos Prime
 import { RecursosPrime } from './pages/RecursosPrime';
 
+// 🏆 NOVA PÁGINA: Multi-Bot Command Center (Recurso Prime)
+import { MultiBotCenter } from './pages/MultiBotCenter';
+
 // 🆕 NOVA PÁGINA: Configuração Guiada (Setup Wizard)
 import { SetupWizard } from './pages/SetupWizard';
 
@@ -168,6 +171,9 @@ function App() {
 
               {/* 🏆 NOVA ROTA: Recursos Prime */}
               <Route path="/recursos-prime" element={<RecursosPrime />} />
+              
+              {/* 🏆 NOVA ROTA: Multi-Bot Command Center */}
+              <Route path="/prime/multi-bot" element={<MultiBotCenter />} />
 
               <Route path="/bots" element={<Bots />} />
               <Route path="/bots/new" element={<NewBot />} />

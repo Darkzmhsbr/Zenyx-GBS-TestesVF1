@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
+import { useNavigate } from 'react-router-dom'; // 🔥 NOVO: Adicionado para roteamento
 import { 
   Crown, Lock, TrendingUp, Copy, Repeat, Brain, Search, Zap, Shield,
   ChevronRight, Star, Trophy, Sparkles, CheckCircle, X, AlertTriangle,
@@ -774,13 +775,130 @@ function RevisaoCopy({ onClose }) {
 }
 
 // ═══════════════════════════════════════════════
+// 🛡️ MODAL: ESCUDO ANTI-CURIOSOS (NOVO RECURSO PRIME)
+// ═══════════════════════════════════════════════
+function EscudoAntiCuriosos({ onClose }) {
+  const { selectedBot, refreshBots } = useBot();
+  const [ativo, setAtivo] = useState(false);
+  const [limite, setLimite] = useState(5);
+  const [saving, setSaving] = useState(false);
+  const [toastMsg, setToastMsg] = useState('');
+
+  useEffect(() => {
+    if (selectedBot) {
+      setAtivo(selectedBot.escudo_ativo || false);
+      setLimite(selectedBot.escudo_limite_pix || 5);
+    }
+  }, [selectedBot]);
+
+  const handleSave = async () => {
+    setSaving(true);
+    try {
+      await botService.updateBot(selectedBot.id, {
+        escudo_ativo: ativo,
+        escudo_limite_pix: parseInt(limite)
+      });
+      setToastMsg('🛡️ Escudo configurado com sucesso!');
+      if (refreshBots) refreshBots();
+      setTimeout(() => {
+        setToastMsg('');
+        onClose();
+      }, 2000);
+    } catch (e) {
+      console.error('Erro ao salvar escudo:', e);
+      setToastMsg('❌ Erro ao salvar configurações.');
+      setTimeout(() => setToastMsg(''), 3000);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <div className="rp-modal-overlay" onClick={onClose}>
+      <div className="rp-modal" onClick={e => e.stopPropagation()}>
+        <div className="rp-modal-header">
+          <div className="rp-modal-header-left">
+            <div className="rp-modal-icon" style={{ background: 'rgba(239,68,68,0.12)', color: '#ef4444' }}>
+              <Shield size={24} />
+            </div>
+            <div>
+              <h2>Escudo Anti-Curiosos</h2>
+              <p>Bloqueie usuários que geram PIX e não pagam</p>
+            </div>
+          </div>
+          <button className="rp-modal-close" onClick={onClose}><X size={20} /></button>
+        </div>
+
+        <div className="rp-modal-body">
+          {toastMsg && (
+            <div style={{ 
+              padding: '12px', 
+              background: toastMsg.includes('Erro') ? 'rgba(239,68,68,0.1)' : 'rgba(34,197,94,0.1)', 
+              color: toastMsg.includes('Erro') ? '#ef4444' : '#22c55e', 
+              borderRadius: '8px', 
+              marginBottom: '15px', 
+              textAlign: 'center',
+              border: `1px solid ${toastMsg.includes('Erro') ? 'rgba(239,68,68,0.3)' : 'rgba(34,197,94,0.3)'}`
+            }}>
+              {toastMsg}
+            </div>
+          )}
+          
+          <div className="clone-warning" style={{ marginBottom: '20px' }}>
+            <AlertTriangle size={16} />
+            <span>Proteja seu bot contra <strong>flood de PIX falsos</strong>. Usuários que atingirem o limite de pendências serão impedidos de gerar novas cobranças.</span>
+          </div>
+
+          <div className="rc-edit-card">
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '15px' }}>
+              <div>
+                <h4 style={{ margin: 0, color: '#f1f5f9', fontSize: '1rem' }}>Ativar Escudo</h4>
+                <p style={{ margin: 0, color: '#94a3b8', fontSize: '0.85rem', marginTop: '4px' }}>Liga ou desliga a proteção para este bot</p>
+              </div>
+              <div 
+                className={`clone-option-toggle ${ativo ? 'on' : ''}`} 
+                onClick={() => setAtivo(!ativo)}
+                style={{ cursor: 'pointer' }}
+              >
+                <div className="clone-option-dot" />
+              </div>
+            </div>
+
+            <div className="rc-edit-field-single" style={{ opacity: ativo ? 1 : 0.5, pointerEvents: ativo ? 'auto' : 'none', transition: 'all 0.3s' }}>
+              <label>Limite de PIX Pendentes</label>
+              <p style={{ fontSize: '0.8rem', color: '#64748b', marginBottom: '8px' }}>Quantos PIX não pagos o usuário pode ter antes de ser bloqueado?</p>
+              <input
+                type="number"
+                min="1"
+                max="20"
+                className="rc-edit-input"
+                value={limite}
+                onChange={e => setLimite(e.target.value)}
+              />
+            </div>
+          </div>
+
+          <div className="rc-action-row">
+            <button className="rp-btn-secondary" onClick={onClose}>Cancelar</button>
+            <button className="rp-btn-primary" onClick={handleSave} disabled={saving} style={{ flex: 1, background: '#ef4444', borderColor: '#ef4444' }}>
+              {saving ? 'Salvando...' : 'Salvar Proteção'}
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ═══════════════════════════════════════════════
 // 🏠 PÁGINA PRINCIPAL
 // ═══════════════════════════════════════════════
 export function RecursosPrime() {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [activeModal, setActiveModal] = useState(null); // 'projecao' | 'clonador' | null
+  const [activeModal, setActiveModal] = useState(null); // 'projecao' | 'clonador' | 'revisao_copy' | 'escudo' | null
   const [toast, setToast] = useState(null);
+  const navigate = useNavigate(); // 🔥 NOVO: Redirecionamento
 
   useEffect(() => { loadData(); }, []);
 
@@ -808,6 +926,8 @@ export function RecursosPrime() {
       case 'revisao_copy': setActiveModal('revisao_copy'); break;
       case 'projecao_receita': setActiveModal('projecao'); break;
       case 'clonador_funil': setActiveModal('clonador'); break;
+      case 'escudo_anticuriosos': setActiveModal('escudo'); break; // 🔥 NOVO: Abre modal do Escudo
+      case 'multibot_center': navigate('/prime/multi-bot'); break; // 🔥 NOVO: Redireciona para Multi-bot
       default: 
         setToast(`${recurso.nome} estará disponível em breve!`);
         setTimeout(() => setToast(null), 3000);
@@ -843,6 +963,10 @@ export function RecursosPrime() {
       )}
       {activeModal === 'clonador' && (
         <ClonadorFunil onClose={() => setActiveModal(null)} />
+      )}
+      {/* 🔥 NOVO: MODAL DO ESCUDO */}
+      {activeModal === 'escudo' && (
+        <EscudoAntiCuriosos onClose={() => setActiveModal(null)} />
       )}
 
       {/* HERO HEADER */}

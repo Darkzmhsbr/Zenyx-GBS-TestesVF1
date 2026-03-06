@@ -486,6 +486,11 @@ export const dashboardService = {
     const url = queryString ? `/api/admin/dashboard/stats?${queryString}` : '/api/admin/dashboard/stats';
     
     return (await api.get(url)).data;
+  },
+  // 🔥 NOVO: Comando Center Multi-Bot (Recurso Prime)
+  getMultiBotStats: async () => {
+    const response = await api.get('/api/admin/multi-bot-stats');
+    return response.data;
   }
 };
 
