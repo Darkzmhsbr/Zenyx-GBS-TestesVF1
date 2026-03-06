@@ -23,7 +23,7 @@ const GATEWAYS_INFO = {
     taxaInfo: 'Taxa ~3%',
     site: 'https://pushinpay.com.br',
     tokenLabel: 'Token da API (Bearer Token)',
-    tokenPlaceholder: 'Cole seu token PushinPay aqui...',
+    tokenPlaceholder: 'Ex: 12345|xyzabc123def456...',
     disponivel: true
   },
   wiinpay: {
@@ -36,7 +36,7 @@ const GATEWAYS_INFO = {
     taxaInfo: 'Taxa ~4.5%',
     site: 'https://wiinpay.com.br',
     tokenLabel: 'Chave API (API Key)',
-    tokenPlaceholder: 'Cole sua API Key WiinPay aqui...',
+    tokenPlaceholder: 'Ex: eyJhbGciOiJIUzI1NiIs...',
     disponivel: true
   },
   syncpay: {
@@ -50,12 +50,11 @@ const GATEWAYS_INFO = {
     site: 'https://app.syncpayments.com.br',
     // Sync Pay usa duas chaves, então labels duplas:
     tokenLabel: 'Client ID (Chave Pública)',
-    tokenPlaceholder: 'Ex: 5ee78200-8b99...',
+    tokenPlaceholder: 'Ex: 5ee78200-8b99-4936...',
     tokenLabel2: 'Client Secret (Chave Privada)',
-    tokenPlaceholder2: 'Ex: a490fcdb-78dd...',
+    tokenPlaceholder2: 'Ex: a490fcdb-78dd-45c1...',
     disponivel: true
   },
-  // 👇 NOVAS INTEGRAÇÕES AQUI 👇
   paradise: {
     id: 'paradise',
     nome: 'Paradise',
@@ -66,7 +65,7 @@ const GATEWAYS_INFO = {
     taxaInfo: 'Taxa Personalizada',
     site: 'https://paradisepags.com',
     tokenLabel: 'Secret Key (Chave Secreta)',
-    tokenPlaceholder: 'Ex: sk_a8d689ceac0b...',
+    tokenPlaceholder: 'Ex: sk_a8d689ceac0b72df...',
     disponivel: true
   },
   omegapay: {
@@ -80,12 +79,11 @@ const GATEWAYS_INFO = {
     site: 'https://omegapay.com.br',
     // OmegaPay também usa duas chaves
     tokenLabel: 'Client ID (Chave Pública)',
-    tokenPlaceholder: 'Ex: luisdedeus2512_...',
+    tokenPlaceholder: 'Ex: usuario123_w933zm9...',
     tokenLabel2: 'Client Secret (Chave Privada)',
-    tokenPlaceholder2: 'Ex: nrbqx75vleydalbv...',
+    tokenPlaceholder2: 'Ex: nrbqx75vleydalbvuot...',
     disponivel: true
   },
-  // 👆 ======================= 👆
   mercadopago: {
     id: 'mercadopago',
     nome: 'Mercado Pago',
