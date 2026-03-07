@@ -914,6 +914,19 @@ export function RecursosPrime() {
   const progressPercent = data ? (data.desbloqueados / data.total_recursos) * 100 : 0;
 
   const handleCardClick = (recurso) => {
+    // 🔥 TRUQUE DE MESTRE: BYPASS PARA O AUTOPOST (Clonador de Prévias)
+    // Se for o AutoPost, ele ignora a verificação de bloqueio para você poder testar!
+    if (recurso.id === 'autopost' || recurso.id === 'clonador_previas' || recurso.nome.includes('Clonador de Prévias')) {
+      const token = localStorage.getItem('zenyx_token');
+      if (token) {
+        window.open(`https://autopost.zenyxvips.com/login?token=${token}`, '_blank');
+      } else {
+        setToast('Token não encontrado. Faça login novamente.');
+        setTimeout(() => setToast(null), 3000);
+      }
+      return; // Interrompe aqui para não barrar no bloqueio abaixo
+    }
+
     if (recurso.status === 'bloqueado') return;
     
     if (!recurso.implementado) {
