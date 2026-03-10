@@ -17,6 +17,7 @@ import ptBR from 'date-fns/locale/pt-BR';
 import { dashboardService } from '../services/api';
 import { useBot } from '../context/BotContext';
 import { Button } from '../components/Button';
+import { SupportWidget } from '../components/SupportWidget';
 import './Dashboard.css';
 
 // Registra o idioma para o DatePicker
@@ -62,7 +63,6 @@ export function Dashboard() {
     if (!startDate || !endDate) return;
     try {
       setLoading(true);
-      // Mestre Código Fácil: A lógica dinâmica do Backend já traz dados de todas as gateways!
       const botId = isGlobalView ? null : (selectedBot ? selectedBot.id : null);
       const data = await dashboardService.getStats(botId, startDate, endDate);
       
@@ -384,6 +384,9 @@ export function Dashboard() {
           </div>
         </section>
       )}
+
+      {/* 💬 WIDGET DE SUPORTE FLUTUANTE */}
+      <SupportWidget />
     </div>
   );
 }
