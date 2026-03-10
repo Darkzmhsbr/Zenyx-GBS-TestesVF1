@@ -21,7 +21,8 @@ export function GlobalConfig() {
     master_paradise_secret_key: '',
     master_omegapay_client_id: '',
     master_omegapay_client_secret: '',
-    maintenance_mode: false
+    maintenance_mode: false,
+    ranking_publico: true
   });
 
   // Estados da Notificação
@@ -48,7 +49,8 @@ export function GlobalConfig() {
           master_paradise_secret_key: data.master_paradise_secret_key || '',
           master_omegapay_client_id: data.master_omegapay_client_id || '',
           master_omegapay_client_secret: data.master_omegapay_client_secret || '',
-          maintenance_mode: data.maintenance_mode || false
+          maintenance_mode: data.maintenance_mode || false,
+          ranking_publico: data.ranking_publico !== undefined ? data.ranking_publico : true
         });
       }
     } catch (error) {
@@ -252,6 +254,22 @@ export function GlobalConfig() {
                 <div>
                   <strong>Modo Manutenção</strong>
                   <p>Se ativo, apenas Super Admins poderão acessar o painel.</p>
+                </div>
+              </div>
+
+              {/* 🏆 TOGGLE: RANKING PÚBLICO */}
+              <div className="form-group checkbox-group" style={{ marginTop: '15px' }}>
+                <label className="toggle-switch">
+                  <input 
+                    type="checkbox" 
+                    checked={config.ranking_publico}
+                    onChange={(e) => setConfig({...config, ranking_publico: e.target.checked})}
+                  />
+                  <span className="slider round"></span>
+                </label>
+                <div>
+                  <strong>Ranking de Vendas Público</strong>
+                  <p>Se desativado, apenas administradores poderão ver o ranking de vendas.</p>
                 </div>
               </div>
 

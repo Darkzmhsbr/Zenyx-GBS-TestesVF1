@@ -11,6 +11,11 @@ export function Ranking() {
   
   const [rankingData, setRankingData] = useState([]);
   const [loading, setLoading] = useState(true);
+  
+  // 🔒 Controle de visibilidade
+  const [visivel, setVisivel] = useState(true);
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [checkingVisibility, setCheckingVisibility] = useState(true);
 
   const meses = [
     { valor: 1, nome: 'Janeiro' }, { valor: 2, nome: 'Fevereiro' },
@@ -31,6 +36,9 @@ export function Ranking() {
       const response = await rankingService.getTopVendedores(mes, ano);
       if (response.status === 'success') {
         setRankingData(response.ranking);
+      } else if (response.status === 'hidden') {
+        setRankingData([]);
+        setVisivel(false);
       } else {
         setRankingData([]);
       }
@@ -41,6 +49,22 @@ export function Ranking() {
       setLoading(false);
     }
   };
+
+  // 🔒 Verifica visibilidade ao montar
+  useEffect(() => {
+    const checkVisibility = async () => {
+      try {
+        const res = await rankingService.checkVisibilidade();
+        setVisivel(res.visivel);
+        setIsAdmin(res.is_admin);
+      } catch (e) {
+        setVisivel(true); // Default: mostrar
+      } finally {
+        setCheckingVisibility(false);
+      }
+    };
+    checkVisibility();
+  }, []);
 
   useEffect(() => {
     carregarRanking();
@@ -107,6 +131,24 @@ export function Ranking() {
 
   return (
     <div className="ranking-page-container">
+      {/* 🔒 LOADING DE VISIBILIDADE */}
+      {checkingVisibility ? (
+        <div className="ranking-card">
+          <div className="ranking-loading">
+            <div className="spinner"></div>
+            <p>Verificando permissões...</p>
+          </div>
+        </div>
+      ) : !visivel ? (
+        <div className="ranking-card">
+          <div className="ranking-empty">
+            <Trophy size={48} className="empty-icon" />
+            <h3>Ranking Oculto</h3>
+            <p>O ranking de vendas está temporariamente oculto pelo administrador da plataforma.</p>
+          </div>
+        </div>
+      ) : (
+      <>
       {/* CABEÇALHO E FILTROS */}
       <div className="ranking-header">
         <div className="ranking-title">
@@ -249,6 +291,8 @@ export function Ranking() {
             <p>Ainda não há dados de vendas aprovadas {modoTodos ? 'na plataforma' : `para ${meses.find(m => m.valor === mesSelecionado)?.nome} de ${anoSelecionado}`}.</p>
           </div>
         </div>
+      )}
+      </>
       )}
     </div>
   );

@@ -1331,6 +1331,15 @@ export const rankingService = {
       console.error('Erro ao buscar ranking:', error);
       throw error;
     }
+  },
+  checkVisibilidade: async () => {
+    try {
+      const response = await api.get('/api/ranking/visibilidade');
+      return response.data;
+    } catch (error) {
+      console.error('Erro ao checar visibilidade do ranking:', error);
+      return { visivel: true, is_admin: false };
+    }
   }
 };
 
