@@ -68,6 +68,9 @@ import { JornadaCliente } from './pages/JornadaCliente';
 // 🆕 NOVA PÁGINA: Configuração Guiada (Setup Wizard)
 import { SetupWizard } from './pages/SetupWizard';
 
+// 🏆 NOVA PÁGINA: Prime Overrides (Admin)
+import { PrimeOverrides } from './pages/PrimeOverrides';
+
 // Mini App (Loja)
 import { MiniAppHome } from './pages/miniapp/MiniAppHome';
 import { MiniAppCategory } from './pages/miniapp/MiniAppCategory';
@@ -207,6 +210,7 @@ function App() {
               <Route path="/superadmin/bots" element={<SuperAdminBots />} />
               <Route path="/superadmin/emojis" element={<SuperAdminEmojis />} />
               <Route path="/superadmin/reports" element={<SuperAdminReports />} />
+              <Route path="/superadmin/prime-overrides" element={<PrimeOverrides />} />
               
               <Route path="/config" element={<GlobalConfig />} />
               

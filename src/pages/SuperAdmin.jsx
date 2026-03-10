@@ -259,6 +259,17 @@ export function SuperAdmin() {
 
           <button 
             className="action-card"
+            onClick={() => navigate('/superadmin/prime-overrides')}
+          >
+            <div className="action-icon">🏆</div>
+            <div className="action-content">
+              <h3>Recursos Prime (Overrides)</h3>
+              <p>Gerenciar metas e bloqueios de recursos por usuário</p>
+            </div>
+          </button>
+
+          <button 
+            className="action-card"
             onClick={() => navigate('/superadmin/reports')}
           >
             <div className="action-icon">🚨</div>

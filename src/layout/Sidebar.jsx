@@ -31,7 +31,7 @@ import {
   Compass
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
-import { profileService } from '../services/api';
+import { profileService, rankingService } from '../services/api';
 import './Sidebar.css';
 
 // =========================================================
@@ -100,12 +100,26 @@ export function Sidebar({ isOpen, onClose }) {
   // 🆕 Estado do widget de faturamento
   const [revenueData, setRevenueData] = useState(null);
 
+  // 🔒 Estado visibilidade do ranking
+  const [rankingVisivel, setRankingVisivel] = useState(true);
+
   // 🆕 Carrega stats do perfil
   useEffect(() => {
     if (hasBot) {
       loadRevenueData();
     }
+    // 🔒 Carrega visibilidade do ranking
+    checkRankingVisibility();
   }, [hasBot]);
+
+  const checkRankingVisibility = async () => {
+    try {
+      const res = await rankingService.checkVisibilidade();
+      setRankingVisivel(res.visivel);
+    } catch (e) {
+      setRankingVisivel(true);
+    }
+  };
 
   const loadRevenueData = async () => {
     try {
@@ -362,7 +376,8 @@ export function Sidebar({ isOpen, onClose }) {
             )}
           </div>
           
-          {/* 🏆 RANKING */}
+          {/* 🏆 RANKING (Oculto se admin desativou) */}
+          {rankingVisivel && (
           <Link 
             to={hasBot ? "/ranking" : "#"} 
             className={`nav-item ranking-item ${isActive('/ranking')} ${!hasBot ? 'locked-nav' : ''}`} 
@@ -372,6 +387,7 @@ export function Sidebar({ isOpen, onClose }) {
             <Trophy size={20} />
             <span>Ranking de Vendas</span>
           </Link>
+          )}
 
           {/* 🏆 RECURSOS PRIME */}
           <Link 

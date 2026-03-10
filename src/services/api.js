@@ -1168,6 +1168,27 @@ export const superAdminService = {
   revertReport: async (reportId, reason) => {
     const response = await api.put(`/api/superadmin/reports/${reportId}/revert`, { reason });
     return response.data;
+  },
+
+  // 🏆 GERENCIAR OVERRIDES DE RECURSOS PRIME POR USUÁRIO
+  getUserPrimeOverrides: async (userId) => {
+    try {
+      const response = await api.get(`/api/superadmin/prime-overrides/user/${userId}`);
+      return response.data;
+    } catch (error) {
+      console.error("Erro ao buscar prime overrides:", error);
+      throw error;
+    }
+  },
+
+  setUserPrimeOverride: async (userId, data) => {
+    try {
+      const response = await api.post(`/api/superadmin/prime-overrides/user/${userId}`, data);
+      return response.data;
+    } catch (error) {
+      console.error("Erro ao salvar prime override:", error);
+      throw error;
+    }
   }
 };
 // ============================================================

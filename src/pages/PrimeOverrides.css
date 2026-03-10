@@ -1,0 +1,192 @@
+/* =========================================================
+   👑 PRIME OVERRIDES — ADMIN PAGE
+========================================================= */
+.po-container {
+  padding: 30px;
+  margin-top: 70px;
+  margin-left: 260px;
+  max-width: 1100px;
+  animation: poFade 0.3s ease;
+}
+@keyframes poFade { from { opacity: 0; } to { opacity: 1; } }
+
+.po-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; }
+.po-header-left { display: flex; align-items: center; gap: 14px; }
+.po-back {
+  width: 38px; height: 38px; border-radius: 10px;
+  border: 1px solid #333; background: #161616; color: #a3a3a3;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer; transition: all 0.2s;
+}
+.po-back:hover { border-color: #c333ff; color: #c333ff; }
+.po-header h1 { font-size: 1.4rem; color: #fff; margin: 0 0 4px; }
+.po-header p { font-size: 0.85rem; color: #888; margin: 0; }
+
+/* Search */
+.po-search-row { display: flex; gap: 10px; margin-bottom: 20px; }
+.po-search-box {
+  flex: 1; display: flex; align-items: center; gap: 10px;
+  background: #161616; border: 1px solid #333; border-radius: 8px;
+  padding: 0 14px; height: 42px;
+}
+.po-search-box svg { color: #555; }
+.po-search-box input {
+  background: transparent; border: none; color: #fff;
+  font-size: 0.9rem; outline: none; width: 100%;
+}
+.po-search-box input::placeholder { color: #444; }
+.po-search-btn {
+  padding: 0 20px; height: 42px; border-radius: 8px;
+  background: #c333ff; color: #fff; border: none;
+  font-weight: 600; cursor: pointer; transition: opacity 0.2s;
+}
+.po-search-btn:hover { opacity: 0.85; }
+
+/* Card & Table */
+.po-card {
+  background: #0a0a0a; border: 1px solid #222; border-radius: 12px;
+  overflow: hidden;
+}
+.po-table { width: 100%; border-collapse: collapse; }
+.po-table th {
+  background: #111; color: #888; font-size: 0.75rem; font-weight: 600;
+  text-transform: uppercase; padding: 14px 18px; border-bottom: 1px solid #222;
+  text-align: left;
+}
+.po-table td {
+  padding: 14px 18px; border-bottom: 1px solid #1a1a1a; color: #e5e5e5;
+}
+.po-table tbody tr:hover { background: #141414; }
+
+.po-user-cell { display: flex; align-items: center; gap: 8px; }
+.po-user-name { font-weight: 600; color: #fff; }
+.po-badge-admin {
+  font-size: 0.65rem; font-weight: 700; padding: 2px 8px;
+  border-radius: 12px; background: linear-gradient(135deg, #667eea, #764ba2); color: #fff;
+}
+.po-email { color: #888; font-size: 0.85rem; }
+.po-edit-btn {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 6px 14px; border-radius: 8px;
+  background: rgba(195,51,255,0.1); border: 1px solid rgba(195,51,255,0.3);
+  color: #c333ff; font-size: 0.8rem; font-weight: 600;
+  cursor: pointer; transition: all 0.2s;
+}
+.po-edit-btn:hover { background: rgba(195,51,255,0.2); }
+
+/* Pagination */
+.po-pagination {
+  display: flex; justify-content: center; align-items: center;
+  gap: 16px; padding: 14px; border-top: 1px solid #1a1a1a;
+  color: #666; font-size: 0.85rem;
+}
+.po-page-btn {
+  width: 32px; height: 32px; border-radius: 6px;
+  background: #161616; border: 1px solid #333; color: #888;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer;
+}
+.po-page-btn:hover:not(:disabled) { border-color: #c333ff; color: #c333ff; }
+.po-page-btn:disabled { opacity: 0.3; cursor: not-allowed; }
+
+/* Loading/Empty */
+.po-loading, .po-empty {
+  padding: 50px; text-align: center; color: #888;
+  display: flex; flex-direction: column; align-items: center; gap: 10px;
+}
+.po-spin { animation: poSpin 1s linear infinite; }
+@keyframes poSpin { to { transform: rotate(360deg); } }
+
+/* =========================================================
+   MODAL
+========================================================= */
+.po-modal-overlay {
+  position: fixed; inset: 0; background: rgba(0,0,0,0.75);
+  display: flex; align-items: center; justify-content: center;
+  z-index: 9999; padding: 20px;
+}
+.po-modal {
+  background: #0f0f0f; border: 1px solid #222; border-radius: 16px;
+  max-width: 750px; width: 100%; max-height: 90vh; overflow-y: auto;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+}
+.po-modal-header {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 20px 24px; border-bottom: 1px solid #222;
+}
+.po-modal-title { display: flex; align-items: center; gap: 12px; }
+.po-modal-title h2 { font-size: 1.15rem; color: #fff; margin: 0 0 2px; }
+.po-modal-title p { font-size: 0.82rem; color: #888; margin: 0; }
+.po-modal-close {
+  width: 34px; height: 34px; border-radius: 8px;
+  background: #222; border: none; color: #888;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer;
+}
+.po-modal-close:hover { background: #333; color: #fff; }
+.po-modal-body { padding: 20px 24px; }
+
+/* Recursos List */
+.po-recursos-list { display: flex; flex-direction: column; gap: 12px; }
+
+.po-recurso-row {
+  background: #161616; border: 1px solid #222; border-radius: 10px;
+  padding: 16px; transition: border-color 0.2s;
+}
+.po-recurso-row.has-override { border-color: rgba(195,51,255,0.3); }
+
+.po-rec-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; gap: 8px; }
+.po-rec-info { display: flex; flex-direction: column; gap: 2px; }
+.po-rec-name { font-weight: 600; color: #e5e5e5; font-size: 0.95rem; }
+.po-rec-meta { font-size: 0.75rem; color: #666; }
+
+.po-rec-status { display: flex; align-items: center; gap: 8px; }
+.po-rec-badge {
+  display: inline-flex; align-items: center; gap: 4px;
+  padding: 3px 10px; border-radius: 20px;
+  font-size: 0.72rem; font-weight: 600; text-transform: capitalize;
+}
+.po-override-tag {
+  display: inline-flex; align-items: center; gap: 3px;
+  padding: 2px 8px; border-radius: 12px;
+  font-size: 0.65rem; font-weight: 700;
+  background: rgba(195,51,255,0.1); color: #c333ff;
+}
+
+.po-rec-controls { display: flex; gap: 10px; align-items: flex-end; flex-wrap: wrap; }
+.po-rec-field { flex: 1; min-width: 140px; }
+.po-rec-field label {
+  display: block; font-size: 0.7rem; font-weight: 600; color: #666;
+  text-transform: uppercase; margin-bottom: 4px;
+}
+.po-rec-field select, .po-rec-field input {
+  width: 100%; padding: 8px 10px; border-radius: 6px;
+  background: #0a0a0a; border: 1px solid #333; color: #fff;
+  font-size: 0.85rem; outline: none;
+}
+.po-rec-field select option { background: #1a1a1a; }
+
+.po-rec-actions { display: flex; gap: 6px; align-items: flex-end; }
+.po-save-btn, .po-remove-btn {
+  display: inline-flex; align-items: center; gap: 4px;
+  padding: 8px 14px; border-radius: 6px;
+  font-size: 0.8rem; font-weight: 600; cursor: pointer;
+  transition: all 0.2s; border: none;
+}
+.po-save-btn {
+  background: #c333ff; color: #fff;
+}
+.po-save-btn:hover:not(:disabled) { opacity: 0.85; }
+.po-save-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+.po-remove-btn {
+  background: rgba(239,68,68,0.1); color: #ef4444;
+  border: 1px solid rgba(239,68,68,0.3);
+}
+.po-remove-btn:hover:not(:disabled) { background: rgba(239,68,68,0.2); }
+
+/* Responsive */
+@media (max-width: 768px) {
+  .po-container { padding: 16px; margin-left: 0; margin-top: 60px; }
+  .po-modal { max-width: 100%; }
+  .po-rec-controls { flex-direction: column; }
+}
