@@ -188,6 +188,16 @@ export function Register() {
     }
   };
 
+  // 🔒 Verifica se todos os campos obrigatórios estão preenchidos
+  const isFormComplete = 
+    formData.inviteCode.trim().length > 0 &&
+    formData.username.trim().length > 0 &&
+    formData.email.trim().length > 0 &&
+    formData.password.length >= 6 &&
+    formData.confirmPassword.length > 0 &&
+    formData.password === formData.confirmPassword &&
+    turnstileToken.length > 0;
+
   return (
     <div className="login-container">
       <div className="login-card">
@@ -298,8 +308,14 @@ export function Register() {
 
           <Button 
             type="submit" 
-            style={{ width: '100%', marginTop: '10px' }}
-            disabled={loading}
+            style={{ 
+              width: '100%', 
+              marginTop: '10px',
+              opacity: (!isFormComplete || loading) ? 0.5 : 1,
+              cursor: (!isFormComplete || loading) ? 'not-allowed' : 'pointer',
+              transition: 'opacity 0.3s ease'
+            }}
+            disabled={!isFormComplete || loading}
           >
             {loading ? 'Criando conta...' : 'Criar Conta'} <ArrowRight size={18} />
           </Button>
