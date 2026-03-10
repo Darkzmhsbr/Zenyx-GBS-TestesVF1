@@ -930,6 +930,16 @@ export const miniappService = {
 // 🔐 SERVIÇO DE AUTENTICAÇÃO
 // ============================================================
 export const authService = {
+  // 🎟️ Verifica se código de convite é obrigatório (rota pública, sem auth)
+  checkInviteRequired: async () => {
+    try {
+      const response = await api.get('/api/public/invite-required');
+      return response.data.invite_required;
+    } catch (error) {
+      console.error("Erro ao verificar exigência de convite:", error);
+      return true; // Em caso de erro, assume que é obrigatório (seguro)
+    }
+  },
   // 🔥 ATUALIZADO: Recebe turnstileToken e invite_code e envia no payload
   register: async (username, email, password, fullName, turnstileToken, inviteCode) => {
     const response = await api.post('/api/auth/register', {

@@ -18,9 +18,17 @@ export function Register() {
   });
   const [turnstileToken, setTurnstileToken] = useState(''); // Estado para o token
   const [loading, setLoading] = useState(false);
+  const [inviteRequired, setInviteRequired] = useState(true); // 🎟️ Controle dinâmico
   const navigate = useNavigate();
   const { login } = useAuth();
   const turnstileRef = useRef(null);
+
+  // 🎟️ Consulta o backend para saber se convite é obrigatório
+  useEffect(() => {
+    authService.checkInviteRequired().then(required => {
+      setInviteRequired(required);
+    });
+  }, []);
 
   // 🛡️ Carrega o Script do Turnstile e Renderiza o Widget
   useEffect(() => {
@@ -76,8 +84,8 @@ export function Register() {
       return;
     }
 
-    // 🎟️ Validação do Código de Convite
-    if (!formData.inviteCode || !formData.inviteCode.trim()) {
+    // 🎟️ Validação do Código de Convite (apenas se obrigatório)
+    if (inviteRequired && (!formData.inviteCode || !formData.inviteCode.trim())) {
       Swal.fire({
         title: 'Código de Convite',
         text: 'O código de convite é obrigatório nesta fase de pré-lançamento.',
@@ -136,7 +144,7 @@ export function Register() {
         formData.password,
         formData.fullName || formData.username,
         turnstileToken,
-        formData.inviteCode.trim().toUpperCase()
+        inviteRequired ? formData.inviteCode.trim().toUpperCase() : null
       );
 
       // 🔥 2. IMPORTANTE: Chame o login do contexto para setar o estado global
@@ -190,7 +198,7 @@ export function Register() {
 
   // 🔒 Verifica se todos os campos obrigatórios estão preenchidos
   const isFormComplete = 
-    formData.inviteCode.trim().length > 0 &&
+    (!inviteRequired || formData.inviteCode.trim().length > 0) &&
     formData.username.trim().length > 0 &&
     formData.email.trim().length > 0 &&
     formData.password.length >= 6 &&
@@ -206,40 +214,47 @@ export function Register() {
           <p>Criar Nova Conta</p>
         </div>
 
-        {/* 🎟️ AVISO DE PRÉ-LANÇAMENTO */}
-        <div style={{
-          background: 'linear-gradient(135deg, rgba(195, 51, 255, 0.15), rgba(99, 51, 255, 0.1))',
-          border: '1px solid rgba(195, 51, 255, 0.3)',
-          borderRadius: '10px',
-          padding: '12px 16px',
-          margin: '0 0 20px 0',
-          textAlign: 'center'
-        }}>
-          <p style={{ color: '#c333ff', fontWeight: 'bold', fontSize: '13px', margin: '0 0 4px 0' }}>
-            🚀 Fase de Pré-Lançamento
-          </p>
-          <p style={{ color: 'var(--muted-foreground)', fontSize: '12px', margin: 0 }}>
-            O cadastro é exclusivo via Código de Convite.
-          </p>
-        </div>
+        {/* 🎟️ AVISO DE PRÉ-LANÇAMENTO (só aparece se convite for obrigatório) */}
+        {inviteRequired && (
+          <div style={{
+            background: 'linear-gradient(135deg, rgba(195, 51, 255, 0.15), rgba(99, 51, 255, 0.1))',
+            border: '1px solid rgba(195, 51, 255, 0.3)',
+            borderRadius: '10px',
+            padding: '12px 16px',
+            margin: '0 0 20px 0',
+            textAlign: 'center'
+          }}>
+            <p style={{ color: '#c333ff', fontWeight: 'bold', fontSize: '13px', margin: '0 0 4px 0' }}>
+              🚀 Fase de Pré-Lançamento
+            </p>
+            <p style={{ color: 'var(--muted-foreground)', fontSize: '12px', margin: 0 }}>
+              O cadastro é exclusivo via Código de Convite.
+            </p>
+            <p style={{ color: 'var(--muted-foreground)', fontSize: '11px', margin: '6px 0 0 0', opacity: 0.7 }}>
+              Em breve o cadastro será aberto para todos.
+            </p>
+          </div>
+        )}
         
         <form onSubmit={handleRegister} className="login-form">
-          {/* 🎟️ CAMPO DE CÓDIGO DE CONVITE (DESTAQUE) */}
-          <div className="input-group-login" style={{
-            borderColor: 'rgba(195, 51, 255, 0.4)',
-            background: 'rgba(195, 51, 255, 0.05)'
-          }}>
-            <Ticket size={20} className="input-icon" style={{ color: '#c333ff' }} />
-            <input 
-              type="text" 
-              name="inviteCode"
-              placeholder="Código de Convite *" 
-              value={formData.inviteCode}
-              onChange={handleChange}
-              style={{ textTransform: 'uppercase', letterSpacing: '1.5px', fontWeight: 'bold' }}
-              required
-            />
-          </div>
+          {/* 🎟️ CAMPO DE CÓDIGO DE CONVITE (só aparece se obrigatório) */}
+          {inviteRequired && (
+            <div className="input-group-login" style={{
+              borderColor: 'rgba(195, 51, 255, 0.4)',
+              background: 'rgba(195, 51, 255, 0.05)'
+            }}>
+              <Ticket size={20} className="input-icon" style={{ color: '#c333ff' }} />
+              <input 
+                type="text" 
+                name="inviteCode"
+                placeholder="Código de Convite *" 
+                value={formData.inviteCode}
+                onChange={handleChange}
+                style={{ textTransform: 'uppercase', letterSpacing: '1.5px', fontWeight: 'bold' }}
+                required
+              />
+            </div>
+          )}
           <div className="input-group-login">
             <User size={20} className="input-icon" />
             <input 
