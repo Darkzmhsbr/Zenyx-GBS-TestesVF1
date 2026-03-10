@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { Lock, User, Mail, UserPlus, ArrowRight } from 'lucide-react';
+import { Lock, User, Mail, UserPlus, ArrowRight, Ticket } from 'lucide-react';
 import { Button } from '../components/Button';
 import { authService } from '../services/api'; 
 import { useAuth } from '../context/AuthContext';
@@ -13,7 +13,8 @@ export function Register() {
     email: '',
     password: '',
     confirmPassword: '',
-    fullName: ''
+    fullName: '',
+    inviteCode: ''
   });
   const [turnstileToken, setTurnstileToken] = useState(''); // Estado para o token
   const [loading, setLoading] = useState(false);
@@ -75,6 +76,19 @@ export function Register() {
       return;
     }
 
+    // 🎟️ Validação do Código de Convite
+    if (!formData.inviteCode || !formData.inviteCode.trim()) {
+      Swal.fire({
+        title: 'Código de Convite',
+        text: 'O código de convite é obrigatório nesta fase de pré-lançamento.',
+        icon: 'warning',
+        background: '#1b1730',
+        color: '#fff',
+        confirmButtonColor: '#c333ff'
+      });
+      return;
+    }
+
     if (formData.password !== formData.confirmPassword) {
       Swal.fire({
         title: 'Senhas Não Coincidem',
@@ -121,7 +135,8 @@ export function Register() {
         formData.email,
         formData.password,
         formData.fullName || formData.username,
-        turnstileToken 
+        turnstileToken,
+        formData.inviteCode.trim().toUpperCase()
       );
 
       // 🔥 2. IMPORTANTE: Chame o login do contexto para setar o estado global
@@ -180,8 +195,41 @@ export function Register() {
           <div className="logo-glow">Zenyx</div>
           <p>Criar Nova Conta</p>
         </div>
+
+        {/* 🎟️ AVISO DE PRÉ-LANÇAMENTO */}
+        <div style={{
+          background: 'linear-gradient(135deg, rgba(195, 51, 255, 0.15), rgba(99, 51, 255, 0.1))',
+          border: '1px solid rgba(195, 51, 255, 0.3)',
+          borderRadius: '10px',
+          padding: '12px 16px',
+          margin: '0 0 20px 0',
+          textAlign: 'center'
+        }}>
+          <p style={{ color: '#c333ff', fontWeight: 'bold', fontSize: '13px', margin: '0 0 4px 0' }}>
+            🚀 Fase de Pré-Lançamento
+          </p>
+          <p style={{ color: 'var(--muted-foreground)', fontSize: '12px', margin: 0 }}>
+            O cadastro é exclusivo via Código de Convite.
+          </p>
+        </div>
         
         <form onSubmit={handleRegister} className="login-form">
+          {/* 🎟️ CAMPO DE CÓDIGO DE CONVITE (DESTAQUE) */}
+          <div className="input-group-login" style={{
+            borderColor: 'rgba(195, 51, 255, 0.4)',
+            background: 'rgba(195, 51, 255, 0.05)'
+          }}>
+            <Ticket size={20} className="input-icon" style={{ color: '#c333ff' }} />
+            <input 
+              type="text" 
+              name="inviteCode"
+              placeholder="Código de Convite *" 
+              value={formData.inviteCode}
+              onChange={handleChange}
+              style={{ textTransform: 'uppercase', letterSpacing: '1.5px', fontWeight: 'bold' }}
+              required
+            />
+          </div>
           <div className="input-group-login">
             <User size={20} className="input-icon" />
             <input 
