@@ -930,14 +930,15 @@ export const miniappService = {
 // 🔐 SERVIÇO DE AUTENTICAÇÃO
 // ============================================================
 export const authService = {
-  // 🔥 ATUALIZADO: Recebe turnstileToken e envia no payload
-  register: async (username, email, password, fullName, turnstileToken) => {
+  // 🔥 ATUALIZADO: Recebe turnstileToken e invite_code e envia no payload
+  register: async (username, email, password, fullName, turnstileToken, inviteCode) => {
     const response = await api.post('/api/auth/register', {
       username,
       email,
       password,
       full_name: fullName,
-      turnstile_token: turnstileToken // 🛡️ NOVO CAMPO
+      turnstile_token: turnstileToken, // 🛡️ CAMPO CAPTCHA
+      invite_code: inviteCode           // 🎟️ CÓDIGO DE CONVITE
     });
     return response.data;
   },
@@ -1187,6 +1188,68 @@ export const superAdminService = {
       return response.data;
     } catch (error) {
       console.error("Erro ao salvar prime override:", error);
+      throw error;
+    }
+  }
+};
+
+// ============================================================
+// 🎟️ SERVIÇO DE CÓDIGOS DE CONVITE (SUPER ADMIN)
+// ============================================================
+export const inviteService = {
+  // Gerar códigos de convite
+  generate: async (quantidade = 1) => {
+    try {
+      const response = await api.post(`/api/admin/invites/generate?quantidade=${quantidade}`);
+      return response.data;
+    } catch (error) {
+      console.error("Erro ao gerar códigos de convite:", error);
+      throw error;
+    }
+  },
+
+  // Listar todos os códigos
+  list: async (status = null) => {
+    try {
+      const params = new URLSearchParams();
+      if (status) params.append('status', status);
+      const response = await api.get(`/api/admin/invites?${params.toString()}`);
+      return response.data;
+    } catch (error) {
+      console.error("Erro ao listar códigos de convite:", error);
+      throw error;
+    }
+  },
+
+  // Deletar código não utilizado
+  delete: async (inviteId) => {
+    try {
+      const response = await api.delete(`/api/admin/invites/${inviteId}`);
+      return response.data;
+    } catch (error) {
+      console.error("Erro ao deletar código de convite:", error);
+      throw error;
+    }
+  },
+
+  // Toggle exigência de convite
+  toggleRequirement: async (enabled) => {
+    try {
+      const response = await api.get(`/api/admin/invites/toggle-requirement?enabled=${enabled}`);
+      return response.data;
+    } catch (error) {
+      console.error("Erro ao alterar exigência de convite:", error);
+      throw error;
+    }
+  },
+
+  // Verificar status da exigência
+  getRequirementStatus: async () => {
+    try {
+      const response = await api.get('/api/admin/invites/requirement-status');
+      return response.data;
+    } catch (error) {
+      console.error("Erro ao verificar status de convite:", error);
       throw error;
     }
   }

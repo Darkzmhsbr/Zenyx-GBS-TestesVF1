@@ -39,6 +39,7 @@ import { SuperAdminBots } from './pages/SuperAdminBots';
 import { GlobalConfig } from './pages/GlobalConfig';
 import { SuperAdminEmojis } from './pages/SuperAdminEmojis';
 import { SuperAdminReports } from './pages/SuperAdminReports';
+import { SuperAdminInvites } from './pages/SuperAdminInvites';
 import { Tutorial } from './pages/Tutorial';
 
 // 🆕 NOVA PÁGINA: Disparo Automático (Renomeada para evitar conflito)
@@ -210,6 +211,7 @@ function App() {
               <Route path="/superadmin/bots" element={<SuperAdminBots />} />
               <Route path="/superadmin/emojis" element={<SuperAdminEmojis />} />
               <Route path="/superadmin/reports" element={<SuperAdminReports />} />
+              <Route path="/superadmin/invites" element={<SuperAdminInvites />} />
               <Route path="/superadmin/prime-overrides" element={<PrimeOverrides />} />
               
               <Route path="/config" element={<GlobalConfig />} />

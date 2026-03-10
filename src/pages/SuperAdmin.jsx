@@ -281,6 +281,17 @@ export function SuperAdmin() {
 
           <button 
             className="action-card"
+            onClick={() => navigate('/superadmin/invites')}
+          >
+            <div className="action-icon">🎟️</div>
+            <div className="action-content">
+              <h3>Códigos de Convite</h3>
+              <p>Gerar, listar e gerenciar convites de pré-lançamento</p>
+            </div>
+          </button>
+
+          <button 
+            className="action-card"
             onClick={() => navigate('/dashboard')}
           >
             <div className="action-icon">📊</div>

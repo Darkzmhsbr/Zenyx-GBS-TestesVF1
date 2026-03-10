@@ -218,9 +218,13 @@ export function ReportPage() {
   return (
     <div style={styles.page}>
       <div style={{ maxWidth: '700px', width: '100%' }}>
+        {/* 🔥 CORREÇÃO: O botão de voltar à página inicial foi desativado/removido 
+            para evitar que os usuários acessem a landing page antes do lançamento oficial.
         <button style={styles.backBtn} onClick={() => navigate('/')}>
           ← Voltar para a página principal
-        </button>
+        </button> 
+        */}
+        <div style={{ height: '38px' }}></div> {/* Espaçador mantido para não quebrar o design visual */}
       </div>
 
       <div style={{ ...styles.card, ...(sent ? styles.successCard : {}) }}>
@@ -233,12 +237,21 @@ export function ReportPage() {
               <br /><br />
               Tomaremos as medidas cabíveis o mais rápido possível. Agradecemos por ajudar a manter a plataforma segura.
             </p>
+            {/* 🔥 CORREÇÃO: Botão alterado. Em vez de navegar para '/', ele agora apenas recarrega a página atual */}
             <button
               style={{ ...styles.submitBtn, maxWidth: '300px', margin: '0 auto' }}
-              onClick={() => navigate('/')}
+              onClick={() => window.location.reload()}
             >
-              Voltar ao Início
+              Fazer Nova Denúncia
             </button>
+            {/* CÓDIGO ANTIGO DO BOTÃO (MANTIDO COMENTADO PARA PRESERVAR AS LINHAS)
+              <button
+                style={{ ...styles.submitBtn, maxWidth: '300px', margin: '0 auto' }}
+                onClick={() => navigate('/')}
+              >
+                Voltar ao Início
+              </button>
+            */}
           </>
         ) : (
           <>
