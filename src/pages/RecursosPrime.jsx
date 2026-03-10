@@ -918,7 +918,9 @@ export function RecursosPrime() {
     if (recurso.id === 'autopost' || recurso.id === 'clonador_previas' || recurso.nome.includes('Clonador de Prévias')) {
       // 🔒 Respeitar o status vindo do backend (bloqueado = meta não atingida)
       if (recurso.status === 'bloqueado') return;
-      if (!recurso.implementado) {
+      
+      // 🔥 A CORREÇÃO ESTÁ AQUI: Libera o clique se o status vier forçado como 'desbloqueado' pelo admin.
+      if (!recurso.implementado && recurso.status !== 'desbloqueado') {
         setToast(`${recurso.nome} estará disponível em breve!`);
         setTimeout(() => setToast(null), 3000);
         return;
@@ -935,7 +937,8 @@ export function RecursosPrime() {
 
     if (recurso.status === 'bloqueado') return;
     
-    if (!recurso.implementado) {
+    // 🔥 A CORREÇÃO ESTÁ AQUI: Libera o clique se o status vier forçado como 'desbloqueado' pelo admin para recursos normais
+    if (!recurso.implementado && recurso.status !== 'desbloqueado') {
       setToast(`${recurso.nome} estará disponível em breve!`);
       setTimeout(() => setToast(null), 3000);
       return;
@@ -1021,7 +1024,9 @@ export function RecursosPrime() {
           const IconComponent = ICON_MAP[recurso.icone] || Star;
           const isLocked = recurso.status === 'bloqueado';
           const isFree = recurso.meta_reais === 0;
-          const isComingSoon = !recurso.implementado && !isLocked;
+          
+          // 🔥 A CORREÇÃO ESTÁ AQUI: Se forçado como 'desbloqueado' pelo admin, removemos o estado 'Em breve' visualmente
+          const isComingSoon = !recurso.implementado && !isLocked && recurso.status !== 'desbloqueado';
           
           return (
             <div 
