@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom'; // 🔥 NOVO: Adicionado para ro
 import { 
   Crown, Lock, TrendingUp, Copy, Repeat, Brain, Search, Zap, Shield,
   ChevronRight, Star, Trophy, Sparkles, CheckCircle, X, AlertTriangle,
-  ArrowRight, BarChart3, Target, Clock, MessageSquare, Send, Play
+  ArrowRight, BarChart3, Target, Clock, MessageSquare, Send, Play, Map
 } from 'lucide-react';
 import { recursosPrimeService, botService, dashboardService } from '../services/api';
 import { useBot } from '../context/BotContext';
@@ -11,7 +11,7 @@ import { RichInput } from '../components/RichInput';
 import { MediaUploader } from '../components/MediaUploader';
 import './RecursosPrime.css';
 
-const ICON_MAP = { TrendingUp, Copy, Repeat, Brain, Search, Zap, Shield, MessageSquare };
+const ICON_MAP = { TrendingUp, Copy, Repeat, Brain, Search, Zap, Shield, MessageSquare, Map };
 
 // ═══════════════════════════════════════════════
 // 📈 MODAL: PROJEÇÃO DE RECEITA
@@ -914,9 +914,15 @@ export function RecursosPrime() {
   const progressPercent = data ? (data.desbloqueados / data.total_recursos) * 100 : 0;
 
   const handleCardClick = (recurso) => {
-    // 🔥 TRUQUE DE MESTRE: BYPASS PARA O AUTOPOST (Clonador de Prévias)
-    // Se for o AutoPost, ele ignora a verificação de bloqueio para você poder testar!
+    // 🔥 AUTOPOST (Clonador de Prévias) — Só abre se desbloqueado pelo backend
     if (recurso.id === 'autopost' || recurso.id === 'clonador_previas' || recurso.nome.includes('Clonador de Prévias')) {
+      // 🔒 Respeitar o status vindo do backend (bloqueado = meta não atingida)
+      if (recurso.status === 'bloqueado') return;
+      if (!recurso.implementado) {
+        setToast(`${recurso.nome} estará disponível em breve!`);
+        setTimeout(() => setToast(null), 3000);
+        return;
+      }
       const token = localStorage.getItem('zenyx_token');
       if (token) {
         window.open(`https://autopost.zenyxvips.com/login?token=${token}`, '_blank');
@@ -924,7 +930,7 @@ export function RecursosPrime() {
         setToast('Token não encontrado. Faça login novamente.');
         setTimeout(() => setToast(null), 3000);
       }
-      return; // Interrompe aqui para não barrar no bloqueio abaixo
+      return;
     }
 
     if (recurso.status === 'bloqueado') return;
@@ -941,6 +947,7 @@ export function RecursosPrime() {
       case 'clonador_funil': setActiveModal('clonador'); break;
       case 'escudo_anticuriosos': setActiveModal('escudo'); break; // 🔥 NOVO: Abre modal do Escudo
       case 'multibot_center': navigate('/prime/multi-bot'); break; // 🔥 NOVO: Redireciona para Multi-bot
+      case 'jornada_cliente': navigate('/prime/jornada-cliente'); break; // 🗺️ NOVO: Jornada do Cliente
       default: 
         setToast(`${recurso.nome} estará disponível em breve!`);
         setTimeout(() => setToast(null), 3000);

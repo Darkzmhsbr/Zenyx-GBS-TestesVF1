@@ -1527,6 +1527,18 @@ export const recursosPrimeService = {
   getCopyData: async (botId, tipo) => {
     const response = await api.get(`/api/admin/recursos-prime/get-copy-data/${botId}/${tipo}`);
     return response.data;
+  },
+  // 🗺️ JORNADA DO CLIENTE
+  getJornadaLista: async (botId, status = 'todos', page = 1, perPage = 50, search = '') => {
+    const params = new URLSearchParams({ status, page, per_page: perPage });
+    if (botId) params.append('bot_id', botId);
+    if (search) params.append('search', search);
+    const response = await api.get(`/api/admin/recursos-prime/jornada-cliente?${params}`);
+    return response.data;
+  },
+  getJornadaMapa: async (telegramId, botId) => {
+    const response = await api.get(`/api/admin/recursos-prime/jornada-cliente/${telegramId}?bot_id=${botId}`);
+    return response.data;
   }
 };
 

@@ -62,6 +62,9 @@ import { RecursosPrime } from './pages/RecursosPrime';
 // 🏆 NOVA PÁGINA: Multi-Bot Command Center (Recurso Prime)
 import { MultiBotCenter } from './pages/MultiBotCenter';
 
+// 🗺️ NOVA PÁGINA: Jornada do Cliente (Recurso Prime)
+import { JornadaCliente } from './pages/JornadaCliente';
+
 // 🆕 NOVA PÁGINA: Configuração Guiada (Setup Wizard)
 import { SetupWizard } from './pages/SetupWizard';
 
@@ -174,6 +177,9 @@ function App() {
               
               {/* 🏆 NOVA ROTA: Multi-Bot Command Center */}
               <Route path="/prime/multi-bot" element={<MultiBotCenter />} />
+
+              {/* 🗺️ NOVA ROTA: Jornada do Cliente */}
+              <Route path="/prime/jornada-cliente" element={<JornadaCliente />} />
 
               <Route path="/bots" element={<Bots />} />
               <Route path="/bots/new" element={<NewBot />} />
