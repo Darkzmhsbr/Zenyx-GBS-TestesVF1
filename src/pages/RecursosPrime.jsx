@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { useNavigate } from 'react-router-dom'; // 🔥 NOVO: Adicionado para roteamento
+import { useNavigate } from 'react-router-dom';
 import { 
   Crown, Lock, TrendingUp, Copy, Repeat, Brain, Search, Zap, Shield,
   ChevronRight, Star, Trophy, Sparkles, CheckCircle, X, AlertTriangle,
@@ -898,7 +898,7 @@ export function RecursosPrime() {
   const [loading, setLoading] = useState(true);
   const [activeModal, setActiveModal] = useState(null); // 'projecao' | 'clonador' | 'revisao_copy' | 'escudo' | null
   const [toast, setToast] = useState(null);
-  const navigate = useNavigate(); // 🔥 NOVO: Redirecionamento
+  const navigate = useNavigate();
 
   useEffect(() => { loadData(); }, []);
 
@@ -914,17 +914,13 @@ export function RecursosPrime() {
   const progressPercent = data ? (data.desbloqueados / data.total_recursos) * 100 : 0;
 
   const handleCardClick = (recurso) => {
-    // 🔥 AUTOPOST (Clonador de Prévias) — Só abre se desbloqueado pelo backend
-    if (recurso.id === 'autopost' || recurso.id === 'clonador_previas' || recurso.nome.includes('Clonador de Prévias')) {
-      // 🔒 Respeitar o status vindo do backend (bloqueado = meta não atingida)
-      if (recurso.status === 'bloqueado') return;
+    // 🔥 VARIÁVEL DE IDENTIFICAÇÃO DO CLONADOR: Pega tanto o nome quanto o ID antigo ou atual
+    const isAutoPost = recurso.id === 'autopost' || recurso.id === 'clonador_previas' || recurso.nome.includes('Clonador de Prévias');
+
+    // 🔗 SE FOR O CLONADOR DE PRÉVIAS (AUTOPOST): Ignora completamente a checagem de "implementado"
+    if (isAutoPost) {
+      if (recurso.status === 'bloqueado') return; // Só barra se a meta não foi batida/desbloqueada
       
-      // 🔥 A CORREÇÃO ESTÁ AQUI: Libera o clique se o status vier forçado como 'desbloqueado' pelo admin.
-      if (!recurso.implementado && recurso.status !== 'desbloqueado') {
-        setToast(`${recurso.nome} estará disponível em breve!`);
-        setTimeout(() => setToast(null), 3000);
-        return;
-      }
       const token = localStorage.getItem('zenyx_token');
       if (token) {
         window.open(`https://autopost.zenyxvips.com/login?token=${token}`, '_blank');
@@ -935,9 +931,10 @@ export function RecursosPrime() {
       return;
     }
 
+    // 🔒 PARA OS DEMAIS RECURSOS INTERNOS DA PLATAFORMA:
     if (recurso.status === 'bloqueado') return;
     
-    // 🔥 A CORREÇÃO ESTÁ AQUI: Libera o clique se o status vier forçado como 'desbloqueado' pelo admin para recursos normais
+    // Mostra "Em breve" caso não esteja implementado e o admin não tenha forçado o status
     if (!recurso.implementado && recurso.status !== 'desbloqueado') {
       setToast(`${recurso.nome} estará disponível em breve!`);
       setTimeout(() => setToast(null), 3000);
@@ -948,9 +945,9 @@ export function RecursosPrime() {
       case 'revisao_copy': setActiveModal('revisao_copy'); break;
       case 'projecao_receita': setActiveModal('projecao'); break;
       case 'clonador_funil': setActiveModal('clonador'); break;
-      case 'escudo_anticuriosos': setActiveModal('escudo'); break; // 🔥 NOVO: Abre modal do Escudo
-      case 'multibot_center': navigate('/prime/multi-bot'); break; // 🔥 NOVO: Redireciona para Multi-bot
-      case 'jornada_cliente': navigate('/prime/jornada-cliente'); break; // 🗺️ NOVO: Jornada do Cliente
+      case 'escudo_anticuriosos': setActiveModal('escudo'); break; 
+      case 'multibot_center': navigate('/prime/multi-bot'); break; 
+      case 'jornada_cliente': navigate('/prime/jornada-cliente'); break; 
       default: 
         setToast(`${recurso.nome} estará disponível em breve!`);
         setTimeout(() => setToast(null), 3000);
@@ -987,7 +984,6 @@ export function RecursosPrime() {
       {activeModal === 'clonador' && (
         <ClonadorFunil onClose={() => setActiveModal(null)} />
       )}
-      {/* 🔥 NOVO: MODAL DO ESCUDO */}
       {activeModal === 'escudo' && (
         <EscudoAntiCuriosos onClose={() => setActiveModal(null)} />
       )}
@@ -1022,11 +1018,17 @@ export function RecursosPrime() {
       <div className="rp-grid">
         {data.recursos.map((recurso) => {
           const IconComponent = ICON_MAP[recurso.icone] || Star;
+          
+          // IDENTIFICADOR DO CLONADOR DE PRÉVIAS
+          const isAutoPost = recurso.id === 'autopost' || recurso.id === 'clonador_previas' || recurso.nome.includes('Clonador de Prévias');
+          
           const isLocked = recurso.status === 'bloqueado';
           const isFree = recurso.meta_reais === 0;
           
-          // 🔥 A CORREÇÃO ESTÁ AQUI: Se forçado como 'desbloqueado' pelo admin, removemos o estado 'Em breve' visualmente
-          const isComingSoon = !recurso.implementado && !isLocked && recurso.status !== 'desbloqueado';
+          // 🔥 A MÁGICA VISUAL ESTÁ AQUI: 
+          // Se for o Clonador de Prévias, removemos totalmente a possibilidade dele ser "Em breve"
+          // Se o status é bloqueado ele fica cinza com cadeado. Se liberou, mostra "Acessar"!
+          const isComingSoon = !isAutoPost && !recurso.implementado && !isLocked && recurso.status !== 'desbloqueado';
           
           return (
             <div 
