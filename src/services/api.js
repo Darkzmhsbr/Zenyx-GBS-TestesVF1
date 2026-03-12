@@ -46,6 +46,15 @@ api.interceptors.request.use(
     if (token) {
       config.headers['Authorization'] = `Bearer ${token}`;
     }
+
+    // 🔥 MATA O FANTASMA DO ADMIN DE VEZ (BURLA CACHE DO NAVEGADOR/CDN)
+    // Garante que requisições GET sempre tragam dados frescos do usuário logado
+    if (config.method === 'get') {
+      config.params = {
+        ...config.params,
+        _t: new Date().getTime(), // Carimbo de tempo único
+      };
+    }
     
     return config;
   },
