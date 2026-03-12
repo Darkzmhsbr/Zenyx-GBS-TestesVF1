@@ -56,22 +56,20 @@ export function PremiumEmojiPicker({ onSelect, disabled = false, position = 'top
     setSearchResults(null);
   };
 
+  // 🔥 Passamos o shortcode E o objeto inteiro do emoji para o Input
   const handleEmojiClick = (emoji) => {
     if (onSelect) {
-      onSelect(emoji.shortcode);
+      onSelect(emoji.shortcode, emoji);
     }
   };
 
   const handleSearch = (value) => {
     setSearchTerm(value);
-    
     if (searchTimeout.current) clearTimeout(searchTimeout.current);
-    
     if (!value || value.length < 2) {
       setSearchResults(null);
       return;
     }
-
     searchTimeout.current = setTimeout(async () => {
       try {
         const data = await premiumEmojiService.search(value);
@@ -87,20 +85,13 @@ export function PremiumEmojiPicker({ onSelect, disabled = false, position = 'top
       return [{ id: 0, name: 'Resultados', icon: '🔍', emojis: searchResults }];
     }
     if (!catalog || !catalog.packs) return [];
-    
-    if (activeTab === 'all') {
-      return catalog.packs;
-    }
-    
+    if (activeTab === 'all') return catalog.packs;
     return catalog.packs.filter(p => p.id === activeTab);
   };
 
   const totalEmojis = catalog?.total_emojis || 0;
   const visiblePacks = getVisibleEmojis();
-
-  const panelStyle = position === 'bottom' 
-    ? { top: 'calc(100% + 8px)', bottom: 'auto' }
-    : {};
+  const panelStyle = position === 'bottom' ? { top: 'calc(100% + 8px)', bottom: 'auto' } : {};
 
   return (
     <div className="pep-trigger-wrapper">
@@ -113,9 +104,7 @@ export function PremiumEmojiPicker({ onSelect, disabled = false, position = 'top
       >
         <span className="pep-icon">✨</span>
         {!compact && <span>Emoji Premium</span>}
-        {!compact && totalEmojis > 0 && (
-          <span className="pep-badge">PRO</span>
-        )}
+        {!compact && totalEmojis > 0 && <span className="pep-badge">PRO</span>}
       </button>
 
       {isOpen && <div className="pep-overlay" onClick={handleClose} />}
@@ -139,19 +128,11 @@ export function PremiumEmojiPicker({ onSelect, disabled = false, position = 'top
 
           {!searchResults && catalog && catalog.packs && catalog.packs.length > 1 && (
             <div className="pep-tabs">
-              <button
-                className={`pep-tab ${activeTab === 'all' ? 'active' : ''}`}
-                onClick={() => setActiveTab('all')}
-              >
+              <button className={`pep-tab ${activeTab === 'all' ? 'active' : ''}`} onClick={() => setActiveTab('all')}>
                 <span className="tab-icon">📋</span> Todos
               </button>
               {catalog.packs.map(pack => (
-                <button
-                  key={pack.id}
-                  className={`pep-tab ${activeTab === pack.id ? 'active' : ''}`}
-                  onClick={() => setActiveTab(pack.id)}
-                  title={pack.name}
-                >
+                <button key={pack.id} className={`pep-tab ${activeTab === pack.id ? 'active' : ''}`} onClick={() => setActiveTab(pack.id)} title={pack.name}>
                   <span className="tab-icon">{pack.icon || '📦'}</span>
                   <span style={{ display: 'none' }}>{pack.name}</span>
                 </button>
@@ -161,63 +142,47 @@ export function PremiumEmojiPicker({ onSelect, disabled = false, position = 'top
 
           <div className="pep-grid-container">
             {loading ? (
-              <div className="pep-loading">
-                <div className="pep-spinner" />
-                <span>Carregando emojis...</span>
-              </div>
+              <div className="pep-loading"><div className="pep-spinner" /><span>Carregando emojis...</span></div>
             ) : visiblePacks.length === 0 ? (
-              <div className="pep-empty">
-                <div className="pep-empty-icon">✨</div>
-                {searchTerm 
-                  ? 'Nenhum emoji encontrado para essa busca.'
-                  : 'Nenhum emoji premium disponível ainda.'
-                }
-              </div>
+              <div className="pep-empty"><div className="pep-empty-icon">✨</div>{searchTerm ? 'Nenhum emoji encontrado.' : 'Nenhum emoji premium disponível ainda.'}</div>
             ) : (
               visiblePacks.map(pack => (
                 <React.Fragment key={pack.id}>
-                  {activeTab === 'all' && (
-                    <div className="pep-pack-label">
-                      {pack.icon} {pack.name}
-                    </div>
-                  )}
+                  {activeTab === 'all' && <div className="pep-pack-label">{pack.icon} {pack.name}</div>}
                   <div className="pep-grid">
                     {pack.emojis.map((emoji) => {
                       const duplicates = pack.emojis.filter(e => e.fallback === emoji.fallback);
                       const hasDuplicate = duplicates.length > 1;
                       const dupIndex = hasDuplicate ? duplicates.indexOf(emoji) + 1 : 0;
                       
-                      // Aplica a URL Absoluta
+                      // Força a URL Absoluta
                       const imgUrl = getEmojiAbsoluteUrl(emoji, pack.name);
-                      
+
                       return (
-                        <button
-                          key={emoji.id}
-                          className="pep-emoji-item"
-                          onClick={() => handleEmojiClick(emoji)}
-                          title={`${emoji.name} (${emoji.shortcode})`}
-                        >
+                        <button key={emoji.id} className="pep-emoji-item" onClick={() => handleEmojiClick(emoji)} title={`${emoji.name} (${emoji.shortcode})`}>
                           {imgUrl ? (
-                            <img 
-                              src={imgUrl} 
-                              alt={emoji.shortcode} 
-                              className="pep-emoji-img-real"
-                              style={{ width: '28px', height: '28px', objectFit: 'contain', pointerEvents: 'none' }} 
-                              loading="lazy" 
-                            />
+                            <>
+                              <img 
+                                src={imgUrl} 
+                                alt={emoji.fallback} 
+                                className="pep-emoji-img-real"
+                                style={{ width: '28px', height: '28px', objectFit: 'contain', pointerEvents: 'none' }} 
+                                loading="lazy" 
+                                onError={(e) => {
+                                  // Se a imagem não carregar, esconde ela e mostra o fallback (🔥)
+                                  e.target.style.display = 'none';
+                                  if (e.target.nextElementSibling) e.target.nextElementSibling.style.display = 'inline';
+                                }}
+                              />
+                              <span className="pep-emoji-fallback-text" style={{ display: 'none' }}>{emoji.fallback}</span>
+                            </>
                           ) : (
                             <span className="pep-emoji-fallback-text">{emoji.fallback}</span>
                           )}
 
-                          {hasDuplicate && (
-                            <span className="pep-dup-badge">{dupIndex}</span>
-                          )}
-                          {emoji.emoji_type === 'animated' && (
-                            <span className="pep-animated-dot" />
-                          )}
-                          <span className="pep-tooltip">
-                            {emoji.name}<br/>{emoji.shortcode}
-                          </span>
+                          {hasDuplicate && <span className="pep-dup-badge">{dupIndex}</span>}
+                          {emoji.emoji_type === 'animated' && <span className="pep-animated-dot" />}
+                          <span className="pep-tooltip">{emoji.name}<br/>{emoji.shortcode}</span>
                         </button>
                       );
                     })}
@@ -228,12 +193,8 @@ export function PremiumEmojiPicker({ onSelect, disabled = false, position = 'top
           </div>
 
           <div className="pep-footer">
-            <span className="pep-footer-text">
-              Emojis Premium do Telegram
-            </span>
-            <span className="pep-footer-count">
-              {totalEmojis} emoji{totalEmojis !== 1 ? 's' : ''}
-            </span>
+            <span className="pep-footer-text">Emojis Premium do Telegram</span>
+            <span className="pep-footer-count">{totalEmojis} emoji{totalEmojis !== 1 ? 's' : ''}</span>
           </div>
         </div>
       )}

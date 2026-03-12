@@ -5,7 +5,7 @@ import { PremiumEmojiPicker } from './PremiumEmojiPicker';
 import { premiumEmojiService } from '../services/api';
 import './RichInput.css';
 
-// ✨ MOTOR BLINDADO DE URL PARA O EDITOR: Impede a imagem de quebrar no texto
+// ✨ MOTOR BLINDADO DE URL PARA O EDITOR
 const getEmojiAbsoluteUrl = (emoji) => {
   const API_BASE = import.meta.env.VITE_API_URL?.replace(/\/$/, '') || 'http://localhost:8000';
   let rawUrl = emoji.file_url || emoji.url;
@@ -28,7 +28,6 @@ export function RichInput({ label, value, onChange, placeholder, rows = 4 }) {
     let isMounted = true;
     premiumEmojiService.getCatalog().then(data => {
       if (isMounted && data && data.packs) {
-        // Injeta o nome do pacote nos emojis para construir a URL corretamente
         setCatalog(data.packs.flatMap(p => p.emojis.map(e => ({...e, pack_name: p.name})) || []));
       }
     }).catch(console.error);
@@ -49,8 +48,8 @@ export function RichInput({ label, value, onChange, placeholder, rows = 4 }) {
         const imgUrl = getEmojiAbsoluteUrl(emoji);
 
         if (imgUrl) {
-          // A imagem injetada. pointer-events:none impede bugs ao arrastar o mouse
-          parsed = parsed.replace(regex, `<img src="${imgUrl}" alt="${emoji.shortcode}" data-shortcode="${emoji.shortcode}" class="rich-emoji-img" draggable="false" style="width:22px;height:22px;vertical-align:middle;margin:0 2px;user-select:all;pointer-events:none;" />`);
+          // O alt usa emoji.fallback (ex: 🔥) para esconder o código perfeitamente se a imagem der erro 404
+          parsed = parsed.replace(regex, `<img src="${imgUrl}" alt="${emoji.fallback}" data-shortcode="${emoji.shortcode}" class="rich-emoji-img" draggable="false" style="width:22px;height:22px;vertical-align:middle;margin:0 2px;user-select:all;pointer-events:none;color:transparent;" />`);
         }
       });
     }
@@ -66,21 +65,13 @@ export function RichInput({ label, value, onChange, placeholder, rows = 4 }) {
   const htmlToText = (htmlStr) => {
     const temp = document.createElement('div');
     temp.innerHTML = htmlStr;
-    
     const imgs = temp.querySelectorAll('.rich-emoji-img');
     imgs.forEach(img => {
       const sc = img.getAttribute('data-shortcode');
       if (sc) img.replaceWith(document.createTextNode(sc));
     });
-    
     let txt = temp.innerHTML;
-    txt = txt.replace(/<div><br><\/div>/gi, '\n')
-             .replace(/<div>/gi, '\n')
-             .replace(/<\/div>/gi, '')
-             .replace(/<br\s*\/?>/gi, '\n')
-             .replace(/<p>/gi, '\n')
-             .replace(/<\/p>/gi, '');
-             
+    txt = txt.replace(/<div><br><\/div>/gi, '\n').replace(/<div>/gi, '\n').replace(/<\/div>/gi, '').replace(/<br\s*\/?>/gi, '\n').replace(/<p>/gi, '\n').replace(/<\/p>/gi, '');
     const unescape = document.createElement('textarea');
     unescape.innerHTML = txt;
     return unescape.value;
@@ -103,20 +94,27 @@ export function RichInput({ label, value, onChange, placeholder, rows = 4 }) {
     document.execCommand('insertText', false, newText);
   };
 
-  const handleEmojiSelect = (shortcode) => {
+  // 🔥 O FIX DEFINITIVO: Trata o clique, insere a imagem certa e atualiza o React na hora!
+  const handleEmojiSelect = (shortcode, emojiObj) => {
     if (!editorRef.current) return;
     const el = editorRef.current.getEl();
     el.focus();
     
-    const emoji = catalog.find(e => e.shortcode === shortcode);
-    const imgUrl = emoji ? getEmojiAbsoluteUrl(emoji) : null;
+    const emoji = emojiObj || catalog.find(e => e.shortcode === shortcode);
     
-    if (imgUrl) {
-      const imgHtml = `<img src="${imgUrl}" alt="${shortcode}" data-shortcode="${shortcode}" class="rich-emoji-img" draggable="false" style="width:22px;height:22px;vertical-align:middle;margin:0 2px;user-select:all;pointer-events:none;" />\u200B`;
+    if (emoji) {
+      const imgUrl = getEmojiAbsoluteUrl(emoji);
+      // Inserção da Imagem no HTML do Input
+      const imgHtml = `<img src="${imgUrl}" alt="${emoji.fallback}" data-shortcode="${emoji.shortcode}" class="rich-emoji-img" draggable="false" style="width:22px;height:22px;vertical-align:middle;margin:0 2px;user-select:all;pointer-events:none;color:transparent;" />\u200B`;
       document.execCommand('insertHTML', false, imgHtml);
     } else {
       document.execCommand('insertText', false, shortcode);
     }
+    
+    // Atualiza o estado pai imediatamente para a mensagem não bugar
+    const newHtml = el.innerHTML;
+    setHtmlContent(newHtml);
+    onChange({ target: { value: htmlToText(newHtml) } });
   };
 
   const addLink = () => {
@@ -140,6 +138,8 @@ export function RichInput({ label, value, onChange, placeholder, rows = 4 }) {
         <div className="rich-separator"></div>
         <button type="button" className="rich-btn" onClick={addLink} title="Link"><LinkIcon size={16} /></button>
         <div className="rich-separator"></div>
+        
+        {/* Passa a função atualizada para o Picker */}
         <PremiumEmojiPicker onSelect={handleEmojiSelect} compact={true} />
       </div>
 
