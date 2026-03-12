@@ -372,6 +372,7 @@
     font-size: 1.3rem;
   }
 }
+
 /* ✨ Badge numérico para emojis duplicados (mesmo fallback) */
 .pep-dup-badge {
   position: absolute;
@@ -390,4 +391,47 @@
   line-height: 1;
   pointer-events: none;
   box-shadow: 0 0 4px rgba(0,0,0,0.5);
+}
+
+/* ============================================================
+   ✨ NOVAS REGRAS PARA EXIBIÇÃO DA IMAGEM REAL (REFERÊNCIA PDF)
+   ============================================================ */
+
+/* Define o tamanho exato da imagem do emoji como no painel do concorrente */
+.pep-emoji-img-real {
+  width: 28px;
+  height: 28px;
+  object-fit: contain;
+  pointer-events: none; /* Evita que a imagem bloqueie o clique no botão */
+  user-select: none;
+  transition: transform 0.2s ease;
+}
+
+/* Garante que o fallback de texto mantenha o tamanho original caso não haja imagem */
+.pep-emoji-fallback-text {
+  font-size: 1.4rem;
+  line-height: 1;
+  pointer-events: none;
+}
+
+/* Efeito de hover suave apenas na imagem do emoji */
+.pep-emoji-item:hover .pep-emoji-img-real {
+  transform: scale(1.15);
+}
+
+/* Oculta o texto na aba de pacotes para exibir apenas os ícones (Visual limpo idêntico à referência) */
+.pep-tabs .sae-desktop-only {
+  display: none !important;
+}
+
+/* Ajuste fino na barra de rolagem dos pacotes para ficar imperceptível */
+.pep-tabs {
+  gap: 8px;
+  padding: 10px;
+}
+
+/* Ajuste na aba ativa para destacar o ícone */
+.pep-tab.active .tab-icon {
+  transform: scale(1.1);
+  transition: transform 0.2s;
 }

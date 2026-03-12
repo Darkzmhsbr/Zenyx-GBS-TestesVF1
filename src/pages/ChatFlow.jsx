@@ -9,9 +9,7 @@ import { Input } from '../components/Input';
 import { RichInput } from '../components/RichInput';
 
 /**
- * ✨ Converte shortcodes de emojis premium para o fallback visual no preview.
- * Ex: ":newsemoji_7: Texto" → "🚫 Texto"
- * Busca no catálogo cacheado ou usa regex para remover shortcodes desconhecidos.
+ * ✨ Converte shortcodes de emojis premium para a IMAGEM visual no preview do iPhone.
  */
 function convertShortcodesToFallback(text, emojiCatalog) {
   if (!text) return text;
@@ -19,7 +17,14 @@ function convertShortcodesToFallback(text, emojiCatalog) {
     // Busca no catálogo se disponível
     if (emojiCatalog && emojiCatalog.length > 0) {
       const found = emojiCatalog.find(e => e.shortcode === match || e.shortcode === `:${code}:`);
-      if (found) return found.fallback;
+      if (found) {
+         // ✨ MÁGICA: Se tiver imagem, mostra a imagem no celularzinho. Se não, mostra o texto.
+         const imgUrl = found.url || found.file_url;
+         if (imgUrl) {
+             return `<img src="${imgUrl}" alt="${found.shortcode}" style="width:20px; height:20px; vertical-align:middle; display:inline-block; margin:0 2px;" />`;
+         }
+         return found.fallback;
+      }
     }
     return match; // Mantém o shortcode se não encontrar
   });
