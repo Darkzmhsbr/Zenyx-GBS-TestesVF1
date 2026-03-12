@@ -95,31 +95,3 @@
 .rich-premium-notice strong {
   color: #f59e0b;
 }
-
-/* =========================================
-   ✨ EDITOR VISUAL (DIV CONTENTEDITABLE)
-   ========================================= */
-
-/* Falso placeholder para quando a caixa estiver vazia */
-.visual-editor:empty:before {
-  content: attr(data-placeholder);
-  color: #666;
-  pointer-events: none;
-  display: block;
-}
-
-/* Mantém a cor da borda bonita ao clicar */
-.visual-editor:focus {
-  border-color: var(--primary, #c333ff) !important;
-}
-
-/* Estilo que transforma o emoji na tela no tamanho exato e permite deletar fácil */
-.rich-inline-emoji {
-  width: 24px;
-  height: 24px;
-  vertical-align: middle;
-  display: inline-block;
-  margin: 0 2px;
-  user-select: all; /* Permite que o backspace apague a imagem de uma vez só */
-  cursor: text;
-}
