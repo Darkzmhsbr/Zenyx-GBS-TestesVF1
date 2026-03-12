@@ -95,35 +95,3 @@
 .rich-premium-notice strong {
   color: #f59e0b;
 }
-
-/* =========================================
-   ✨ NOVAS REGRAS PARA O EDITOR VISUAL (DIV)
-   ========================================= */
-
-/* Simula o placeholder em uma div contentEditable quando vazia */
-.visual-editor:empty:before {
-  content: attr(data-placeholder);
-  color: #666;
-  pointer-events: none;
-  display: block;
-}
-
-/* Garante que o campo vazio mantenha a altura certa para digitação */
-.visual-editor:empty {
-  min-height: 120px;
-}
-
-/* Estilo para os emojis premium renderizados dentro do texto */
-.rich-inline-emoji {
-  display: inline-block;
-  vertical-align: middle;
-  margin: 0 2px;
-  user-select: none;
-  transform: translateY(-2px); /* Ajuste fino para alinhar no meio do texto */
-}
-
-/* Remove a borda dupla do wrapper de transição */
-.rich-textarea-wrapper {
-  border: none !important;
-  background: transparent !important;
-}
