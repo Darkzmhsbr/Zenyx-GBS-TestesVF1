@@ -21,6 +21,7 @@ const getEmojiAbsoluteUrl = (emoji) => {
 
 export function RichInput({ label, value, onChange, placeholder, rows = 4 }) {
   const editorRef = useRef(null);
+  const savedRangeRef = useRef(null); // ⚓ Memória da posição do cursor
   const [catalog, setCatalog] = useState([]);
   const [htmlContent, setHtmlContent] = useState("");
 
@@ -48,7 +49,6 @@ export function RichInput({ label, value, onChange, placeholder, rows = 4 }) {
         const imgUrl = getEmojiAbsoluteUrl(emoji);
 
         if (imgUrl) {
-          // O alt usa emoji.fallback (ex: 🔥) para esconder o código perfeitamente se a imagem der erro 404
           parsed = parsed.replace(regex, `<img src="${imgUrl}" alt="${emoji.fallback}" data-shortcode="${emoji.shortcode}" class="rich-emoji-img" draggable="false" style="width:22px;height:22px;vertical-align:middle;margin:0 2px;user-select:all;pointer-events:none;color:transparent;" />`);
         }
       });
@@ -83,35 +83,60 @@ export function RichInput({ label, value, onChange, placeholder, rows = 4 }) {
     onChange({ target: { value: htmlToText(newHtml) } });
   };
 
+  // ⚓ Salva a coordenada exata do cursor sempre que digitar ou clicar
+  const saveSelection = () => {
+    const sel = window.getSelection();
+    if (sel.rangeCount > 0 && editorRef.current) {
+      const range = sel.getRangeAt(0);
+      if (editorRef.current.getEl().contains(range.commonAncestorContainer)) {
+        savedRangeRef.current = range.cloneRange();
+      }
+    }
+  };
+
   const applyFormat = (tagStart, tagEnd) => {
     if (!editorRef.current) return;
     const el = editorRef.current.getEl();
     el.focus();
-    const selection = window.getSelection();
-    if (!selection.rangeCount) return;
-    const selectedText = selection.toString();
+
+    // 🎯 Restaura o cursor antes de formatar
+    const sel = window.getSelection();
+    if (savedRangeRef.current) {
+      sel.removeAllRanges();
+      sel.addRange(savedRangeRef.current);
+    }
+
+    if (!sel.rangeCount) return;
+    const selectedText = sel.toString();
     const newText = `${tagStart}${selectedText}${tagEnd}`;
     document.execCommand('insertText', false, newText);
+    saveSelection(); // Atualiza a âncora após modificar
   };
 
-  // 🔥 O FIX DEFINITIVO: Trata o clique, insere a imagem certa e atualiza o React na hora!
   const handleEmojiSelect = (shortcode, emojiObj) => {
     if (!editorRef.current) return;
     const el = editorRef.current.getEl();
     el.focus();
     
+    // 🎯 O SEGREDO ESTÁ AQUI: Restaura o cursor pro lugar exato antes de soltar a imagem!
+    const sel = window.getSelection();
+    if (savedRangeRef.current) {
+      sel.removeAllRanges();
+      sel.addRange(savedRangeRef.current);
+    }
+    
     const emoji = emojiObj || catalog.find(e => e.shortcode === shortcode);
     
     if (emoji) {
       const imgUrl = getEmojiAbsoluteUrl(emoji);
-      // Inserção da Imagem no HTML do Input
       const imgHtml = `<img src="${imgUrl}" alt="${emoji.fallback}" data-shortcode="${emoji.shortcode}" class="rich-emoji-img" draggable="false" style="width:22px;height:22px;vertical-align:middle;margin:0 2px;user-select:all;pointer-events:none;color:transparent;" />\u200B`;
       document.execCommand('insertHTML', false, imgHtml);
     } else {
       document.execCommand('insertText', false, shortcode);
     }
     
-    // Atualiza o estado pai imediatamente para a mensagem não bugar
+    saveSelection(); // Atualiza a âncora pro lado direito do novo emoji inserido
+
     const newHtml = el.innerHTML;
     setHtmlContent(newHtml);
     onChange({ target: { value: htmlToText(newHtml) } });
@@ -122,21 +147,26 @@ export function RichInput({ label, value, onChange, placeholder, rows = 4 }) {
     if (url) applyFormat(`<a href="${url}">`, '</a>');
   };
 
+  // Impede que os botões roubem o foco ao clicar (onMouseDown prevent default)
+  const preventFocusSteal = (e) => {
+    e.preventDefault();
+  };
+
   return (
     <div className="rich-input-container">
       {label && <label className="rich-label">{label}</label>}
       
       <div className="rich-toolbar">
-        <button type="button" className="rich-btn" onClick={() => applyFormat('<b>', '</b>')} title="Negrito"><Bold size={16} /></button>
-        <button type="button" className="rich-btn" onClick={() => applyFormat('<i>', '</i>')} title="Itálico"><Italic size={16} /></button>
-        <button type="button" className="rich-btn" onClick={() => applyFormat('<u>', '</u>')} title="Sublinhado"><Underline size={16} /></button>
-        <button type="button" className="rich-btn" onClick={() => applyFormat('<s>', '</s>')} title="Tachado"><Strikethrough size={16} /></button>
+        <button type="button" className="rich-btn" onMouseDown={preventFocusSteal} onClick={() => applyFormat('<b>', '</b>')} title="Negrito"><Bold size={16} /></button>
+        <button type="button" className="rich-btn" onMouseDown={preventFocusSteal} onClick={() => applyFormat('<i>', '</i>')} title="Itálico"><Italic size={16} /></button>
+        <button type="button" className="rich-btn" onMouseDown={preventFocusSteal} onClick={() => applyFormat('<u>', '</u>')} title="Sublinhado"><Underline size={16} /></button>
+        <button type="button" className="rich-btn" onMouseDown={preventFocusSteal} onClick={() => applyFormat('<s>', '</s>')} title="Tachado"><Strikethrough size={16} /></button>
         <div className="rich-separator"></div>
-        <button type="button" className="rich-btn" onClick={() => applyFormat('<span class="tg-spoiler">', '</span>')} title="Spoiler (Oculto)"><EyeOff size={16} /></button>
-        <button type="button" className="rich-btn" onClick={() => applyFormat('<pre>', '</pre>')} title="Bloco de Código (Copiar)"><Code size={16} /></button>
-        <button type="button" className="rich-btn" onClick={() => applyFormat('<blockquote>', '</blockquote>')} title="Citação"><Quote size={16} /></button>
+        <button type="button" className="rich-btn" onMouseDown={preventFocusSteal} onClick={() => applyFormat('<span class="tg-spoiler">', '</span>')} title="Spoiler (Oculto)"><EyeOff size={16} /></button>
+        <button type="button" className="rich-btn" onMouseDown={preventFocusSteal} onClick={() => applyFormat('<pre>', '</pre>')} title="Bloco de Código (Copiar)"><Code size={16} /></button>
+        <button type="button" className="rich-btn" onMouseDown={preventFocusSteal} onClick={() => applyFormat('<blockquote>', '</blockquote>')} title="Citação"><Quote size={16} /></button>
         <div className="rich-separator"></div>
-        <button type="button" className="rich-btn" onClick={addLink} title="Link"><LinkIcon size={16} /></button>
+        <button type="button" className="rich-btn" onMouseDown={preventFocusSteal} onClick={addLink} title="Link"><LinkIcon size={16} /></button>
         <div className="rich-separator"></div>
         
         {/* Passa a função atualizada para o Picker */}
@@ -149,6 +179,9 @@ export function RichInput({ label, value, onChange, placeholder, rows = 4 }) {
           html={htmlContent}
           disabled={false}
           onChange={handleChange}
+          onMouseUp={saveSelection} // Memoriza ao clicar com mouse
+          onKeyUp={saveSelection}   // Memoriza ao digitar no teclado
+          onBlur={saveSelection}    // Memoriza ao sair do campo
           tagName="div"
           className="rich-textarea visual-editor"
           style={{ minHeight: `${rows * 24}px`, maxHeight: '300px', overflowY: 'auto', padding: '12px', color: 'var(--foreground, #fff)', fontSize: '0.95rem', whiteSpace: 'pre-wrap', wordBreak: 'break-word', fontFamily: 'inherit', outline: 'none' }}
