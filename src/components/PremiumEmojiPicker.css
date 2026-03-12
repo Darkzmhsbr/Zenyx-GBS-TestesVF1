@@ -216,6 +216,7 @@
   display: grid;
   grid-template-columns: repeat(7, 1fr);
   gap: 4px;
+  content-visibility: auto; /* 🚀 Linha Mágica: Acelera absurdamente a renderização de muitos emojis */
 }
 
 /* Cada emoji individual */

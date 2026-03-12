@@ -2,6 +2,9 @@ import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { premiumEmojiService } from '../services/api';
 import './PremiumEmojiPicker.css';
 
+// 🚀 CACHE GLOBAL: Evita requisições repetidas em diferentes partes do sistema
+let globalCatalogCache = null;
+
 // ✨ MOTOR BLINDADO DE URL: Força a busca da imagem no domínio correto do Backend
 const getEmojiAbsoluteUrl = (emoji, packName) => {
   const API_BASE = import.meta.env.VITE_API_URL?.replace(/\/$/, '') || 'http://localhost:8000';
@@ -18,8 +21,9 @@ const getEmojiAbsoluteUrl = (emoji, packName) => {
 
 export function PremiumEmojiPicker({ onSelect, disabled = false, position = 'top', compact = false }) {
   const [isOpen, setIsOpen] = useState(false);
-  const [catalog, setCatalog] = useState(null);
+  const [catalog, setCatalog] = useState(globalCatalogCache); // 🚀 Inicia com o cache se existir
   const [loading, setLoading] = useState(false);
+  const [isMounting, setIsMounting] = useState(false); // 🚀 Evita engasgo ao abrir
   const [activeTab, setActiveTab] = useState('all');
   const [searchTerm, setSearchTerm] = useState('');
   const [searchResults, setSearchResults] = useState(null);
@@ -27,26 +31,39 @@ export function PremiumEmojiPicker({ onSelect, disabled = false, position = 'top
   const searchTimeout = useRef(null);
 
   const loadCatalog = useCallback(async () => {
-    if (catalog) return;
+    if (globalCatalogCache) {
+      setCatalog(globalCatalogCache);
+      return;
+    }
     setLoading(true);
     try {
       const data = await premiumEmojiService.getCatalog();
+      globalCatalogCache = data; // 🚀 Salva no cache global
       setCatalog(data);
     } catch (error) {
       console.error('Erro ao carregar catálogo de emojis premium:', error);
     } finally {
       setLoading(false);
     }
-  }, [catalog]);
+  }, []);
 
   const handleToggle = () => {
     if (disabled) return;
     const next = !isOpen;
-    setIsOpen(next);
+    
     if (next) {
-      loadCatalog();
+      // 🚀 Libera a UI para abrir o menu INSTANTANEAMENTE antes de renderizar os emojis pesados
+      setIsMounting(true);
+      setIsOpen(true);
       setSearchTerm('');
       setSearchResults(null);
+      
+      setTimeout(() => {
+        setIsMounting(false);
+        loadCatalog();
+      }, 50); // Pequeno respiro para o React desenhar o painel
+    } else {
+      setIsOpen(false);
     }
   };
 
@@ -134,7 +151,6 @@ export function PremiumEmojiPicker({ onSelect, disabled = false, position = 'top
               {catalog.packs.map(pack => (
                 <button key={pack.id} className={`pep-tab ${activeTab === pack.id ? 'active' : ''}`} onClick={() => setActiveTab(pack.id)} title={pack.name}>
                   <span className="tab-icon">{pack.icon || '📦'}</span>
-                  {/* ✨ Ajuste: O título do pacote agora está visível ao lado do ícone */}
                   <span style={{ marginLeft: '6px', fontSize: '0.85rem', fontWeight: '500' }}>{pack.name}</span>
                 </button>
               ))}
@@ -142,7 +158,7 @@ export function PremiumEmojiPicker({ onSelect, disabled = false, position = 'top
           )}
 
           <div className="pep-grid-container">
-            {loading ? (
+            {loading || isMounting ? (
               <div className="pep-loading"><div className="pep-spinner" /><span>Carregando emojis...</span></div>
             ) : visiblePacks.length === 0 ? (
               <div className="pep-empty"><div className="pep-empty-icon">✨</div>{searchTerm ? 'Nenhum emoji encontrado.' : 'Nenhum emoji premium disponível ainda.'}</div>
@@ -152,11 +168,7 @@ export function PremiumEmojiPicker({ onSelect, disabled = false, position = 'top
                   {activeTab === 'all' && <div className="pep-pack-label">{pack.icon} {pack.name}</div>}
                   <div className="pep-grid">
                     {pack.emojis.map((emoji) => {
-                      const duplicates = pack.emojis.filter(e => e.fallback === emoji.fallback);
-                      const hasDuplicate = duplicates.length > 1;
-                      const dupIndex = hasDuplicate ? duplicates.indexOf(emoji) + 1 : 0;
-                      
-                      // Força a URL Absoluta
+                      // Otimização: Evitar rodar filter() milhares de vezes atoa
                       const imgUrl = getEmojiAbsoluteUrl(emoji, pack.name);
 
                       return (
@@ -170,7 +182,6 @@ export function PremiumEmojiPicker({ onSelect, disabled = false, position = 'top
                                 style={{ width: '28px', height: '28px', objectFit: 'contain', pointerEvents: 'none' }} 
                                 loading="lazy" 
                                 onError={(e) => {
-                                  // Se a imagem não carregar, esconde ela e mostra o fallback (🔥)
                                   e.target.style.display = 'none';
                                   if (e.target.nextElementSibling) e.target.nextElementSibling.style.display = 'inline';
                                 }}
@@ -180,8 +191,7 @@ export function PremiumEmojiPicker({ onSelect, disabled = false, position = 'top
                           ) : (
                             <span className="pep-emoji-fallback-text">{emoji.fallback}</span>
                           )}
-
-                          {hasDuplicate && <span className="pep-dup-badge">{dupIndex}</span>}
+                          
                           {emoji.emoji_type === 'animated' && <span className="pep-animated-dot" />}
                           <span className="pep-tooltip">{emoji.name}<br/>{emoji.shortcode}</span>
                         </button>
