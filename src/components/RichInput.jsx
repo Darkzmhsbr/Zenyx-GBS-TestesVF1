@@ -43,6 +43,23 @@ export function RichInput({ label, value, onChange, placeholder, rows = 4 }) {
       .replace(/>/g, "&gt;")
       .replace(/\n/g, "<br>");
     
+    // ✨ RESTAURA AS TAGS PARA VISUALIZAÇÃO WYSIWYG ✨
+    const tags = ['b', 'i', 'u', 's', 'pre', 'code', 'blockquote'];
+    tags.forEach(tag => {
+      parsed = parsed.replace(new RegExp(`&lt;${tag}&gt;`, 'gi'), `<${tag}>`)
+                     .replace(new RegExp(`&lt;/${tag}&gt;`, 'gi'), `</${tag}>`);
+    });
+
+    // Restaurar Links visuais
+    parsed = parsed.replace(/&lt;a href=(?:&quot;|")(.*?)(?:&quot;|")&gt;/gi, '<a href="$1">');
+    parsed = parsed.replace(/&lt;\/a&gt;/gi, '</a>');
+
+    // Restaurar Spoiler visual
+    parsed = parsed.replace(/&lt;span class=(?:&quot;|")tg-spoiler(?:&quot;|")&gt;/gi, '<span class="tg-spoiler">');
+    parsed = parsed.replace(/&lt;tg-spoiler&gt;/gi, '<span class="tg-spoiler">');
+    parsed = parsed.replace(/&lt;\/span&gt;/gi, '</span>');
+    parsed = parsed.replace(/&lt;\/tg-spoiler&gt;/gi, '</span>');
+
     if (catalog && catalog.length > 0) {
       catalog.forEach(emoji => {
         const regex = new RegExp(emoji.shortcode, 'g');
@@ -88,12 +105,31 @@ export function RichInput({ label, value, onChange, placeholder, rows = 4 }) {
       parent.removeChild(font);
     });
 
-    // 4. Limpa atributos soltos
+    // 4. ✨ Padroniza as tags visuais de volta para as exigidas pelo Telegram
     const allEls = Array.from(temp.querySelectorAll('*'));
     allEls.forEach(el => {
       el.removeAttribute('style');
       if (el.tagName.toLowerCase() !== 'span' || el.className !== 'tg-spoiler') {
-        el.removeAttribute('class');
+        if (el.tagName.toLowerCase() !== 'a') el.removeAttribute('class');
+      }
+      
+      const tag = el.tagName.toLowerCase();
+      if (tag === 'strong') {
+        const b = document.createElement('b');
+        b.innerHTML = el.innerHTML;
+        el.replaceWith(b);
+      } else if (tag === 'em') {
+        const i = document.createElement('i');
+        i.innerHTML = el.innerHTML;
+        el.replaceWith(i);
+      } else if (tag === 'strike' || tag === 'del') {
+        const s = document.createElement('s');
+        s.innerHTML = el.innerHTML;
+        el.replaceWith(s);
+      } else if (tag === 'ins') {
+        const u = document.createElement('u');
+        u.innerHTML = el.innerHTML;
+        el.replaceWith(u);
       }
     });
     
@@ -133,8 +169,8 @@ export function RichInput({ label, value, onChange, placeholder, rows = 4 }) {
     }
   };
 
-  // 🔥 FIX DA FORMATAÇÃO: Envelopa perfeitamente sem esmagar o texto e os emojis
-  const applyFormat = (tagStart, tagEnd) => {
+  // 🔥 FIX DA FORMATAÇÃO VISUAL (WYSIWYG)
+  const handleFormat = (command, tagStart = null, tagEnd = null) => {
     if (!editorRef.current) return;
     const el = editorRef.current.getEl();
     el.focus();
@@ -145,27 +181,15 @@ export function RichInput({ label, value, onChange, placeholder, rows = 4 }) {
       sel.addRange(savedRangeRef.current);
     }
 
-    if (!sel.rangeCount || sel.isCollapsed) return;
-    const range = sel.getRangeAt(0);
-    
-    // Insere a tag de fechamento no final da seleção
-    const endNode = document.createTextNode(tagEnd);
-    const endRange = range.cloneRange();
-    endRange.collapse(false);
-    endRange.insertNode(endNode);
-
-    // Insere a tag de abertura no começo da seleção
-    const startNode = document.createTextNode(tagStart);
-    const startRange = range.cloneRange();
-    startRange.collapse(true);
-    startRange.insertNode(startNode);
-
-    // Mantém a seleção visual para o usuário
-    sel.removeAllRanges();
-    const newRange = document.createRange();
-    newRange.setStartAfter(startNode);
-    newRange.setEndBefore(endNode);
-    sel.addRange(newRange);
+    if (command) {
+      // Formatações nativas (Negrito, Itálico, Sublinhado, Tachado)
+      document.execCommand(command, false, null);
+    } else if (tagStart && tagEnd) {
+      // Formatações customizadas (Spoiler, Código, Quote)
+      if (!sel.rangeCount || sel.isCollapsed) return;
+      const text = sel.toString();
+      document.execCommand('insertHTML', false, tagStart + text + tagEnd);
+    }
 
     saveSelection();
     const newHtml = el.innerHTML;
@@ -202,7 +226,9 @@ export function RichInput({ label, value, onChange, placeholder, rows = 4 }) {
 
   const addLink = () => {
     const url = prompt("Digite a URL do link:", "https://");
-    if (url) applyFormat(`<a href="${url}">`, '</a>');
+    if (url) {
+      handleFormat(null, `<a href="${url}">`, '</a>');
+    }
   };
 
   const preventFocusSteal = (e) => e.preventDefault();
@@ -218,14 +244,14 @@ export function RichInput({ label, value, onChange, placeholder, rows = 4 }) {
       {label && <label className="rich-label">{label}</label>}
       
       <div className="rich-toolbar">
-        <button type="button" className="rich-btn" onMouseDown={preventFocusSteal} onClick={() => applyFormat('<b>', '</b>')} title="Negrito"><Bold size={16} /></button>
-        <button type="button" className="rich-btn" onMouseDown={preventFocusSteal} onClick={() => applyFormat('<i>', '</i>')} title="Itálico"><Italic size={16} /></button>
-        <button type="button" className="rich-btn" onMouseDown={preventFocusSteal} onClick={() => applyFormat('<u>', '</u>')} title="Sublinhado"><Underline size={16} /></button>
-        <button type="button" className="rich-btn" onMouseDown={preventFocusSteal} onClick={() => applyFormat('<s>', '</s>')} title="Tachado"><Strikethrough size={16} /></button>
+        <button type="button" className="rich-btn" onMouseDown={preventFocusSteal} onClick={() => handleFormat('bold')} title="Negrito"><Bold size={16} /></button>
+        <button type="button" className="rich-btn" onMouseDown={preventFocusSteal} onClick={() => handleFormat('italic')} title="Itálico"><Italic size={16} /></button>
+        <button type="button" className="rich-btn" onMouseDown={preventFocusSteal} onClick={() => handleFormat('underline')} title="Sublinhado"><Underline size={16} /></button>
+        <button type="button" className="rich-btn" onMouseDown={preventFocusSteal} onClick={() => handleFormat('strikeThrough')} title="Tachado"><Strikethrough size={16} /></button>
         <div className="rich-separator"></div>
-        <button type="button" className="rich-btn" onMouseDown={preventFocusSteal} onClick={() => applyFormat('<span class="tg-spoiler">', '</span>')} title="Spoiler (Oculto)"><EyeOff size={16} /></button>
-        <button type="button" className="rich-btn" onMouseDown={preventFocusSteal} onClick={() => applyFormat('<pre>', '</pre>')} title="Bloco de Código (Copiar)"><Code size={16} /></button>
-        <button type="button" className="rich-btn" onMouseDown={preventFocusSteal} onClick={() => applyFormat('<blockquote>', '</blockquote>')} title="Citação"><Quote size={16} /></button>
+        <button type="button" className="rich-btn" onMouseDown={preventFocusSteal} onClick={() => handleFormat(null, '<span class="tg-spoiler">', '</span>')} title="Spoiler (Oculto)"><EyeOff size={16} /></button>
+        <button type="button" className="rich-btn" onMouseDown={preventFocusSteal} onClick={() => handleFormat(null, '<pre>', '</pre>')} title="Bloco de Código (Copiar)"><Code size={16} /></button>
+        <button type="button" className="rich-btn" onMouseDown={preventFocusSteal} onClick={() => handleFormat(null, '<blockquote>', '</blockquote>')} title="Citação"><Quote size={16} /></button>
         <div className="rich-separator"></div>
         <button type="button" className="rich-btn" onMouseDown={preventFocusSteal} onClick={addLink} title="Link"><LinkIcon size={16} /></button>
         <div className="rich-separator"></div>

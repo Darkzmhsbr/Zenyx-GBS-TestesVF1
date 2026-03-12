@@ -95,3 +95,40 @@
 .rich-premium-notice strong {
   color: #f59e0b;
 }
+
+/* Estilização visual dentro do RichInput */
+.visual-editor b, .visual-editor strong { font-weight: bold; color: #fff; }
+.visual-editor i, .visual-editor em { font-style: italic; }
+.visual-editor u { text-decoration: underline; }
+.visual-editor s { text-decoration: line-through; opacity: 0.8; }
+.visual-editor a { color: #c333ff; text-decoration: underline; cursor: pointer; }
+
+/* Estilo do Citação (Quote) parecido com o Telegram */
+.visual-editor blockquote {
+  border-left: 3px solid #c333ff;
+  padding-left: 10px;
+  margin: 5px 0;
+  color: #ccc;
+  background: rgba(195, 51, 255, 0.05);
+  border-radius: 0 4px 4px 0;
+}
+
+/* Estilo do Código Mono */
+.visual-editor pre, .visual-editor code {
+  background: rgba(255, 255, 255, 0.1);
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-family: 'Courier New', Courier, monospace;
+  font-size: 0.9em;
+  color: #10b981;
+}
+
+/* Estilo do Spoiler simulado */
+.visual-editor .tg-spoiler {
+  background: rgba(255, 255, 255, 0.2);
+  color: transparent;
+  text-shadow: 0 0 8px rgba(255,255,255,0.7);
+  border-radius: 4px;
+  padding: 0 4px;
+  user-select: none;
+}
