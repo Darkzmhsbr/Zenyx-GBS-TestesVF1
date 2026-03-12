@@ -5,6 +5,20 @@ import { PremiumEmojiPicker } from './PremiumEmojiPicker';
 import { premiumEmojiService } from '../services/api';
 import './RichInput.css';
 
+// ✨ MOTOR BLINDADO DE URL PARA O EDITOR: Impede a imagem de quebrar no texto
+const getEmojiAbsoluteUrl = (emoji) => {
+  const API_BASE = import.meta.env.VITE_API_URL?.replace(/\/$/, '') || 'http://localhost:8000';
+  let rawUrl = emoji.file_url || emoji.url;
+  
+  if (!rawUrl && emoji.emoji_id) {
+    const pName = emoji.pack_name || 'Outros';
+    rawUrl = `/api/emojis/thumb/${encodeURIComponent(pName)}/${emoji.emoji_id}.webp`;
+  }
+  
+  if (!rawUrl) return null;
+  return rawUrl.startsWith('http') ? rawUrl : `${API_BASE}${rawUrl}`;
+};
+
 export function RichInput({ label, value, onChange, placeholder, rows = 4 }) {
   const editorRef = useRef(null);
   const [catalog, setCatalog] = useState([]);
@@ -14,7 +28,7 @@ export function RichInput({ label, value, onChange, placeholder, rows = 4 }) {
     let isMounted = true;
     premiumEmojiService.getCatalog().then(data => {
       if (isMounted && data && data.packs) {
-        // ✨ Injetamos o nome do pack em cada emoji para podermos montar a URL depois
+        // Injeta o nome do pacote nos emojis para construir a URL corretamente
         setCatalog(data.packs.flatMap(p => p.emojis.map(e => ({...e, pack_name: p.name})) || []));
       }
     }).catch(console.error);
@@ -32,16 +46,11 @@ export function RichInput({ label, value, onChange, placeholder, rows = 4 }) {
     if (catalog && catalog.length > 0) {
       catalog.forEach(emoji => {
         const regex = new RegExp(emoji.shortcode, 'g');
-        
-        // ✨ LÓGICA MESTRA: Força a construção da URL aqui também
-        const API_BASE = import.meta.env.VITE_API_URL || '';
-        let imgUrl = emoji.url || emoji.file_url;
-        if (!imgUrl && emoji.file_unique_id) {
-          imgUrl = `${API_BASE}/api/emojis/thumb/${emoji.pack_name}/${emoji.file_unique_id}.webp`;
-        }
+        const imgUrl = getEmojiAbsoluteUrl(emoji);
 
         if (imgUrl) {
-          parsed = parsed.replace(regex, `<img src="${imgUrl}" alt="${emoji.shortcode}" data-shortcode="${emoji.shortcode}" class="rich-emoji-img" draggable="false" style="width:22px;height:22px;vertical-align:middle;margin:0 2px;user-select:all;" />`);
+          // A imagem injetada. pointer-events:none impede bugs ao arrastar o mouse
+          parsed = parsed.replace(regex, `<img src="${imgUrl}" alt="${emoji.shortcode}" data-shortcode="${emoji.shortcode}" class="rich-emoji-img" draggable="false" style="width:22px;height:22px;vertical-align:middle;margin:0 2px;user-select:all;pointer-events:none;" />`);
         }
       });
     }
@@ -57,13 +66,21 @@ export function RichInput({ label, value, onChange, placeholder, rows = 4 }) {
   const htmlToText = (htmlStr) => {
     const temp = document.createElement('div');
     temp.innerHTML = htmlStr;
+    
     const imgs = temp.querySelectorAll('.rich-emoji-img');
     imgs.forEach(img => {
       const sc = img.getAttribute('data-shortcode');
       if (sc) img.replaceWith(document.createTextNode(sc));
     });
+    
     let txt = temp.innerHTML;
-    txt = txt.replace(/<div><br><\/div>/gi, '\n').replace(/<div>/gi, '\n').replace(/<\/div>/gi, '').replace(/<br\s*\/?>/gi, '\n').replace(/<p>/gi, '\n').replace(/<\/p>/gi, '');
+    txt = txt.replace(/<div><br><\/div>/gi, '\n')
+             .replace(/<div>/gi, '\n')
+             .replace(/<\/div>/gi, '')
+             .replace(/<br\s*\/?>/gi, '\n')
+             .replace(/<p>/gi, '\n')
+             .replace(/<\/p>/gi, '');
+             
     const unescape = document.createElement('textarea');
     unescape.innerHTML = txt;
     return unescape.value;
@@ -92,14 +109,10 @@ export function RichInput({ label, value, onChange, placeholder, rows = 4 }) {
     el.focus();
     
     const emoji = catalog.find(e => e.shortcode === shortcode);
-    const API_BASE = import.meta.env.VITE_API_URL || '';
-    let imgUrl = emoji?.url || emoji?.file_url;
-    if (!imgUrl && emoji?.file_unique_id) {
-      imgUrl = `${API_BASE}/api/emojis/thumb/${emoji.pack_name}/${emoji.file_unique_id}.webp`;
-    }
+    const imgUrl = emoji ? getEmojiAbsoluteUrl(emoji) : null;
     
     if (imgUrl) {
-      const imgHtml = `<img src="${imgUrl}" alt="${shortcode}" data-shortcode="${shortcode}" class="rich-emoji-img" draggable="false" style="width:22px;height:22px;vertical-align:middle;margin:0 2px;user-select:all;" />\u200B`;
+      const imgHtml = `<img src="${imgUrl}" alt="${shortcode}" data-shortcode="${shortcode}" class="rich-emoji-img" draggable="false" style="width:22px;height:22px;vertical-align:middle;margin:0 2px;user-select:all;pointer-events:none;" />\u200B`;
       document.execCommand('insertHTML', false, imgHtml);
     } else {
       document.execCommand('insertText', false, shortcode);
@@ -141,6 +154,11 @@ export function RichInput({ label, value, onChange, placeholder, rows = 4 }) {
           style={{ minHeight: `${rows * 24}px`, maxHeight: '300px', overflowY: 'auto', padding: '12px', color: 'var(--foreground, #fff)', fontSize: '0.95rem', whiteSpace: 'pre-wrap', wordBreak: 'break-word', fontFamily: 'inherit', outline: 'none' }}
           data-placeholder={placeholder}
         />
+        {!htmlContent && placeholder && (
+          <div style={{ position: 'absolute', top: '12px', left: '12px', color: '#666', pointerEvents: 'none', fontSize: '0.95rem' }}>
+            {placeholder}
+          </div>
+        )}
       </div>
       
       <div className="rich-helper">* Selecione o texto e clique no ícone para formatar. ✨ Use o botão de emoji premium para inserir custom emojis.</div>
