@@ -134,7 +134,8 @@ export function PremiumEmojiPicker({ onSelect, disabled = false, position = 'top
               {catalog.packs.map(pack => (
                 <button key={pack.id} className={`pep-tab ${activeTab === pack.id ? 'active' : ''}`} onClick={() => setActiveTab(pack.id)} title={pack.name}>
                   <span className="tab-icon">{pack.icon || '📦'}</span>
-                  <span style={{ display: 'none' }}>{pack.name}</span>
+                  {/* ✨ Ajuste: O título do pacote agora está visível ao lado do ícone */}
+                  <span style={{ marginLeft: '6px', fontSize: '0.85rem', fontWeight: '500' }}>{pack.name}</span>
                 </button>
               ))}
             </div>
