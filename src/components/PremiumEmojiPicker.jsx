@@ -4,27 +4,22 @@ import './PremiumEmojiPicker.css';
 
 /**
  * ✨ PremiumEmojiPicker - Componente reutilizável para inserir emojis premium do Telegram.
- * 
- * COMO USAR EM QUALQUER PÁGINA:
- * 
- *   import { PremiumEmojiPicker } from '../components/PremiumEmojiPicker';
- * 
- *   // Dentro do JSX, ao lado do textarea/input:
- *   <PremiumEmojiPicker onSelect={(shortcode) => {
- *     setText(prev => prev + shortcode);
- *   }} />
- * 
- * COMO INTEGRAR NO RichInput (para ativar em TODAS as páginas de uma vez):
- *   Basta importar este componente dentro do RichInput.jsx e renderizá-lo
- *   ao lado da toolbar de formatação existente, passando o onSelect para
- *   inserir o shortcode na posição do cursor.
- * 
- * Props:
- *   - onSelect(shortcode: string): Callback chamado quando o usuário clica num emoji.
- *     Recebe o shortcode (ex: ":fire_premium:") para ser inserido no texto.
- *   - disabled (boolean): Se true, o botão fica desabilitado.
- *   - position ("top" | "bottom"): Posição do painel. Default: "top" (abre acima).
- *   - compact (boolean): Se true, mostra apenas o ícone sem texto.
+ * * COMO USAR EM QUALQUER PÁGINA:
+ * * import { PremiumEmojiPicker } from '../components/PremiumEmojiPicker';
+ * * // Dentro do JSX, ao lado do textarea/input:
+ * <PremiumEmojiPicker onSelect={(shortcode) => {
+ * setText(prev => prev + shortcode);
+ * }} />
+ * * COMO INTEGRAR NO RichInput (para ativar em TODAS as páginas de uma vez):
+ * Basta importar este componente dentro do RichInput.jsx e renderizá-lo
+ * ao lado da toolbar de formatação existente, passando o onSelect para
+ * inserir o shortcode na posição do cursor.
+ * * Props:
+ * - onSelect(shortcode: string): Callback chamado quando o usuário clica num emoji.
+ * Recebe o shortcode (ex: ":fire_premium:") para ser inserido no texto.
+ * - disabled (boolean): Se true, o botão fica desabilitado.
+ * - position ("top" | "bottom"): Posição do painel. Default: "top" (abre acima).
+ * - compact (boolean): Se true, mostra apenas o ícone sem texto.
  */
 export function PremiumEmojiPicker({ onSelect, disabled = false, position = 'top', compact = false }) {
   const [isOpen, setIsOpen] = useState(false);
@@ -171,9 +166,11 @@ export function PremiumEmojiPicker({ onSelect, disabled = false, position = 'top
                   key={pack.id}
                   className={`pep-tab ${activeTab === pack.id ? 'active' : ''}`}
                   onClick={() => setActiveTab(pack.id)}
+                  title={pack.name}
                 >
-                  <span className="tab-icon">{pack.icon}</span>
-                  {pack.name}
+                  <span className="tab-icon">{pack.icon || '📦'}</span>
+                  {/* ✨ Alteração visual: Oculta o texto na aba para ficar limpo como o da concorrência */}
+                  <span style={{ display: 'none' }}>{pack.name}</span>
                 </button>
               ))}
             </div>
@@ -209,6 +206,9 @@ export function PremiumEmojiPicker({ onSelect, disabled = false, position = 'top
                       const hasDuplicate = duplicates.length > 1;
                       const dupIndex = hasDuplicate ? duplicates.indexOf(emoji) + 1 : 0;
                       
+                      // ✨ LÓGICA ATUALIZADA: Puxa a URL real do emoji (imagem .webp)
+                      const imgUrl = emoji.url || emoji.file_url;
+                      
                       return (
                         <button
                           key={emoji.id}
@@ -216,7 +216,19 @@ export function PremiumEmojiPicker({ onSelect, disabled = false, position = 'top
                           onClick={() => handleEmojiClick(emoji)}
                           title={`${emoji.name} (${emoji.shortcode})`}
                         >
-                          {emoji.fallback}
+                          {/* Renderiza a imagem se existir, senão mostra o texto como fallback */}
+                          {imgUrl ? (
+                            <img 
+                              src={imgUrl} 
+                              alt={emoji.shortcode} 
+                              className="pep-emoji-img-real"
+                              style={{ width: '28px', height: '28px', objectFit: 'contain', pointerEvents: 'none' }} 
+                              loading="lazy" 
+                            />
+                          ) : (
+                            <span className="pep-emoji-fallback-text">{emoji.fallback}</span>
+                          )}
+
                           {hasDuplicate && (
                             <span className="pep-dup-badge">{dupIndex}</span>
                           )}
