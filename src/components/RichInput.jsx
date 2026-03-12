@@ -21,7 +21,7 @@ const getEmojiAbsoluteUrl = (emoji) => {
 
 export function RichInput({ label, value, onChange, placeholder, rows = 4 }) {
   const editorRef = useRef(null);
-  const savedRangeRef = useRef(null); // ⚓ Memória da posição do cursor
+  const savedRangeRef = useRef(null);
   const [catalog, setCatalog] = useState([]);
   const [htmlContent, setHtmlContent] = useState("");
 
@@ -56,40 +56,30 @@ export function RichInput({ label, value, onChange, placeholder, rows = 4 }) {
     return parsed;
   }, [catalog]);
 
-  useEffect(() => {
-    if (editorRef.current && document.activeElement !== editorRef.current.getEl()) {
-      setHtmlContent(textToHtml(value || ""));
-    }
-  }, [value, catalog, textToHtml]);
-
   const htmlToText = (htmlStr) => {
     const temp = document.createElement('div');
     temp.innerHTML = htmlStr;
-    
-    // ✨ FIX ANTI-VAZAMENTO DE CÓDIGO HTML:
-    // Caça todas as imagens. Converte as válidas e destrói sem dó as corrompidas.
-    const imgs = temp.querySelectorAll('img');
+    const imgs = temp.querySelectorAll('.rich-emoji-img');
     imgs.forEach(img => {
       const sc = img.getAttribute('data-shortcode');
-      if (sc) {
-        img.replaceWith(document.createTextNode(sc));
-      } else {
-        img.remove(); 
-      }
+      if (sc) img.replaceWith(document.createTextNode(sc));
     });
-    
     let txt = temp.innerHTML;
-    txt = txt.replace(/<div><br><\/div>/gi, '\n')
-             .replace(/<div>/gi, '\n')
-             .replace(/<\/div>/gi, '')
-             .replace(/<br\s*\/?>/gi, '\n')
-             .replace(/<p>/gi, '\n')
-             .replace(/<\/p>/gi, '');
-             
+    txt = txt.replace(/<div><br><\/div>/gi, '\n').replace(/<div>/gi, '\n').replace(/<\/div>/gi, '').replace(/<br\s*\/?>/gi, '\n').replace(/<p>/gi, '\n').replace(/<\/p>/gi, '');
     const unescape = document.createElement('textarea');
     unescape.innerHTML = txt;
     return unescape.value;
   };
+
+  // 🔥 TRAVA ANTI-FLICKER: Impede que os emojis fiquem recarregando e piscando na tela
+  useEffect(() => {
+    if (editorRef.current && document.activeElement !== editorRef.current.getEl()) {
+      const currentText = htmlToText(htmlContent);
+      if (currentText !== (value || "")) {
+        setHtmlContent(textToHtml(value || ""));
+      }
+    }
+  }, [value, catalog, textToHtml, htmlContent]);
 
   const handleChange = (evt) => {
     const newHtml = evt.target.value;
@@ -107,38 +97,38 @@ export function RichInput({ label, value, onChange, placeholder, rows = 4 }) {
     }
   };
 
-  // ✨ FIX DA FORMATAÇÃO: Insere tags SEM destruir os emojis da seleção!
+  // 🔥 FIX DA FORMATAÇÃO: Abraça blocos inteiros contendo imagens sem quebrar o HTML!
   const applyFormat = (tagStart, tagEnd) => {
     if (!editorRef.current) return;
     const el = editorRef.current.getEl();
     el.focus();
-    
+
     const sel = window.getSelection();
+    if (savedRangeRef.current) {
+      sel.removeAllRanges();
+      sel.addRange(savedRangeRef.current);
+    }
+
     if (!sel.rangeCount) return;
     const range = sel.getRangeAt(0);
     
-    // Cria nós de texto literal (ex: "<b>" e "</b>")
-    const startNode = document.createTextNode(tagStart);
-    const endNode = document.createTextNode(tagEnd);
-    
-    // Abraça a seleção com as tags
-    const endRange = range.cloneRange();
-    endRange.collapse(false);
-    endRange.insertNode(endNode);
-    
-    const startRange = range.cloneRange();
-    startRange.collapse(true);
-    startRange.insertNode(startNode);
-    
-    // Refaz a marcação visual para você continuar editando
+    if (range.collapsed) return; // Se não selecionou nenhum texto, ignora
+
+    // Extrai delicadamente tudo o que foi selecionado (texto + emojis)
+    const frag = range.extractContents();
+
+    // Devolve para o HTML envelopado nas tags selecionadas
+    range.insertNode(document.createTextNode(tagEnd));
+    range.insertNode(frag);
+    range.insertNode(document.createTextNode(tagStart));
+
+    // Move o cursor para o final para você poder continuar digitando
+    range.collapse(false);
     sel.removeAllRanges();
-    const newRange = document.createRange();
-    newRange.setStartAfter(startNode);
-    newRange.setEndBefore(endNode);
-    sel.addRange(newRange);
-    
+    sel.addRange(range);
+
     saveSelection();
-    
+
     const newHtml = el.innerHTML;
     setHtmlContent(newHtml);
     onChange({ target: { value: htmlToText(newHtml) } });
@@ -179,7 +169,7 @@ export function RichInput({ label, value, onChange, placeholder, rows = 4 }) {
 
   const preventFocusSteal = (e) => e.preventDefault();
 
-  // ✨ FIX DO COPIAR E COLAR: Remove estilos inúteis e links invisíveis de outros sites
+  // Limpa textos colados de outros sites para não trazer lixo HTML invisível
   const handlePaste = (e) => {
     e.preventDefault();
     const text = e.clipboardData.getData('text/plain');
@@ -214,8 +204,8 @@ export function RichInput({ label, value, onChange, placeholder, rows = 4 }) {
           onChange={handleChange}
           onMouseUp={saveSelection} 
           onKeyUp={saveSelection}   
-          onBlur={saveSelection}
-          onPaste={handlePaste} // Proteção ativa!
+          onBlur={saveSelection}    
+          onPaste={handlePaste}
           tagName="div"
           className="rich-textarea visual-editor"
           style={{ minHeight: `${rows * 24}px`, maxHeight: '300px', overflowY: 'auto', padding: '12px', color: 'var(--foreground, #fff)', fontSize: '0.95rem', whiteSpace: 'pre-wrap', wordBreak: 'break-word', fontFamily: 'inherit', outline: 'none' }}
