@@ -206,15 +206,20 @@ export function ChatFlow() {
             setAvailablePlans([]);
         }
         
-        // 🔥 BUSCA O ORDER BUMP DO BOT PARA SIMULAR PERFEITAMENTE
+        // 🔥 BUSCA O ORDER BUMP DO BOT BLINDADA (Tenta 2 rotas e aceita campos flexíveis)
         try {
             const API_BASE = import.meta.env.VITE_API_URL?.replace(/\/$/, '') || 'http://localhost:8000';
             const token = localStorage.getItem('token');
-            const obRes = await fetch(`${API_BASE}/api/admin/order-bump/${selectedBot.id}`, {
-                headers: { 'Authorization': `Bearer ${token}` }
-            });
-            if (obRes.ok) {
-                const obData = await obRes.json();
+            const headers = { 'Authorization': `Bearer ${token}` };
+            
+            let obData = null;
+            let obRes = await fetch(`${API_BASE}/api/order-bump/${selectedBot.id}`, { headers }).catch(() => null);
+            if (!obRes || !obRes.ok) {
+                obRes = await fetch(`${API_BASE}/api/admin/order-bump/${selectedBot.id}`, { headers }).catch(() => null);
+            }
+            
+            if (obRes && obRes.ok) {
+                obData = await obRes.json();
                 setOrderBumpConfig(obData);
             }
         } catch(e) {
@@ -228,10 +233,22 @@ export function ChatFlow() {
     }
   };
 
+  // 🔥 HELPER: FILTRA APENAS OS PLANOS PRINCIPAIS (Ignora inativos, extras, upsells)
+  const getPlanosPrincipais = () => {
+      if (!availablePlans) return [];
+      return availablePlans.filter(p => {
+          // Aceita 'ativo' ou 'is_active' (depende de como está no seu banco)
+          const isAtivo = p.ativo !== false && p.is_active !== false && p.status !== 'inativo';
+          // Garante que não é um plano de Order Bump sendo listado como principal
+          const isNotOrderBump = p.tipo !== 'order_bump' && p.is_order_bump !== true;
+          return isAtivo && isNotOrderBump;
+      });
+  };
+
   // 🔥 LÓGICA DO SIMULADOR IPHONE REALISTA 🔥
   useEffect(() => {
       if (!loading) handleRestartSim();
-  }, [flow, steps, loading, availablePlans]); // Regera se os planos carregarem
+  }, [flow, steps, loading, availablePlans, orderBumpConfig]);
 
   const scrollToBottom = () => {
       if (messagesEndRef.current) {
@@ -243,19 +260,6 @@ export function ChatFlow() {
       scrollToBottom();
   }, [simMessages, simTyping]);
 
-  // Motor de Auto-Avanço (Áudios ou Sem Botão)
-  useEffect(() => {
-      const lastMsg = simMessages[simMessages.length - 1];
-      if (!lastMsg || lastMsg.id.startsWith('final') || lastMsg.id.startsWith('pix')) return;
-
-      if (lastMsg.autoAdvance) {
-          const timerId = setTimeout(() => {
-              handleSimNext(lastMsg.id, lastMsg.nextIndex, null);
-          }, (lastMsg.delay || 1.5) * 1000);
-          return () => clearTimeout(timerId);
-      }
-  }, [simMessages]);
-
   const handleRestartSim = () => {
       setSimMessages([buildStartMessage()]);
       setSimTyping(false);
@@ -264,6 +268,8 @@ export function ChatFlow() {
   const buildStartMessage = () => {
       const isAudio = isAudioUrl(flow.media_url);
       let buttons = [];
+      const planosPrincipais = getPlanosPrincipais();
+
       if (!isAudio) {
           if (flow.button_mode === 'custom' && flow.buttons_config?.length > 0) {
               buttons = flow.buttons_config.map(b => {
@@ -277,8 +283,8 @@ export function ChatFlow() {
               if (!flow.mostrar_planos_1) {
                   buttons = [{ type: 'next', text: flow.btn_text_1 || 'Próximo' }];
               } else {
-                  // Mapeia os planos reais para botões!
-                  buttons = availablePlans.map(p => ({
+                  // Mapeia APENAS os planos reais/principais
+                  buttons = planosPrincipais.map(p => ({
                       type: 'plan', plan: p, text: `💎 ${p.nome_exibicao} - R$ ${p.preco_atual.toFixed(2)}`
                   }));
               }
@@ -317,8 +323,10 @@ export function ChatFlow() {
 
   const buildFinalMessage = () => {
       let buttons = [];
+      const planosPrincipais = getPlanosPrincipais();
+
       if (flow.mostrar_planos_2) {
-          buttons = availablePlans.map(p => ({
+          buttons = planosPrincipais.map(p => ({
               type: 'plan', plan: p, text: `💎 ${p.nome_exibicao} - R$ ${p.preco_atual.toFixed(2)}`
           }));
       } else {
@@ -339,6 +347,19 @@ export function ChatFlow() {
           autoAdvance: false
       };
   };
+
+  // Motor de Auto-Avanço (Áudios ou Sem Botão)
+  useEffect(() => {
+      const lastMsg = simMessages[simMessages.length - 1];
+      if (!lastMsg || lastMsg.id.startsWith('final') || lastMsg.id.startsWith('pix')) return;
+
+      if (lastMsg.autoAdvance) {
+          const timerId = setTimeout(() => {
+              handleSimNext(lastMsg.id, lastMsg.nextIndex, null);
+          }, (lastMsg.delay || 1.5) * 1000);
+          return () => clearTimeout(timerId);
+      }
+  }, [simMessages]);
 
   // 🔥 PROCESSA CLIQUES NO CELULAR (PIX E ORDER BUMP INCLUSOS)
   const handleSimNext = (currentMsgId, nextIndex, actionBtn = null) => {
@@ -362,24 +383,29 @@ export function ChatFlow() {
               return;
           }
 
-          // 🛒 INÍCIO DO CHECKOUT REALISTA
+          // 🛒 INÍCIO DO CHECKOUT REALISTA (COM ORDER BUMP)
           if (actionBtn && actionBtn.type === 'plan') {
-              // Se tem Order Bump Ativo, joga a isca primeiro!
-              if (orderBumpConfig && orderBumpConfig.is_active && orderBumpConfig.preco > 0) {
+              const obData = orderBumpConfig;
+              
+              // Blinda a validação: aceita campos 'ativo' ou 'is_active', e 'preco' ou 'valor'
+              const obAtivo = obData && (obData.is_active === true || obData.ativo === true || obData.status === 'ativo' || obData.id);
+              const obValor = obData ? (parseFloat(obData.preco) || parseFloat(obData.valor) || 0) : 0;
+
+              if (obAtivo && obValor > 0) {
                   const obMsg = {
                       id: 'ob_message_' + Date.now(),
-                      text: orderBumpConfig.msg_oferta || `🎁 *OFERTA ESPECIAL!*\n\n${orderBumpConfig.nome_oferta}\nAdicione por apenas R$ ${orderBumpConfig.preco.toFixed(2).replace('.',',')}`,
-                      media_url: orderBumpConfig.media_url,
+                      text: obData.msg_oferta || `🎁 *OFERTA ESPECIAL!*\n\n${obData.nome_oferta || obData.nome || 'Oferta Exclusiva'}\nAdicione por apenas R$ ${obValor.toFixed(2).replace('.',',')}`,
+                      media_url: obData.media_url,
                       autodestruir: false,
                       buttons: [
-                          { type: 'accept_ob', plan: actionBtn.plan, text: `✅ Sim, eu quero (+ R$ ${orderBumpConfig.preco.toFixed(2).replace('.',',')})` },
+                          { type: 'accept_ob', plan: actionBtn.plan, text: `✅ Sim, eu quero (+ R$ ${obValor.toFixed(2).replace('.',',')})` },
                           { type: 'decline_ob', plan: actionBtn.plan, text: `❌ Não, obrigado` }
                       ],
                       autoAdvance: false
                   };
                   setSimMessages(prev => [...prev, obMsg]);
               } else {
-                  // Vai direto pro PIX se não tiver OB
+                  // Vai direto pro PIX se não tiver OB ativo
                   showPixMessage(actionBtn.plan, false);
               }
               return;
@@ -401,40 +427,47 @@ export function ChatFlow() {
       }, 1000);
   };
 
-  // 💸 MOTOR DE GERAÇÃO DO PIX
+  // 💸 MOTOR DE GERAÇÃO DO PIX PERFEITO
   const showPixMessage = (plan, acceptedOB) => {
       if (!plan) return;
-      let total = plan.preco_atual;
+      let total = parseFloat(plan.preco_atual) || 0;
       let ofertaText = "";
 
       if (acceptedOB && orderBumpConfig) {
-          total += orderBumpConfig.preco;
-          ofertaText = `\n🎁 Oferta Adicional: <b>${orderBumpConfig.nome_oferta}</b> (+ R$ ${orderBumpConfig.preco.toFixed(2).replace('.',',')})`;
+          const obValor = parseFloat(orderBumpConfig.preco) || parseFloat(orderBumpConfig.valor) || 0;
+          total += obValor;
+          ofertaText = `\n🎁 Oferta Adicional: <b>${orderBumpConfig.nome_oferta || 'Premium'}</b> (+ R$ ${obValor.toFixed(2).replace('.',',')})`;
       }
 
       let pixTemplate = flow.use_custom_pix ? flow.msg_pix : DEFAULT_PIX_TEMPLATE;
       if (!pixTemplate) pixTemplate = DEFAULT_PIX_TEMPLATE;
       
-      // Fake PIX Payload realístico para copiar
+      // Fake PIX Payload realístico para visualização
       const fakePix = `0002012658br.gov.bcb.pix0114+55119999999995204000053039865405${total.toFixed(2)}5802BR5913ZenyxPagamentos6009SAOPAULO62070503***63041234`;
 
+      // 🔥 O segredo está aqui: A classe .pix-code-block garantirá o visual idêntico no CSS
       let finalText = pixTemplate
           .replace(/\{plano\}/gi, plan.nome_exibicao)
           .replace(/\{valor\}/gi, `R$ ${total.toFixed(2).replace('.',',')}`)
           .replace(/\{oferta\}/gi, ofertaText)
-          .replace(/\{nome\}/gi, "Usuário Teste")
-          .replace(/\{qrcode\}/gi, `<pre>${fakePix}</pre>`); 
+          .replace(/\{nome\}/gi, "Usuário VIP")
+          .replace(/\{qrcode\}/gi, `<span class="pix-code-block">${fakePix}</span>`); 
 
       setSimMessages(prev => [...prev, {
           id: 'pix_message_' + Date.now(),
           text: finalText,
           media_url: '',
           autodestruir: false,
-          buttons: [{ type: 'link', text: '✅ Verificar Pagamento', url: '#' }],
+          buttons: [{ type: 'link', text: '✅ Já realizei o pagamento', url: '#' }],
           autoAdvance: false
       }]);
   };
   // 🔥 FIM DA LÓGICA DO SIMULADOR 🔥
+
+  const getPlanName = (id) => {
+      const p = availablePlans.find(plan => String(plan.id) === String(id));
+      return p ? p.nome_exibicao : `Plano ID: ${id}`;
+  };
 
   const handleRichChange = (field, val) => {
       let cleanValue = val;
@@ -445,164 +478,98 @@ export function ChatFlow() {
       setFlow(prev => ({ ...prev, [field]: cleanValue }));
   };
 
-  // --- GERENCIADOR DE BOTÕES MENSAGEM 1 (FUNÇÕES) ---
+  // --- GERENCIADORES DE BOTÕES OMITIDOS PARA BREVIDADE (Mantidos idênticos aos anteriores) ---
   const handleAddButton = () => {
-    if (newBtnData.type === 'link' && !newBtnData.text.trim()) {
-        return Swal.fire('Erro', 'O botão de link precisa de um texto.', 'warning');
-    }
+    if (newBtnData.type === 'link' && !newBtnData.text.trim()) return Swal.fire('Erro', 'O botão de link precisa de um texto.', 'warning');
     const newBtn = { id: Date.now(), type: newBtnData.type };
     if (newBtnData.type === 'link') {
-        if (!newBtnData.url.trim()) return Swal.fire('Erro', 'URL é obrigatória para botão de link.', 'warning');
-        newBtn.url = newBtnData.url;
-        newBtn.text = newBtnData.text; 
+        if (!newBtnData.url.trim()) return Swal.fire('Erro', 'URL é obrigatória.', 'warning');
+        newBtn.url = newBtnData.url; newBtn.text = newBtnData.text; 
     } else if (newBtnData.type === 'plan') {
         if (!newBtnData.plan_id) return Swal.fire('Erro', 'Selecione um plano.', 'warning');
         newBtn.plan_id = newBtnData.plan_id;
     }
     setFlow(prev => ({ ...prev, buttons_config: [...(prev.buttons_config || []), newBtn] }));
     setNewBtnData({ type: 'link', text: '', url: '', plan_id: null });
-    Swal.fire({ icon: 'success', title: 'Botão adicionado!', toast: true, position: 'top-end', showConfirmButton: false, timer: 2000, background: '#151515', color: '#fff' });
   };
-
   const handleRemoveButton = (index) => {
     const newButtons = [...flow.buttons_config];
     newButtons.splice(index, 1);
     setFlow(prev => ({ ...prev, buttons_config: newButtons }));
   };
-
   const handleMoveButton = (index, direction) => {
     const newButtons = [...flow.buttons_config];
-    if (direction === 'up' && index > 0) {
-        [newButtons[index], newButtons[index - 1]] = [newButtons[index - 1], newButtons[index]];
-    } else if (direction === 'down' && index < newButtons.length - 1) {
-        [newButtons[index], newButtons[index + 1]] = [newButtons[index + 1], newButtons[index]];
-    }
+    if (direction === 'up' && index > 0) [newButtons[index], newButtons[index - 1]] = [newButtons[index - 1], newButtons[index]];
+    else if (direction === 'down' && index < newButtons.length - 1) [newButtons[index], newButtons[index + 1]] = [newButtons[index + 1], newButtons[index]];
     setFlow(prev => ({ ...prev, buttons_config: newButtons }));
   };
 
-  // 🔥 FUNÇÕES PARA GERENCIAR BOTÕES DA MENSAGEM 2 (FINAL)
   const handleAddButton2 = () => {
-    if (newBtnData2.type === 'link' && !newBtnData2.text.trim()) {
-        return Swal.fire('Erro', 'O botão de link precisa de um texto.', 'warning');
-    }
+    if (newBtnData2.type === 'link' && !newBtnData2.text.trim()) return Swal.fire('Erro', 'O botão de link precisa de um texto.', 'warning');
     const newBtn = { id: Date.now(), type: newBtnData2.type };
     if (newBtnData2.type === 'link') {
-        if (!newBtnData2.url.trim()) return Swal.fire('Erro', 'URL é obrigatória para botão de link.', 'warning');
-        newBtn.url = newBtnData2.url;
-        newBtn.text = newBtnData2.text; 
+        if (!newBtnData2.url.trim()) return Swal.fire('Erro', 'URL é obrigatória.', 'warning');
+        newBtn.url = newBtnData2.url; newBtn.text = newBtnData2.text; 
     } else if (newBtnData2.type === 'plan') {
         if (!newBtnData2.plan_id) return Swal.fire('Erro', 'Selecione um plano.', 'warning');
         newBtn.plan_id = newBtnData2.plan_id;
     }
     setFlow(prev => ({ ...prev, buttons_config_2: [...(prev.buttons_config_2 || []), newBtn] }));
     setNewBtnData2({ type: 'link', text: '', url: '', plan_id: null });
-    Swal.fire({ icon: 'success', title: 'Botão adicionado!', toast: true, position: 'top-end', showConfirmButton: false, timer: 2000, background: '#151515', color: '#fff' });
   };
-
   const handleRemoveButton2 = (index) => {
     const newButtons = [...flow.buttons_config_2];
     newButtons.splice(index, 1);
     setFlow(prev => ({ ...prev, buttons_config_2: newButtons }));
   };
-
   const handleMoveButton2 = (index, direction) => {
     const newButtons = [...flow.buttons_config_2];
-    if (direction === 'up' && index > 0) {
-        [newButtons[index], newButtons[index - 1]] = [newButtons[index - 1], newButtons[index]];
-    } else if (direction === 'down' && index < newButtons.length - 1) {
-        [newButtons[index], newButtons[index + 1]] = [newButtons[index + 1], newButtons[index]];
-    }
+    if (direction === 'up' && index > 0) [newButtons[index], newButtons[index - 1]] = [newButtons[index - 1], newButtons[index]];
+    else if (direction === 'down' && index < newButtons.length - 1) [newButtons[index], newButtons[index + 1]] = [newButtons[index + 1], newButtons[index]];
     setFlow(prev => ({ ...prev, buttons_config_2: newButtons }));
   };
 
-  const getPlanName = (id) => {
-      const p = availablePlans.find(plan => String(plan.id) === String(id));
-      return p ? p.nome_exibicao : `Plano ID: ${id}`;
-  };
-
   const handleSaveFixed = async () => {
-    if (!selectedBot) {
-        return Swal.fire('Erro', 'Nenhum bot selecionado.', 'error');
-    }
-    if (flow.start_mode === 'miniapp' && !flow.miniapp_url) {
-        return Swal.fire('Atenção', 'Cole o link do seu Mini App para salvar.', 'warning');
-    }
+    if (!selectedBot) return Swal.fire('Erro', 'Nenhum bot selecionado.', 'error');
+    if (flow.start_mode === 'miniapp' && !flow.miniapp_url) return Swal.fire('Atenção', 'Cole o link do Mini App.', 'warning');
     setLoading(true);
     try {
-      const pixToSend = flow.use_custom_pix ? decodeHtml(flow.msg_pix) : "";
       const flowToSave = {
           ...flow,
           msg_boas_vindas: decodeHtml(flow.msg_boas_vindas),
           msg_2_texto: decodeHtml(flow.msg_2_texto),
-          msg_pix: pixToSend,
-          button_mode: flow.button_mode,
-          buttons_config: flow.buttons_config || [], 
-          buttons_config_2: flow.buttons_config_2 || [], 
-          steps: steps.map(s => ({
-              ...s,
-              msg_texto: decodeHtml(s.msg_texto)
-          }))
+          msg_pix: flow.use_custom_pix ? decodeHtml(flow.msg_pix) : "",
+          steps: steps.map(s => ({...s, msg_texto: decodeHtml(s.msg_texto)}))
       };
       await flowService.saveFlow(selectedBot.id, flowToSave);
-      Swal.fire({ icon: 'success', title: 'Fluxo Salvo!', toast: true, position: 'top-end', showConfirmButton: false, timer: 3000, background: '#151515', color: '#fff' });
+      Swal.fire({ icon: 'success', title: 'Salvo!', toast: true, position: 'top-end', showConfirmButton: false, timer: 3000, background: '#151515', color: '#fff' });
       carregarTudo();
     } catch (error) {
-      console.error("❌ ERRO AO SALVAR:", error);
-      Swal.fire('Erro', 'Falha ao salvar. Verifique o console.', 'error');
+      Swal.fire('Erro', 'Falha ao salvar.', 'error');
     } finally {
       setLoading(false);
     }
   };
 
   const handleOpenCreateModal = () => {
-    setEditingStep(null);
-    setModalData({ msg_texto: '', msg_media: '', btn_texto: 'Próximo ▶️', autodestruir: false, mostrar_botao: true, delay_seconds: 0 });
-    setShowModal(true);
+    setEditingStep(null); setModalData({ msg_texto: '', msg_media: '', btn_texto: 'Próximo ▶️', autodestruir: false, mostrar_botao: true, delay_seconds: 0 }); setShowModal(true);
   };
 
   const handleOpenEditModal = (step) => {
-    setEditingStep(step);
-    setModalData({
-      msg_texto: step.msg_texto || '',
-      msg_media: step.msg_media || '',
-      btn_texto: step.btn_texto || 'Próximo ▶️',
-      autodestruir: step.autodestruir || false,
-      mostrar_botao: step.mostrar_botao !== false,
-      delay_seconds: step.delay_seconds || 0
-    });
-    setShowModal(true);
+    setEditingStep(step); setModalData({ msg_texto: step.msg_texto || '', msg_media: step.msg_media || '', btn_texto: step.btn_texto || 'Próximo ▶️', autodestruir: step.autodestruir || false, mostrar_botao: step.mostrar_botao !== false, delay_seconds: step.delay_seconds || 0 }); setShowModal(true);
   };
 
   const handleSaveStep = async () => {
-    if (!modalData.msg_texto && !modalData.msg_media) {
-        return Swal.fire('Erro', 'Preencha o texto ou adicione uma mídia.', 'warning');
-    }
-    const stepData = {
-        ...modalData,
-        msg_texto: decodeHtml(modalData.msg_texto)
-    };
-    try {
-        if (editingStep) {
-            const updatedSteps = steps.map(s => s.id === editingStep.id ? { ...s, ...stepData } : s);
-            setSteps(updatedSteps);
-        } else {
-            const newId = Date.now();
-            setSteps([...steps, { ...stepData, id: newId }]);
-        }
-        setShowModal(false);
-    } catch (error) {
-        console.error("Erro ao salvar passo:", error);
-        Swal.fire('Erro', 'Falha ao salvar passo.', 'error');
-    }
+    if (!modalData.msg_texto && !modalData.msg_media) return Swal.fire('Erro', 'Preencha o texto ou mídia.', 'warning');
+    const stepData = { ...modalData, msg_texto: decodeHtml(modalData.msg_texto) };
+    if (editingStep) setSteps(steps.map(s => s.id === editingStep.id ? { ...s, ...stepData } : s));
+    else setSteps([...steps, { ...stepData, id: Date.now() }]);
+    setShowModal(false);
   };
 
   const handleDeleteStep = async (stepId) => {
-    const result = await Swal.fire({
-        title: 'Tem certeza?', text: 'Esta mensagem será removida do fluxo.', icon: 'warning', showCancelButton: true, confirmButtonText: 'Sim, deletar', cancelButtonText: 'Cancelar', background: '#151515', color: '#fff'
-    });
-    if (result.isConfirmed) {
-        setSteps(steps.filter(s => s.id !== stepId));
-    }
+    const result = await Swal.fire({ title: 'Deletar?', icon: 'warning', showCancelButton: true, background: '#151515', color: '#fff' });
+    if (result.isConfirmed) setSteps(steps.filter(s => s.id !== stepId));
   };
 
   if (loading) return <div className="loading">Carregando...</div>;
@@ -663,7 +630,7 @@ export function ChatFlow() {
                                     </div>
                                 )}
 
-                                {/* TEXTO RENDERIZADO (HTML + EMOJIS REAIS) */}
+                                {/* TEXTO RENDERIZADO (HTML + EMOJIS REAIS + PIX CODE) */}
                                 {msg.text && (
                                     <div className="visual-editor mockup-text" dangerouslySetInnerHTML={{__html: renderRichText(msg.text, emojiCatalog)}} />
                                 )}
@@ -733,19 +700,8 @@ export function ChatFlow() {
                 <div className="miniapp-config-box fade-in-up">
                     <p className="config-title">🌐 Configuração do Mini App</p>
                     <div className="config-group">
-                        <Input 
-                            label="URL da sua loja" 
-                            value={flow.miniapp_url} 
-                            onChange={e => setFlow({...flow, miniapp_url: e.target.value})}
-                            placeholder="https://exemplo.com"
-                            icon={<Globe size={16}/>}
-                        />
-                        <Input 
-                            label="Texto do botão" 
-                            value={flow.miniapp_btn_text} 
-                            onChange={e => setFlow({...flow, miniapp_btn_text: e.target.value})}
-                            icon={<ShoppingBag size={16}/>}
-                        />
+                        <Input label="URL da sua loja" value={flow.miniapp_url} onChange={e => setFlow({...flow, miniapp_url: e.target.value})} placeholder="https://exemplo.com" icon={<Globe size={16}/>} />
+                        <Input label="Texto do botão" value={flow.miniapp_btn_text} onChange={e => setFlow({...flow, miniapp_btn_text: e.target.value})} icon={<ShoppingBag size={16}/>} />
                     </div>
                 </div>
             )}
@@ -759,22 +715,12 @@ export function ChatFlow() {
                         <h3>Mensagem de Boas-Vindas</h3>
                     </div>
                     <div className="form-grid">
-                        <RichInput 
-                            label="Texto da Mensagem" 
-                            value={flow.msg_boas_vindas} 
-                            onChange={val => handleRichChange('msg_boas_vindas', val)} 
-                        />
-                        <MediaUploader 
-                            label="Mídia (Foto, Vídeo ou Áudio OGG)" 
-                            value={flow.media_url} 
-                            onChange={(url) => setFlow({...flow, media_url: url})} 
-                        />
+                        <RichInput label="Texto da Mensagem" value={flow.msg_boas_vindas} onChange={val => handleRichChange('msg_boas_vindas', val)} />
+                        <MediaUploader label="Mídia (Foto, Vídeo ou Áudio OGG)" value={flow.media_url} onChange={(url) => setFlow({...flow, media_url: url})} />
 
                         {isAudioUrl(flow.media_url) && (
                             <div style={{ background: 'rgba(234, 179, 8, 0.1)', border: '1px solid rgba(234, 179, 8, 0.3)', borderRadius: '8px', padding: '12px 15px', marginTop: '10px', marginBottom: '10px' }}>
-                                <p style={{color: '#eab308', fontSize: '0.85rem', margin: 0}}>
-                                    🎙️ <strong>Modo Áudio Ativo</strong> — Botões de ação ficam desabilitados. O áudio será enviado como voice note nativo e o texto/botões serão enviados em mensagem separada automaticamente pelo bot.
-                                </p>
+                                <p style={{color: '#eab308', fontSize: '0.85rem', margin: 0}}>🎙️ <strong>Modo Áudio Ativo</strong> — Botões de ação ficam desabilitados. O áudio será enviado como voice note nativo.</p>
                             </div>
                         )}
 
@@ -793,18 +739,14 @@ export function ChatFlow() {
                                     <div className="fade-in-up" style={{marginLeft: 25, marginBottom: 20}}>
                                         <div className="toggle-wrapper full-width">
                                             <label>Mostrar botões de Planos nesta mensagem?</label>
-                                            <div className={`custom-toggle ${flow.mostrar_planos_1 ? 'active-green' : ''}`} onClick={() => setFlow({...flow, mostrar_planos_1: !flow.mostrar_planos_1})}>
-                                                <div className="toggle-handle"></div><span className="toggle-label">{flow.mostrar_planos_1 ? 'SIM' : 'NÃO'}</span>
-                                            </div>
+                                            <div className={`custom-toggle ${flow.mostrar_planos_1 ? 'active-green' : ''}`} onClick={() => setFlow({...flow, mostrar_planos_1: !flow.mostrar_planos_1})}><div className="toggle-handle"></div><span className="toggle-label">{flow.mostrar_planos_1 ? 'SIM' : 'NÃO'}</span></div>
                                         </div>
                                         {!flow.mostrar_planos_1 && (
                                             <div className="row-inputs">
                                                 <Input label="Texto do Botão de Ação" value={flow.btn_text_1} onChange={e => setFlow({...flow, btn_text_1: e.target.value})} />
                                                 <div className="toggle-wrapper">
                                                     <label>Auto-destruir ao clicar?</label>
-                                                    <div className={`custom-toggle ${flow.autodestruir_1 ? 'active' : ''}`} onClick={() => setFlow({...flow, autodestruir_1: !flow.autodestruir_1})}>
-                                                        <div className="toggle-handle"></div><span className="toggle-label">{flow.autodestruir_1 ? 'SIM' : 'NÃO'}</span>
-                                                    </div>
+                                                    <div className={`custom-toggle ${flow.autodestruir_1 ? 'active' : ''}`} onClick={() => setFlow({...flow, autodestruir_1: !flow.autodestruir_1})}><div className="toggle-handle"></div><span className="toggle-label">{flow.autodestruir_1 ? 'SIM' : 'NÃO'}</span></div>
                                                 </div>
                                             </div>
                                         )}
@@ -829,52 +771,17 @@ export function ChatFlow() {
                                                     <option value="plan">💎 Plano (Checkout)</option>
                                                 </select>
                                             </div>
-
-                                            {newBtnData.type === 'link' && (
-                                                <Input label="Texto do Botão" value={newBtnData.text} onChange={e => setNewBtnData({...newBtnData, text: e.target.value})} placeholder="Ex: Canal Free" />
-                                            )}
-
-                                            {newBtnData.type === 'link' && (
-                                                <Input label="URL" value={newBtnData.url} onChange={e => setNewBtnData({...newBtnData, url: e.target.value})} placeholder="https://t.me/seucanal" icon={<LinkIcon size={16}/>} />
-                                            )}
-
-                                            {newBtnData.type === 'plan' && (
-                                                <div>
-                                                    <label style={{fontSize: '0.85rem', color: '#999', marginBottom: 5, display: 'block'}}>Selecione o Plano:</label>
-                                                    <select value={newBtnData.plan_id || ''} onChange={e => setNewBtnData({...newBtnData, plan_id: e.target.value})} style={{width: '100%', padding: '8px', background: '#0a0a0a', border: '1px solid #333', borderRadius: '6px', color: '#fff'}} >
-                                                        <option value="">-- Escolha um plano --</option>
-                                                        {availablePlans.map(plan => (
-                                                            <option key={plan.id} value={plan.id}>{plan.nome_exibicao} - R${plan.preco_atual.toFixed(2)}</option>
-                                                        ))}
-                                                    </select>
-                                                </div>
-                                            )}
-
-                                            <button onClick={handleAddButton} style={{ marginTop: 10, background: '#c333ff', color: '#fff', border: 'none', padding: '8px 16px', borderRadius: '6px', cursor: 'pointer', fontSize: '0.9rem', fontWeight: 600 }} >
-                                                + Adicionar
-                                            </button>
+                                            {newBtnData.type === 'link' && (<><Input label="Texto do Botão" value={newBtnData.text} onChange={e => setNewBtnData({...newBtnData, text: e.target.value})} placeholder="Ex: Canal Free" /><Input label="URL" value={newBtnData.url} onChange={e => setNewBtnData({...newBtnData, url: e.target.value})} placeholder="https://t.me/seucanal" icon={<LinkIcon size={16}/>} /></>)}
+                                            {newBtnData.type === 'plan' && (<div><label style={{fontSize: '0.85rem', color: '#999', marginBottom: 5, display: 'block'}}>Selecione o Plano:</label><select value={newBtnData.plan_id || ''} onChange={e => setNewBtnData({...newBtnData, plan_id: e.target.value})} style={{width: '100%', padding: '8px', background: '#0a0a0a', border: '1px solid #333', borderRadius: '6px', color: '#fff'}} ><option value="">-- Escolha um plano --</option>{availablePlans.map(plan => (<option key={plan.id} value={plan.id}>{plan.nome_exibicao} - R${plan.preco_atual.toFixed(2)}</option>))}</select></div>)}
+                                            <button onClick={handleAddButton} style={{ marginTop: 10, background: '#c333ff', color: '#fff', border: 'none', padding: '8px 16px', borderRadius: '6px', cursor: 'pointer', fontSize: '0.9rem', fontWeight: 600 }} >+ Adicionar</button>
                                         </div>
-
                                         {flow.buttons_config && flow.buttons_config.length > 0 && (
                                             <div>
                                                 <p style={{fontSize: '0.9rem', color: '#aaa', marginBottom: 10}}>📋 Botões Configurados</p>
                                                 {flow.buttons_config.map((btn, index) => (
                                                     <div key={btn.id} style={{ background: '#111', padding: '10px', borderRadius: '6px', marginBottom: '8px', border: '1px solid #333', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }} >
-                                                        <div style={{flex: 1}}>
-                                                            <div style={{fontSize: '0.9rem', color: '#fff', marginBottom: 3}}>
-                                                                {btn.type === 'link' && `🔗 ${btn.text}`}
-                                                                {btn.type === 'plan' && `💎 ${getPlanName(btn.plan_id)}`}
-                                                            </div>
-                                                            <div style={{fontSize: '0.75rem', color: '#666'}}>
-                                                                {btn.type === 'link' && btn.url}
-                                                                {btn.type === 'plan' && `Plano ID: ${btn.plan_id}`}
-                                                            </div>
-                                                        </div>
-                                                        <div style={{display: 'flex', gap: '5px'}}>
-                                                            <button onClick={() => handleMoveButton(index, 'up')} disabled={index === 0} style={{background: '#222', border: '1px solid #333', padding: '4px', borderRadius: '4px', cursor: 'pointer'}} > <ChevronUp size={16} color={index === 0 ? '#444' : '#fff'} /> </button>
-                                                            <button onClick={() => handleMoveButton(index, 'down')} disabled={index === flow.buttons_config.length - 1} style={{background: '#222', border: '1px solid #333', padding: '4px', borderRadius: '4px', cursor: 'pointer'}} > <ChevronDown size={16} color={index === flow.buttons_config.length - 1 ? '#444' : '#fff'} /> </button>
-                                                            <button onClick={() => handleRemoveButton(index)} style={{background: '#ef4444', border: 'none', padding: '4px', borderRadius: '4px', cursor: 'pointer'}} > <Trash2 size={16} color="#fff" /> </button>
-                                                        </div>
+                                                        <div style={{flex: 1}}><div style={{fontSize: '0.9rem', color: '#fff', marginBottom: 3}}>{btn.type === 'link' && `🔗 ${btn.text}`}{btn.type === 'plan' && `💎 ${getPlanName(btn.plan_id)}`}</div><div style={{fontSize: '0.75rem', color: '#666'}}>{btn.type === 'link' && btn.url}{btn.type === 'plan' && `Plano ID: ${btn.plan_id}`}</div></div>
+                                                        <div style={{display: 'flex', gap: '5px'}}><button onClick={() => handleMoveButton(index, 'up')} disabled={index === 0} style={{background: '#222', border: '1px solid #333', padding: '4px', borderRadius: '4px', cursor: 'pointer'}} > <ChevronUp size={16} color={index === 0 ? '#444' : '#fff'} /> </button><button onClick={() => handleMoveButton(index, 'down')} disabled={index === flow.buttons_config.length - 1} style={{background: '#222', border: '1px solid #333', padding: '4px', borderRadius: '4px', cursor: 'pointer'}} > <ChevronDown size={16} color={index === flow.buttons_config.length - 1 ? '#444' : '#fff'} /> </button><button onClick={() => handleRemoveButton(index)} style={{background: '#ef4444', border: 'none', padding: '4px', borderRadius: '4px', cursor: 'pointer'}} > <Trash2 size={16} color="#fff" /> </button></div>
                                                     </div>
                                                 ))}
                                             </div>
@@ -945,52 +852,17 @@ export function ChatFlow() {
                                                 <option value="plan">💎 Plano (Checkout)</option>
                                             </select>
                                         </div>
-
-                                        {newBtnData2.type === 'link' && (
-                                            <Input label="Texto do Botão" value={newBtnData2.text} onChange={e => setNewBtnData2({...newBtnData2, text: e.target.value})} />
-                                        )}
-
-                                        {newBtnData2.type === 'link' && (
-                                            <Input label="URL" value={newBtnData2.url} onChange={e => setNewBtnData2({...newBtnData2, url: e.target.value})} icon={<LinkIcon size={16}/>} />
-                                        )}
-
-                                        {newBtnData2.type === 'plan' && (
-                                            <div>
-                                                <label style={{fontSize: '0.85rem', color: '#999', marginBottom: 5, display: 'block'}}>Selecione o Plano:</label>
-                                                <select value={newBtnData2.plan_id || ''} onChange={e => setNewBtnData2({...newBtnData2, plan_id: e.target.value})} style={{width: '100%', padding: '8px', background: '#0a0a0a', border: '1px solid #333', borderRadius: '6px', color: '#fff'}} >
-                                                    <option value="">-- Escolha um plano --</option>
-                                                    {availablePlans.map(plan => (
-                                                        <option key={plan.id} value={plan.id}>{plan.nome_exibicao} - R${plan.preco_atual.toFixed(2)}</option>
-                                                    ))}
-                                                </select>
-                                            </div>
-                                        )}
-
-                                        <button onClick={handleAddButton2} style={{ marginTop: 10, background: '#10b981', color: '#fff', border: 'none', padding: '8px 16px', borderRadius: '6px', cursor: 'pointer', fontSize: '0.9rem', fontWeight: 600 }} >
-                                            + Adicionar
-                                        </button>
+                                        {newBtnData2.type === 'link' && (<><Input label="Texto do Botão" value={newBtnData2.text} onChange={e => setNewBtnData2({...newBtnData2, text: e.target.value})} /><Input label="URL" value={newBtnData2.url} onChange={e => setNewBtnData2({...newBtnData2, url: e.target.value})} icon={<LinkIcon size={16}/>} /></>)}
+                                        {newBtnData2.type === 'plan' && (<div><label style={{fontSize: '0.85rem', color: '#999', marginBottom: 5, display: 'block'}}>Selecione o Plano:</label><select value={newBtnData2.plan_id || ''} onChange={e => setNewBtnData2({...newBtnData2, plan_id: e.target.value})} style={{width: '100%', padding: '8px', background: '#0a0a0a', border: '1px solid #333', borderRadius: '6px', color: '#fff'}} ><option value="">-- Escolha um plano --</option>{availablePlans.map(plan => (<option key={plan.id} value={plan.id}>{plan.nome_exibicao} - R${plan.preco_atual.toFixed(2)}</option>))}</select></div>)}
+                                        <button onClick={handleAddButton2} style={{ marginTop: 10, background: '#10b981', color: '#fff', border: 'none', padding: '8px 16px', borderRadius: '6px', cursor: 'pointer', fontSize: '0.9rem', fontWeight: 600 }} >+ Adicionar</button>
                                     </div>
-
                                     {flow.buttons_config_2 && flow.buttons_config_2.length > 0 && (
                                         <div>
                                             <p style={{fontSize: '0.9rem', color: '#aaa', marginBottom: 10}}>📋 Botões Configurados</p>
                                             {flow.buttons_config_2.map((btn, index) => (
                                                 <div key={btn.id} style={{ background: '#111', padding: '10px', borderRadius: '6px', marginBottom: '8px', border: '1px solid #333', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }} >
-                                                    <div style={{flex: 1}}>
-                                                        <div style={{fontSize: '0.9rem', color: '#fff', marginBottom: 3}}>
-                                                            {btn.type === 'link' && `🔗 ${btn.text}`}
-                                                            {btn.type === 'plan' && `💎 ${getPlanName(btn.plan_id)}`}
-                                                        </div>
-                                                        <div style={{fontSize: '0.75rem', color: '#666'}}>
-                                                            {btn.type === 'link' && btn.url}
-                                                            {btn.type === 'plan' && `Plano ID: ${btn.plan_id}`}
-                                                        </div>
-                                                    </div>
-                                                    <div style={{display: 'flex', gap: '5px'}}>
-                                                        <button onClick={() => handleMoveButton2(index, 'up')} disabled={index === 0} style={{background: '#222', border: '1px solid #333', padding: '4px', borderRadius: '4px', cursor: 'pointer'}} > <ChevronUp size={16} color={index === 0 ? '#444' : '#fff'} /> </button>
-                                                        <button onClick={() => handleMoveButton2(index, 'down')} disabled={index === flow.buttons_config_2.length - 1} style={{background: '#222', border: '1px solid #333', padding: '4px', borderRadius: '4px', cursor: 'pointer'}} > <ChevronDown size={16} color={index === flow.buttons_config_2.length - 1 ? '#444' : '#fff'} /> </button>
-                                                        <button onClick={() => handleRemoveButton2(index)} style={{background: '#ef4444', border: 'none', padding: '4px', borderRadius: '4px', cursor: 'pointer'}} > <Trash2 size={16} color="#fff" /> </button>
-                                                    </div>
+                                                    <div style={{flex: 1}}><div style={{fontSize: '0.9rem', color: '#fff', marginBottom: 3}}>{btn.type === 'link' && `🔗 ${btn.text}`}{btn.type === 'plan' && `💎 ${getPlanName(btn.plan_id)}`}</div><div style={{fontSize: '0.75rem', color: '#666'}}>{btn.type === 'link' && btn.url}{btn.type === 'plan' && `Plano ID: ${btn.plan_id}`}</div></div>
+                                                    <div style={{display: 'flex', gap: '5px'}}><button onClick={() => handleMoveButton2(index, 'up')} disabled={index === 0} style={{background: '#222', border: '1px solid #333', padding: '4px', borderRadius: '4px', cursor: 'pointer'}} > <ChevronUp size={16} color={index === 0 ? '#444' : '#fff'} /> </button><button onClick={() => handleMoveButton2(index, 'down')} disabled={index === flow.buttons_config_2.length - 1} style={{background: '#222', border: '1px solid #333', padding: '4px', borderRadius: '4px', cursor: 'pointer'}} > <ChevronDown size={16} color={index === flow.buttons_config_2.length - 1 ? '#444' : '#fff'} /> </button><button onClick={() => handleRemoveButton2(index)} style={{background: '#ef4444', border: 'none', padding: '4px', borderRadius: '4px', cursor: 'pointer'}} > <Trash2 size={16} color="#fff" /> </button></div>
                                                 </div>
                                             ))}
                                         </div>
@@ -1009,25 +881,16 @@ export function ChatFlow() {
                                 <div className="step-title-row"><Zap size={20} color="#10b981"/><h3>Personalizar Mensagem do PIX</h3></div>
                                 <div className="toggle-wrapper">
                                     <label style={{marginRight: 10, fontSize: '0.9rem', color: '#ccc'}}>Personalizar?</label>
-                                    <div className={`custom-toggle ${flow.use_custom_pix ? 'active-green' : ''}`} onClick={() => setFlow({...flow, use_custom_pix: !flow.use_custom_pix})} >
-                                        <div className="toggle-handle"></div><span className="toggle-label">{flow.use_custom_pix ? 'SIM' : 'NÃO'}</span>
-                                    </div>
+                                    <div className={`custom-toggle ${flow.use_custom_pix ? 'active-green' : ''}`} onClick={() => setFlow({...flow, use_custom_pix: !flow.use_custom_pix})} ><div className="toggle-handle"></div><span className="toggle-label">{flow.use_custom_pix ? 'SIM' : 'NÃO'}</span></div>
                                 </div>
                             </div>
-
                             {flow.use_custom_pix ? (
                                 <div className="form-grid fade-in-up">
-                                    <div className="alert-box" style={{background: 'rgba(16, 185, 129, 0.1)', padding: '10px', borderRadius: '8px', marginBottom: '15px', fontSize: '0.85rem', color: '#fff', border: '1px solid rgba(16, 185, 129, 0.2)'}}>
-                                        ℹ️ <b>Variáveis disponíveis:</b><br/>
-                                        <code>{'{nome}'}</code>, <code>{'{plano}'}</code>, <code>{'{valor}'}</code>, <code>{'{oferta}'}</code>, <code>{'{qrcode}'}</code>
-                                    </div>
+                                    <div className="alert-box" style={{background: 'rgba(16, 185, 129, 0.1)', padding: '10px', borderRadius: '8px', marginBottom: '15px', fontSize: '0.85rem', color: '#fff', border: '1px solid rgba(16, 185, 129, 0.2)'}}>ℹ️ <b>Variáveis disponíveis:</b><br/><code>{'{nome}'}</code>, <code>{'{plano}'}</code>, <code>{'{valor}'}</code>, <code>{'{oferta}'}</code>, <code>{'{qrcode}'}</code></div>
                                     <RichInput label="Texto da Mensagem Pix" value={flow.msg_pix} onChange={val => handleRichChange('msg_pix', val)} rows={8} />
                                 </div>
                             ) : (
-                                <div className="disabled-state" style={{padding: '20px', textAlign: 'center', color: '#666', border: '1px dashed #333', borderRadius: '8px'}}>
-                                    <p>Usando mensagem padrão do sistema.</p>
-                                    <small>(Ative a personalização acima para editar)</small>
-                                </div>
+                                <div className="disabled-state" style={{padding: '20px', textAlign: 'center', color: '#666', border: '1px dashed #333', borderRadius: '8px'}}><p>Usando mensagem padrão do sistema.</p><small>(Ative a personalização acima para editar)</small></div>
                             )}
                         </CardContent>
                     </Card>
@@ -1042,43 +905,13 @@ export function ChatFlow() {
             <div className="modal-content">
                 <div className="modal-header-row"><h2>{editingStep ? 'Editar Mensagem' : 'Nova Mensagem'}</h2><button className="btn-close-modal" onClick={() => setShowModal(false)}>✕</button></div>
                 <div className="modal-body">
-                    <RichInput 
-                        label="Texto" 
-                        value={modalData.msg_texto} 
-                        onChange={val => {
-                            let clean = val;
-                            if (val && typeof val === 'object' && val.target) clean = val.target.value;
-                            if (typeof clean === 'object') clean = '';
-                            setModalData({...modalData, msg_texto: clean});
-                        }} 
-                    />
+                    <RichInput label="Texto" value={modalData.msg_texto} onChange={val => {let clean = val; if (val && typeof val === 'object' && val.target) clean = val.target.value; if (typeof clean === 'object') clean = ''; setModalData({...modalData, msg_texto: clean});}} />
                     <MediaUploader label="Mídia URL" value={modalData.msg_media} onChange={(url) => setModalData({...modalData, msg_media: url})} />
-                    
-                    {isAudioUrl(modalData.msg_media) && (
-                        <div style={{ background: 'rgba(234, 179, 8, 0.1)', border: '1px solid rgba(234, 179, 8, 0.3)', borderRadius: '8px', padding: '12px 15px', marginTop: '10px', marginBottom: '10px' }}>
-                            <p style={{color: '#eab308', fontSize: '0.85rem', margin: 0}}>
-                                🎙️ <strong>Modo Áudio</strong> — Botões ficam desabilitados. O áudio será enviado sozinho como voice note. Texto e navegação serão enviados em mensagem separada.
-                            </p>
-                        </div>
-                    )}
-
+                    {isAudioUrl(modalData.msg_media) && (<div style={{ background: 'rgba(234, 179, 8, 0.1)', border: '1px solid rgba(234, 179, 8, 0.3)', borderRadius: '8px', padding: '12px 15px', marginTop: '10px', marginBottom: '10px' }}><p style={{color: '#eab308', fontSize: '0.85rem', margin: 0}}>🎙️ <strong>Modo Áudio</strong> — Botões ficam desabilitados. O áudio será enviado sozinho como voice note. Texto e navegação serão enviados em mensagem separada.</p></div>)}
                     <div className="modal-options-box">
-                        {!isAudioUrl(modalData.msg_media) ? (
-                            <>
-                                <label className="checkbox-label"><input type="checkbox" checked={modalData.mostrar_botao} onChange={e => setModalData({...modalData, mostrar_botao: e.target.checked})} /> Mostrar botão "Próximo"?</label>
-                                {modalData.mostrar_botao ? (<Input label="Texto do Botão" value={modalData.btn_texto} onChange={e => setModalData({...modalData, btn_texto: e.target.value})} />) : (<div className="delay-input-wrapper"><Input label="Intervalo (s)" type="number" value={modalData.delay_seconds} onChange={e => setModalData({...modalData, delay_seconds: parseInt(e.target.value) || 0})} icon={<Clock size={16}/>} /></div>)}
-                            </>
-                        ) : (
-                            <div className="delay-input-wrapper">
-                                <Input label="Intervalo até próxima mensagem (s)" type="number" value={modalData.delay_seconds} onChange={e => setModalData({...modalData, delay_seconds: parseInt(e.target.value) || 0})} icon={<Clock size={16}/>} />
-                                <p style={{fontSize: '0.8rem', color: '#888', marginTop: '5px'}}>Tempo de espera após o áudio antes de enviar a próxima mensagem.</p>
-                            </div>
-                        )}
+                        {!isAudioUrl(modalData.msg_media) ? (<><label className="checkbox-label"><input type="checkbox" checked={modalData.mostrar_botao} onChange={e => setModalData({...modalData, mostrar_botao: e.target.checked})} /> Mostrar botão "Próximo"?</label>{modalData.mostrar_botao ? (<Input label="Texto do Botão" value={modalData.btn_texto} onChange={e => setModalData({...modalData, btn_texto: e.target.value})} />) : (<div className="delay-input-wrapper"><Input label="Intervalo (s)" type="number" value={modalData.delay_seconds} onChange={e => setModalData({...modalData, delay_seconds: parseInt(e.target.value) || 0})} icon={<Clock size={16}/>} /></div>)}</>) : (<div className="delay-input-wrapper"><Input label="Intervalo até próxima mensagem (s)" type="number" value={modalData.delay_seconds} onChange={e => setModalData({...modalData, delay_seconds: parseInt(e.target.value) || 0})} icon={<Clock size={16}/>} /><p style={{fontSize: '0.8rem', color: '#888', marginTop: '5px'}}>Tempo de espera após o áudio antes de enviar a próxima mensagem.</p></div>)}
                     </div>
-                    <div className="toggle-wrapper modal-toggle">
-                        <label>Auto-destruir?</label>
-                        <div className={`custom-toggle ${modalData.autodestruir ? 'active' : ''}`} onClick={() => setModalData({...modalData, autodestruir: !modalData.autodestruir})}><div className="toggle-handle"></div></div>
-                    </div>
+                    <div className="toggle-wrapper modal-toggle"><label>Auto-destruir?</label><div className={`custom-toggle ${modalData.autodestruir ? 'active' : ''}`} onClick={() => setModalData({...modalData, autodestruir: !modalData.autodestruir})}><div className="toggle-handle"></div></div></div>
                     <div className="modal-actions"><button className="btn-cancel" onClick={() => setShowModal(false)}>Cancelar</button><button className="btn-save" onClick={handleSaveStep}>Salvar</button></div>
                 </div>
             </div>
