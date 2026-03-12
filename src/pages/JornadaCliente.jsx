@@ -93,11 +93,13 @@ export function JornadaCliente() {
     }
   };
 
+  // 🔥 CORREÇÃO 2 APLICADA AQUI: Adicionada a aba "Leads"
   const abas = [
     { key: 'todos', label: 'Todos', icon: <Users size={15} /> },
     { key: 'pagantes', label: 'Pagantes', icon: <CheckCircle size={15} /> },
     { key: 'pendentes', label: 'Pendentes', icon: <Clock size={15} /> },
     { key: 'expirados', label: 'Expirados', icon: <XCircle size={15} /> },
+    { key: 'leads', label: 'Leads', icon: <Eye size={15} /> },
   ];
 
   const etapaIcon = (etapa) => {
