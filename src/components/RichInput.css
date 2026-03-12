@@ -95,26 +95,3 @@
 .rich-premium-notice strong {
   color: #f59e0b;
 }
-
-/* Simula o placeholder em uma div contentEditable */
-.visual-editor:empty:before {
-  content: attr(data-placeholder);
-  color: #666;
-  pointer-events: none;
-  display: block;
-}
-
-.visual-editor:focus {
-  border-color: var(--primary, #c333ff) !important;
-}
-
-/* Tamanho idêntico ao Telegram Web */
-.rich-emoji-img {
-  width: 22px;
-  height: 22px;
-  vertical-align: middle;
-  display: inline-block;
-  margin: 0 1px;
-  user-select: all; /* Permite apagar a imagem de uma vez só com o backspace */
-  cursor: text;
-}
