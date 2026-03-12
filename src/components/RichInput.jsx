@@ -5,16 +5,13 @@ import { PremiumEmojiPicker } from './PremiumEmojiPicker';
 import { premiumEmojiService } from '../services/api';
 import './RichInput.css';
 
-// ✨ MOTOR BLINDADO DE URL PARA O EDITOR
 const getEmojiAbsoluteUrl = (emoji) => {
   const API_BASE = import.meta.env.VITE_API_URL?.replace(/\/$/, '') || 'http://localhost:8000';
   let rawUrl = emoji.file_url || emoji.url;
-  
   if (!rawUrl && emoji.emoji_id) {
     const pName = emoji.pack_name || 'Outros';
     rawUrl = `/api/emojis/thumb/${encodeURIComponent(pName)}/${emoji.emoji_id}.webp`;
   }
-  
   if (!rawUrl) return null;
   return rawUrl.startsWith('http') ? rawUrl : `${API_BASE}${rawUrl}`;
 };
@@ -47,7 +44,6 @@ export function RichInput({ label, value, onChange, placeholder, rows = 4 }) {
       catalog.forEach(emoji => {
         const regex = new RegExp(emoji.shortcode, 'g');
         const imgUrl = getEmojiAbsoluteUrl(emoji);
-
         if (imgUrl) {
           parsed = parsed.replace(regex, `<img src="${imgUrl}" alt="${emoji.fallback}" data-shortcode="${emoji.shortcode}" class="rich-emoji-img" draggable="false" style="width:22px;height:22px;vertical-align:middle;margin:0 2px;user-select:all;pointer-events:none;color:transparent;" />`);
         }
@@ -56,22 +52,65 @@ export function RichInput({ label, value, onChange, placeholder, rows = 4 }) {
     return parsed;
   }, [catalog]);
 
+  // ✨ O "ASPIRADOR DE PÓ" (A Solução do Erro 400)
   const htmlToText = (htmlStr) => {
     const temp = document.createElement('div');
     temp.innerHTML = htmlStr;
+    
+    // 1. Resgata as imagens e transforma no shortcode limpo
     const imgs = temp.querySelectorAll('.rich-emoji-img');
     imgs.forEach(img => {
       const sc = img.getAttribute('data-shortcode');
       if (sc) img.replaceWith(document.createTextNode(sc));
     });
+
+    // 2. DESTRÓI OS SPANS INVISÍVEIS DO CHROME!
+    // Apenas ignora o <span class="tg-spoiler"> que é oficial do Telegram
+    const spans = temp.querySelectorAll('span');
+    spans.forEach(span => {
+      if (!span.classList.contains('tg-spoiler')) {
+        const fragment = document.createDocumentFragment();
+        while (span.firstChild) {
+          fragment.appendChild(span.firstChild);
+        }
+        span.replaceWith(fragment); // Desmonta a tag, preservando o texto dentro!
+      }
+    });
+
+    // 3. Remove tags <font> criadas ao colar
+    const fonts = temp.querySelectorAll('font');
+    fonts.forEach(font => {
+      const fragment = document.createDocumentFragment();
+      while (font.firstChild) {
+        fragment.appendChild(font.firstChild);
+      }
+      font.replaceWith(fragment);
+    });
+
+    // 4. Limpa todos os estilos inline (ex: style="color: var(...)") de TUDO
+    const allEls = temp.querySelectorAll('*');
+    allEls.forEach(el => {
+      el.removeAttribute('style');
+      if (el.tagName.toLowerCase() !== 'span' || !el.classList.contains('tg-spoiler')) {
+        el.removeAttribute('class');
+      }
+    });
+    
     let txt = temp.innerHTML;
-    txt = txt.replace(/<div><br><\/div>/gi, '\n').replace(/<div>/gi, '\n').replace(/<\/div>/gi, '').replace(/<br\s*\/?>/gi, '\n').replace(/<p>/gi, '\n').replace(/<\/p>/gi, '');
+    txt = txt.replace(/<div><br><\/div>/gi, '\n')
+             .replace(/<div>/gi, '\n')
+             .replace(/<\/div>/gi, '')
+             .replace(/<br\s*\/?>/gi, '\n')
+             .replace(/<p>/gi, '\n')
+             .replace(/<\/p>/gi, '');
+             
     const unescape = document.createElement('textarea');
     unescape.innerHTML = txt;
-    return unescape.value;
+    
+    // Remove também espaços com largura zero que ajudam o cursor mas atrapalham a API
+    return unescape.value.replace(/\u200B/g, ''); 
   };
 
-  // 🔥 TRAVA ANTI-FLICKER: Impede que os emojis fiquem recarregando e piscando na tela
   useEffect(() => {
     if (editorRef.current && document.activeElement !== editorRef.current.getEl()) {
       const currentText = htmlToText(htmlContent);
@@ -97,7 +136,6 @@ export function RichInput({ label, value, onChange, placeholder, rows = 4 }) {
     }
   };
 
-  // 🔥 FIX DA FORMATAÇÃO: Abraça blocos inteiros contendo imagens sem quebrar o HTML!
   const applyFormat = (tagStart, tagEnd) => {
     if (!editorRef.current) return;
     const el = editorRef.current.getEl();
@@ -112,21 +150,16 @@ export function RichInput({ label, value, onChange, placeholder, rows = 4 }) {
     if (!sel.rangeCount) return;
     const range = sel.getRangeAt(0);
     
-    if (range.collapsed) return; // Se não selecionou nenhum texto, ignora
+    if (range.collapsed) return;
 
-    // Extrai delicadamente tudo o que foi selecionado (texto + emojis)
     const frag = range.extractContents();
-
-    // Devolve para o HTML envelopado nas tags selecionadas
     range.insertNode(document.createTextNode(tagEnd));
     range.insertNode(frag);
     range.insertNode(document.createTextNode(tagStart));
 
-    // Move o cursor para o final para você poder continuar digitando
     range.collapse(false);
     sel.removeAllRanges();
     sel.addRange(range);
-
     saveSelection();
 
     const newHtml = el.innerHTML;
@@ -156,7 +189,6 @@ export function RichInput({ label, value, onChange, placeholder, rows = 4 }) {
     }
     
     saveSelection();
-
     const newHtml = el.innerHTML;
     setHtmlContent(newHtml);
     onChange({ target: { value: htmlToText(newHtml) } });
@@ -169,7 +201,6 @@ export function RichInput({ label, value, onChange, placeholder, rows = 4 }) {
 
   const preventFocusSteal = (e) => e.preventDefault();
 
-  // Limpa textos colados de outros sites para não trazer lixo HTML invisível
   const handlePaste = (e) => {
     e.preventDefault();
     const text = e.clipboardData.getData('text/plain');
@@ -192,7 +223,6 @@ export function RichInput({ label, value, onChange, placeholder, rows = 4 }) {
         <div className="rich-separator"></div>
         <button type="button" className="rich-btn" onMouseDown={preventFocusSteal} onClick={addLink} title="Link"><LinkIcon size={16} /></button>
         <div className="rich-separator"></div>
-        
         <PremiumEmojiPicker onSelect={handleEmojiSelect} compact={true} />
       </div>
 
