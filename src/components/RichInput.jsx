@@ -8,10 +8,12 @@ import './RichInput.css';
 const getEmojiAbsoluteUrl = (emoji) => {
   const API_BASE = import.meta.env.VITE_API_URL?.replace(/\/$/, '') || 'http://localhost:8000';
   let rawUrl = emoji.file_url || emoji.url;
+  
   if (!rawUrl && emoji.emoji_id) {
     const pName = emoji.pack_name || 'Outros';
     rawUrl = `/api/emojis/thumb/${encodeURIComponent(pName)}/${emoji.emoji_id}.webp`;
   }
+  
   if (!rawUrl) return null;
   return rawUrl.startsWith('http') ? rawUrl : `${API_BASE}${rawUrl}`;
 };
@@ -19,6 +21,7 @@ const getEmojiAbsoluteUrl = (emoji) => {
 export function RichInput({ label, value, onChange, placeholder, rows = 4 }) {
   const editorRef = useRef(null);
   const savedRangeRef = useRef(null);
+  const isFocusedRef = useRef(false); // ⚓ Controle real de foco
   const [catalog, setCatalog] = useState([]);
   const [htmlContent, setHtmlContent] = useState("");
 
@@ -44,54 +47,52 @@ export function RichInput({ label, value, onChange, placeholder, rows = 4 }) {
       catalog.forEach(emoji => {
         const regex = new RegExp(emoji.shortcode, 'g');
         const imgUrl = getEmojiAbsoluteUrl(emoji);
+
         if (imgUrl) {
-          parsed = parsed.replace(regex, `<img src="${imgUrl}" alt="${emoji.fallback}" data-shortcode="${emoji.shortcode}" class="rich-emoji-img" draggable="false" style="width:22px;height:22px;vertical-align:middle;margin:0 2px;user-select:all;pointer-events:none;color:transparent;" />`);
+          // fetchpriority="high" ajuda a imagem a carregar super rápido
+          parsed = parsed.replace(regex, `<img src="${imgUrl}" alt="${emoji.fallback}" data-shortcode="${emoji.shortcode}" class="rich-emoji-img" draggable="false" fetchpriority="high" style="width:22px;height:22px;vertical-align:middle;margin:0 2px;user-select:all;pointer-events:none;color:transparent;" />`);
         }
       });
     }
     return parsed;
   }, [catalog]);
 
-  // ✨ O "ASPIRADOR DE PÓ" (A Solução do Erro 400)
+  // ✨ O ASPIRADOR DE PÓ DE BUGS (Adeus Erro 400 do Telegram)
   const htmlToText = (htmlStr) => {
     const temp = document.createElement('div');
     temp.innerHTML = htmlStr;
     
-    // 1. Resgata as imagens e transforma no shortcode limpo
-    const imgs = temp.querySelectorAll('.rich-emoji-img');
+    // 1. Salva as imagens e transforma em texto
+    const imgs = Array.from(temp.querySelectorAll('.rich-emoji-img'));
     imgs.forEach(img => {
       const sc = img.getAttribute('data-shortcode');
       if (sc) img.replaceWith(document.createTextNode(sc));
+      else img.remove();
     });
 
-    // 2. DESTRÓI OS SPANS INVISÍVEIS DO CHROME!
-    // Apenas ignora o <span class="tg-spoiler"> que é oficial do Telegram
-    const spans = temp.querySelectorAll('span');
+    // 2. Destrói TODOS os Spans invisíveis do Chrome, mantendo só o spoiler
+    const spans = Array.from(temp.querySelectorAll('span'));
     spans.forEach(span => {
-      if (!span.classList.contains('tg-spoiler')) {
-        const fragment = document.createDocumentFragment();
-        while (span.firstChild) {
-          fragment.appendChild(span.firstChild);
-        }
-        span.replaceWith(fragment); // Desmonta a tag, preservando o texto dentro!
+      if (span.className !== 'tg-spoiler') {
+        const parent = span.parentNode;
+        while (span.firstChild) parent.insertBefore(span.firstChild, span);
+        parent.removeChild(span);
       }
     });
 
-    // 3. Remove tags <font> criadas ao colar
-    const fonts = temp.querySelectorAll('font');
+    // 3. Destrói tags de fonte
+    const fonts = Array.from(temp.querySelectorAll('font'));
     fonts.forEach(font => {
-      const fragment = document.createDocumentFragment();
-      while (font.firstChild) {
-        fragment.appendChild(font.firstChild);
-      }
-      font.replaceWith(fragment);
+      const parent = font.parentNode;
+      while (font.firstChild) parent.insertBefore(font.firstChild, font);
+      parent.removeChild(font);
     });
 
-    // 4. Limpa todos os estilos inline (ex: style="color: var(...)") de TUDO
-    const allEls = temp.querySelectorAll('*');
+    // 4. Limpa atributos soltos
+    const allEls = Array.from(temp.querySelectorAll('*'));
     allEls.forEach(el => {
       el.removeAttribute('style');
-      if (el.tagName.toLowerCase() !== 'span' || !el.classList.contains('tg-spoiler')) {
+      if (el.tagName.toLowerCase() !== 'span' || el.className !== 'tg-spoiler') {
         el.removeAttribute('class');
       }
     });
@@ -106,19 +107,15 @@ export function RichInput({ label, value, onChange, placeholder, rows = 4 }) {
              
     const unescape = document.createElement('textarea');
     unescape.innerHTML = txt;
-    
-    // Remove também espaços com largura zero que ajudam o cursor mas atrapalham a API
-    return unescape.value.replace(/\u200B/g, ''); 
+    return unescape.value.replace(/\u200B/g, ''); // Tira espaços invisíveis
   };
 
+  // 🔥 FIX DO CÓDIGO APARECENDO: Só converte quando você NÃO estiver digitando
   useEffect(() => {
-    if (editorRef.current && document.activeElement !== editorRef.current.getEl()) {
-      const currentText = htmlToText(htmlContent);
-      if (currentText !== (value || "")) {
-        setHtmlContent(textToHtml(value || ""));
-      }
+    if (!isFocusedRef.current) {
+      setHtmlContent(textToHtml(value || ""));
     }
-  }, [value, catalog, textToHtml, htmlContent]);
+  }, [value, catalog, textToHtml]);
 
   const handleChange = (evt) => {
     const newHtml = evt.target.value;
@@ -136,6 +133,7 @@ export function RichInput({ label, value, onChange, placeholder, rows = 4 }) {
     }
   };
 
+  // 🔥 FIX DA FORMATAÇÃO: Envelopa perfeitamente sem esmagar o texto e os emojis
   const applyFormat = (tagStart, tagEnd) => {
     if (!editorRef.current) return;
     const el = editorRef.current.getEl();
@@ -147,21 +145,29 @@ export function RichInput({ label, value, onChange, placeholder, rows = 4 }) {
       sel.addRange(savedRangeRef.current);
     }
 
-    if (!sel.rangeCount) return;
+    if (!sel.rangeCount || sel.isCollapsed) return;
     const range = sel.getRangeAt(0);
     
-    if (range.collapsed) return;
+    // Insere a tag de fechamento no final da seleção
+    const endNode = document.createTextNode(tagEnd);
+    const endRange = range.cloneRange();
+    endRange.collapse(false);
+    endRange.insertNode(endNode);
 
-    const frag = range.extractContents();
-    range.insertNode(document.createTextNode(tagEnd));
-    range.insertNode(frag);
-    range.insertNode(document.createTextNode(tagStart));
+    // Insere a tag de abertura no começo da seleção
+    const startNode = document.createTextNode(tagStart);
+    const startRange = range.cloneRange();
+    startRange.collapse(true);
+    startRange.insertNode(startNode);
 
-    range.collapse(false);
+    // Mantém a seleção visual para o usuário
     sel.removeAllRanges();
-    sel.addRange(range);
-    saveSelection();
+    const newRange = document.createRange();
+    newRange.setStartAfter(startNode);
+    newRange.setEndBefore(endNode);
+    sel.addRange(newRange);
 
+    saveSelection();
     const newHtml = el.innerHTML;
     setHtmlContent(newHtml);
     onChange({ target: { value: htmlToText(newHtml) } });
@@ -182,7 +188,7 @@ export function RichInput({ label, value, onChange, placeholder, rows = 4 }) {
     
     if (emoji) {
       const imgUrl = getEmojiAbsoluteUrl(emoji);
-      const imgHtml = `<img src="${imgUrl}" alt="${emoji.fallback}" data-shortcode="${emoji.shortcode}" class="rich-emoji-img" draggable="false" style="width:22px;height:22px;vertical-align:middle;margin:0 2px;user-select:all;pointer-events:none;color:transparent;" />\u200B`;
+      const imgHtml = `<img src="${imgUrl}" alt="${emoji.fallback}" data-shortcode="${emoji.shortcode}" class="rich-emoji-img" draggable="false" fetchpriority="high" style="width:22px;height:22px;vertical-align:middle;margin:0 2px;user-select:all;pointer-events:none;color:transparent;" />\u200B`;
       document.execCommand('insertHTML', false, imgHtml);
     } else {
       document.execCommand('insertText', false, shortcode);
@@ -223,6 +229,7 @@ export function RichInput({ label, value, onChange, placeholder, rows = 4 }) {
         <div className="rich-separator"></div>
         <button type="button" className="rich-btn" onMouseDown={preventFocusSteal} onClick={addLink} title="Link"><LinkIcon size={16} /></button>
         <div className="rich-separator"></div>
+        
         <PremiumEmojiPicker onSelect={handleEmojiSelect} compact={true} />
       </div>
 
@@ -232,9 +239,10 @@ export function RichInput({ label, value, onChange, placeholder, rows = 4 }) {
           html={htmlContent}
           disabled={false}
           onChange={handleChange}
+          onFocus={() => { isFocusedRef.current = true; }} 
+          onBlur={() => { isFocusedRef.current = false; saveSelection(); }}
           onMouseUp={saveSelection} 
           onKeyUp={saveSelection}   
-          onBlur={saveSelection}    
           onPaste={handlePaste}
           tagName="div"
           className="rich-textarea visual-editor"
