@@ -102,6 +102,9 @@ export function ChatFlow() {
 
   const [steps, setSteps] = useState([]);
   const [availablePlans, setAvailablePlans] = useState([]);
+  
+  // 🔥 ESTADO: CONFIGURAÇÃO DO ORDER BUMP (SIMULAÇÃO)
+  const [orderBumpConfig, setOrderBumpConfig] = useState(null);
 
   const [newBtnData, setNewBtnData] = useState({ 
     type: 'link', text: '', url: '', plan_id: null
@@ -203,6 +206,21 @@ export function ChatFlow() {
             setAvailablePlans([]);
         }
         
+        // 🔥 BUSCA O ORDER BUMP DO BOT PARA SIMULAR PERFEITAMENTE
+        try {
+            const API_BASE = import.meta.env.VITE_API_URL?.replace(/\/$/, '') || 'http://localhost:8000';
+            const token = localStorage.getItem('token');
+            const obRes = await fetch(`${API_BASE}/api/admin/order-bump/${selectedBot.id}`, {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            if (obRes.ok) {
+                const obData = await obRes.json();
+                setOrderBumpConfig(obData);
+            }
+        } catch(e) {
+            console.log("Nenhum Order Bump encontrado para simulação.");
+        }
+        
     } catch (error) {
         console.error("Erro ao carregar fluxo:", error);
     } finally {
@@ -210,11 +228,10 @@ export function ChatFlow() {
     }
   };
 
-  // 🔥 LÓGICA DO SIMULADOR IPHONE 🔥
+  // 🔥 LÓGICA DO SIMULADOR IPHONE REALISTA 🔥
   useEffect(() => {
-      // Sempre que os dados mudarem, reinicia o simulador para refletir a edição
       if (!loading) handleRestartSim();
-  }, [flow, steps, loading]);
+  }, [flow, steps, loading, availablePlans]); // Regera se os planos carregarem
 
   const scrollToBottom = () => {
       if (messagesEndRef.current) {
@@ -229,11 +246,11 @@ export function ChatFlow() {
   // Motor de Auto-Avanço (Áudios ou Sem Botão)
   useEffect(() => {
       const lastMsg = simMessages[simMessages.length - 1];
-      if (!lastMsg || lastMsg.id === 'final') return;
+      if (!lastMsg || lastMsg.id.startsWith('final') || lastMsg.id.startsWith('pix')) return;
 
       if (lastMsg.autoAdvance) {
           const timerId = setTimeout(() => {
-              handleSimNext(lastMsg.id, lastMsg.nextIndex);
+              handleSimNext(lastMsg.id, lastMsg.nextIndex, null);
           }, (lastMsg.delay || 1.5) * 1000);
           return () => clearTimeout(timerId);
       }
@@ -249,12 +266,21 @@ export function ChatFlow() {
       let buttons = [];
       if (!isAudio) {
           if (flow.button_mode === 'custom' && flow.buttons_config?.length > 0) {
-              buttons = flow.buttons_config;
+              buttons = flow.buttons_config.map(b => {
+                  if (b.type === 'plan') {
+                      const p = availablePlans.find(ap => String(ap.id) === String(b.plan_id));
+                      return { ...b, plan: p, text: p ? `💎 ${p.nome_exibicao} - R$ ${p.preco_atual.toFixed(2)}` : '💎 Plano Inválido' };
+                  }
+                  return { ...b, text: `🔗 ${b.text}` };
+              });
           } else {
               if (!flow.mostrar_planos_1) {
                   buttons = [{ type: 'next', text: flow.btn_text_1 || 'Próximo' }];
               } else {
-                  buttons = [{ type: 'plan', plan_id: 'fake', fake_text: '📋 Ver Planos' }];
+                  // Mapeia os planos reais para botões!
+                  buttons = availablePlans.map(p => ({
+                      type: 'plan', plan: p, text: `💎 ${p.nome_exibicao} - R$ ${p.preco_atual.toFixed(2)}`
+                  }));
               }
           }
       }
@@ -265,7 +291,7 @@ export function ChatFlow() {
           autodestruir: flow.autodestruir_1,
           buttons: buttons,
           autoAdvance: isAudio,
-          delay: 2, // Simulando tempo para ouvir áudio
+          delay: 2, 
           nextIndex: 0
       };
   };
@@ -290,34 +316,80 @@ export function ChatFlow() {
   };
 
   const buildFinalMessage = () => {
+      let buttons = [];
+      if (flow.mostrar_planos_2) {
+          buttons = availablePlans.map(p => ({
+              type: 'plan', plan: p, text: `💎 ${p.nome_exibicao} - R$ ${p.preco_atual.toFixed(2)}`
+          }));
+      } else {
+          buttons = (flow.buttons_config_2 || []).map(b => {
+              if (b.type === 'plan') {
+                  const p = availablePlans.find(ap => String(ap.id) === String(b.plan_id));
+                  return { ...b, plan: p, text: p ? `💎 ${p.nome_exibicao} - R$ ${p.preco_atual.toFixed(2)}` : '💎 Plano Inválido' };
+              }
+              return { ...b, text: `🔗 ${b.text}` };
+          });
+      }
       return {
           id: 'final',
           text: flow.msg_2_texto,
           media_url: flow.msg_2_media,
           autodestruir: false,
-          buttons: flow.mostrar_planos_2 ? [{ type: 'plan', fake_text: '📋 Escolher Plano' }] : (flow.buttons_config_2 || []),
+          buttons: buttons,
           autoAdvance: false
       };
   };
 
-  const handleSimNext = (currentMsgId, nextIndex) => {
+  // 🔥 PROCESSA CLIQUES NO CELULAR (PIX E ORDER BUMP INCLUSOS)
+  const handleSimNext = (currentMsgId, nextIndex, actionBtn = null) => {
       setSimMessages(prev => {
           let updated = [...prev];
           const idx = updated.findIndex(m => m.id === currentMsgId);
           if (idx !== -1) {
-              // Se autodestruir, remove da tela. Se não, esconde os botões.
-              if (updated[idx].autodestruir) {
-                  updated.splice(idx, 1);
-              } else {
-                  updated[idx].buttonsHidden = true;
-              }
+              if (updated[idx].autodestruir) updated.splice(idx, 1);
+              else updated[idx].buttonsHidden = true;
           }
           return updated;
       });
 
       setSimTyping(true);
+
       setTimeout(() => {
           setSimTyping(false);
+
+          if (actionBtn && actionBtn.type === 'link') {
+              Swal.fire({title: 'Link Clicado!', text: `O bot abriria: ${actionBtn.url || actionBtn.text}`, icon: 'info', background: '#111', color: '#fff'});
+              return;
+          }
+
+          // 🛒 INÍCIO DO CHECKOUT REALISTA
+          if (actionBtn && actionBtn.type === 'plan') {
+              // Se tem Order Bump Ativo, joga a isca primeiro!
+              if (orderBumpConfig && orderBumpConfig.is_active && orderBumpConfig.preco > 0) {
+                  const obMsg = {
+                      id: 'ob_message_' + Date.now(),
+                      text: orderBumpConfig.msg_oferta || `🎁 *OFERTA ESPECIAL!*\n\n${orderBumpConfig.nome_oferta}\nAdicione por apenas R$ ${orderBumpConfig.preco.toFixed(2).replace('.',',')}`,
+                      media_url: orderBumpConfig.media_url,
+                      autodestruir: false,
+                      buttons: [
+                          { type: 'accept_ob', plan: actionBtn.plan, text: `✅ Sim, eu quero (+ R$ ${orderBumpConfig.preco.toFixed(2).replace('.',',')})` },
+                          { type: 'decline_ob', plan: actionBtn.plan, text: `❌ Não, obrigado` }
+                      ],
+                      autoAdvance: false
+                  };
+                  setSimMessages(prev => [...prev, obMsg]);
+              } else {
+                  // Vai direto pro PIX se não tiver OB
+                  showPixMessage(actionBtn.plan, false);
+              }
+              return;
+          }
+
+          // Respostas do Order Bump
+          if (actionBtn && actionBtn.type === 'accept_ob') return showPixMessage(actionBtn.plan, true);
+          if (actionBtn && actionBtn.type === 'decline_ob') return showPixMessage(actionBtn.plan, false);
+
+          // Fluxo Normal de Navegação (Passos Extras ou Final)
           let nextMsg;
           if (nextIndex >= steps.length) {
               nextMsg = buildFinalMessage();
@@ -325,7 +397,42 @@ export function ChatFlow() {
               nextMsg = buildStepMessage(nextIndex);
           }
           setSimMessages(prev => [...prev, nextMsg]);
-      }, 1000); // 1 segundo de "digitando..." para dar realismo
+
+      }, 1000);
+  };
+
+  // 💸 MOTOR DE GERAÇÃO DO PIX
+  const showPixMessage = (plan, acceptedOB) => {
+      if (!plan) return;
+      let total = plan.preco_atual;
+      let ofertaText = "";
+
+      if (acceptedOB && orderBumpConfig) {
+          total += orderBumpConfig.preco;
+          ofertaText = `\n🎁 Oferta Adicional: <b>${orderBumpConfig.nome_oferta}</b> (+ R$ ${orderBumpConfig.preco.toFixed(2).replace('.',',')})`;
+      }
+
+      let pixTemplate = flow.use_custom_pix ? flow.msg_pix : DEFAULT_PIX_TEMPLATE;
+      if (!pixTemplate) pixTemplate = DEFAULT_PIX_TEMPLATE;
+      
+      // Fake PIX Payload realístico para copiar
+      const fakePix = `0002012658br.gov.bcb.pix0114+55119999999995204000053039865405${total.toFixed(2)}5802BR5913ZenyxPagamentos6009SAOPAULO62070503***63041234`;
+
+      let finalText = pixTemplate
+          .replace(/\{plano\}/gi, plan.nome_exibicao)
+          .replace(/\{valor\}/gi, `R$ ${total.toFixed(2).replace('.',',')}`)
+          .replace(/\{oferta\}/gi, ofertaText)
+          .replace(/\{nome\}/gi, "Usuário Teste")
+          .replace(/\{qrcode\}/gi, `<pre>${fakePix}</pre>`); 
+
+      setSimMessages(prev => [...prev, {
+          id: 'pix_message_' + Date.now(),
+          text: finalText,
+          media_url: '',
+          autodestruir: false,
+          buttons: [{ type: 'link', text: '✅ Verificar Pagamento', url: '#' }],
+          autoAdvance: false
+      }]);
   };
   // 🔥 FIM DA LÓGICA DO SIMULADOR 🔥
 
@@ -569,11 +676,9 @@ export function ChatFlow() {
                                                 key={i} 
                                                 className="btn-bubble" 
                                                 style={{ cursor: 'pointer', textAlign: 'center', opacity: msg.buttonsHidden ? 0.5 : 1 }}
-                                                onClick={() => !msg.buttonsHidden && handleSimNext(msg.id, msg.nextIndex)}
+                                                onClick={() => !msg.buttonsHidden && handleSimNext(msg.id, msg.nextIndex, btn)}
                                             >
-                                                {btn.type === 'plan' && (btn.fake_text ? btn.fake_text : `💎 ${getPlanName(btn.plan_id)}`)}
-                                                {btn.type === 'link' && `🔗 ${btn.text}`}
-                                                {btn.type === 'next' && btn.text}
+                                                {btn.text}
                                             </div>
                                         ))}
                                     </div>
