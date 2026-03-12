@@ -65,13 +65,27 @@ export function RichInput({ label, value, onChange, placeholder, rows = 4 }) {
   const htmlToText = (htmlStr) => {
     const temp = document.createElement('div');
     temp.innerHTML = htmlStr;
-    const imgs = temp.querySelectorAll('.rich-emoji-img');
+    
+    // ✨ FIX ANTI-VAZAMENTO DE CÓDIGO HTML:
+    // Caça todas as imagens. Converte as válidas e destrói sem dó as corrompidas.
+    const imgs = temp.querySelectorAll('img');
     imgs.forEach(img => {
       const sc = img.getAttribute('data-shortcode');
-      if (sc) img.replaceWith(document.createTextNode(sc));
+      if (sc) {
+        img.replaceWith(document.createTextNode(sc));
+      } else {
+        img.remove(); 
+      }
     });
+    
     let txt = temp.innerHTML;
-    txt = txt.replace(/<div><br><\/div>/gi, '\n').replace(/<div>/gi, '\n').replace(/<\/div>/gi, '').replace(/<br\s*\/?>/gi, '\n').replace(/<p>/gi, '\n').replace(/<\/p>/gi, '');
+    txt = txt.replace(/<div><br><\/div>/gi, '\n')
+             .replace(/<div>/gi, '\n')
+             .replace(/<\/div>/gi, '')
+             .replace(/<br\s*\/?>/gi, '\n')
+             .replace(/<p>/gi, '\n')
+             .replace(/<\/p>/gi, '');
+             
     const unescape = document.createElement('textarea');
     unescape.innerHTML = txt;
     return unescape.value;
@@ -83,7 +97,6 @@ export function RichInput({ label, value, onChange, placeholder, rows = 4 }) {
     onChange({ target: { value: htmlToText(newHtml) } });
   };
 
-  // ⚓ Salva a coordenada exata do cursor sempre que digitar ou clicar
   const saveSelection = () => {
     const sel = window.getSelection();
     if (sel.rangeCount > 0 && editorRef.current) {
@@ -94,23 +107,41 @@ export function RichInput({ label, value, onChange, placeholder, rows = 4 }) {
     }
   };
 
+  // ✨ FIX DA FORMATAÇÃO: Insere tags SEM destruir os emojis da seleção!
   const applyFormat = (tagStart, tagEnd) => {
     if (!editorRef.current) return;
     const el = editorRef.current.getEl();
     el.focus();
-
-    // 🎯 Restaura o cursor antes de formatar
+    
     const sel = window.getSelection();
-    if (savedRangeRef.current) {
-      sel.removeAllRanges();
-      sel.addRange(savedRangeRef.current);
-    }
-
     if (!sel.rangeCount) return;
-    const selectedText = sel.toString();
-    const newText = `${tagStart}${selectedText}${tagEnd}`;
-    document.execCommand('insertText', false, newText);
-    saveSelection(); // Atualiza a âncora após modificar
+    const range = sel.getRangeAt(0);
+    
+    // Cria nós de texto literal (ex: "<b>" e "</b>")
+    const startNode = document.createTextNode(tagStart);
+    const endNode = document.createTextNode(tagEnd);
+    
+    // Abraça a seleção com as tags
+    const endRange = range.cloneRange();
+    endRange.collapse(false);
+    endRange.insertNode(endNode);
+    
+    const startRange = range.cloneRange();
+    startRange.collapse(true);
+    startRange.insertNode(startNode);
+    
+    // Refaz a marcação visual para você continuar editando
+    sel.removeAllRanges();
+    const newRange = document.createRange();
+    newRange.setStartAfter(startNode);
+    newRange.setEndBefore(endNode);
+    sel.addRange(newRange);
+    
+    saveSelection();
+    
+    const newHtml = el.innerHTML;
+    setHtmlContent(newHtml);
+    onChange({ target: { value: htmlToText(newHtml) } });
   };
 
   const handleEmojiSelect = (shortcode, emojiObj) => {
@@ -118,7 +149,6 @@ export function RichInput({ label, value, onChange, placeholder, rows = 4 }) {
     const el = editorRef.current.getEl();
     el.focus();
     
-    // 🎯 O SEGREDO ESTÁ AQUI: Restaura o cursor pro lugar exato antes de soltar a imagem!
     const sel = window.getSelection();
     if (savedRangeRef.current) {
       sel.removeAllRanges();
@@ -135,7 +165,7 @@ export function RichInput({ label, value, onChange, placeholder, rows = 4 }) {
       document.execCommand('insertText', false, shortcode);
     }
     
-    saveSelection(); // Atualiza a âncora pro lado direito do novo emoji inserido
+    saveSelection();
 
     const newHtml = el.innerHTML;
     setHtmlContent(newHtml);
@@ -147,9 +177,13 @@ export function RichInput({ label, value, onChange, placeholder, rows = 4 }) {
     if (url) applyFormat(`<a href="${url}">`, '</a>');
   };
 
-  // Impede que os botões roubem o foco ao clicar (onMouseDown prevent default)
-  const preventFocusSteal = (e) => {
+  const preventFocusSteal = (e) => e.preventDefault();
+
+  // ✨ FIX DO COPIAR E COLAR: Remove estilos inúteis e links invisíveis de outros sites
+  const handlePaste = (e) => {
     e.preventDefault();
+    const text = e.clipboardData.getData('text/plain');
+    document.execCommand('insertText', false, text);
   };
 
   return (
@@ -169,7 +203,6 @@ export function RichInput({ label, value, onChange, placeholder, rows = 4 }) {
         <button type="button" className="rich-btn" onMouseDown={preventFocusSteal} onClick={addLink} title="Link"><LinkIcon size={16} /></button>
         <div className="rich-separator"></div>
         
-        {/* Passa a função atualizada para o Picker */}
         <PremiumEmojiPicker onSelect={handleEmojiSelect} compact={true} />
       </div>
 
@@ -179,9 +212,10 @@ export function RichInput({ label, value, onChange, placeholder, rows = 4 }) {
           html={htmlContent}
           disabled={false}
           onChange={handleChange}
-          onMouseUp={saveSelection} // Memoriza ao clicar com mouse
-          onKeyUp={saveSelection}   // Memoriza ao digitar no teclado
-          onBlur={saveSelection}    // Memoriza ao sair do campo
+          onMouseUp={saveSelection} 
+          onKeyUp={saveSelection}   
+          onBlur={saveSelection}
+          onPaste={handlePaste} // Proteção ativa!
           tagName="div"
           className="rich-textarea visual-editor"
           style={{ minHeight: `${rows * 24}px`, maxHeight: '300px', overflowY: 'auto', padding: '12px', color: 'var(--foreground, #fff)', fontSize: '0.95rem', whiteSpace: 'pre-wrap', wordBreak: 'break-word', fontFamily: 'inherit', outline: 'none' }}
