@@ -261,14 +261,22 @@ export function ChatFlow() {
       });
   };
 
-  // 🔥 LÓGICA DO SIMULADOR IPHONE REALISTA 🔥
+// 🔥 LÓGICA DO SIMULADOR IPHONE REALISTA 🔥
   useEffect(() => {
       if (!loading) handleRestartSim();
   }, [flow, steps, loading, availablePlans, orderBumpConfig]); 
 
   const scrollToBottom = () => {
       if (messagesEndRef.current) {
-          messagesEndRef.current.scrollIntoView({ behavior: "smooth" });
+          // 🔥 CORREÇÃO: Em vez de scrollIntoView (que puxa a página inteira no celular),
+          // nós rolamos apenas a barra interna da 'messages-area' do iPhone.
+          const container = messagesEndRef.current.parentElement;
+          if (container) {
+              container.scrollTo({
+                  top: container.scrollHeight,
+                  behavior: 'smooth'
+              });
+          }
       }
   };
 
@@ -363,7 +371,7 @@ export function ChatFlow() {
           autoAdvance: false
       };
   };
-
+  
   // Motor de Auto-Avanço (Áudios ou Sem Botão)
   useEffect(() => {
       const lastMsg = simMessages[simMessages.length - 1];
