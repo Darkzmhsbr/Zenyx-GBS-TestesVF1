@@ -1650,4 +1650,5 @@ export const recursosPrimeService = {
   }
 };
 
+
 export default api;
