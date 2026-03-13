@@ -1,6 +1,6 @@
 import React, { useRef, useState, useEffect, useCallback } from 'react';
 import ContentEditable from 'react-contenteditable';
-import { Bold, Italic, Underline, Strikethrough, Code, Quote, Link as LinkIcon, EyeOff } from 'lucide-react';
+import { Bold, Italic, Underline, Strikethrough, Code, Quote, Link as LinkIcon, EyeOff, Eraser } from 'lucide-react';
 import { PremiumEmojiPicker } from './PremiumEmojiPicker';
 import { premiumEmojiService } from '../services/api';
 import './RichInput.css';
@@ -182,7 +182,7 @@ export function RichInput({ label, value, onChange, placeholder, rows = 4 }) {
     }
 
     if (command) {
-      // Formatações nativas (Negrito, Itálico, Sublinhado, Tachado)
+      // Formatações nativas (Negrito, Itálico, Sublinhado, Tachado, Remover Formatação)
       document.execCommand(command, false, null);
     } else if (tagStart && tagEnd) {
       // Formatações customizadas (Spoiler, Código, Quote)
@@ -252,6 +252,10 @@ export function RichInput({ label, value, onChange, placeholder, rows = 4 }) {
         <button type="button" className="rich-btn" onMouseDown={preventFocusSteal} onClick={() => handleFormat(null, '<span class="tg-spoiler">', '</span>')} title="Spoiler (Oculto)"><EyeOff size={16} /></button>
         <button type="button" className="rich-btn" onMouseDown={preventFocusSteal} onClick={() => handleFormat(null, '<pre>', '</pre>')} title="Bloco de Código (Copiar)"><Code size={16} /></button>
         <button type="button" className="rich-btn" onMouseDown={preventFocusSteal} onClick={() => handleFormat(null, '<blockquote>', '</blockquote>')} title="Citação"><Quote size={16} /></button>
+        
+        {/* 🔥 NOVO: BOTÃO DE LIMPAR FORMATAÇÃO */}
+        <button type="button" className="rich-btn" onMouseDown={preventFocusSteal} onClick={() => handleFormat('removeFormat')} title="Limpar Formatação" style={{ marginLeft: 'auto', color: '#ef4444' }}><Eraser size={16} /></button>
+        
         <div className="rich-separator"></div>
         <button type="button" className="rich-btn" onMouseDown={preventFocusSteal} onClick={addLink} title="Link"><LinkIcon size={16} /></button>
         <div className="rich-separator"></div>

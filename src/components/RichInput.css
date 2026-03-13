@@ -107,10 +107,29 @@
 .visual-editor blockquote {
   border-left: 3px solid #c333ff;
   padding-left: 10px;
-  margin: 5px 0;
+  /* Margem zero para colar blocos adjacentes */
+  margin: 0; 
+  padding-top: 4px;
+  padding-bottom: 4px;
   color: #ccc;
   background: rgba(195, 51, 255, 0.05);
-  border-radius: 0 4px 4px 0;
+}
+
+/* Se houver citações seguidas, removemos o padding para fundir perfeitamente */
+.visual-editor blockquote + blockquote {
+  padding-top: 0;
+}
+
+/* Garante um respiro no topo e na base do grupo inteiro de citações */
+.visual-editor > blockquote:first-child,
+.visual-editor > :not(blockquote) + blockquote {
+  margin-top: 8px;
+  border-top-right-radius: 4px;
+}
+.visual-editor > blockquote:last-child,
+.visual-editor > blockquote:has(+ :not(blockquote)) {
+  margin-bottom: 8px;
+  border-bottom-right-radius: 4px;
 }
 
 /* Estilo do Código Mono */
