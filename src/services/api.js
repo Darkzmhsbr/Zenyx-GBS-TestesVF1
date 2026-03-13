@@ -439,7 +439,10 @@ export const crmService = {
       const response = await api.get(`/api/admin/contacts?${params.toString()}`);
       return response.data;
     } catch (error) {
-      return { data: [], total: 0, page: 1, per_page: perPage, total_pages: 0 };
+      console.error("Erro real:", error);
+      // Remova o retorno falso com array vazio. Jogue o erro para cima
+      // para o seu React poder exibir um alerta como: "Carregamento instável, tentando novamente..."
+      throw new Error("Servidor ocupado. Tente recarregar em alguns segundos.");
     }
   },
   
@@ -450,7 +453,8 @@ export const crmService = {
     try {
       return (await api.get(`/api/admin/leads?${params.toString()}`)).data;
     } catch (error) {
-      return { data: [], total: 0, page: 1, per_page: perPage, total_pages: 0 };
+      console.error("Erro real:", error);
+      throw new Error("Servidor ocupado. Tente recarregar em alguns segundos.");
     }
   },
   
@@ -459,7 +463,8 @@ export const crmService = {
       const url = botId ? `/api/admin/contacts/funnel-stats?bot_id=${botId}` : '/api/admin/contacts/funnel-stats';
       return (await api.get(url)).data;
     } catch (error) {
-      return { topo: 0, meio: 0, fundo: 0, expirados: 0, total: 0 };
+      console.error("Erro real:", error);
+      throw new Error("Servidor ocupado. Tente recarregar em alguns segundos.");
     }
   },
   
@@ -957,7 +962,7 @@ export const authService = {
       password,
       full_name: fullName,
       turnstile_token: turnstileToken, // 🛡️ CAMPO CAPTCHA
-      invite_code: inviteCode           // 🎟️ CÓDIGO DE CONVITE
+      invite_code: inviteCode          // 🎟️ CÓDIGO DE CONVITE
     });
     return response.data;
   },
