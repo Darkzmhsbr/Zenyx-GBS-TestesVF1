@@ -26,10 +26,17 @@ const getEmojiAbsoluteUrl = (emoji) => {
 
 /**
  * ✨ Renderiza HTML + Emojis Premium no Simulador (Igual ao Telegram)
+ * 🔥 FIX: Remove espaços vazios inúteis (buracos) ao redor do blockquote
  */
 function renderRichText(text, emojiCatalog) {
   if (!text) return "";
+  
+  // Primeiro, lida com as quebras normais
   let parsed = String(text).replace(/\n/g, "<br>");
+  
+  // Limpeza de buracos perto de Blockquotes
+  parsed = parsed.replace(/<br>\s*<blockquote>/gi, '<blockquote>');
+  parsed = parsed.replace(/<\/blockquote>\s*<br>/gi, '</blockquote>');
   
   if (emojiCatalog && emojiCatalog.length > 0) {
     emojiCatalog.forEach(emoji => {
@@ -268,8 +275,6 @@ export function ChatFlow() {
 
   const scrollToBottom = () => {
       if (messagesEndRef.current) {
-          // 🔥 CORREÇÃO: Em vez de scrollIntoView (que puxa a página inteira no celular),
-          // nós rolamos apenas a barra interna da 'messages-area' do iPhone.
           const container = messagesEndRef.current.parentElement;
           if (container) {
               container.scrollTo({
@@ -637,7 +642,6 @@ export function ChatFlow() {
     if (result.isConfirmed) setSteps(steps.filter(s => s.id !== stepId));
   };
 
-  // 🔥 NOVO TELA DE CARREGAMENTO PROFISSIONAL (Substitui o return antigo)
   if (loading) {
     return (
       <div className="chatflow-container loading-state">
