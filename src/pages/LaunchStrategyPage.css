@@ -140,9 +140,11 @@
     border-radius: 12px 12px 0 0;
 }
 
-.launch-badge.step-1 { background: #3b82f6; color: #fff; }
-.launch-badge.step-2 { background: #eab308; color: #000; }
-.launch-badge.step-3 { background: #f97316; color: #fff; }
+/* 🔥 CORES ATUALIZADAS PARA OS 4 PASSOS */
+.launch-badge.step-1 { background: #3b82f6; color: #fff; } /* Azul: Convite */
+.launch-badge.step-2 { background: #10b981; color: #fff; } /* Verde: Aprovação VIP */
+.launch-badge.step-3 { background: #eab308; color: #000; } /* Amarelo: Cronômetro */
+.launch-badge.step-4 { background: #f97316; color: #fff; } /* Laranja: Expulsão/Oferta */
 
 .launch-card.drop-shadow-orange {
     box-shadow: 0 15px 40px rgba(249, 115, 22, 0.08);

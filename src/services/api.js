@@ -1630,6 +1630,11 @@ export const launchStrategyService = {
     }
   },
   
+  /**
+   * Salva as configurações de lançamento VIP.
+   * @param {number} botId 
+   * @param {object} data - Inclui os novos campos: delay_aprovacao_segundos, msg_aprovacao_texto, msg_aprovacao_media, msg_aprovacao_btn
+   */
   saveConfig: async (botId, data) => {
     try {
       const response = await api.post(`/api/admin/launch-strategy/${botId}`, data);

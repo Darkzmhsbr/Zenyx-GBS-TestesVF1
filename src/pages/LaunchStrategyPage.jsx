@@ -8,7 +8,8 @@ import {
     AlertOctagon, 
     Zap, 
     CreditCard,
-    Loader2
+    Loader2,
+    CheckCircle
 } from 'lucide-react';
 import { useBot } from '../context/BotContext';
 import { launchStrategyService, planService } from '../services/api';
@@ -30,6 +31,12 @@ export function LaunchStrategyPage() {
         msg_boas_vindas: '',
         media_url: '',
         btn_text: '🔓 RESGATAR CONVITE VIP',
+        // NOVOS CAMPOS: APROVAÇÃO VIP E DELAY
+        delay_aprovacao_segundos: 0,
+        msg_aprovacao_texto: 'PARABÉNS {first_name} VOCÊ FOI APROVADO EM NOSSO VIP 🎉\n\nCLIQUE ABAIXO PARA ACESSAR O NOSSO GRUPINHO SECRETO 👇🏼\n\nENTRE AGORA!! SE SAIR NÃO TEM VOLTA!!',
+        msg_aprovacao_media: '',
+        msg_aprovacao_btn: '🔥 ENTRAR NO VIP',
+        // FIM NOVOS CAMPOS
         tempo_vip_minutos: 1,
         msg_expulsao: '',
         media_oferta_url: '',
@@ -53,6 +60,12 @@ export function LaunchStrategyPage() {
                     msg_boas_vindas: data.msg_boas_vindas || '',
                     media_url: data.media_url || '',
                     btn_text: data.btn_text || '🔓 RESGATAR CONVITE VIP',
+                    // NOVOS CAMPOS
+                    delay_aprovacao_segundos: data.delay_aprovacao_segundos || 0,
+                    msg_aprovacao_texto: data.msg_aprovacao_texto || '',
+                    msg_aprovacao_media: data.msg_aprovacao_media || '',
+                    msg_aprovacao_btn: data.msg_aprovacao_btn || '🔥 ENTRAR NO VIP',
+                    // FIM NOVOS CAMPOS
                     tempo_vip_minutos: data.tempo_vip_minutos || 1,
                     msg_expulsao: data.msg_expulsao || '',
                     media_oferta_url: data.media_oferta_url || '',
@@ -83,12 +96,16 @@ export function LaunchStrategyPage() {
         if (config.ativo && !config.plano_id) {
             return Swal.fire('Atenção', 'Você deve selecionar um plano de oferta para a expulsão.', 'warning');
         }
+        if (config.delay_aprovacao_segundos < 0) {
+            return Swal.fire('Atenção', 'O tempo de delay não pode ser negativo.', 'warning');
+        }
 
         setSaving(true);
         try {
             // Conversão de tipos segura antes de enviar
             const payload = {
                 ...config,
+                delay_aprovacao_segundos: parseInt(config.delay_aprovacao_segundos) || 0,
                 tempo_vip_minutos: parseInt(config.tempo_vip_minutos) || 1,
                 plano_id: config.plano_id ? parseInt(config.plano_id) : null
             };
@@ -175,7 +192,7 @@ export function LaunchStrategyPage() {
 
             <div className="launch-grid">
                 
-                {/* COLUNA ESQUERDA: ENTRADA E TEMPO */}
+                {/* COLUNA ESQUERDA: ENTRADA E APROVAÇÃO */}
                 <div className="launch-column">
                     
                     {/* PASSO 1: MENSAGEM DE ENTRADA */}
@@ -220,9 +237,70 @@ export function LaunchStrategyPage() {
                         </CardContent>
                     </Card>
 
-                    {/* PASSO 2: O CRONÔMETRO */}
+                    {/* PASSO 2: MENSAGEM DE APROVAÇÃO VIP (NOVO) */}
                     <Card className="launch-card">
-                        <div className="launch-badge step-2">Passo 2: O Cronômetro</div>
+                        <div className="launch-badge step-2">Passo 2: A Aprovação VIP</div>
+                        <CardContent>
+                            <div className="card-header-row">
+                                <CheckCircle size={20} color="#10b981"/>
+                                <h3>Aprovação Instantânea</h3>
+                            </div>
+                            <p className="card-description">
+                                Enviada assim que o lead pede para entrar no canal. Opcionalmente, adicione um delay (em segundos) para gerar antecipação.
+                            </p>
+
+                            <div className="form-group mt-15">
+                                <label style={{display: 'block', marginBottom: '5px', fontWeight: 'bold', color: '#ccc'}}>
+                                    ⏳ Tempo de Espera (Delay em Segundos)
+                                </label>
+                                <Input 
+                                    type="number"
+                                    min="0"
+                                    value={config.delay_aprovacao_segundos} 
+                                    onChange={e => setConfig({...config, delay_aprovacao_segundos: parseInt(e.target.value) || 0})}
+                                    placeholder="Ex: 10"
+                                />
+                                <small className="helper-text">Defina como 0 para aprovar imediatamente. Ex: 15 segundos gera alta expectativa.</small>
+                            </div>
+
+                            <div className="form-group mt-15">
+                                <RichInput 
+                                    label="Copy de Boas-Vindas no VIP" 
+                                    value={config.msg_aprovacao_texto} 
+                                    onChange={val => handleRichChange('msg_aprovacao_texto', val)} 
+                                    rows={5}
+                                />
+                                <small className="helper-text">Variáveis permitidas: {"{first_name}"} e {"{username}"}</small>
+                            </div>
+
+                            <div className="form-group mt-15">
+                                <MediaUploader 
+                                    label="Mídia (Opcional)" 
+                                    value={config.msg_aprovacao_media} 
+                                    onChange={(url) => setConfig({...config, msg_aprovacao_media: url})} 
+                                />
+                            </div>
+
+                            <div className="form-group mt-15">
+                                <Input 
+                                    label="Botão de Acesso Direto" 
+                                    value={config.msg_aprovacao_btn} 
+                                    onChange={e => setConfig({...config, msg_aprovacao_btn: e.target.value})}
+                                    placeholder="Ex: 🔥 ENTRAR NO VIP"
+                                />
+                                <small className="helper-text">Botão que leva o lead direto para dentro do Canal.</small>
+                            </div>
+                        </CardContent>
+                    </Card>
+
+                </div>
+
+                {/* COLUNA DIREITA: TEMPO E OFERTA (REMARKETING) */}
+                <div className="launch-column">
+
+                    {/* PASSO 3: O CRONÔMETRO */}
+                    <Card className="launch-card">
+                        <div className="launch-badge step-3">Passo 3: O Cronômetro</div>
                         <CardContent>
                             <div className="card-header-row">
                                 <Clock size={20} color="#eab308"/>
@@ -250,15 +328,10 @@ export function LaunchStrategyPage() {
                             </div>
                         </CardContent>
                     </Card>
-
-                </div>
-
-                {/* COLUNA DIREITA: A OFERTA (REMARKETING) */}
-                <div className="launch-column">
                     
-                    {/* PASSO 3: A EXPULSÃO */}
+                    {/* PASSO 4: A EXPULSÃO */}
                     <Card className="launch-card drop-shadow-orange">
-                        <div className="launch-badge step-3">Passo 3: A Conversão</div>
+                        <div className="launch-badge step-4">Passo 4: A Conversão</div>
                         <CardContent>
                             <div className="card-header-row">
                                 <Flame size={20} color="#f97316"/>
