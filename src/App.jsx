@@ -72,6 +72,9 @@ import { SetupWizard } from './pages/SetupWizard';
 // 🏆 NOVA PÁGINA: Prime Overrides (Admin)
 import { PrimeOverrides } from './pages/PrimeOverrides';
 
+// 🚀 NOVA PÁGINA: Estratégia de Lançamento (Degustação VIP)
+import { LaunchStrategyPage } from './pages/LaunchStrategyPage';
+
 // Mini App (Loja)
 import { MiniAppHome } from './pages/miniapp/MiniAppHome';
 import { MiniAppCategory } from './pages/miniapp/MiniAppCategory';
@@ -231,6 +234,9 @@ function App() {
               
               {/* 🆕 NOVA ROTA: DISPARO AUTOMÁTICO */}
               <Route path="/extras/auto-remarketing" element={<AutoRemarketing />} />
+
+              {/* 🚀 NOVA ROTA: ESTRATÉGIA DE LANÇAMENTO */}
+              <Route path="/extras/lancamento-vip" element={<LaunchStrategyPage />} />
             </Route>
 
             {/* Rota não encontrada */}

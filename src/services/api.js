@@ -1617,6 +1617,31 @@ export const testSendService = {
 };
 
 // =========================================================
+// 🚀 SERVIÇO: ESTRATÉGIA DE LANÇAMENTO (SNEAK PEEK)
+// =========================================================
+export const launchStrategyService = {
+  getConfig: async (botId) => {
+    try {
+      const response = await api.get(`/api/admin/launch-strategy/${botId}`);
+      return response.data;
+    } catch (error) {
+      console.error('Erro ao buscar configuração da Estratégia de Lançamento:', error);
+      throw error;
+    }
+  },
+  
+  saveConfig: async (botId, data) => {
+    try {
+      const response = await api.post(`/api/admin/launch-strategy/${botId}`, data);
+      return response.data;
+    } catch (error) {
+      console.error('Erro ao salvar configuração da Estratégia de Lançamento:', error);
+      throw error;
+    }
+  }
+};
+
+// =========================================================
 // 🏆 SERVIÇO: RECURSOS PRIME (GAMIFICAÇÃO)
 // =========================================================
 export const recursosPrimeService = {
@@ -1649,6 +1674,5 @@ export const recursosPrimeService = {
     return response.data;
   }
 };
-
 
 export default api;

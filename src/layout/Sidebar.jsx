@@ -28,7 +28,8 @@ import {
   ArrowDownCircle,
   Trophy,
   BarChart3,
-  Compass
+  Compass,
+  Flame
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { profileService, rankingService } from '../services/api';
@@ -371,6 +372,15 @@ export function Sidebar({ isOpen, onClose }) {
                   onClick={onClose}
                 >
                   <Send size={18} /> <span>Disparo Automático</span>
+                </Link>
+
+                {/* 🚀 ESTRATÉGIA DE LANÇAMENTO (NOVO) */}
+                <Link 
+                  to="/extras/lancamento-vip" 
+                  className={`nav-item ${isActive('/extras/lancamento-vip')}`} 
+                  onClick={onClose}
+                >
+                  <Flame size={18} /> <span>Lançamento VIP</span>
                 </Link>
               </div>
             )}

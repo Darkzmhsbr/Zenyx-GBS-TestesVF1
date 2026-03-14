@@ -1,0 +1,315 @@
+/* ========================================= */
+/* 🚀 LaunchStrategyPage.css - Zenyx VIPs    */
+/* ========================================= */
+
+.launch-page-container {
+    padding: 30px;
+    max-width: 1200px;
+    margin: 0 auto;
+    margin-top: var(--header-height, 70px);
+    margin-left: var(--sidebar-width, 260px);
+    padding-bottom: 80px;
+}
+
+/* --- HEADER --- */
+.launch-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    margin-bottom: 25px;
+    padding-bottom: 20px;
+    border-bottom: 1px solid var(--card-border, #333);
+}
+
+.launch-header h1 {
+    font-size: 1.8rem;
+    font-weight: 800;
+    color: #fff;
+    margin: 0;
+    letter-spacing: -0.5px;
+}
+
+.launch-header p {
+    color: var(--muted-foreground, #888);
+    font-size: 0.95rem;
+    margin: 5px 0 0 0;
+}
+
+.flame-icon-wrapper {
+    background: rgba(249, 115, 22, 0.15);
+    padding: 8px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid rgba(249, 115, 22, 0.3);
+    box-shadow: 0 0 15px rgba(249, 115, 22, 0.2);
+}
+
+/* --- MASTER TOGGLE CARD --- */
+.master-toggle-card {
+    border: 1px solid #333;
+    background: #111;
+    margin-bottom: 30px;
+    transition: all 0.3s ease;
+}
+
+.master-toggle-card.is-active {
+    border-color: rgba(249, 115, 22, 0.4);
+    background: linear-gradient(90deg, #111, rgba(249, 115, 22, 0.03));
+}
+
+.mt-content {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px !important;
+}
+
+.mt-info {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.mt-info h3 {
+    margin: 0 0 4px 0;
+    color: #fff;
+    font-size: 1.1rem;
+}
+
+.mt-info p {
+    margin: 0;
+    color: #888;
+    font-size: 0.85rem;
+    max-width: 600px;
+}
+
+/* Custom Toggle Laranja */
+.custom-toggle.large {
+    width: 110px;
+    height: 38px;
+    border-radius: 20px;
+}
+.custom-toggle.large .toggle-handle {
+    width: 30px;
+    height: 30px;
+}
+.custom-toggle.large.active-orange {
+    background-color: #f97316; /* Laranja Fogo */
+}
+.custom-toggle.large.active-orange .toggle-handle {
+    transform: translateX(72px);
+}
+
+/* --- GRID E COLUNAS --- */
+.launch-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 25px;
+    align-items: start;
+}
+
+.launch-column {
+    display: flex;
+    flex-direction: column;
+    gap: 25px;
+}
+
+/* --- CARDS E BADGES --- */
+.launch-card {
+    position: relative;
+    border-top: none;
+    border-radius: 0 0 12px 12px;
+    margin-top: 30px;
+}
+
+.launch-badge {
+    position: absolute;
+    top: -30px;
+    left: 0;
+    right: 0;
+    height: 30px;
+    display: flex;
+    align-items: center;
+    padding: 0 15px;
+    font-size: 0.85rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    border-radius: 12px 12px 0 0;
+}
+
+.launch-badge.step-1 { background: #3b82f6; color: #fff; }
+.launch-badge.step-2 { background: #eab308; color: #000; }
+.launch-badge.step-3 { background: #f97316; color: #fff; }
+
+.launch-card.drop-shadow-orange {
+    box-shadow: 0 15px 40px rgba(249, 115, 22, 0.08);
+    border: 1px solid rgba(249, 115, 22, 0.2);
+}
+
+.card-header-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 8px;
+}
+
+.card-header-row h3 {
+    margin: 0;
+    color: #fff;
+    font-size: 1.1rem;
+}
+
+.card-description {
+    color: #888;
+    font-size: 0.85rem;
+    margin: 0 0 15px 0;
+    line-height: 1.4;
+}
+
+/* --- UTILS --- */
+.mt-15 { margin-top: 15px; }
+
+.helper-text {
+    display: block;
+    color: #666;
+    font-size: 0.75rem;
+    margin-top: 6px;
+}
+
+/* --- TIMER BOX --- */
+.timer-box {
+    background: rgba(0,0,0,0.2);
+    border: 1px solid #333;
+    border-radius: 8px;
+    padding: 20px;
+    text-align: center;
+}
+
+.timer-input-wrapper {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 15px;
+    margin-bottom: 15px;
+}
+
+.timer-input-wrapper input {
+    width: 100px;
+}
+
+.timer-suffix {
+    font-size: 1.2rem;
+    color: #ccc;
+    font-weight: 600;
+}
+
+.timer-warning {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    color: #eab308;
+    background: rgba(234, 179, 8, 0.1);
+    padding: 8px;
+    border-radius: 6px;
+    font-size: 0.85rem;
+}
+
+/* --- SELECT CUSTOMIZADO --- */
+.offer-select-box label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.9rem;
+    color: #ccc;
+    margin-bottom: 8px;
+    font-weight: 500;
+}
+
+.zenyx-select {
+    width: 100%;
+    padding: 12px 15px;
+    background: #0a0a0a;
+    border: 1px solid #333;
+    border-radius: 8px;
+    color: #fff;
+    font-size: 0.95rem;
+    outline: none;
+    transition: border-color 0.2s;
+    cursor: pointer;
+}
+
+.zenyx-select:focus {
+    border-color: #f97316;
+}
+
+/* --- DICA BOX --- */
+.strategy-tip-box {
+    background: linear-gradient(135deg, rgba(249, 115, 22, 0.1), transparent);
+    border-left: 4px solid #f97316;
+    padding: 20px;
+    border-radius: 0 8px 8px 0;
+}
+
+.strategy-tip-box h4 {
+    margin: 0 0 8px 0;
+    color: #f97316;
+    font-size: 1rem;
+}
+
+.strategy-tip-box p {
+    margin: 0;
+    color: #aaa;
+    font-size: 0.85rem;
+    line-height: 1.5;
+}
+
+/* --- LOADING STATE --- */
+.loading-state {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: calc(100vh - 150px);
+}
+
+.loading-content {
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 15px;
+}
+
+.spinner-animado {
+    color: #f97316;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin { 100% { transform: rotate(360deg); } }
+
+/* RESPONSIVIDADE */
+@media (max-width: 1024px) {
+    .launch-grid { grid-template-columns: 1fr; }
+}
+
+@media (max-width: 768px) {
+    .launch-page-container {
+        margin-left: 0;
+        padding: 15px;
+    }
+    
+    .launch-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 15px;
+    }
+    
+    .mt-content {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 20px;
+    }
+}

@@ -1,4 +1,4 @@
-/* --- CONFIGURAÃ‡Ã•ES BASE --- */
+/* --- CONFIGURAÇÕES BASE --- */
 :root {
   --sidebar-width: 260px;
   --sidebar-bg: #0a0a0a;
@@ -30,7 +30,7 @@
   height: 70px;
   display: flex;
   align-items: center;
-  justify-content: space-between; /* EspaÃ§a logo e botÃ£o X */
+  justify-content: space-between; /* Espaça logo e botão X */
   padding: 0 20px;
   border-bottom: 1px solid var(--sidebar-border);
 }
@@ -41,14 +41,14 @@
   gap: 12px;
 }
 
-/* --- NAVEGAÃ‡ÃƒO --- */
+/* --- NAVEGAÇÃO --- */
 .sidebar-nav {
   flex: 1;
   overflow-y: auto;
   padding: 20px 0;
   display: flex;
   flex-direction: column;
-  gap: 5px; /* EspaÃ§amento entre itens */
+  gap: 5px; /* Espaçamento entre itens */
 }
 
 /* Itens do Menu */
@@ -56,7 +56,7 @@
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: 12px 25px; /* Padding padrÃ£o */
+  padding: 12px 25px; /* Padding padrão */
   color: var(--text-secondary);
   text-decoration: none;
   font-size: 0.95rem;
@@ -77,7 +77,7 @@
   border-right-color: var(--primary-color);
 }
 
-/* --- ðŸ”¥ ÃREA SUPER ADMIN (NOVO) --- */
+/* --- 🔥 ÁREA SUPER ADMIN (NOVO) --- */
 .admin-section {
   margin-bottom: 10px;
   border-bottom: 1px solid var(--sidebar-border);
@@ -97,7 +97,7 @@
 }
 
 .nav-item.super-admin {
-  color: #ffcc00 !important; /* Dourado forÃ§ado */
+  color: #ffcc00 !important; /* Dourado forçado */
 }
 
 .nav-item.super-admin:hover {
@@ -123,7 +123,7 @@
   flex-direction: column;
 }
 
-/* âœ… CORREÃ‡ÃƒO: Estilo para group-header (Meus Bots) */
+/* ✅ CORREÇÃO: Estilo para group-header (Meus Bots) */
 .nav-item.group-header {
   display: flex;
   align-items: center;
@@ -143,7 +143,7 @@
   color: #fff;
 }
 
-/* âœ… CORREÃ‡ÃƒO: Estilo para group-label (Meus Bots) */
+/* ✅ CORREÇÃO: Estilo para group-label (Meus Bots) */
 .group-label {
   display: flex;
   align-items: center;
@@ -183,7 +183,7 @@
   padding: 5px 0;
 }
 
-/* IndentaÃ§Ã£o dos subitens */
+/* Indentação dos subitens */
 .nav-subitems .nav-item {
   padding-left: 57px; /* 25px padding + 20px icon + 12px gap */
   font-size: 0.9rem;
@@ -191,7 +191,7 @@
 
 /* --- LOGOUT BUTTON --- */
 .logout-btn {
-  margin-top: auto; /* Empurra para o fundo se houver espaÃ§o */
+  margin-top: auto; /* Empurra para o fundo se houver espaço */
   color: #ef4444 !important;
 }
 .logout-btn:hover {
@@ -302,10 +302,10 @@
 }
 
 /* ============================================================
-   ðŸ“± MOBILE & TABLET 
+   📱 MOBILE & TABLET 
    ============================================================ */
 
-/* BotÃ£o Fechar (X) - Oculto no Desktop */
+/* Botão Fechar (X) - Oculto no Desktop */
 .close-sidebar-btn {
   display: none; 
   background: transparent;
@@ -321,7 +321,7 @@
 
 @media (max-width: 768px) {
   .sidebar {
-    transform: translateX(-100%); /* Escondido por padrÃ£o no mobile */
+    transform: translateX(-100%); /* Escondido por padrão no mobile */
     width: 280px; /* Um pouco mais largo no mobile para toque */
   }
 
@@ -330,7 +330,7 @@
     box-shadow: 10px 0 30px rgba(0,0,0,0.5);
   }
 
-  /* BotÃ£o X visÃ­vel no mobile */
+  /* Botão X visível no mobile */
   .close-sidebar-btn {
     display: block;
   }
@@ -386,4 +386,22 @@
   background: rgba(195, 51, 255, 0.15);
   border-right-color: #c333ff;
   color: #c333ff !important;
+}
+
+/* ============================================================
+   🚀 ESTRATÉGIA DE LANÇAMENTO (DESTAQUE SIDEBAR)
+   ============================================================ */
+.nav-item[href="/extras/lancamento-vip"] {
+  color: #f97316 !important; /* Laranja fogo base */
+}
+
+.nav-item[href="/extras/lancamento-vip"]:hover {
+  background: rgba(249, 115, 22, 0.1) !important;
+  color: #fb923c !important; /* Laranja mais claro no hover */
+}
+
+.nav-item.active[href="/extras/lancamento-vip"] {
+  background: rgba(249, 115, 22, 0.15) !important;
+  border-right-color: #f97316 !important;
+  color: #f97316 !important;
 }
