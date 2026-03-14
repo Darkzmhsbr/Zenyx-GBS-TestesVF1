@@ -103,32 +103,42 @@
 .visual-editor s { text-decoration: line-through; opacity: 0.8; }
 .visual-editor a { color: #c333ff; text-decoration: underline; cursor: pointer; }
 
-/* Estilo do Citação (Quote) parecido com o Telegram */
+/* 🔥 FIX DEFINITIVO DA CITAÇÃO (QUOTE) - SEM BURACOS */
 .visual-editor blockquote {
   border-left: 3px solid #c333ff;
   padding-left: 10px;
-  /* Margem zero para colar blocos adjacentes */
+  
+  /* MARGENS ZERO: Garante que não empurre o texto de baixo ou de cima */
   margin: 0; 
-  padding-top: 4px;
-  padding-bottom: 4px;
+  padding-top: 2px;
+  padding-bottom: 2px;
+  
   color: #ccc;
   background: rgba(195, 51, 255, 0.05);
+  
+  /* Garante que o interior do blockquote também não tenha margens extras */
+  line-height: 1.4;
 }
 
-/* Se houver citações seguidas, removemos o padding para fundir perfeitamente */
+/* Força que o próximo elemento (texto solto ou p) cole no blockquote imediatamente */
+.visual-editor blockquote + * {
+  margin-top: 0 !important;
+  padding-top: 0 !important;
+}
+
+/* Mescla blockquotes seguidos sem divisórias */
 .visual-editor blockquote + blockquote {
   padding-top: 0;
+  margin-top: 0;
 }
 
-/* Garante um respiro no topo e na base do grupo inteiro de citações */
+/* Suaviza as bordas do grupo de citações sem estragar o layout */
 .visual-editor > blockquote:first-child,
 .visual-editor > :not(blockquote) + blockquote {
-  margin-top: 8px;
   border-top-right-radius: 4px;
 }
 .visual-editor > blockquote:last-child,
 .visual-editor > blockquote:has(+ :not(blockquote)) {
-  margin-bottom: 8px;
   border-bottom-right-radius: 4px;
 }
 
