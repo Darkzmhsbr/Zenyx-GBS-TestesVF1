@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useRef } from 'react';
 import Swal from 'sweetalert2';
-import { Save, MessageSquare, ArrowDown, Zap, Image as ImageIcon, Video, Plus, Trash2, Edit, Clock, Layout, Globe, Smartphone, ShoppingBag, Link as LinkIcon, CreditCard, ArrowUp, ChevronDown, ChevronUp, RotateCcw } from 'lucide-react';
+import { Save, MessageSquare, ArrowDown, Zap, Image as ImageIcon, Video, Plus, Trash2, Edit, Clock, Layout, Globe, Smartphone, ShoppingBag, Link as LinkIcon, CreditCard, ArrowUp, ChevronDown, ChevronUp, RotateCcw, Loader2 } from 'lucide-react';
 import { flowService, premiumEmojiService } from '../services/api'; 
 import { useBot } from '../context/BotContext'; 
 import { Button } from '../components/Button';
@@ -637,7 +637,18 @@ export function ChatFlow() {
     if (result.isConfirmed) setSteps(steps.filter(s => s.id !== stepId));
   };
 
-  if (loading) return <div className="loading">Carregando...</div>;
+  // 🔥 NOVO TELA DE CARREGAMENTO PROFISSIONAL (Substitui o return antigo)
+  if (loading) {
+    return (
+      <div className="chatflow-container loading-state">
+        <div className="loading-content fade-in-up">
+          <Loader2 className="spinner-animado" size={50} />
+          <h2>Sincronizando fluxo...</h2>
+          <p>Preparando o ambiente do seu bot, por favor aguarde.</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="chatflow-container">
