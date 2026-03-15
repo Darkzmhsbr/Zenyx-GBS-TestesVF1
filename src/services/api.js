@@ -155,6 +155,11 @@ export const botService = {
   createBot: async (dados) => (await api.post('/api/admin/bots', dados)).data,
   listBots: async () => (await api.get('/api/admin/bots')).data,
   getBot: async (botId) => (await api.get(`/api/admin/bots/${botId}`)).data,
+  
+  /**
+   * Atualiza bot na API. 
+   * ATUALIZAÇÃO V13: payload suporta 'apagar_mensagens_servico' (Boolean)
+   */
   updateBot: async (botId, dados) => (await api.put(`/api/admin/bots/${botId}`, dados)).data,
   toggleBot: async (botId) => (await api.post(`/api/admin/bots/${botId}/toggle`)).data,
   deleteBot: async (botId) => (await api.delete(`/api/admin/bots/${botId}`)).data,
@@ -1632,8 +1637,9 @@ export const launchStrategyService = {
   
   /**
    * Salva as configurações de lançamento VIP.
+   * ATUALIZAÇÃO V13: Adicionado campo 'tempo_vip_segundos' substituindo minutos.
    * @param {number} botId 
-   * @param {object} data - Inclui os novos campos: delay_aprovacao_segundos, msg_aprovacao_texto, msg_aprovacao_media, msg_aprovacao_btn
+   * @param {object} data - Inclui os campos: tempo_vip_segundos, msg_aprovacao_texto, msg_aprovacao_media, msg_aprovacao_btn
    */
   saveConfig: async (botId, data) => {
     try {

@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom'; 
 import { 
   Save, ArrowLeft, MessageSquare, Key, Headphones, 
-  Smartphone, Layout, PlayCircle, Type, Plus, Trash2, Edit, Image as ImageIcon, Link, User, Palette, Shield, Radio, Wifi, CheckCircle, XCircle, AlertTriangle, Bell, ShoppingBag, Layers, Grid, Square, Circle
+  Smartphone, Layout, PlayCircle, Type, Plus, Trash2, Edit, Image as ImageIcon, Link, User, Palette, Shield, Radio, Wifi, CheckCircle, XCircle, AlertTriangle, Bell, ShoppingBag, Layers, Grid, Square, Circle, Eraser
 } from 'lucide-react'; 
 import { Button } from '../components/Button';
 import { Card, CardContent } from '../components/Card';
@@ -72,6 +72,7 @@ export function BotConfig() {
     id_canal_notificacao: '',  // ✅ Canal de Notificações
     protect_content: false,    // 🔒 Proteção de Conteúdo
     notificar_no_bot: true,    // 🔔 Notificação no bot
+    apagar_mensagens_servico: false, // 🔥 NOVO: LIMPEZA DE GRUPO V13
     status: 'desconectado'
   });
 
@@ -124,6 +125,7 @@ export function BotConfig() {
           id_canal_notificacao: currentBot.id_canal_notificacao || '',  // ✅ Canal de Notificações
           protect_content: currentBot.protect_content || false,         // 🔒 Proteção de Conteúdo
           notificar_no_bot: currentBot.notificar_no_bot !== undefined ? currentBot.notificar_no_bot : true, // 🔔 Notificação no bot
+          apagar_mensagens_servico: currentBot.apagar_mensagens_servico || false, // 🔥 NOVO CARREGAMENTO V13
           status: currentBot.status || 'desconectado'
         });
 
@@ -553,6 +555,49 @@ export function BotConfig() {
                         }}>
                           <span style={{
                             position:'absolute', left: config.protect_content ? 26 : 3, top: 3,
+                            width: 20, height: 20, background: '#fff', borderRadius: '50%',
+                            transition: 'all 0.3s ease',
+                            boxShadow: '0 2px 4px rgba(0,0,0,0.3)'
+                          }}/>
+                        </span>
+                      </label>
+                    </div>
+
+                    {/* 🔥 NOVO: LIMPEZA DE MENSAGENS DE SERVIÇO (V13) */}
+                    <div style={{
+                      marginTop: 15,
+                      padding: '16px 20px',
+                      background: config.apagar_mensagens_servico ? 'rgba(239, 68, 68, 0.08)' : 'rgba(255,255,255,0.03)',
+                      border: `1px solid ${config.apagar_mensagens_servico ? 'rgba(239, 68, 68, 0.3)' : 'rgba(255,255,255,0.08)'}`,
+                      borderRadius: 10,
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                      transition: 'all 0.3s ease'
+                    }}>
+                      <div>
+                        <div style={{display:'flex', alignItems:'center', gap: 8, marginBottom: 4}}>
+                          <Eraser size={18} color={config.apagar_mensagens_servico ? '#ef4444' : '#888'}/>
+                          <span style={{fontWeight: 600, color: '#fff', fontSize: '0.95rem'}}>Limpar Lixo do Grupo (Anti-Flood)</span>
+                        </div>
+                        <small style={{color:'#888', lineHeight: 1.4, display:'block', maxWidth: 400}}>
+                          Apaga as notificações automáticas que o Telegram gera nos grupos e canais (ex: "Entrou no chat", "Saiu do chat", "Mensagem fixada"). Mantém o VIP limpo.
+                        </small>
+                      </div>
+                      <label style={{position:'relative', display:'inline-block', width: 50, height: 26, cursor:'pointer', flexShrink: 0, marginLeft: 15}}>
+                        <input 
+                          type="checkbox" 
+                          checked={config.apagar_mensagens_servico} 
+                          onChange={(e) => setConfig({...config, apagar_mensagens_servico: e.target.checked})}
+                          style={{opacity: 0, width: 0, height: 0}}
+                        />
+                        <span style={{
+                          position:'absolute', top:0, left:0, right:0, bottom:0,
+                          background: config.apagar_mensagens_servico ? '#ef4444' : '#333',
+                          borderRadius: 26, transition: 'all 0.3s ease'
+                        }}>
+                          <span style={{
+                            position:'absolute', left: config.apagar_mensagens_servico ? 26 : 3, top: 3,
                             width: 20, height: 20, background: '#fff', borderRadius: '50%',
                             transition: 'all 0.3s ease',
                             boxShadow: '0 2px 4px rgba(0,0,0,0.3)'

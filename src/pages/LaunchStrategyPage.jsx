@@ -37,7 +37,10 @@ export function LaunchStrategyPage() {
         msg_aprovacao_media: '',
         msg_aprovacao_btn: '🔥 ENTRAR NO VIP',
         // FIM NOVOS CAMPOS
-        tempo_vip_minutos: 1,
+        
+        // 🔥 MUDANÇA DA V13: AGORA EM SEGUNDOS
+        tempo_vip_segundos: 60, 
+        
         msg_expulsao: '',
         media_oferta_url: '',
         plano_id: ''
@@ -66,7 +69,10 @@ export function LaunchStrategyPage() {
                     msg_aprovacao_media: data.msg_aprovacao_media || '',
                     msg_aprovacao_btn: data.msg_aprovacao_btn || '🔥 ENTRAR NO VIP',
                     // FIM NOVOS CAMPOS
-                    tempo_vip_minutos: data.tempo_vip_minutos || 1,
+                    
+                    // 🔥 MUDANÇA DA V13: CARREGA OS SEGUNDOS DO BANCO
+                    tempo_vip_segundos: data.tempo_vip_segundos || 60, 
+                    
                     msg_expulsao: data.msg_expulsao || '',
                     media_oferta_url: data.media_oferta_url || '',
                     plano_id: data.plano_id || ''
@@ -90,8 +96,10 @@ export function LaunchStrategyPage() {
 
     const handleSave = async () => {
         if (!selectedBot) return;
-        if (config.ativo && config.tempo_vip_minutos < 1) {
-            return Swal.fire('Atenção', 'O tempo de degustação deve ser de pelo menos 1 minuto.', 'warning');
+        
+        // 🔥 VALIDAÇÃO AJUSTADA PARA SEGUNDOS
+        if (config.ativo && config.tempo_vip_segundos < 1) {
+            return Swal.fire('Atenção', 'O tempo de degustação deve ser de pelo menos 1 segundo.', 'warning');
         }
         if (config.ativo && !config.plano_id) {
             return Swal.fire('Atenção', 'Você deve selecionar um plano de oferta para a expulsão.', 'warning');
@@ -106,7 +114,10 @@ export function LaunchStrategyPage() {
             const payload = {
                 ...config,
                 delay_aprovacao_segundos: parseInt(config.delay_aprovacao_segundos) || 0,
-                tempo_vip_minutos: parseInt(config.tempo_vip_minutos) || 1,
+                
+                // 🔥 ENVIANDO SEGUNDOS PARA A API
+                tempo_vip_segundos: parseInt(config.tempo_vip_segundos) || 60, 
+                
                 plano_id: config.plano_id ? parseInt(config.plano_id) : null
             };
 
@@ -234,10 +245,19 @@ export function LaunchStrategyPage() {
                                 />
                                 <small className="helper-text">Ao clicar, o usuário recebe o link de 1 uso do Canal VIP.</small>
                             </div>
+
+                            {/* 🔥 NOVA DICA DO LINK (BLINDAGEM DA ESTRATÉGIA) */}
+                            <div className="strategy-tip-box" style={{ marginTop: '20px', background: 'rgba(59, 130, 246, 0.1)', borderLeftColor: '#3b82f6' }}>
+                                <h4 style={{ color: '#3b82f6', marginBottom: '8px', fontSize: '0.95rem' }}>🔗 Sobre a Configuração do Canal</h4>
+                                <p style={{ color: '#aaa', fontSize: '0.85rem', margin: 0, lineHeight: 1.5 }}>
+                                    Para a estratégia funcionar perfeitamente e o bot conseguir expulsar o cliente, o seu canal VIP precisa ter a opção <b>"Aprovar Novos Membros"</b> ATIVADA. Certifique-se também de que o Bot é Administrador com todas as permissões.
+                                </p>
+                            </div>
+
                         </CardContent>
                     </Card>
 
-                    {/* PASSO 2: MENSAGEM DE APROVAÇÃO VIP (NOVO) */}
+                    {/* PASSO 2: MENSAGEM DE APROVAÇÃO VIP */}
                     <Card className="launch-card">
                         <div className="launch-badge step-2">Passo 2: A Aprovação VIP</div>
                         <CardContent>
@@ -307,7 +327,7 @@ export function LaunchStrategyPage() {
                                 <h3>Tempo de Degustação</h3>
                             </div>
                             <p className="card-description">
-                                Defina quantos minutos o usuário poderá ficar dentro do VIP de graça antes de ser removido pelo bot.
+                                Defina quantos <b>segundos</b> o usuário poderá ficar dentro do VIP de graça antes de ser removido pelo bot.
                             </p>
 
                             <div className="timer-box mt-15">
@@ -315,11 +335,12 @@ export function LaunchStrategyPage() {
                                     <Input 
                                         type="number"
                                         min="1"
-                                        value={config.tempo_vip_minutos} 
-                                        onChange={e => setConfig({...config, tempo_vip_minutos: parseInt(e.target.value) || 1})}
+                                        value={config.tempo_vip_segundos} 
+                                        onChange={e => setConfig({...config, tempo_vip_segundos: parseInt(e.target.value) || 1})}
                                         style={{ fontSize: '1.5rem', textAlign: 'center', height: '60px' }}
                                     />
-                                    <span className="timer-suffix">Minutos</span>
+                                    {/* 🔥 MUDANÇA VISUAL PARA SEGUNDOS */}
+                                    <span className="timer-suffix">Segundos</span>
                                 </div>
                                 <div className="timer-warning">
                                     <AlertOctagon size={16} />

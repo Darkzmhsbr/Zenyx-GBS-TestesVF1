@@ -248,7 +248,7 @@
     border-color: #f97316;
 }
 
-/* --- DICA BOX --- */
+/* --- DICA BOX (ORIGINAL LARANJA) --- */
 .strategy-tip-box {
     background: linear-gradient(135deg, rgba(249, 115, 22, 0.1), transparent);
     border-left: 4px solid #f97316;
@@ -267,6 +267,18 @@
     color: #aaa;
     font-size: 0.85rem;
     line-height: 1.5;
+}
+
+/* --- DICA BOX (AZUL - AVISO DE CANAL) --- */
+.strategy-tip-box.blue-tip {
+    background: linear-gradient(135deg, rgba(59, 130, 246, 0.1), transparent);
+    border-left: 4px solid #3b82f6;
+    margin-top: 20px;
+}
+
+.strategy-tip-box.blue-tip h4 {
+    color: #3b82f6;
+    font-size: 0.95rem;
 }
 
 /* --- LOADING STATE --- */
